@@ -1,0 +1,18 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-std=c++17",
+      "-Wall",
+      "-I/Users/adamolsson/VulkanSDK/1.3.296.0/macOS/include",
+      "-I/opt/homebrew/include",
+      "-o",
+      "bin/main",
+      "src/main.cpp"
+    ],
+    "directory": "/Users/adamolsson/projects/game_engine_cpp",
+    "file": "/Users/adamolsson/projects/game_engine_cpp/src/main.cpp",
+    "output": "/Users/adamolsson/projects/game_engine_cpp/bin/main"
+  }
+]
