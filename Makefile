@@ -9,13 +9,18 @@ BREW_INCLUDE_PATH = $(BREW_PATH)/include
 BREW_LIBRARY_PATH = $(BREW_PATH)/lib
 GLFW_LIBRARY = glfw 
 
-TARGET = main
-SRC = src/main.cpp
+LOCAL_INCLUDE_PATH = include/
 
-CXXFLAGS = $(CXX_INCLUDE) -std=c++17 -Wall 
+TARGET = main
+SRC := $(shell find src -name '*.cpp')
+
+$(info SOURCES: $(SRC))
+
+CXXFLAGS = -std=c++17 -Wall 
 
 $(TARGET): $(SRC)
 	$(CXX) $(CXXFLAGS) $(SRC) -o bin/$(TARGET) \
+		-I$(LOCAL_INCLUDE_PATH) \
 		-I$(VULKAN_INCLUDE_PATH) \
 		-L$(VULKAN_LIBRARY_PATH) \
 		-l$(VULKAN_LIBRARY) \
