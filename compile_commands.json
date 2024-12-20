@@ -5,6 +5,7 @@
       "-c",
       "-std=c++17",
       "-Wall",
+      "-Iinclude/",
       "-I/Users/adamolsson/VulkanSDK/1.3.296.0/macOS/include",
       "-I/opt/homebrew/include",
       "-o",
