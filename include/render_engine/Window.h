@@ -1,4 +1,6 @@
 #pragma once
+
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <functional>
 #include <optional>
@@ -8,6 +10,7 @@
  */
 class Window {
   public:
+    GLFWwindow *window;
     Window(const uint32_t width, const uint32_t height, char const *window_title) {
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -33,8 +36,16 @@ class Window {
      */
     void register_mouse_event_callback(std::function<void()> cb);
 
+    VkSurfaceKHR createSurface(VkInstance *instance, GLFWwindow &window) {
+        VkSurfaceKHR surface;
+        if (glfwCreateWindowSurface(*instance, &window, nullptr, &surface) !=
+            VK_SUCCESS) {
+            throw std::runtime_error("failed to create window surface!");
+        }
+        return surface;
+    }
+
   private:
-    GLFWwindow *window;
     std::optional<std::function<void()>> mouse_event_cb;
 
     /**

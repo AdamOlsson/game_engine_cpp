@@ -3,7 +3,9 @@
 void GameEngine::run() {
     while (!this->render_engine->should_window_close()) {
         this->render_engine->process_window_events();
-        // TODO: Update physics
-        // TODO: Render physics
+
+        this->render_engine->render();
     }
+
+    this->render_engine->wait_idle();
 }
