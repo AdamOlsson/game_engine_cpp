@@ -9,7 +9,7 @@ class RenderEngine {
     RenderEngine(const uint32_t width, const uint32_t height, char const *title) {
 
         window = std::make_unique<Window>(width, height, title);
-        g_ctx = std::make_unique<GraphicsContext>(window);
+        g_ctx = std::make_unique<GraphicsContext>(*window);
     }
 
     ~RenderEngine() {}

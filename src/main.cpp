@@ -3,10 +3,6 @@
 #include <cstdint>
 #include <memory>
 
-// TODO: Why is not my StorageBuffer data read?
-// - Perhaps I need to use some instance index to access the data?
-// - Look at some Youtube video that implements Storage Buffers
-// TODO: Implement Instanced rendering for GraphicsContext (triangles)
 // TODO: Implement RigidBody (triangle)
 // TODO: Implement click and move triangles
 // TODO: Implement SAT

@@ -1,10 +1,13 @@
 #version 450
-
-layout(std140, binding = 0) readonly buffer StorageBufferObject {
+struct InstanceData {
     vec3 position;
     vec3 color;
     float rotation;
-} ssbo;
+};
+
+layout(std140, binding = 0) readonly buffer InstanceDataBlock {
+    InstanceData instances[1024];
+} instance_data_block;
 
 layout(location = 0) in vec3 inPosition;
 
@@ -19,9 +22,10 @@ mat3 rotationMatrixZ(float theta) {
 }
 
 void main() {
-    mat3 rotation_matrix = rotationMatrixZ(ssbo.rotation);
+    InstanceData instance = instance_data_block.instances[gl_InstanceIndex];
+    mat3 rotation_matrix = rotationMatrixZ(instance.rotation);
     vec3 rotated_vertex_pos = rotation_matrix * inPosition; 
 
-    gl_Position = vec4(ssbo.position + rotated_vertex_pos, 1.0);
-    fragColor = ssbo.color;
+    gl_Position = vec4(instance.position + rotated_vertex_pos, 1.0);
+    fragColor = instance.color;
 }

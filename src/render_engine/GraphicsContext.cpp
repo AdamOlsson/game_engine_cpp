@@ -1,8 +1,6 @@
 #include "render_engine/GraphicsContext.h"
 
 #include "render_engine/buffers/StorageBuffer.h"
-#include "render_engine/buffers/UniformBuffer.h"
-#include "render_engine/buffers/common.h"
 #include "vulkan/vulkan_beta.h"
 #include "vulkan/vulkan_core.h"
 #include <fstream>
@@ -10,7 +8,8 @@
 #include <set>
 #include <stdexcept>
 
-void GraphicsContext::render(std::unique_ptr<Window> &window) {
+void GraphicsContext::render(Window &window,
+                             const std::vector<StorageBufferObject> &ssbo) {
     vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
     uint32_t imageIndex;
@@ -18,7 +17,7 @@ void GraphicsContext::render(std::unique_ptr<Window> &window) {
                                             imageAvailableSemaphores[currentFrame],
                                             VK_NULL_HANDLE, &imageIndex);
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-        recreateSwapChain(device, *window->window);
+        recreateSwapChain(device, *window.window);
         return;
     } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
         throw std::runtime_error("failed to acquire swap chain image!");
@@ -28,7 +27,7 @@ void GraphicsContext::render(std::unique_ptr<Window> &window) {
 
     vkResetCommandBuffer(commandBuffers[currentFrame], 0);
 
-    storageBuffers[currentFrame]->updateStorageBuffer();
+    storageBuffers[currentFrame]->updateStorageBuffer(ssbo);
     recordCommandBuffer(commandBuffers[currentFrame], imageIndex, currentFrame,
                         vertexBuffer->buffer, indices);
 
@@ -70,7 +69,7 @@ void GraphicsContext::render(std::unique_ptr<Window> &window) {
     // window is resized
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
         framebufferResized) {
-        recreateSwapChain(device, *window->window);
+        recreateSwapChain(device, *window.window);
 
         // It is important to do this after vkQueuePresentKHR to ensure that the
         // semaphores are in a consistent state, otherwise a signaled semaphore
@@ -931,7 +930,10 @@ void GraphicsContext::recordCommandBuffer(VkCommandBuffer commandBuffer,
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0,
                             nullptr);
-    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+
+    uint32_t num_instances = 2;
+    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), num_instances,
+                     0, 0, 0);
     vkCmdEndRenderPass(commandBuffer);
 
     if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
@@ -1039,7 +1041,7 @@ std::vector<VkDescriptorSet> GraphicsContext::createDescriptorSets(
         VkDescriptorBufferInfo bufferInfo{};
         bufferInfo.buffer = storageBuffers[i]->buffer;
         bufferInfo.offset = 0;
-        bufferInfo.range = sizeof(StorageBufferObject);
+        bufferInfo.range = storageBuffers[i]->size;
 
         VkWriteDescriptorSet descriptorWrite{};
         descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

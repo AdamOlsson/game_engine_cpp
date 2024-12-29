@@ -65,19 +65,19 @@ struct QueueFamilyIndices {
 
 class GraphicsContext {
   public:
-    GraphicsContext(std::unique_ptr<Window> &window) : enableValidationLayers(true) {
+    GraphicsContext(Window &window) : enableValidationLayers(true) {
         instance = createInstance(enableValidationLayers);
         if (enableValidationLayers) {
             debugMessenger = setupDebugMessenger(instance, enableValidationLayers);
         }
         // Create surface can affect the device selection, so we create it before
         // selecting device
-        surface = createSurface(&instance, *window->window);
+        surface = createSurface(&instance, *window.window);
         physicalDevice = pickPhysicalDevice(instance);
         device = createLogicalDevice(physicalDevice, deviceExtensions);
 
         auto [_swapChain, _swapChainImages, _swapChainImageFormat, _swapChainExtent] =
-            createSwapChain(physicalDevice, device, *window->window);
+            createSwapChain(physicalDevice, device, *window.window);
         swapChain = _swapChain;
         swapChainImages = _swapChainImages;
         swapChainImageFormat = _swapChainImageFormat;
@@ -100,9 +100,9 @@ class GraphicsContext {
                                         graphicsQueue);
 
         storageBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+        size_t size = 1024;
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            storageBuffers[i] = createStorageBuffer(physicalDevice, device);
-            storageBuffers[i]->updateStorageBuffer();
+            storageBuffers[i] = createStorageBuffer(physicalDevice, device, size);
         }
 
         descriptorPool = createDescriptorPool(device, MAX_FRAMES_IN_FLIGHT);
@@ -158,7 +158,7 @@ class GraphicsContext {
     }
 
     void waitIdle();
-    void render(std::unique_ptr<Window> &window);
+    void render(Window &window, const std::vector<StorageBufferObject> &ssbo);
 
   private:
     uint32_t currentFrame = 0;

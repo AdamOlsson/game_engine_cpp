@@ -7,4 +7,8 @@
 struct RenderBody {
     glm::vec3 position;
     glm::vec3 color;
+    glm::float32_t rotation;
+
+    RenderBody(glm::vec3 position, glm::vec3 color, glm::float32_t rotation)
+        : position(position), color(color), rotation(rotation) {}
 };

@@ -5,9 +5,9 @@
 #include <ostream>
 
 std::unique_ptr<StorageBuffer> createStorageBuffer(VkPhysicalDevice &physicalDevice,
-                                                   VkDevice &device) {
+                                                   VkDevice &device, size_t capacity) {
 
-    VkDeviceSize bufferSize = sizeof(StorageBufferObject);
+    VkDeviceSize bufferSize = capacity * sizeof(StorageBufferObject);
 
     VkBuffer buffer;
     VkDeviceMemory bufferMemory;
@@ -19,7 +19,8 @@ std::unique_ptr<StorageBuffer> createStorageBuffer(VkPhysicalDevice &physicalDev
 
     vkMapMemory(device, bufferMemory, 0, bufferSize, 0, &bufferMapped);
 
-    auto ptr = std::make_unique<StorageBuffer>(buffer, bufferMemory, bufferMapped);
+    auto ptr =
+        std::make_unique<StorageBuffer>(buffer, bufferMemory, bufferMapped, bufferSize);
 
     return ptr;
 }
@@ -46,20 +47,8 @@ VkDescriptorSetLayout StorageBuffer::createDescriptorSetLayout(VkDevice &device,
     return descriptorSetLayout;
 }
 
-void StorageBuffer::updateStorageBuffer() {
-
-    static auto startTime = std::chrono::high_resolution_clock::now();
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime -
-                                                                            startTime)
-                     .count();
-
-    StorageBufferObject ssbo;
-    ssbo.position = glm::vec3(0.0, 0.0, 0.0);
-    ssbo.color = glm::vec3(0.0, 1.0, 0.0);
-    ssbo.rotation = (time / 5.0) * glm::radians(90.0);
-
-    memcpy(bufferMapped, &ssbo, sizeof(ssbo));
+void StorageBuffer::updateStorageBuffer(const std::vector<StorageBufferObject> &ssbo) {
+    memcpy(bufferMapped, &ssbo[0], sizeof(ssbo[0]) * ssbo.size());
 }
 
 void StorageBuffer::dumpData() {
