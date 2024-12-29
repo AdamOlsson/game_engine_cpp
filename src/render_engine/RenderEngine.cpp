@@ -1,6 +1,11 @@
 #include "render_engine/RenderEngine.h"
+#include "RenderBody.h"
 
-void RenderEngine::render() { this->g_ctx->render(this->window); }
+void RenderEngine::render() {
+    const std::vector<RenderBody> instance_data = {
+        {glm::vec3(0.0, 0.0, 0.0), glm::vec3(1.0, 0.0, 0.0)}};
+    this->g_ctx->render(this->window);
+}
 
 void RenderEngine::wait_idle() { this->g_ctx->waitIdle(); }
 

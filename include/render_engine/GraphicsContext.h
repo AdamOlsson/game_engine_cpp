@@ -1,6 +1,13 @@
 #pragma once
 
 #include "render_engine/Window.h"
+#include "render_engine/buffers/IndexBuffer.h"
+#include "render_engine/buffers/StorageBuffer.h"
+#include "render_engine/buffers/UniformBuffer.h"
+#include "render_engine/buffers/VertexBuffer.h"
+#include "render_engine/shapes/Triangle.h"
+#include "render_engine/shapes/Vertex.h"
+#include "vulkan/vulkan_core.h"
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -19,44 +26,19 @@ const std::vector<const char *> deviceExtensions = {
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
-struct UniformBufferObject {
-    glm::mat4 model;
-    glm::mat4 view;
-    glm::mat4 proj;
-};
-
-struct Vertex {
-    glm::vec2 pos;
-    glm::vec3 color;
-
-    static VkVertexInputBindingDescription getBindingDescription() {
-        VkVertexInputBindingDescription bindingDescription{};
-        bindingDescription.binding = 0;
-        bindingDescription.stride = sizeof(Vertex);
-        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-        return bindingDescription;
-    }
-    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
-        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
-        attributeDescriptions[0].binding = 0;
-        attributeDescriptions[0].location = 0;
-        attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
-        attributeDescriptions[0].offset = offsetof(Vertex, pos);
-
-        attributeDescriptions[1].binding = 0;
-        attributeDescriptions[1].location = 1;
-        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[1].offset = offsetof(Vertex, color);
-        return attributeDescriptions;
+struct Device {
+    VkDevice device;
+    Device(VkDevice device) : device(device) {}
+    ~Device() {
+        if (device == nullptr) {
+            return;
+        }
+        vkDestroyDevice(device, nullptr);
     }
 };
 
-const std::vector<Vertex> vertices = {{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-                                      {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-                                      {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-                                      {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}};
-
-const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
+const std::vector<Vertex> vertices = Triangle::vertices;
+const std::vector<uint16_t> indices = Triangle::indices;
 
 VKAPI_ATTR inline VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -102,27 +84,26 @@ class GraphicsContext {
         swapChainExtent = _swapChainExtent;
         swapChainImageViews = createImageViews(device, swapChainImages);
         renderPass = createRenderPass(device, swapChainImageFormat);
-        descriptorSetLayout = createDescriptorSetLayout(device);
 
-        graphicsPipeline =
-            createGraphicsPipeline(device, "src/render_engine/shaders/vert.spv",
-                                   "src/render_engine/shaders/frag.spv");
+        descriptorSetLayout = StorageBuffer::createDescriptorSetLayout(device, 0);
+        graphicsPipeline = createGraphicsPipeline(
+            device, "src/render_engine/shaders/vert.spv",
+            "src/render_engine/shaders/frag.spv", descriptorSetLayout);
 
         swapChainFramebuffers = createFramebuffers(device, swapChainImageViews);
         commandPool = createCommandPool(physicalDevice, device);
 
-        auto [_vertexBuffer, _vertexBufferMemory] = createVertexBuffer(device, vertices);
-        vertexBuffer = _vertexBuffer;
-        vertexBufferMemory = _vertexBufferMemory;
+        vertexBuffer = createVertexBuffer(physicalDevice, device, vertices, commandPool,
+                                          graphicsQueue);
 
-        auto [_indexBuffer, _indexBufferMemory] = createIndexBuffer(device, indices);
-        indexBuffer = _indexBuffer;
-        indexBufferMemory = _indexBufferMemory;
-        auto [_uniformBuffers, _uniformBuffersMemory, _uniformBuffersMapped] =
-            createUniformBuffers(device, MAX_FRAMES_IN_FLIGHT);
-        uniformBuffers = _uniformBuffers;
-        uniformBuffersMemory = _uniformBuffersMemory;
-        uniformBuffersMapped = _uniformBuffersMapped;
+        indexBuffer = createIndexBuffer(physicalDevice, device, indices, commandPool,
+                                        graphicsQueue);
+
+        storageBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            storageBuffers[i] = createStorageBuffer(physicalDevice, device);
+            storageBuffers[i]->updateStorageBuffer();
+        }
 
         descriptorPool = createDescriptorPool(device, MAX_FRAMES_IN_FLIGHT);
         descriptorSets =
@@ -141,17 +122,21 @@ class GraphicsContext {
         cleanupSwapChain(device);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            vkDestroyBuffer(device, uniformBuffers[i], nullptr);
-            vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
+            vkUnmapMemory(device, storageBuffers[i]->bufferMemory);
+            vkFreeMemory(device, storageBuffers[i]->bufferMemory, nullptr);
+            vkDestroyBuffer(device, storageBuffers[i]->buffer, nullptr);
         }
 
         vkDestroyDescriptorPool(device, descriptorPool, nullptr);
         vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
-        vkDestroyBuffer(device, indexBuffer, nullptr);
-        vkFreeMemory(device, indexBufferMemory, nullptr);
 
-        vkDestroyBuffer(device, vertexBuffer, nullptr);
-        vkFreeMemory(device, vertexBufferMemory, nullptr);
+        /*delete indexBuffer.release();*/
+        vkDestroyBuffer(device, indexBuffer->buffer, nullptr);
+        vkFreeMemory(device, indexBuffer->bufferMemory, nullptr);
+
+        /*delete vertexBuffer.release();*/
+        vkDestroyBuffer(device, vertexBuffer->buffer, nullptr);
+        vkFreeMemory(device, vertexBuffer->bufferMemory, nullptr);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
@@ -185,6 +170,7 @@ class GraphicsContext {
 
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice device;
+
     VkQueue graphicsQueue;
     VkQueue presentQueue;
 
@@ -208,14 +194,11 @@ class GraphicsContext {
     std::vector<VkSemaphore> renderFinishedSemaphores;
     std::vector<VkFence> inFlightFences;
 
-    VkBuffer vertexBuffer;
-    VkDeviceMemory vertexBufferMemory;
-    VkBuffer indexBuffer;
-    VkDeviceMemory indexBufferMemory;
+    std::unique_ptr<VertexBuffer> vertexBuffer;
+    std::unique_ptr<IndexBuffer> indexBuffer;
 
-    std::vector<VkBuffer> uniformBuffers;
-    std::vector<VkDeviceMemory> uniformBuffersMemory;
-    std::vector<void *> uniformBuffersMapped;
+    /*std::vector<std::unique_ptr<UniformBuffer>> uniformBuffers;*/
+    std::vector<std::unique_ptr<StorageBuffer>> storageBuffers;
 
     VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
@@ -254,8 +237,6 @@ class GraphicsContext {
 
     VkRenderPass createRenderPass(VkDevice &device, VkFormat &swapChainImageFormat);
 
-    VkDescriptorSetLayout createDescriptorSetLayout(VkDevice &device);
-
     VkSurfaceFormatKHR
     chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats);
 
@@ -279,7 +260,9 @@ class GraphicsContext {
 
     VkPipeline createGraphicsPipeline(VkDevice &device,
                                       const std::string vertex_shader_path,
-                                      const std::string fragment_shader_path);
+                                      const std::string fragment_shader_path,
+                                      VkDescriptorSetLayout &descriptorSetLayout);
+
     std::vector<VkCommandBuffer> createCommandBuffers(VkDevice &device,
                                                       const int capacity);
 
@@ -289,29 +272,13 @@ class GraphicsContext {
     VkCommandPool createCommandPool(VkPhysicalDevice &physicalDevice, VkDevice &device);
 
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex,
-                             uint32_t currentFrame, const std::vector<uint16_t> indices);
+                             uint32_t currentFrame, const VkBuffer vertexBuffer,
+                             const std::vector<uint16_t> indices);
 
     std::tuple<std::vector<VkSemaphore>, std::vector<VkSemaphore>, std::vector<VkFence>>
     createSyncObjects(VkDevice &device, const int capacity);
 
-    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-
-    std::tuple<VkBuffer, VkDeviceMemory>
-    createVertexBuffer(VkDevice &device, const std::vector<Vertex> &vertices);
-
-    std::tuple<VkBuffer, VkDeviceMemory>
-    createIndexBuffer(VkDevice &device, const std::vector<uint16_t> &indices);
-
-    void copyBuffer(VkDevice &device, VkBuffer srcBuffer, VkBuffer dstBuffer,
-                    VkDeviceSize size);
-
-    void createBuffer(VkDevice &device, VkDeviceSize size, VkBufferUsageFlags usage,
-                      VkMemoryPropertyFlags properties, VkBuffer &buffer,
-                      VkDeviceMemory &bufferMemory);
-
     void updateUniformBuffer(uint32_t currentImage);
-    std::tuple<std::vector<VkBuffer>, std::vector<VkDeviceMemory>, std::vector<void *>>
-    createUniformBuffers(VkDevice &device, const int capacity);
 
     std::vector<VkDescriptorSet>
     createDescriptorSets(VkDevice &device, VkDescriptorSetLayout &descriptorSetLayout,

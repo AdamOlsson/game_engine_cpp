@@ -1,7 +1,12 @@
 #include "render_engine/GraphicsContext.h"
 
+#include "render_engine/buffers/StorageBuffer.h"
+#include "render_engine/buffers/UniformBuffer.h"
+#include "render_engine/buffers/common.h"
 #include "vulkan/vulkan_beta.h"
+#include "vulkan/vulkan_core.h"
 #include <fstream>
+#include <memory>
 #include <set>
 #include <stdexcept>
 
@@ -21,10 +26,11 @@ void GraphicsContext::render(std::unique_ptr<Window> &window) {
 
     vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
-    updateUniformBuffer(currentFrame);
-
     vkResetCommandBuffer(commandBuffers[currentFrame], 0);
-    recordCommandBuffer(commandBuffers[currentFrame], imageIndex, currentFrame, indices);
+
+    storageBuffers[currentFrame]->updateStorageBuffer();
+    recordCommandBuffer(commandBuffers[currentFrame], imageIndex, currentFrame,
+                        vertexBuffer->buffer, indices);
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -371,6 +377,7 @@ GraphicsContext::createLogicalDevice(VkPhysicalDevice &physicalDevice,
     uint32_t index = 0;
     vkGetDeviceQueue(device, indices.graphicsFamily.value(), index, &graphicsQueue);
     vkGetDeviceQueue(device, indices.presentFamily.value(), index, &presentQueue);
+
     return device;
 }
 
@@ -417,27 +424,6 @@ VkRenderPass GraphicsContext::createRenderPass(VkDevice &device,
         throw std::runtime_error("failed to create render pass!");
     }
     return renderPass;
-}
-
-VkDescriptorSetLayout GraphicsContext::createDescriptorSetLayout(VkDevice &device) {
-    VkDescriptorSetLayoutBinding uboLayoutBinding{};
-    uboLayoutBinding.binding = 0;
-    uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    uboLayoutBinding.descriptorCount = 1;
-    uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
-
-    VkDescriptorSetLayoutCreateInfo layoutInfo{};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings = &uboLayoutBinding;
-
-    VkDescriptorSetLayout descriptorSetLayout;
-    if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) !=
-        VK_SUCCESS) {
-        throw std::runtime_error("failed to create descriptor set layout!");
-    }
-    return descriptorSetLayout;
 }
 
 std::vector<VkImageView>
@@ -696,10 +682,9 @@ VkShaderModule createShaderModule(VkDevice &device, const std::vector<char> &cod
     return shaderModule;
 }
 
-VkPipeline
-GraphicsContext::createGraphicsPipeline(VkDevice &device,
-                                        const std::string vertex_shader_path,
-                                        const std::string fragment_shader_path) {
+VkPipeline GraphicsContext::createGraphicsPipeline(
+    VkDevice &device, const std::string vertex_shader_path,
+    const std::string fragment_shader_path, VkDescriptorSetLayout &descriptorSetLayout) {
     auto vertShaderCode = readFile(vertex_shader_path);
     auto fragShaderCode = readFile(fragment_shader_path);
 
@@ -898,6 +883,7 @@ GraphicsContext::createSyncObjects(VkDevice &device, const int capacity) {
 
 void GraphicsContext::recordCommandBuffer(VkCommandBuffer commandBuffer,
                                           uint32_t imageIndex, uint32_t currentFrame,
+                                          const VkBuffer vertexBuffer,
                                           const std::vector<uint16_t> indices) {
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -941,7 +927,7 @@ void GraphicsContext::recordCommandBuffer(VkCommandBuffer commandBuffer,
     VkDeviceSize offsets[] = {0};
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
-    vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+    vkCmdBindIndexBuffer(commandBuffer, indexBuffer->buffer, 0, VK_INDEX_TYPE_UINT16);
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0,
                             nullptr);
@@ -1013,206 +999,11 @@ GraphicsContext::createFramebuffers(VkDevice &device,
     return swapChainFramebuffers;
 }
 
-void GraphicsContext::createBuffer(VkDevice &device, VkDeviceSize size,
-                                   VkBufferUsageFlags usage,
-                                   VkMemoryPropertyFlags properties, VkBuffer &buffer,
-                                   VkDeviceMemory &bufferMemory) {
-    VkBufferCreateInfo bufferInfo{};
-    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferInfo.size = size;
-    bufferInfo.usage = usage;
-    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-    if (vkCreateBuffer(device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create buffer!");
-    }
-
-    VkMemoryRequirements memRequirements;
-    vkGetBufferMemoryRequirements(device, buffer, &memRequirements);
-
-    VkMemoryAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex =
-        findMemoryType(memRequirements.memoryTypeBits, properties);
-
-    if (vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
-        throw std::runtime_error("failed to allocate buffer memory!");
-    }
-
-    vkBindBufferMemory(device, buffer, bufferMemory, 0);
-}
-
-void GraphicsContext::copyBuffer(VkDevice &device, VkBuffer srcBuffer, VkBuffer dstBuffer,
-                                 VkDeviceSize size) {
-    VkCommandBufferAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    // You may wish to create a separate command pool for these kinds of
-    // short-lived buffers, because the implementation may be able to apply
-    // memory allocation optimizations. You should use the
-    // VK_COMMAND_POOL_CREATE_TRANSIENT_BIT flag during command pool generation
-    // in that cas
-    allocInfo.commandPool = commandPool;
-    allocInfo.commandBufferCount = 1;
-
-    VkCommandBuffer commandBuffer;
-    vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
-
-    VkCommandBufferBeginInfo beginInfo{};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-    vkBeginCommandBuffer(commandBuffer, &beginInfo);
-
-    VkBufferCopy copyRegion{};
-    copyRegion.srcOffset = 0; // Optional
-    copyRegion.dstOffset = 0; // Optional
-    copyRegion.size = size;
-    vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
-
-    vkEndCommandBuffer(commandBuffer);
-
-    VkSubmitInfo submitInfo{};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &commandBuffer;
-
-    vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-    vkQueueWaitIdle(graphicsQueue);
-
-    vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
-}
-
-std::tuple<VkBuffer, VkDeviceMemory>
-GraphicsContext::createIndexBuffer(VkDevice &device,
-                                   const std::vector<uint16_t> &indices) {
-    VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
-
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    createBuffer(device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                 stagingBuffer, stagingBufferMemory);
-
-    void *data;
-    vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, indices.data(), (size_t)bufferSize);
-    vkUnmapMemory(device, stagingBufferMemory);
-
-    VkBuffer indexBuffer;
-    VkDeviceMemory indexBufferMemory;
-    createBuffer(device, bufferSize,
-                 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
-
-    copyBuffer(device, stagingBuffer, indexBuffer, bufferSize);
-
-    vkDestroyBuffer(device, stagingBuffer, nullptr);
-    vkFreeMemory(device, stagingBufferMemory, nullptr);
-    return std::make_tuple(indexBuffer, indexBufferMemory);
-}
-
-std::tuple<VkBuffer, VkDeviceMemory>
-GraphicsContext::createVertexBuffer(VkDevice &device,
-                                    const std::vector<Vertex> &vertices) {
-
-    VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    createBuffer(device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                 stagingBuffer, stagingBufferMemory);
-
-    void *data;
-    vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, vertices.data(), (size_t)bufferSize);
-    vkUnmapMemory(device, stagingBufferMemory);
-
-    VkBuffer vertexBuffer;
-    VkDeviceMemory vertexBufferMemory;
-    createBuffer(device, bufferSize,
-                 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
-
-    copyBuffer(device, stagingBuffer, vertexBuffer, bufferSize);
-    vkDestroyBuffer(device, stagingBuffer, nullptr);
-    vkFreeMemory(device, stagingBufferMemory, nullptr);
-    return std::make_tuple(vertexBuffer, vertexBufferMemory);
-}
-
-uint32_t GraphicsContext::findMemoryType(uint32_t typeFilter,
-                                         VkMemoryPropertyFlags properties) {
-    VkPhysicalDeviceMemoryProperties memProperties;
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
-    for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
-        if ((typeFilter & (1 << i)) &&
-            (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
-            return i;
-        }
-    }
-    throw std::runtime_error("failed to find suitable memory type!");
-}
-
-std::tuple<std::vector<VkBuffer>, std::vector<VkDeviceMemory>, std::vector<void *>>
-GraphicsContext::createUniformBuffers(VkDevice &device, const int capacity) {
-    VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-
-    std::vector<VkBuffer> uniformBuffers;
-    std::vector<VkDeviceMemory> uniformBuffersMemory;
-    std::vector<void *> uniformBuffersMapped;
-
-    uniformBuffers.resize(capacity);
-    uniformBuffersMemory.resize(capacity);
-    uniformBuffersMapped.resize(capacity);
-
-    for (size_t i = 0; i < capacity; i++) {
-        createBuffer(device, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                         VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                     uniformBuffers[i], uniformBuffersMemory[i]);
-
-        vkMapMemory(device, uniformBuffersMemory[i], 0, bufferSize, 0,
-                    &uniformBuffersMapped[i]);
-    }
-    return std::make_tuple(uniformBuffers, uniformBuffersMemory, uniformBuffersMapped);
-}
-
-void GraphicsContext::updateUniformBuffer(uint32_t currentImage) {
-    static auto startTime = std::chrono::high_resolution_clock::now();
-
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime -
-                                                                            startTime)
-                     .count();
-
-    UniformBufferObject ubo{};
-    ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f),
-                            glm::vec3(0.0f, 0.0f, 1.0f));
-    ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f),
-                           glm::vec3(0.0f, 0.0f, 1.0f));
-
-    ubo.proj = glm::perspective(glm::radians(45.0f),
-                                swapChainExtent.width / (float)swapChainExtent.height,
-                                0.1f, 10.0f);
-
-    // GLM was originally designed for OpenGL, where the Y coordinate of the
-    // clip coordinates is inverted. The easiest way to compensate for that is
-    // to flip the sign on the scaling factor of the Y axis in the projection
-    // matrix. If you don't do this, then the image will be rendered upside
-    // down.
-    ubo.proj[1][1] *= -1;
-
-    memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
-}
-
 VkDescriptorPool GraphicsContext::createDescriptorPool(VkDevice &device,
                                                        const int capacity) {
     VkDescriptorPoolSize poolSize{};
-    poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSize.descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+    poolSize.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    poolSize.descriptorCount = static_cast<uint32_t>(capacity);
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -1246,16 +1037,16 @@ std::vector<VkDescriptorSet> GraphicsContext::createDescriptorSets(
 
     for (size_t i = 0; i < capacity; i++) {
         VkDescriptorBufferInfo bufferInfo{};
-        bufferInfo.buffer = uniformBuffers[i];
+        bufferInfo.buffer = storageBuffers[i]->buffer;
         bufferInfo.offset = 0;
-        bufferInfo.range = sizeof(UniformBufferObject);
+        bufferInfo.range = sizeof(StorageBufferObject);
 
         VkWriteDescriptorSet descriptorWrite{};
         descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptorWrite.dstSet = descriptorSets[i];
         descriptorWrite.dstBinding = 0;
         descriptorWrite.dstArrayElement = 0;
-        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         descriptorWrite.descriptorCount = 1;
         descriptorWrite.pBufferInfo = &bufferInfo;
         descriptorWrite.pImageInfo = nullptr;       // Optional
