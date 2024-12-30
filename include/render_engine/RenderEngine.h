@@ -1,5 +1,6 @@
 #pragma once
 #include "render_engine/GraphicsContext.h"
+#include "render_engine/RenderBody.h"
 #include "render_engine/Window.h"
 #include <GLFW/glfw3.h>
 #include <functional>
@@ -29,7 +30,7 @@ class RenderEngine {
      */
     void register_mouse_event_callback(std::function<void()>);
 
-    void render();
+    void render(std::vector<RenderBody *>);
     void wait_idle();
 
   private:
