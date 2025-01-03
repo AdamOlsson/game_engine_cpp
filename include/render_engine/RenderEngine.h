@@ -30,7 +30,7 @@ class RenderEngine {
      */
     void register_mouse_event_callback(std::function<void()>);
 
-    void render(std::vector<RenderBody *>);
+    void render(std::vector<RenderBody> &);
     void wait_idle();
 
   private:

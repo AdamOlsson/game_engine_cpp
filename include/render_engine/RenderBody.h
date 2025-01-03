@@ -5,11 +5,10 @@
 #include <glm/glm.hpp>
 
 struct RenderBody {
-    glm::vec3 position = glm::vec3(0.0, 0.0, 0.0);
-    glm::vec3 color = glm::vec3(1.0, 0.0, 0.0);
-    glm::float32_t rotation = 0.0;
+    glm::vec3 *position;
+    glm::vec3 *color;
+    glm::float32_t *rotation;
 
-    RenderBody();
-    RenderBody(glm::vec3 position, glm::vec3 color, glm::float32_t rotation);
-    ~RenderBody();
+    RenderBody() = default;
+    ~RenderBody() = default;
 };

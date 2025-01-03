@@ -1,6 +1,6 @@
 #pragma once
 
-#include "glm/fwd.hpp"
+#include "glm/glm.hpp"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
 #include <memory>

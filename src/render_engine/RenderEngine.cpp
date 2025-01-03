@@ -3,12 +3,10 @@
 #include "render_engine/buffers/StorageBuffer.h"
 #include <memory>
 
-void RenderEngine::render(std::vector<RenderBody *> bodies) {
-    // TODO: Can probably avoid a write here by simply using StorageBufferObject or
-    // RenderBody
+void RenderEngine::render(std::vector<RenderBody> &bodies) {
     const std::vector<StorageBufferObject> ssbo = {
-        StorageBufferObject(bodies[0]->position, bodies[0]->color, bodies[0]->rotation),
-        StorageBufferObject(bodies[1]->position, bodies[1]->color, bodies[1]->rotation)};
+        StorageBufferObject(*bodies[0].position, *bodies[0].color, *bodies[0].rotation),
+        StorageBufferObject(*bodies[1].position, *bodies[1].color, *bodies[1].rotation)};
 
     this->g_ctx->render(*window, ssbo);
 }

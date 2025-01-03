@@ -1,7 +1,7 @@
-#include "Entity.h"
+#include "EntityBuilder.h"
+#include "EntityComponentStorage.h"
 #include "Game.h"
 #include "GameEngine.h"
-#include "physics_engine/RigidBody.h"
 #include "render_engine/RenderBody.h"
 #include <memory>
 
@@ -12,18 +12,22 @@
 
 class Dev : public Game {
   public:
-    std::vector<std::unique_ptr<Entity>> entities;
-
+    EntityComponentStorage ecs;
     std::shared_ptr<uint32_t> click_count;
 
     Dev() : click_count(std::make_shared<uint32_t>(0)) {
 
-        entities.push_back(std::make_unique<Entity>(
-            std::make_unique<RigidBody>(glm::vec3(0.5f, 0.0f, 0.0f), 0.0f),
-            std::make_unique<RenderBody>()));
-        entities.push_back(std::make_unique<Entity>(
-            std::make_unique<RigidBody>(glm::vec3(-0.5f, 0.0f, 0.0f), 0.0f),
-            std::make_unique<RenderBody>()));
+        EntityBuilder e1{};
+        e1.position = glm::vec3(-0.5f, 0.0f, 0.0f);
+        e1.rotation = 0.0;
+        e1.color = glm::vec3(1.0, 0.0, 0.0);
+        ecs.add_entity(e1);
+
+        EntityBuilder e2{};
+        e2.position = glm::vec3(0.5f, 0.0f, 0.0f);
+        e2.rotation = 0.0;
+        e2.color = glm::vec3(0.0, 1.0, 0.0);
+        ecs.add_entity(e2);
     };
 
     ~Dev() {};
@@ -35,19 +39,13 @@ class Dev : public Game {
                          currentTime - startTime)
                          .count();
 
-        entities[0]->rigid_body->rotation = (time / 5.0) * glm::radians(90.0);
-        entities[1]->rigid_body->rotation = (time / 5.0) * glm::radians(-90.0);
+        ecs.update_rotation(0, (time / 5.0) * glm::radians(90.0));
+        ecs.update_rotation(1, (time / 5.0) * glm::radians(-90.0));
     };
 
     void render(RenderEngine &render_engine) override {
-        entities[0]->render_body->position = entities[0]->rigid_body->position;
-        entities[1]->render_body->position = entities[1]->rigid_body->position;
-
-        entities[0]->render_body->rotation = entities[0]->rigid_body->rotation;
-        entities[1]->render_body->rotation = entities[1]->rigid_body->rotation;
-
-        std::vector<RenderBody *> render_bodies = {entities[0]->render_body.get(),
-                                                   entities[1]->render_body.get()};
+        std::vector<RenderBody> render_bodies = {ecs.get_render_body(0),
+                                                 ecs.get_render_body(1)};
         render_engine.render(render_bodies);
     };
 
