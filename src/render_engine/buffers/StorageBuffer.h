@@ -14,8 +14,12 @@ struct StorageBufferObject {
     alignas(16) glm::vec3 color;
     alignas(4) glm::float32_t rotation;
 
-    StorageBufferObject(glm::vec3 position, glm::vec3 color, glm::float32_t rotation)
-        : position(position), color(color), rotation(rotation) {}
+    // Shape specific data
+    alignas(4) glm::float32_t side;
+
+    StorageBufferObject(glm::vec3 position, glm::vec3 color, glm::float32_t rotation,
+                        glm::float32_t side)
+        : position(position), color(color), rotation(rotation), side(side) {}
 };
 
 struct StorageBuffer {

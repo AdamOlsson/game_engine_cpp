@@ -11,18 +11,9 @@
 class Window {
   public:
     GLFWwindow *window;
-    Window(const uint32_t width, const uint32_t height, char const *window_title) {
-        glfwInit();
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-        this->window = glfwCreateWindow(width, height, window_title, nullptr, nullptr);
-    }
+    Window(const uint32_t width, const uint32_t height, char const *window_title);
 
-    ~Window() {
-        glfwDestroyWindow(this->window);
-        glfwTerminate();
-    }
-
+    ~Window();
     /**
      * @brief Processes any events GLFW has queued. This function triggers any callback
      * registered.
@@ -34,19 +25,12 @@ class Window {
      * @brief Register a callback function for mouse input events.
      * @param cb The callback function which is triggered after a mouse input event.
      */
-    void register_mouse_event_callback(std::function<void()> cb);
+    void register_mouse_event_callback(std::function<void(double, double)> cb);
 
-    VkSurfaceKHR createSurface(VkInstance *instance, GLFWwindow &window) {
-        VkSurfaceKHR surface;
-        if (glfwCreateWindowSurface(*instance, &window, nullptr, &surface) !=
-            VK_SUCCESS) {
-            throw std::runtime_error("failed to create window surface!");
-        }
-        return surface;
-    }
+    VkSurfaceKHR createSurface(VkInstance *instance, GLFWwindow &window);
 
   private:
-    std::optional<std::function<void()>> mouse_event_cb;
+    std::optional<std::function<void(double, double)>> mouse_event_cb;
 
     /**
      * @brief Callback function whoms only purpose is to call the user registered function

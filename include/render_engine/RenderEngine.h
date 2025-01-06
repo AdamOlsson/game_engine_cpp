@@ -28,7 +28,7 @@ class RenderEngine {
      * the call to the Window class member.
      * @param cb The callback function which is triggered after a mouse input event.
      */
-    void register_mouse_event_callback(std::function<void()>);
+    void register_mouse_event_callback(std::function<void(double, double)>);
 
     void render(std::vector<RenderBody> &);
     void wait_idle();

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "EntityBuilder.h"
-#include "glm/fwd.hpp"
 #include "glm/glm.hpp"
 #include "physics_engine/RigidBody.h"
 #include "render_engine/RenderBody.h"
@@ -10,21 +8,23 @@
 
 using EntityId = size_t;
 
+struct Entity {
+    RigidBody rigid_body;
+    RenderBody render_body;
+};
+
 class EntityComponentStorage {
   public:
     EntityComponentStorage();
     ~EntityComponentStorage();
 
-    size_t add_entity(EntityBuilder &entity);
+    size_t add_entity(Entity &entity);
     RenderBody get_render_body(EntityId);
     RigidBody get_rigid_body(EntityId);
     std::vector<Vertex> get_vertices(EntityId);
 
     void update_rotation(EntityId, glm::float32 new_value);
 
-  private:
-    std::vector<glm::vec3> positions;
+    std::vector<RigidBody> rigid_bodies;
     std::vector<glm::vec3> colors;
-    std::vector<glm::float32> rotations;
-    std::vector<EntityShape> shapes;
 };

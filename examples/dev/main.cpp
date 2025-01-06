@@ -1,11 +1,11 @@
-#include "EntityBuilder.h"
 #include "EntityComponentStorage.h"
 #include "Game.h"
 #include "GameEngine.h"
 #include "render_engine/RenderBody.h"
+#include "shape.h"
 #include <memory>
-
 // TODO: Implement click and move triangles
+// - Implement is_point_inside()
 // TODO: Implement SAT
 // TODO: Implement SAT example
 // TODO: Implement EntityComponentStorage
@@ -17,16 +17,16 @@ class Dev : public Game {
 
     Dev() : click_count(std::make_shared<uint32_t>(0)) {
 
-        EntityBuilder e1{};
-        e1.position = glm::vec3(-0.5f, 0.0f, 0.0f);
-        e1.rotation = 0.0;
-        e1.color = glm::vec3(1.0, 0.0, 0.0);
+        Entity e1 = {.rigid_body = {.position = glm::vec3(-0.5f, 0.0f, 0.0f),
+                                    .rotation = 0.0,
+                                    .shape_data = create_triangle_data(0.5)},
+                     .render_body = {.color = glm::vec3(1.0, 1.0, 0.0)}};
         ecs.add_entity(e1);
 
-        EntityBuilder e2{};
-        e2.position = glm::vec3(0.5f, 0.0f, 0.0f);
-        e2.rotation = 0.0;
-        e2.color = glm::vec3(0.0, 1.0, 0.0);
+        Entity e2 = {.rigid_body = {.position = glm::vec3(0.5f, 0.0f, 0.0f),
+                                    .rotation = 0.0,
+                                    .shape_data = create_triangle_data(1.0)},
+                     .render_body = {.color = glm::vec3(1.0, 0.0, 0.0)}};
         ecs.add_entity(e2);
     };
 
@@ -39,8 +39,8 @@ class Dev : public Game {
                          currentTime - startTime)
                          .count();
 
-        ecs.update_rotation(0, (time / 5.0) * glm::radians(90.0));
-        ecs.update_rotation(1, (time / 5.0) * glm::radians(-90.0));
+        ecs.rigid_bodies[0].rotation = (time / 5.0) * glm::radians(90.0);
+        ecs.rigid_bodies[1].rotation = (time / 5.0) * glm::radians(-90.0);
     };
 
     void render(RenderEngine &render_engine) override {
@@ -51,7 +51,14 @@ class Dev : public Game {
 
     void setup(RenderEngine &render_engine) override {
         render_engine.register_mouse_event_callback(
-            [this]() { this->increase_click_count(); });
+            [this](double xpos, double ypos) { this->select_entity(xpos, ypos); });
+    }
+
+    void select_entity(double xpos, double ypos) {
+        glm::vec3 click_point = glm::vec3(xpos, ypos, 0.0);
+        for (RigidBody body : ecs.rigid_bodies) {
+            body.is_point_inside(click_point);
+        }
     }
 
     // Temporary to test out event callbacks

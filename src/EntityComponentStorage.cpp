@@ -1,6 +1,5 @@
 #include "EntityComponentStorage.h"
 
-#include "physics_engine/RigidBody.h"
 #include "render_engine/shapes/Triangle.h"
 #include "render_engine/shapes/Vertex.h"
 #include <stdexcept>
@@ -8,50 +7,35 @@
 
 EntityComponentStorage::EntityComponentStorage() {
     size_t initial_capacity = 1024;
-    positions.reserve(initial_capacity);
     colors.reserve(initial_capacity);
-    rotations.reserve(initial_capacity);
-    shapes.reserve(initial_capacity);
+    rigid_bodies.reserve(initial_capacity);
 }
 
 EntityComponentStorage::~EntityComponentStorage() {}
 
-EntityId EntityComponentStorage::add_entity(EntityBuilder &entity) {
-    size_t id = positions.size();
-
-    positions.push_back(entity.position);
-    colors.push_back(entity.color);
-    rotations.push_back(entity.rotation);
-    shapes.push_back(entity.shape);
+EntityId EntityComponentStorage::add_entity(Entity &entity) {
+    EntityId id = rigid_bodies.size();
+    rigid_bodies.push_back(entity.rigid_body);
+    colors.push_back(entity.render_body.color);
 
     return id;
 }
 
-RigidBody EntityComponentStorage::get_rigid_body(EntityId entity_id) {
-    RigidBody body;
-    body.position = &positions[entity_id];
-    body.rotation = &rotations[entity_id];
-    return body;
-}
-
 RenderBody EntityComponentStorage::get_render_body(EntityId entity_id) {
     RenderBody body;
-    body.position = &positions[entity_id];
-    body.color = &colors[entity_id];
-    body.rotation = &rotations[entity_id];
+    body.position = rigid_bodies[entity_id].position;
+    body.color = colors[entity_id];
+    body.rotation = rigid_bodies[entity_id].rotation;
+    body.shape = rigid_bodies[entity_id].shape_data;
     return body;
-}
-
-void EntityComponentStorage::update_rotation(EntityId entity_id, glm::float32 new_value) {
-    rotations[entity_id] = new_value;
 }
 
 std::vector<Vertex> EntityComponentStorage::get_vertices(EntityId entity_id) {
-    switch (shapes[entity_id]) {
-    case EntityShape::Triangle:
+    switch (rigid_bodies[entity_id].shape_data.shape) {
+    case Shape::Triangle:
         return Triangle::vertices;
-    case EntityShape::Square:
-    case EntityShape::Circle:
+    case Shape::Square:
+    case Shape::Circle:
         throw std::invalid_argument("Shape does is not yet implemented");
     default:
         return std::vector<Vertex>{};
