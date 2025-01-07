@@ -13,6 +13,11 @@ layout(std140, binding = 0) readonly buffer InstanceDataBlock {
     InstanceData instances[1024];
 } instance_data_block;
 
+layout(binding = 1) readonly uniform WindowDimensions {
+        vec2 dims;
+} window;
+
+
 layout(location = 0) in vec3 inPosition;
 
 layout(location = 0) out vec3 fragColor;
@@ -33,6 +38,13 @@ vec3 scale_vertex(vec3 vertex, float side) {
     return vertex*scale;
 }
 
+vec2 position_to_uv(vec2 pixel_pos, vec2 window_dims) {
+    return vec2(
+        (2.0 * pixel_pos.x - window_dims.x) / window_dims.x,
+        (2.0 * pixel_pos.y - window_dims.y) / window_dims.y
+    );
+}
+
 void main() {
     InstanceData instance = instance_data_block.instances[gl_InstanceIndex];
 
@@ -40,6 +52,9 @@ void main() {
     mat3 rotation_matrix = rotationMatrixZ(instance.rotation);
     vec3 rotated_vertex_pos = rotation_matrix * scaled_vertex_pos; 
 
-    gl_Position = vec4(instance.position + rotated_vertex_pos, 1.0);
+    vec2 uv_position = position_to_uv(instance.position.xy, window.dims);
+    vec2 vertex_uv = rotated_vertex_pos.xy / vec2(window.dims.x, window.dims.y) * 2.0;
+    
+    gl_Position = vec4(uv_position + vertex_uv, instance.position.z, 1.0);
     fragColor = instance.color;
 }

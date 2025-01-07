@@ -1,12 +1,139 @@
 #include "render_engine/GraphicsContext.h"
 
+#include "glm/fwd.hpp"
 #include "render_engine/buffers/StorageBuffer.h"
+#include "render_engine/buffers/UniformBuffer.h"
 #include "vulkan/vulkan_beta.h"
 #include "vulkan/vulkan_core.h"
+#include <cstring>
 #include <fstream>
 #include <memory>
 #include <set>
 #include <stdexcept>
+
+GraphicsContext::GraphicsContext(Window &window) : enableValidationLayers(true) {
+    instance = createInstance(enableValidationLayers);
+    if (enableValidationLayers) {
+        debugMessenger = setupDebugMessenger(instance, enableValidationLayers);
+    }
+    // Create surface can affect the device selection, so we create it before
+    // selecting device
+    surface = createSurface(&instance, *window.window);
+    physicalDevice = pickPhysicalDevice(instance);
+    device = createLogicalDevice(physicalDevice, deviceExtensions);
+
+    auto [_swapChain, _swapChainImages, _swapChainImageFormat, _swapChainExtent] =
+        createSwapChain(physicalDevice, device, *window.window);
+    swapChain = _swapChain;
+    swapChainImages = _swapChainImages;
+    swapChainImageFormat = _swapChainImageFormat;
+    swapChainExtent = _swapChainExtent;
+    swapChainImageViews = createImageViews(device, swapChainImages);
+    renderPass = createRenderPass(device, swapChainImageFormat);
+
+    auto storageBufferSetLayoutBinding =
+        StorageBuffer::createDescriptorSetLayoutBinding(0);
+
+    auto uniformBufferSetLayoutBinding =
+        UniformBuffer::createDescriptorSetLayoutBinding(1);
+
+    std::vector<VkDescriptorSetLayoutBinding> layoutBindings = {
+        *storageBufferSetLayoutBinding, *uniformBufferSetLayoutBinding};
+
+    VkDescriptorSetLayoutCreateInfo layoutInfo{};
+    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = layoutBindings.size();
+    layoutInfo.pBindings = layoutBindings.data();
+
+    if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr,
+                                    &bufferDescriptorSetLayout) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create descriptor set layout!");
+    }
+
+    graphicsPipeline = createGraphicsPipeline(
+        device, "src/render_engine/shaders/vert.spv",
+        "src/render_engine/shaders/frag.spv", bufferDescriptorSetLayout);
+
+    swapChainFramebuffers = createFramebuffers(device, swapChainImageViews);
+    commandPool = createCommandPool(physicalDevice, device);
+
+    vertexBuffer =
+        createVertexBuffer(physicalDevice, device, vertices, commandPool, graphicsQueue);
+
+    indexBuffer =
+        createIndexBuffer(physicalDevice, device, indices, commandPool, graphicsQueue);
+
+    storageBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+    uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+    size_t size = 1024;
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        storageBuffers[i] = createStorageBuffer(physicalDevice, device, size);
+        uniformBuffers[i] =
+            createUniformBuffer(physicalDevice, device, sizeof(UniformBufferObject));
+    }
+
+    auto [width, height] = window.dimensions();
+    UniformBufferObject ubo{
+        .dimensions = glm::vec2(static_cast<float>(width), static_cast<float>(height))};
+    uniformBuffers[0]->updateUniformBuffer(ubo);
+    uniformBuffers[1]->updateUniformBuffer(ubo);
+
+    descriptorPool = createDescriptorPool(device, MAX_FRAMES_IN_FLIGHT);
+    descriptorSets =
+        createDescriptorSets(device, bufferDescriptorSetLayout, MAX_FRAMES_IN_FLIGHT);
+
+    commandBuffers = createCommandBuffers(device, MAX_FRAMES_IN_FLIGHT);
+
+    auto [_imageAvailableSemaphores, _renderFinishedSemaphores, _inFlightFences] =
+        createSyncObjects(device, MAX_FRAMES_IN_FLIGHT);
+    imageAvailableSemaphores = _imageAvailableSemaphores;
+    renderFinishedSemaphores = _renderFinishedSemaphores;
+    inFlightFences = _inFlightFences;
+}
+
+GraphicsContext::~GraphicsContext() {
+    // Order of these functions matter
+    cleanupSwapChain(device);
+
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        vkUnmapMemory(device, storageBuffers[i]->bufferMemory);
+        vkFreeMemory(device, storageBuffers[i]->bufferMemory, nullptr);
+        vkDestroyBuffer(device, storageBuffers[i]->buffer, nullptr);
+
+        vkUnmapMemory(device, uniformBuffers[i]->bufferMemory);
+        vkFreeMemory(device, uniformBuffers[i]->bufferMemory, nullptr);
+        vkDestroyBuffer(device, uniformBuffers[i]->buffer, nullptr);
+    }
+
+    vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+    vkDestroyDescriptorSetLayout(device, bufferDescriptorSetLayout, nullptr);
+
+    /*delete indexBuffer.release();*/
+    vkDestroyBuffer(device, indexBuffer->buffer, nullptr);
+    vkFreeMemory(device, indexBuffer->bufferMemory, nullptr);
+
+    /*delete vertexBuffer.release();*/
+    vkDestroyBuffer(device, vertexBuffer->buffer, nullptr);
+    vkFreeMemory(device, vertexBuffer->bufferMemory, nullptr);
+
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
+        vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
+        vkDestroyFence(device, inFlightFences[i], nullptr);
+    }
+    vkDestroyCommandPool(device, commandPool, nullptr);
+
+    vkDestroyPipeline(device, graphicsPipeline, nullptr);
+    vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+    vkDestroyRenderPass(device, renderPass, nullptr);
+
+    vkDestroyDevice(device, nullptr);
+    if (enableValidationLayers) {
+        DestroyDebugUtilsMessengerEXT(instance, debugMessenger.value(), nullptr);
+    }
+    vkDestroySurfaceKHR(instance, surface, nullptr);
+    vkDestroyInstance(instance, nullptr);
+}
 
 void GraphicsContext::render(Window &window,
                              const std::vector<StorageBufferObject> &ssbo) {
@@ -26,6 +153,10 @@ void GraphicsContext::render(Window &window,
     vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
     vkResetCommandBuffer(commandBuffers[currentFrame], 0);
+
+    /*UniformBufferObject w_dim = {.width = 800.0, .height = 800.0};*/
+    /*uniformBuffers[currentFrame]->updateStorageBuffer(w_dim);*/
+    /*uniformBuffers[currentFrame]->dumpData();*/
 
     storageBuffers[currentFrame]->updateStorageBuffer(ssbo);
     recordCommandBuffer(commandBuffers[currentFrame], imageIndex, currentFrame,
@@ -684,6 +815,7 @@ VkShaderModule createShaderModule(VkDevice &device, const std::vector<char> &cod
 VkPipeline GraphicsContext::createGraphicsPipeline(
     VkDevice &device, const std::string vertex_shader_path,
     const std::string fragment_shader_path, VkDescriptorSetLayout &descriptorSetLayout) {
+
     auto vertShaderCode = readFile(vertex_shader_path);
     auto fragShaderCode = readFile(fragment_shader_path);
 
@@ -802,10 +934,10 @@ VkPipeline GraphicsContext::createGraphicsPipeline(
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 1;                 // Optional
-    pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout; // Optional
-    pipelineLayoutInfo.pushConstantRangeCount = 0;         // Optional
-    pipelineLayoutInfo.pPushConstantRanges = nullptr;      // Optional
+    pipelineLayoutInfo.setLayoutCount = 1;
+    pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+    pipelineLayoutInfo.pushConstantRangeCount = 0;    // Optional
+    pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
 
     if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) !=
         VK_SUCCESS) {
@@ -1003,14 +1135,18 @@ GraphicsContext::createFramebuffers(VkDevice &device,
 
 VkDescriptorPool GraphicsContext::createDescriptorPool(VkDevice &device,
                                                        const int capacity) {
-    VkDescriptorPoolSize poolSize{};
-    poolSize.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    poolSize.descriptorCount = static_cast<uint32_t>(capacity);
+    std::array<VkDescriptorPoolSize, 2> poolSizes{};
+
+    poolSizes[0].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    poolSizes[0].descriptorCount = static_cast<uint32_t>(capacity);
+
+    poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    poolSizes[1].descriptorCount = static_cast<uint32_t>(capacity);
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = 1;
-    poolInfo.pPoolSizes = &poolSize;
+    poolInfo.poolSizeCount = poolSizes.size();
+    poolInfo.pPoolSizes = poolSizes.data();
     poolInfo.maxSets = static_cast<uint32_t>(capacity);
 
     VkDescriptorPool descriptorPool;
@@ -1023,7 +1159,9 @@ VkDescriptorPool GraphicsContext::createDescriptorPool(VkDevice &device,
 
 std::vector<VkDescriptorSet> GraphicsContext::createDescriptorSets(
     VkDevice &device, VkDescriptorSetLayout &descriptorSetLayout, const int capacity) {
+
     std::vector<VkDescriptorSetLayout> layouts(capacity, descriptorSetLayout);
+
     VkDescriptorSetAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfo.descriptorPool = descriptorPool;
@@ -1038,23 +1176,41 @@ std::vector<VkDescriptorSet> GraphicsContext::createDescriptorSets(
     }
 
     for (size_t i = 0; i < capacity; i++) {
-        VkDescriptorBufferInfo bufferInfo{};
-        bufferInfo.buffer = storageBuffers[i]->buffer;
-        bufferInfo.offset = 0;
-        bufferInfo.range = storageBuffers[i]->size;
+        VkDescriptorBufferInfo storageBufferInfo{};
+        storageBufferInfo.buffer = storageBuffers[i]->buffer;
+        storageBufferInfo.offset = 0;
+        storageBufferInfo.range = storageBuffers[i]->size;
 
-        VkWriteDescriptorSet descriptorWrite{};
-        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrite.dstSet = descriptorSets[i];
-        descriptorWrite.dstBinding = 0;
-        descriptorWrite.dstArrayElement = 0;
-        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-        descriptorWrite.descriptorCount = 1;
-        descriptorWrite.pBufferInfo = &bufferInfo;
-        descriptorWrite.pImageInfo = nullptr;       // Optional
-        descriptorWrite.pTexelBufferView = nullptr; // Optional
+        VkWriteDescriptorSet storageBufferDescriptorWrite{};
+        storageBufferDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        storageBufferDescriptorWrite.dstSet = descriptorSets[i];
+        storageBufferDescriptorWrite.dstBinding = 0;
+        storageBufferDescriptorWrite.dstArrayElement = 0;
+        storageBufferDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        storageBufferDescriptorWrite.descriptorCount = 1;
+        storageBufferDescriptorWrite.pBufferInfo = &storageBufferInfo;
+        storageBufferDescriptorWrite.pImageInfo = nullptr;       // Optional
+        storageBufferDescriptorWrite.pTexelBufferView = nullptr; // Optional
 
-        vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+        VkDescriptorBufferInfo uniformBufferInfo{};
+        uniformBufferInfo.buffer = uniformBuffers[i]->buffer;
+        uniformBufferInfo.offset = 0;
+        uniformBufferInfo.range = uniformBuffers[i]->size;
+
+        VkWriteDescriptorSet uniformBufferDescriptorWrite{};
+        uniformBufferDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        uniformBufferDescriptorWrite.dstSet = descriptorSets[i];
+        uniformBufferDescriptorWrite.dstBinding = 1;
+        uniformBufferDescriptorWrite.dstArrayElement = 0;
+        uniformBufferDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uniformBufferDescriptorWrite.descriptorCount = 1;
+        uniformBufferDescriptorWrite.pBufferInfo = &uniformBufferInfo;
+
+        std::array<VkWriteDescriptorSet, 2> descriptorWrites = {
+            storageBufferDescriptorWrite, uniformBufferDescriptorWrite};
+
+        vkUpdateDescriptorSets(device, descriptorWrites.size(), descriptorWrites.data(),
+                               0, nullptr);
     }
     return descriptorSets;
 }

@@ -4,25 +4,29 @@
 #include <glm/glm.hpp>
 #include <memory>
 
+struct UniformBufferObject {
+    alignas(8) glm::vec2 dimensions;
+};
+
 struct UniformBuffer {
     VkBuffer buffer;
     VkDeviceMemory bufferMemory;
     void *bufferMapped;
 
-    UniformBuffer(VkBuffer &buffer, VkDeviceMemory &bufferMemory, void *bufferMapped)
-        : buffer(buffer), bufferMemory(bufferMemory), bufferMapped(bufferMapped) {}
+    VkDeviceSize size;
 
-    void updateUniformBuffer(uint32_t currentImage);
+    UniformBuffer(VkBuffer &buffer, VkDeviceMemory &bufferMemory, void *bufferMapped,
+                  VkDeviceSize &size)
+        : buffer(buffer), bufferMemory(bufferMemory), bufferMapped(bufferMapped),
+          size(size) {}
 
-    static VkDescriptorSetLayout createDescriptorSetLayout(VkDevice &device,
-                                                           uint32_t binding_num);
-};
+    void updateUniformBuffer(const UniformBufferObject &);
 
-struct UniformBufferObject {
-    glm::mat4 model;
-    glm::mat4 view;
-    glm::mat4 proj;
+    static std::unique_ptr<VkDescriptorSetLayoutBinding>
+    createDescriptorSetLayoutBinding(uint32_t binding_num);
+
+    void dumpData();
 };
 
 std::unique_ptr<UniformBuffer> createUniformBuffer(VkPhysicalDevice &physicalDevice,
-                                                   VkDevice &device);
+                                                   VkDevice &device, size_t size);

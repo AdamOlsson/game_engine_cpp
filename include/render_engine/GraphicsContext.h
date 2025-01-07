@@ -65,97 +65,8 @@ struct QueueFamilyIndices {
 
 class GraphicsContext {
   public:
-    GraphicsContext(Window &window) : enableValidationLayers(true) {
-        instance = createInstance(enableValidationLayers);
-        if (enableValidationLayers) {
-            debugMessenger = setupDebugMessenger(instance, enableValidationLayers);
-        }
-        // Create surface can affect the device selection, so we create it before
-        // selecting device
-        surface = createSurface(&instance, *window.window);
-        physicalDevice = pickPhysicalDevice(instance);
-        device = createLogicalDevice(physicalDevice, deviceExtensions);
-
-        auto [_swapChain, _swapChainImages, _swapChainImageFormat, _swapChainExtent] =
-            createSwapChain(physicalDevice, device, *window.window);
-        swapChain = _swapChain;
-        swapChainImages = _swapChainImages;
-        swapChainImageFormat = _swapChainImageFormat;
-        swapChainExtent = _swapChainExtent;
-        swapChainImageViews = createImageViews(device, swapChainImages);
-        renderPass = createRenderPass(device, swapChainImageFormat);
-
-        descriptorSetLayout = StorageBuffer::createDescriptorSetLayout(device, 0);
-        graphicsPipeline = createGraphicsPipeline(
-            device, "src/render_engine/shaders/vert.spv",
-            "src/render_engine/shaders/frag.spv", descriptorSetLayout);
-
-        swapChainFramebuffers = createFramebuffers(device, swapChainImageViews);
-        commandPool = createCommandPool(physicalDevice, device);
-
-        vertexBuffer = createVertexBuffer(physicalDevice, device, vertices, commandPool,
-                                          graphicsQueue);
-
-        indexBuffer = createIndexBuffer(physicalDevice, device, indices, commandPool,
-                                        graphicsQueue);
-
-        storageBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-        size_t size = 1024;
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            storageBuffers[i] = createStorageBuffer(physicalDevice, device, size);
-        }
-
-        descriptorPool = createDescriptorPool(device, MAX_FRAMES_IN_FLIGHT);
-        descriptorSets =
-            createDescriptorSets(device, descriptorSetLayout, MAX_FRAMES_IN_FLIGHT);
-        commandBuffers = createCommandBuffers(device, MAX_FRAMES_IN_FLIGHT);
-
-        auto [_imageAvailableSemaphores, _renderFinishedSemaphores, _inFlightFences] =
-            createSyncObjects(device, MAX_FRAMES_IN_FLIGHT);
-        imageAvailableSemaphores = _imageAvailableSemaphores;
-        renderFinishedSemaphores = _renderFinishedSemaphores;
-        inFlightFences = _inFlightFences;
-    }
-
-    ~GraphicsContext() {
-        // Order of these functions matter
-        cleanupSwapChain(device);
-
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            vkUnmapMemory(device, storageBuffers[i]->bufferMemory);
-            vkFreeMemory(device, storageBuffers[i]->bufferMemory, nullptr);
-            vkDestroyBuffer(device, storageBuffers[i]->buffer, nullptr);
-        }
-
-        vkDestroyDescriptorPool(device, descriptorPool, nullptr);
-        vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
-
-        /*delete indexBuffer.release();*/
-        vkDestroyBuffer(device, indexBuffer->buffer, nullptr);
-        vkFreeMemory(device, indexBuffer->bufferMemory, nullptr);
-
-        /*delete vertexBuffer.release();*/
-        vkDestroyBuffer(device, vertexBuffer->buffer, nullptr);
-        vkFreeMemory(device, vertexBuffer->bufferMemory, nullptr);
-
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
-            vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
-            vkDestroyFence(device, inFlightFences[i], nullptr);
-        }
-        vkDestroyCommandPool(device, commandPool, nullptr);
-
-        vkDestroyPipeline(device, graphicsPipeline, nullptr);
-        vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-        vkDestroyRenderPass(device, renderPass, nullptr);
-
-        vkDestroyDevice(device, nullptr);
-        if (enableValidationLayers) {
-            DestroyDebugUtilsMessengerEXT(instance, debugMessenger.value(), nullptr);
-        }
-        vkDestroySurfaceKHR(instance, surface, nullptr);
-        vkDestroyInstance(instance, nullptr);
-    }
+    GraphicsContext(Window &window);
+    ~GraphicsContext();
 
     void waitIdle();
     void render(Window &window, const std::vector<StorageBufferObject> &ssbo);
@@ -182,7 +93,7 @@ class GraphicsContext {
 
     VkRenderPass renderPass;
 
-    VkDescriptorSetLayout descriptorSetLayout;
+    VkDescriptorSetLayout bufferDescriptorSetLayout;
 
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
@@ -197,7 +108,7 @@ class GraphicsContext {
     std::unique_ptr<VertexBuffer> vertexBuffer;
     std::unique_ptr<IndexBuffer> indexBuffer;
 
-    /*std::vector<std::unique_ptr<UniformBuffer>> uniformBuffers;*/
+    std::vector<std::unique_ptr<UniformBuffer>> uniformBuffers;
     std::vector<std::unique_ptr<StorageBuffer>> storageBuffers;
 
     VkDescriptorPool descriptorPool;

@@ -35,8 +35,9 @@ struct StorageBuffer {
           size(size) {}
 
     void updateStorageBuffer(const std::vector<StorageBufferObject> &ssbo);
-    static VkDescriptorSetLayout createDescriptorSetLayout(VkDevice &device,
-                                                           uint32_t binding_num);
+
+    static std::unique_ptr<VkDescriptorSetLayoutBinding>
+    createDescriptorSetLayoutBinding(uint32_t binding_num);
 
     void dumpData();
 };

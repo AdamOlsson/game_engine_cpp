@@ -19,32 +19,20 @@ std::unique_ptr<StorageBuffer> createStorageBuffer(VkPhysicalDevice &physicalDev
 
     vkMapMemory(device, bufferMemory, 0, bufferSize, 0, &bufferMapped);
 
-    auto ptr =
-        std::make_unique<StorageBuffer>(buffer, bufferMemory, bufferMapped, bufferSize);
-
-    return ptr;
+    return std::make_unique<StorageBuffer>(buffer, bufferMemory, bufferMapped,
+                                           bufferSize);
 }
 
-VkDescriptorSetLayout StorageBuffer::createDescriptorSetLayout(VkDevice &device,
-                                                               uint32_t binding_num) {
-    VkDescriptorSetLayoutBinding layoutBinding{};
-    layoutBinding.binding = binding_num;
-    layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    layoutBinding.descriptorCount = 1;
-    layoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    layoutBinding.pImmutableSamplers = nullptr; // Optional
+std::unique_ptr<VkDescriptorSetLayoutBinding>
+StorageBuffer::createDescriptorSetLayoutBinding(uint32_t binding_num) {
+    auto layoutBinding = std::make_unique<VkDescriptorSetLayoutBinding>();
+    layoutBinding->binding = binding_num;
+    layoutBinding->descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    layoutBinding->descriptorCount = 1;
+    layoutBinding->stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    layoutBinding->pImmutableSamplers = nullptr; // Optional
 
-    VkDescriptorSetLayoutCreateInfo layoutInfo{};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings = &layoutBinding;
-
-    VkDescriptorSetLayout descriptorSetLayout;
-    if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) !=
-        VK_SUCCESS) {
-        throw std::runtime_error("failed to create descriptor set layout!");
-    }
-    return descriptorSetLayout;
+    return layoutBinding;
 }
 
 void StorageBuffer::updateStorageBuffer(const std::vector<StorageBufferObject> &ssbo) {

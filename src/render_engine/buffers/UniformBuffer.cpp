@@ -1,5 +1,6 @@
 #include "UniformBuffer.h"
 #include "render_engine/buffers/common.h"
+#include <iostream>
 
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #define GLM_FORCE_RADIANS
@@ -7,8 +8,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 std::unique_ptr<UniformBuffer> createUniformBuffer(VkPhysicalDevice &physicalDevice,
-                                                   VkDevice &device) {
-    VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+                                                   VkDevice &device, size_t size) {
+    VkDeviceSize bufferSize = size;
 
     VkBuffer buffer;
     VkDeviceMemory bufferMemory;
@@ -19,29 +20,37 @@ std::unique_ptr<UniformBuffer> createUniformBuffer(VkPhysicalDevice &physicalDev
                  buffer, bufferMemory);
 
     vkMapMemory(device, bufferMemory, 0, bufferSize, 0, &bufferMapped);
-    return std::make_unique<UniformBuffer>(buffer, bufferMemory, &bufferMapped);
+
+    return std::make_unique<UniformBuffer>(buffer, bufferMemory, bufferMapped,
+                                           bufferSize);
 }
 
-void UniformBuffer::updateUniformBuffer(uint32_t currentImage) {}
+void UniformBuffer::updateUniformBuffer(const UniformBufferObject &ssbo) {
+    memcpy(bufferMapped, &ssbo, sizeof(ssbo));
+}
 
-VkDescriptorSetLayout UniformBuffer::createDescriptorSetLayout(VkDevice &device,
-                                                               uint32_t binding_num) {
-    VkDescriptorSetLayoutBinding uboLayoutBinding{};
-    uboLayoutBinding.binding = binding_num;
-    uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    uboLayoutBinding.descriptorCount = 1;
-    uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
+std::unique_ptr<VkDescriptorSetLayoutBinding>
+UniformBuffer::createDescriptorSetLayoutBinding(uint32_t binding_num) {
+    auto layoutBinding = std::make_unique<VkDescriptorSetLayoutBinding>();
+    layoutBinding->binding = binding_num;
+    layoutBinding->descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    layoutBinding->descriptorCount = 1;
+    layoutBinding->stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    layoutBinding->pImmutableSamplers = nullptr; // Optional
+    return layoutBinding;
+}
 
-    VkDescriptorSetLayoutCreateInfo layoutInfo{};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings = &uboLayoutBinding;
+void UniformBuffer::dumpData() {
+    auto *mappedData = reinterpret_cast<UniformBufferObject *>(bufferMapped);
+    std::cout << "Uniform Buffer Data Dump:" << std::endl;
+    std::cout << "Size of UniformBufferObject: " << sizeof(UniformBufferObject)
+              << std::endl;
+    std::cout << "Dimensions: (" << mappedData->dimensions.x << ", "
+              << mappedData->dimensions.y << ")" << std::endl;
 
-    VkDescriptorSetLayout descriptorSetLayout;
-    if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) !=
-        VK_SUCCESS) {
-        throw std::runtime_error("failed to create descriptor set layout!");
+    unsigned char *byteData = reinterpret_cast<unsigned char *>(bufferMapped);
+    for (size_t i = 0; i < sizeof(UniformBufferObject); i++) {
+        printf("%02x ", byteData[i]);
     }
-    return descriptorSetLayout;
+    printf("\n");
 }

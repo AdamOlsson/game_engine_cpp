@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <functional>
@@ -28,6 +29,8 @@ class Window {
     void register_mouse_event_callback(std::function<void(double, double)> cb);
 
     VkSurfaceKHR createSurface(VkInstance *instance, GLFWwindow &window);
+
+    std::tuple<uint32_t, uint32_t> dimensions();
 
   private:
     std::optional<std::function<void(double, double)>> mouse_event_cb;

@@ -1,4 +1,6 @@
 #include "render_engine/Window.h"
+#include <cstdint>
+#include <tuple>
 
 Window::Window(const uint32_t width, const uint32_t height, char const *window_title) {
     glfwInit();
@@ -29,6 +31,12 @@ VkSurfaceKHR Window::createSurface(VkInstance *instance, GLFWwindow &window) {
         throw std::runtime_error("failed to create window surface!");
     }
     return surface;
+}
+
+std::tuple<uint32_t, uint32_t> Window::dimensions() {
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    return std::make_tuple(width, height);
 }
 
 /* ######################################### */

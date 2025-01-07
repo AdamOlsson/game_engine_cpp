@@ -17,15 +17,15 @@ class Dev : public Game {
 
     Dev() : click_count(std::make_shared<uint32_t>(0)) {
 
-        Entity e1 = {.rigid_body = {.position = glm::vec3(-0.5f, 0.0f, 0.0f),
+        Entity e1 = {.rigid_body = {.position = glm::vec3(200.0, 400.0, 0.0),
                                     .rotation = 0.0,
-                                    .shape_data = create_triangle_data(0.5)},
+                                    .shape_data = create_triangle_data(400.0)},
                      .render_body = {.color = glm::vec3(1.0, 1.0, 0.0)}};
         ecs.add_entity(e1);
 
-        Entity e2 = {.rigid_body = {.position = glm::vec3(0.5f, 0.0f, 0.0f),
+        Entity e2 = {.rigid_body = {.position = glm::vec3(600.0, 400.0, 0.0),
                                     .rotation = 0.0,
-                                    .shape_data = create_triangle_data(1.0)},
+                                    .shape_data = create_triangle_data(250.0)},
                      .render_body = {.color = glm::vec3(1.0, 0.0, 0.0)}};
         ecs.add_entity(e2);
     };
