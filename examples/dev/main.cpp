@@ -4,12 +4,12 @@
 #include "render_engine/RenderBody.h"
 #include "shape.h"
 #include <memory>
-// TODO: Implement click and move triangles
-// - Implement is_point_inside()
+
 // TODO: Implement SAT
 // TODO: Implement SAT example
 // TODO: Implement EntityComponentStorage
 
+// TODO: Include shader code into game_engine lib
 class Dev : public Game {
   public:
     EntityComponentStorage ecs;
@@ -55,7 +55,7 @@ class Dev : public Game {
     }
 
     void select_entity(double xpos, double ypos) {
-        glm::vec3 click_point = glm::vec3(xpos, ypos, 0.0);
+        glm::vec2 click_point = glm::vec2(xpos, ypos);
         for (RigidBody body : ecs.rigid_bodies) {
             body.is_point_inside(click_point);
         }

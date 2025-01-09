@@ -8,5 +8,5 @@ struct RigidBody {
     glm::float32_t rotation;
     ShapeData shape_data;
 
-    bool is_point_inside(glm::vec3 &);
+    bool is_point_inside(glm::vec2 &);
 };
