@@ -1,27 +1,28 @@
 #pragma once
 
+#include <cstdint>
 #include <glm/glm.hpp>
+#include <variant>
 
-enum class Shape { None, Triangle, Square, Circle };
-
-union ShapeParam {
-    struct {
-    } none;
-    struct {
-        glm::float32 side;
-    } triangle;
-    struct {
-        glm::float32 width;
-        glm::float32 height;
-    } rectangle;
-    struct {
-        glm::float32 radius;
-    } circle;
+struct Triangle {
+    alignas(4) glm::float32 side;
 };
 
-struct ShapeData {
-    Shape shape;
-    ShapeParam param;
+struct Rectangle {
+    alignas(4) glm::float32 width;
+    alignas(4) glm::float32 height;
 };
 
-ShapeData create_triangle_data(float side);
+enum ShapeTypeEncoding { None = 0, TriangleShape = 1, RectangleShape = 2 };
+
+struct Shape {
+    std::variant<std::monostate, Triangle, Rectangle> params;
+
+    template <typename T> bool is() const { return std::holds_alternative<T>(params); }
+    template <typename T> T get() const { return std::get<T>(params); }
+
+    static Shape create_triangle_data(float side);
+    static Shape create_rectangle_data(float width, float height);
+
+    uint32_t encode_shape_type() const;
+};

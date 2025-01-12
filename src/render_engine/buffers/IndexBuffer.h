@@ -3,12 +3,22 @@
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
-struct IndexBuffer {
+class IndexBuffer {
+  public:
     VkBuffer buffer;
     VkDeviceMemory bufferMemory;
 
-    IndexBuffer(VkBuffer &buffer, VkDeviceMemory &bufferMemory)
-        : buffer(buffer), bufferMemory(bufferMemory) {};
+    IndexBuffer(VkDevice &device, VkBuffer &buffer, VkDeviceMemory &bufferMemory)
+        : buffer(buffer), bufferMemory(bufferMemory), device(&device) {};
+
+    ~IndexBuffer();
+
+    void cleanup();
+
+  private:
+    // TODO: Shared ptr
+    VkDevice *device;
+    bool cleanup_done;
 };
 
 std::unique_ptr<IndexBuffer> createIndexBuffer(VkPhysicalDevice &physicalDevice,

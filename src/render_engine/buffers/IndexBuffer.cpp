@@ -1,4 +1,5 @@
 #include "IndexBuffer.h"
+#include "io.h"
 #include "render_engine/buffers/common.h"
 #include <vector>
 
@@ -32,5 +33,23 @@ std::unique_ptr<IndexBuffer> createIndexBuffer(VkPhysicalDevice &physicalDevice,
 
     vkDestroyBuffer(device, stagingBuffer, nullptr);
     vkFreeMemory(device, stagingBufferMemory, nullptr);
-    return std::make_unique<IndexBuffer>(indexBuffer, indexBufferMemory);
+    return std::make_unique<IndexBuffer>(device, indexBuffer, indexBufferMemory);
+}
+
+IndexBuffer::~IndexBuffer() { cleanup(); }
+
+void IndexBuffer::cleanup() {
+
+    if (cleanup_done) {
+        return;
+    }
+
+    if (device == nullptr) {
+        std::cout << "Can't cleanup Index Buffer because device is null." << std::endl;
+        return;
+    }
+
+    vkDestroyBuffer(*device, buffer, nullptr);
+    vkFreeMemory(*device, bufferMemory, nullptr);
+    cleanup_done = true;
 }

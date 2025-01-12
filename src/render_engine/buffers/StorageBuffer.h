@@ -1,6 +1,7 @@
 #pragma once
 
-#include "glm/glm.hpp"
+#include "Shape.h"
+#include "glm/fwd.hpp"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
 #include <memory>
@@ -13,20 +14,19 @@ struct StorageBufferObject {
     alignas(16) glm::vec3 position;
     alignas(16) glm::vec3 color;
     alignas(4) glm::float32_t rotation;
-
-    // Shape specific data
-    alignas(4) glm::float32_t side;
+    alignas(4) glm::uint32 shape_type;
+    alignas(16) Shape shape;
 
     StorageBufferObject(glm::vec3 position, glm::vec3 color, glm::float32_t rotation,
-                        glm::float32_t side)
-        : position(position), color(color), rotation(rotation), side(side) {}
+                        Shape shape)
+        : position(position), color(color), rotation(rotation),
+          shape_type(shape.encode_shape_type()), shape(shape) {}
 };
 
 struct StorageBuffer {
     VkBuffer buffer;
     VkDeviceMemory bufferMemory;
     void *bufferMapped;
-
     VkDeviceSize size;
 
     StorageBuffer(VkBuffer &buffer, VkDeviceMemory &bufferMemory, void *bufferMapped,

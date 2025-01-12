@@ -3,12 +3,22 @@
 #include "render_engine/shapes/Vertex.h"
 #include "vulkan/vulkan_core.h"
 
-struct VertexBuffer {
+class VertexBuffer {
+  public:
     VkBuffer buffer;
     VkDeviceMemory bufferMemory;
 
-    VertexBuffer(VkBuffer &buffer, VkDeviceMemory &bufferMemory)
-        : buffer(buffer), bufferMemory(bufferMemory) {};
+    VertexBuffer(VkDevice &device, VkBuffer &buffer, VkDeviceMemory &bufferMemory)
+        : buffer(buffer), bufferMemory(bufferMemory), device(&device) {};
+
+    ~VertexBuffer();
+
+    void cleanup();
+
+  private:
+    // TODO: Shared ptr
+    VkDevice *device;
+    bool cleanup_done;
 };
 
 std::unique_ptr<VertexBuffer> createVertexBuffer(VkPhysicalDevice &physicalDevice,

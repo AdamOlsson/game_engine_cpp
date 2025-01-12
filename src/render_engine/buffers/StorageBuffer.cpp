@@ -49,6 +49,7 @@ void StorageBuffer::dumpData() {
     std::cout << "Color: " << mappedData->color.x << ", " << mappedData->color.y << ", "
               << mappedData->color.z << std::endl;
     std::cout << "Rotation: " << mappedData->rotation << std::endl;
+    /*std::cout << "Shape: " << mappedData->rotation << std::endl;*/
 
     unsigned char *byteData = reinterpret_cast<unsigned char *>(bufferMapped);
     for (size_t i = 0; i < sizeof(StorageBufferObject); i++) {

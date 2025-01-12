@@ -2,10 +2,6 @@
 #include "render_engine/buffers/common.h"
 #include <vector>
 
-// TODO: Create the instance buffer, BUFFER_USAGE_INSTANCE or something
-// TODO: Function to write to buffer
-// TODO: I do not need staging buffer as I will often write to this buffer
-
 std::unique_ptr<InstanceBuffer> createVertexBuffer(VkPhysicalDevice &physicalDevice,
                                                    VkDevice &device,
                                                    const std::vector<uint> &vertices,

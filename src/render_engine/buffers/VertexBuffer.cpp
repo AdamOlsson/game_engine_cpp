@@ -1,4 +1,5 @@
 #include "VertexBuffer.h"
+#include "io.h"
 #include "render_engine/buffers/common.h"
 #include <vector>
 
@@ -31,5 +32,23 @@ std::unique_ptr<VertexBuffer> createVertexBuffer(VkPhysicalDevice &physicalDevic
     vkDestroyBuffer(device, stagingBuffer, nullptr);
     vkFreeMemory(device, stagingBufferMemory, nullptr);
 
-    return std::make_unique<VertexBuffer>(vertexBuffer, vertexBufferMemory);
+    return std::make_unique<VertexBuffer>(device, vertexBuffer, vertexBufferMemory);
+}
+
+VertexBuffer::~VertexBuffer() { cleanup(); }
+
+void VertexBuffer::cleanup() {
+
+    if (cleanup_done) {
+        return;
+    }
+
+    if (device == nullptr) {
+        std::cout << "Can't cleanup Vertex Buffer because device is null." << std::endl;
+        return;
+    }
+
+    vkDestroyBuffer(*device, buffer, nullptr);
+    vkFreeMemory(*device, bufferMemory, nullptr);
+    cleanup_done = true;
 }
