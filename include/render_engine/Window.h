@@ -1,10 +1,21 @@
 #pragma once
 
+#include "Coordinates.h"
 #include <cstdint>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <functional>
 #include <optional>
+
+enum class MouseEvent {
+    CURSOR_MOVED,
+    LEFT_BUTTON_DOWN,
+    LEFT_BUTTON_UP,
+    RIGHT_BUTTON_DOWN,
+    RIGHT_BUTTON_UP
+};
+
+using MouseEventCallbackFn = std::function<void(MouseEvent, ViewportPoint &)>;
 
 /**
  * @brief Wrapper class for GLFW window api.
@@ -26,19 +37,16 @@ class Window {
      * @brief Register a callback function for mouse input events.
      * @param cb The callback function which is triggered after a mouse input event.
      */
-    void register_mouse_event_callback(std::function<void(double, double)> cb);
+    void register_mouse_event_callback(MouseEventCallbackFn cb);
 
     VkSurfaceKHR createSurface(VkInstance *instance, GLFWwindow &window);
 
     std::tuple<uint32_t, uint32_t> dimensions();
 
   private:
-    std::optional<std::function<void(double, double)>> mouse_event_cb;
+    std::optional<MouseEventCallbackFn> mouse_event_cb;
 
-    /**
-     * @brief Callback function whoms only purpose is to call the user registered function
-     * mouse_event_cb;
-     */
+    static void cursor_position_callback(GLFWwindow *window, double xpos, double ypos);
     static void mouse_button_callback(GLFWwindow *window, int button, int action,
                                       int mods);
 };

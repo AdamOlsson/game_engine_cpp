@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-enum class Shape { None, Triangle, Square, Circle };
+enum class Shape { None, Triangle, Rectangle, Circle };
 
 union ShapeParam {
     struct {
@@ -25,3 +25,4 @@ struct ShapeData {
 };
 
 ShapeData create_triangle_data(float side);
+ShapeData create_rectangle_data(float width, float height);

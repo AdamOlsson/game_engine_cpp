@@ -40,8 +40,8 @@ vec3 scale_vertex(vec3 vertex, float side) {
 
 vec2 position_to_uv(vec2 pixel_pos, vec2 window_dims) {
     return vec2(
-        (2.0 * pixel_pos.x - window_dims.x) / window_dims.x,
-        (2.0 * pixel_pos.y - window_dims.y) / window_dims.y
+        (2.0 * pixel_pos.x) / window_dims.x,
+        -(2.0 * pixel_pos.y) / window_dims.y
     );
 }
 
@@ -49,7 +49,7 @@ void main() {
     InstanceData instance = instance_data_block.instances[gl_InstanceIndex];
 
     vec3 scaled_vertex_pos = scale_vertex(inPosition, instance.side);
-    mat3 rotation_matrix = rotationMatrixZ(instance.rotation);
+    mat3 rotation_matrix = rotationMatrixZ(-instance.rotation);
     vec3 rotated_vertex_pos = rotation_matrix * scaled_vertex_pos; 
 
     vec2 uv_position = position_to_uv(instance.position.xy, window.dims);

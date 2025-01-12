@@ -18,7 +18,8 @@ class EntityComponentStorage {
     EntityComponentStorage();
     ~EntityComponentStorage();
 
-    size_t add_entity(Entity &entity);
+    EntityId add_entity(Entity &);
+    void set_entity_position(EntityId, float, float);
     RenderBody get_render_body(EntityId);
     RigidBody get_rigid_body(EntityId);
     std::vector<Vertex> get_vertices(EntityId);

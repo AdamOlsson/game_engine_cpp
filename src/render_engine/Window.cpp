@@ -18,9 +18,10 @@ bool Window::should_window_close() { return glfwWindowShouldClose(this->window);
 
 void Window::process_window_events() { glfwPollEvents(); }
 
-void Window::register_mouse_event_callback(std::function<void(double, double)> cb) {
+void Window::register_mouse_event_callback(MouseEventCallbackFn cb) {
     this->mouse_event_cb = cb;
     glfwSetMouseButtonCallback(this->window, this->mouse_button_callback);
+    glfwSetCursorPosCallback(this->window, this->cursor_position_callback);
     glfwSetWindowUserPointer(this->window,
                              this); // This should preferably be set elsewhere
 }
@@ -43,21 +44,45 @@ std::tuple<uint32_t, uint32_t> Window::dimensions() {
 /* ---------! PRIVATE FUNCTIONS !------------*/
 /* ######################################### */
 
+void Window::cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
+    auto w = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
+    if (w->mouse_event_cb.has_value()) {
+        auto p = ViewportPoint(xpos, ypos);
+        w->mouse_event_cb.value()(MouseEvent::CURSOR_MOVED, p);
+    }
+}
+
 void Window::mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
-    if (button != GLFW_MOUSE_BUTTON_LEFT) {
-        return;
+    MouseEvent m_event;
+    if (button == GLFW_MOUSE_BUTTON_LEFT) {
+        switch (action) {
+        case GLFW_PRESS:
+            m_event = MouseEvent::LEFT_BUTTON_DOWN;
+            break;
+        case GLFW_RELEASE:
+            m_event = MouseEvent::LEFT_BUTTON_UP;
+            break;
+        default:
+            return;
+        }
+    } else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+        switch (action) {
+        case GLFW_PRESS:
+            m_event = MouseEvent::RIGHT_BUTTON_DOWN;
+            break;
+        case GLFW_RELEASE:
+            m_event = MouseEvent::RIGHT_BUTTON_UP;
+            break;
+        default:
+            return;
+        }
     }
 
-    if (action == GLFW_PRESS) {
-        auto w = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
-        if (w->mouse_event_cb.has_value()) {
-            double xpos, ypos;
-            glfwGetCursorPos(window, &xpos, &ypos);
-            /*int width, height;*/
-            /*glfwGetWindowSize(window, &width, &height);*/
-            /*xpos = xpos / width;*/
-            /*ypos = ypos / height;*/
-            w->mouse_event_cb.value()(xpos, ypos);
-        }
+    auto w = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
+    if (w->mouse_event_cb.has_value()) {
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+        auto p = ViewportPoint(xpos, ypos);
+        w->mouse_event_cb.value()(m_event, p);
     }
 }

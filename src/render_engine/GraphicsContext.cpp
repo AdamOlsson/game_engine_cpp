@@ -5,6 +5,7 @@
 #include "render_engine/buffers/UniformBuffer.h"
 #include "vulkan/vulkan_beta.h"
 #include "vulkan/vulkan_core.h"
+#include <cstdint>
 #include <cstring>
 #include <fstream>
 #include <memory>
@@ -158,9 +159,10 @@ void GraphicsContext::render(Window &window,
     /*uniformBuffers[currentFrame]->updateStorageBuffer(w_dim);*/
     /*uniformBuffers[currentFrame]->dumpData();*/
 
+    uint32_t num_instances = ssbo.size();
     storageBuffers[currentFrame]->updateStorageBuffer(ssbo);
     recordCommandBuffer(commandBuffers[currentFrame], imageIndex, currentFrame,
-                        vertexBuffer->buffer, indices);
+                        vertexBuffer->buffer, indices, num_instances);
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1015,7 +1017,8 @@ GraphicsContext::createSyncObjects(VkDevice &device, const int capacity) {
 void GraphicsContext::recordCommandBuffer(VkCommandBuffer commandBuffer,
                                           uint32_t imageIndex, uint32_t currentFrame,
                                           const VkBuffer vertexBuffer,
-                                          const std::vector<uint16_t> indices) {
+                                          const std::vector<uint16_t> indices,
+                                          const uint32_t num_instances) {
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = 0;                  // Optional
@@ -1063,7 +1066,6 @@ void GraphicsContext::recordCommandBuffer(VkCommandBuffer commandBuffer,
                             pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0,
                             nullptr);
 
-    uint32_t num_instances = 2;
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), num_instances,
                      0, 0, 0);
     vkCmdEndRenderPass(commandBuffer);

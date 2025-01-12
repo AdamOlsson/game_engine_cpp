@@ -184,7 +184,8 @@ class GraphicsContext {
 
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex,
                              uint32_t currentFrame, const VkBuffer vertexBuffer,
-                             const std::vector<uint16_t> indices);
+                             const std::vector<uint16_t> indices,
+                             const uint32_t num_instances);
 
     std::tuple<std::vector<VkSemaphore>, std::vector<VkSemaphore>, std::vector<VkFence>>
     createSyncObjects(VkDevice &device, const int capacity);
