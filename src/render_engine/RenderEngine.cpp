@@ -11,12 +11,6 @@ void RenderEngine::render(std::vector<RenderBody> &bodies) {
                                            b.shape.param.triangle.side));
     }
 
-    /*const std::vector<StorageBufferObject> ssbo = {*/
-    /*    Storagebufferobject(bodies[0].position, bodies[0].color, bodies[0].rotation,*/
-    /*                        bodies[0].shape.param.triangle.side),*/
-    /*    StorageBufferObject(bodies[1].position, bodies[1].color, bodies[1].rotation,*/
-    /*                        bodies[1].shape.param.triangle.side)};*/
-
     this->g_ctx->render(*window, ssbo);
 }
 

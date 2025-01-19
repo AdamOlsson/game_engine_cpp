@@ -1,5 +1,6 @@
 #pragma once
 
+#include "render_engine/SwapChain.h"
 #include "render_engine/Window.h"
 #include "render_engine/buffers/IndexBuffer.h"
 #include "render_engine/buffers/StorageBuffer.h"
@@ -37,6 +38,7 @@ struct Device {
     }
 };
 
+// TODO: These should be created closer to the user
 const std::vector<Vertex> vertices = Triangle::vertices;
 const std::vector<uint16_t> indices = Triangle::indices;
 
@@ -50,17 +52,11 @@ VKAPI_ATTR inline VkBool32 VKAPI_CALL debugCallback(
     return VK_FALSE;
 }
 
-struct SwapChainSupportDetails {
-    VkSurfaceCapabilitiesKHR capabilities;
-    std::vector<VkSurfaceFormatKHR> formats;
-    std::vector<VkPresentModeKHR> presentModes;
-};
-
-struct QueueFamilyIndices {
-    std::optional<uint32_t> graphicsFamily;
-    std::optional<uint32_t> presentFamily;
-
-    bool isComplete() { return graphicsFamily.has_value() && presentFamily.has_value(); }
+struct CoreGraphicsContext {
+    VkInstance instance;
+    VkSurfaceKHR surface;
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+    VkDevice device;
 };
 
 class GraphicsContext {
@@ -85,11 +81,7 @@ class GraphicsContext {
     VkQueue graphicsQueue;
     VkQueue presentQueue;
 
-    VkSwapchainKHR swapChain;
-    std::vector<VkImage> swapChainImages;
-    VkFormat swapChainImageFormat;
-    VkExtent2D swapChainExtent;
-    std::vector<VkImageView> swapChainImageViews;
+    SwapChain swapChain;
 
     VkRenderPass renderPass;
 
@@ -118,7 +110,8 @@ class GraphicsContext {
 
     bool framebufferResized = false;
 
-    void recreateSwapChain(VkDevice &device, GLFWwindow &window);
+    void recreateSwapChain(VkPhysicalDevice &physicalDevice, VkDevice &device,
+                           GLFWwindow &window);
 
     void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
 
@@ -137,10 +130,10 @@ class GraphicsContext {
                                  const VkAllocationCallbacks *pAllocator,
                                  VkDebugUtilsMessengerEXT *pDebugMessenger);
 
-    VkPhysicalDevice pickPhysicalDevice(VkInstance &instance);
-    bool isDeviceSuitable(const VkPhysicalDevice &physicalDevice);
+    VkPhysicalDevice pickPhysicalDevice(VkInstance &instance, VkSurfaceKHR &surface);
+    bool isDeviceSuitable(const VkPhysicalDevice &physicalDevice, VkSurfaceKHR &surface);
 
-    VkDevice createLogicalDevice(VkPhysicalDevice &physicalDevice,
+    VkDevice createLogicalDevice(VkPhysicalDevice &physicalDevice, VkSurfaceKHR &surface,
                                  const std::vector<const char *> &deviceExtensions);
 
     std::vector<VkImageView> createImageViews(VkDevice &device,
@@ -165,9 +158,10 @@ class GraphicsContext {
 
     bool checkDeviceExtensionSupport(const VkPhysicalDevice &physicalDevice);
 
-    SwapChainSupportDetails querySwapChainSupport(const VkPhysicalDevice &physicalDevice);
+    /*SwapChainSupportDetails querySwapChainSupport(const VkPhysicalDevice
+     * &physicalDevice);*/
 
-    QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice &device);
+    /*QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice &device);*/
 
     VkPipeline createGraphicsPipeline(VkDevice &device,
                                       const std::string vertex_shader_path,
@@ -178,9 +172,11 @@ class GraphicsContext {
                                                       const int capacity);
 
     std::vector<VkFramebuffer>
-    createFramebuffers(VkDevice &device, std::vector<VkImageView> &swapChainImageViews);
+    createFramebuffers(VkDevice &device, std::vector<VkImageView> &swapChainImageViews,
+                       VkRenderPass &renderPass, VkExtent2D &swapChainExtent);
 
-    VkCommandPool createCommandPool(VkPhysicalDevice &physicalDevice, VkDevice &device);
+    VkCommandPool createCommandPool(VkPhysicalDevice &physicalDevice, VkDevice &device,
+                                    VkSurfaceKHR &surface);
 
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex,
                              uint32_t currentFrame, const VkBuffer vertexBuffer,
@@ -202,5 +198,5 @@ class GraphicsContext {
                                        VkDebugUtilsMessengerEXT debugMessenger,
                                        const VkAllocationCallbacks *pAllocator);
 
-    void cleanupSwapChain(VkDevice &device);
+    /*void cleanupSwapChain(VkDevice &device, SwapChain &);*/
 };
