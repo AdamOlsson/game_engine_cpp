@@ -1,10 +1,10 @@
 #include "Coordinates.h"
-#include "Shape.h"
 #include "equations/round.h"
 #include "glm/ext/scalar_constants.hpp"
 #include "glm/glm.hpp"
 #include "io.h"
 #include "physics_engine/RigidBody.h"
+#include "shape.h"
 #include <gtest/gtest.h>
 
 void expect_near_rigid_body_test(glm::vec3 &expected, glm::vec3 &v, float epsilon) {
@@ -629,4 +629,215 @@ TEST(RigidBodyTest, GivenTriangleWhenAtOrigoProducesExpectedEdges) {
     expect_near_rigid_body_test(expected[0], edges[0], max_diff);
     expect_near_rigid_body_test(expected[1], edges[1], max_diff);
     expect_near_rigid_body_test(expected[2], edges[2], max_diff);
+}
+
+TEST(RigidBodyTest, GivenPointLeftOfRectangleExpectClosestPointOnBorder) {
+    WorldPoint test_point = WorldPoint(-15.0f, 0.0f, 0.0f);
+    RigidBody test_body = RigidBody{.position = WorldPoint(0.0f, 0.0f, 0.0f),
+                                    .rotation = 0.0f,
+                                    .shape = Shape::create_rectangle_data(10.0f, 10.0f)};
+    WorldPoint output = test_body.closest_point_on_body(test_point);
+    WorldPoint expected = WorldPoint(-5.0f, 0.0f, 0.0f);
+    EXPECT_EQ(expected, output) << "Expected " << expected << " found " << output;
+}
+
+TEST(RigidBodyTest, GivenPointLeftOfRotated90RectangleExpectClosestPointOnBorder) {
+    WorldPoint test_point = WorldPoint(-15.0f, 0.0f, 0.0f);
+    RigidBody test_body = RigidBody{.position = WorldPoint(0.0f, 0.0f, 0.0f),
+                                    .rotation = glm::radians(-90.0f),
+                                    .shape = Shape::create_rectangle_data(10.0f, 10.0f)};
+    WorldPoint output = test_body.closest_point_on_body(test_point);
+    Round::round_mut(output);
+    WorldPoint expected = WorldPoint(-5.0f, 0.0f, 0.0f);
+    EXPECT_EQ(expected, output) << "Expected " << expected << " found " << output;
+}
+
+TEST(RigidBodyTest, GivenPointAboveRectangleExpectClosestPointOnBorder) {
+    WorldPoint test_point = WorldPoint(0.0f, 15.0f, 0.0f);
+    RigidBody test_body = RigidBody{.position = WorldPoint(0.0f, 0.0f, 0.0f),
+                                    .rotation = 0.0f,
+                                    .shape = Shape::create_rectangle_data(10.0f, 10.0f)};
+    WorldPoint output = test_body.closest_point_on_body(test_point);
+    WorldPoint expected = WorldPoint(0.0f, 5.0f, 0.0f);
+    EXPECT_EQ(expected, output) << "Expected " << expected << " found " << output;
+}
+
+TEST(RigidBodyTest, GivenPointAboveRotated90RectangleExpectClosestPointOnBorder) {
+    WorldPoint test_point = WorldPoint(0.0f, 15.0f, 0.0f);
+    RigidBody test_body = RigidBody{.position = WorldPoint(0.0f, 0.0f, 0.0f),
+                                    .rotation = glm::radians(-90.f),
+                                    .shape = Shape::create_rectangle_data(10.0f, 10.0f)};
+    WorldPoint output = test_body.closest_point_on_body(test_point);
+    Round::round_mut(output);
+    WorldPoint expected = WorldPoint(0.0f, 5.0f, 0.0f);
+    EXPECT_EQ(expected, output) << "Expected " << expected << " found " << output;
+}
+
+TEST(RigidBodyTest, GivenPointDiagonalToRectangleExpectClosestPointOnCorner) {
+    WorldPoint test_point = WorldPoint(-15.0f, 15.0f, 0.0f);
+    RigidBody test_body = RigidBody{.position = WorldPoint(0.0f, 0.0f, 0.0f),
+                                    .rotation = 0.0f,
+                                    .shape = Shape::create_rectangle_data(10.0f, 10.0f)};
+    WorldPoint output = test_body.closest_point_on_body(test_point);
+    WorldPoint expected = WorldPoint(-5.0f, 5.0f, 0.0f);
+    EXPECT_EQ(expected, output) << "Expected " << expected << " found " << output;
+}
+
+TEST(RigidBodyTest, GivenPointDiagonalToRotatedNeg90RectangleExpectClosestPointOnCorner) {
+    WorldPoint test_point = WorldPoint(-15.0f, 15.0f, 0.0f);
+    RigidBody test_body = RigidBody{.position = WorldPoint(0.0f, 0.0f, 0.0f),
+                                    .rotation = glm::radians(90.f),
+                                    .shape = Shape::create_rectangle_data(10.0f, 10.0f)};
+    WorldPoint output = test_body.closest_point_on_body(test_point);
+    Round::round_mut(output);
+    WorldPoint expected = WorldPoint(-5.0f, 5.0f, 0.0f);
+    EXPECT_EQ(expected, output) << "Expected " << expected << " found " << output;
+}
+
+TEST(RigidBodyTest, GivenPointDiagonalToRotated45RectangleExpectClosestPointOnDiagonal) {
+    WorldPoint test_point = WorldPoint(-30.0f, 30.0f, 0.0f);
+    RigidBody test_body = RigidBody{.position = WorldPoint(0.0f, 0.0f, 0.0f),
+                                    .rotation = glm::radians(45.0f), // Negated from -PI/4
+                                    .shape = Shape::create_rectangle_data(20.0f, 20.0f)};
+    WorldPoint output = test_body.closest_point_on_body(test_point);
+    Round::round_mut(output);
+    WorldPoint expected = WorldPoint(-7.071f, 7.071f, 0.0f);
+    EXPECT_EQ(expected, output) << "Expected " << expected << " found " << output;
+}
+
+TEST(RigidBodyTest,
+     GivenPointOnXAxisWithRectRotated90AndOffsetYExpectClosestPointOnEdge) {
+    WorldPoint test_point = WorldPoint(-400.0f, 0.0f, 0.0f);
+    RigidBody test_body =
+        RigidBody{.position = WorldPoint(0.0f, -150.0f, 0.0f),
+                  .rotation = glm::radians(-90.0f), // Negated from PI/2
+                  .shape = Shape::create_rectangle_data(500.0f, 500.0f)};
+    WorldPoint output = test_body.closest_point_on_body(test_point);
+    Round::round_mut(output);
+    WorldPoint expected = WorldPoint(-250.0f, 0.0f, 0.0f);
+    EXPECT_EQ(expected, output) << "Expected " << expected << " found " << output;
+}
+
+TEST(RigidBodyTest,
+     GivenPointOnYAxisWithRectRotated90AndOffsetYExpectClosestPointOnEdge) {
+    WorldPoint test_point = WorldPoint(0.0f, 400.0f, 0.0f);
+    RigidBody test_body =
+        RigidBody{.position = WorldPoint(0.0f, -150.0f, 0.0f),
+                  .rotation = glm::radians(90.0f), // Negated from -PI/2
+                  .shape = Shape::create_rectangle_data(500.0f, 500.0f)};
+    WorldPoint output = test_body.closest_point_on_body(test_point);
+    Round::round_mut(output);
+    WorldPoint expected = WorldPoint(0.0f, 100.0f, 0.0f);
+    EXPECT_EQ(expected, output) << "Expected " << expected << " found " << output;
+}
+
+TEST(RigidBodyTest,
+     GivenPointOnXAxisWithRectRotated90AndOffsetXExpectClosestPointOnEdge) {
+    WorldPoint test_point = WorldPoint(-400.0f, 0.0f, 0.0f);
+    RigidBody test_body =
+        RigidBody{.position = WorldPoint(150.0f, 0.0f, 0.0f),
+                  .rotation = glm::radians(90.0f), // Negated from -PI/2
+                  .shape = Shape::create_rectangle_data(500.0f, 500.0f)};
+    WorldPoint output = test_body.closest_point_on_body(test_point);
+    Round::round_mut(output);
+    WorldPoint expected = WorldPoint(-100.0f, 0.0f, 0.0f);
+    EXPECT_EQ(expected, output) << "Expected " << expected << " found " << output;
+}
+
+TEST(RigidBodyTest,
+     GivenPointOnYAxisWithRectRotated90AndOffsetXExpectClosestPointOnEdge) {
+    WorldPoint test_point = WorldPoint(0.0f, 400.0f, 0.0f);
+    RigidBody test_body =
+        RigidBody{.position = WorldPoint(150.0f, 0.0f, 0.0f),
+                  .rotation = glm::radians(90.0f), // Negated from -PI/2
+                  .shape = Shape::create_rectangle_data(500.0f, 500.0f)};
+    WorldPoint output = test_body.closest_point_on_body(test_point);
+    Round::round_mut(output);
+    WorldPoint expected = WorldPoint(0.0f, 250.0f, 0.0f);
+    EXPECT_EQ(expected, output) << "Expected " << expected << " found " << output;
+}
+
+TEST(RigidBodyTest,
+     GivenAsyncOffsetPointWithRectRotated90AndAsyncOffsetExpectClosestPointOnEdge) {
+    WorldPoint test_point = WorldPoint(70.0f, -25.0f, 0.0f);
+    RigidBody test_body =
+        RigidBody{.position = WorldPoint(-150.0f, 50.0f, 0.0f),
+                  .rotation = glm::radians(-90.0f), // Negated from PI/2
+                  .shape = Shape::create_rectangle_data(200.0f, 200.0f)};
+    WorldPoint output = test_body.closest_point_on_body(test_point);
+    Round::round_mut(output);
+    WorldPoint expected = WorldPoint(-50.0f, -25.0f, 0.0f);
+    EXPECT_EQ(expected, output) << "Expected " << expected << " found " << output;
+}
+
+TEST(RigidBodyTest, GivenPointIsInsideRectangle) {
+    WorldPoint test_point = WorldPoint(0.0f, 0.0f, 0.0f);
+    RigidBody test_body = RigidBody{.position = WorldPoint(0.0f, 0.0f, 0.0f),
+                                    .rotation = 0.0,
+                                    .shape = Shape::create_rectangle_data(10.0f, 10.0f)};
+    WorldPoint output = test_body.closest_point_on_body(test_point);
+    Round::round_mut(output);
+    WorldPoint expected = WorldPoint(0.0f, 0.0f, 0.0f);
+    EXPECT_EQ(expected, output) << "Expected " << expected << " found " << output;
+}
+
+TEST(RigidBodyTest, GivenPointIsAboveTriangleExpectPointOnVertex) {
+    WorldPoint test_point = WorldPoint(0.0f, 15.0f, 0.0f);
+    RigidBody test_body = RigidBody{.position = WorldPoint(0.0f, 0.0f, 0.0f),
+                                    .rotation = 0.0,
+                                    .shape = Shape::create_triangle_data(10.0f)};
+    WorldPoint output = test_body.closest_point_on_body(test_point);
+    WorldPoint expected = WorldPoint(0.0f, 5.774f, 0.0f);
+    Round::round_mut(output);
+    Round::round_mut(expected);
+    EXPECT_EQ(expected, output) << "Expected " << expected << " found " << output;
+}
+
+TEST(RigidBodyTest, GivenPointIsBelowTriangleExpectPointOnVertex) {
+    WorldPoint test_point = WorldPoint(0.0f, -15.0f, 0.0f);
+    RigidBody test_body = RigidBody{.position = WorldPoint(0.0f, 0.0f, 0.0f),
+                                    .rotation = 0.0,
+                                    .shape = Shape::create_triangle_data(10.0f)};
+    WorldPoint output = test_body.closest_point_on_body(test_point);
+    WorldPoint expected = WorldPoint(0.0f, -2.887f, 0.0f);
+    Round::round_mut(output);
+    Round::round_mut(expected);
+    EXPECT_EQ(expected, output) << "Expected " << expected << " found " << output;
+}
+
+TEST(RigidBodyTest, GivenPointIsLeftOfTriangleAndTriangleIsRotated30ExpectPointOnVertex) {
+    WorldPoint test_point = WorldPoint(15.0f, 0.0f, 0.0f);
+    RigidBody test_body = RigidBody{.position = WorldPoint(0.0f, 0.0f, 0.0f),
+                                    .rotation = glm::radians(30.0f),
+                                    .shape = Shape::create_triangle_data(10.0f)};
+    WorldPoint output = test_body.closest_point_on_body(test_point);
+    WorldPoint expected = WorldPoint(2.887f, 0.0f, 0.0f);
+    Round::round_mut(output);
+    Round::round_mut(expected);
+    EXPECT_EQ(expected, output) << "Expected " << expected << " found " << output;
+}
+
+TEST(RigidBodyTest, GivenPointIsBelowOfTriangleAndTriangleIsOffsetExpectPointOnVertex) {
+    WorldPoint test_point = WorldPoint(10.0f, 50.0f, 0.0f);
+    RigidBody test_body = RigidBody{.position = WorldPoint(10.0f, 100.0f, 0.0f),
+                                    .rotation = 0.0f,
+                                    .shape = Shape::create_triangle_data(10.0f)};
+    WorldPoint output = test_body.closest_point_on_body(test_point);
+    WorldPoint expected = WorldPoint(10.0f, 97.113f, 0.0f);
+    Round::round_mut(output);
+    Round::round_mut(expected);
+    EXPECT_EQ(expected, output) << "Expected " << expected << " found " << output;
+}
+
+TEST(RigidBodyTest,
+     GivenPointIsLeftOfTriangleAndTriangleIsOffsetAndRotatedExpectPointOnVertex) {
+    WorldPoint test_point = WorldPoint(0.0f, 100.0f, 0.0f);
+    RigidBody test_body = RigidBody{.position = WorldPoint(10.0f, 100.0f, 0.0f),
+                                    .rotation = glm::radians(90.0f),
+                                    .shape = Shape::create_triangle_data(10.0f)};
+    WorldPoint output = test_body.closest_point_on_body(test_point);
+    WorldPoint expected = WorldPoint(7.113f, 100.0f, 0.0f);
+    Round::round_mut(output);
+    Round::round_mut(expected);
+    EXPECT_EQ(expected, output) << "Expected " << expected << " found " << output;
 }

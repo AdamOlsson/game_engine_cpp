@@ -1,6 +1,12 @@
 #include "equations/equations.h"
 #include <glm/glm.hpp>
 
+float Equations::length2(const glm::vec3 &v) { return v.x * v.x + v.y * v.y + v.z * v.z; }
+
+float Equations::cross_2d(const glm::vec3 &v1, const glm::vec3 &v2) {
+    return v1.x * v2.y - v1.y * v2.x;
+}
+
 glm::vec3 Equations::counterclockwise_perp_z(const glm::vec3 &v) {
     return glm::vec3(-v.y, v.x, 0.0f);
 }

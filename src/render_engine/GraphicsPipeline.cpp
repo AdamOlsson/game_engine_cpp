@@ -1,7 +1,7 @@
 #include "render_engine/GraphicsPipeline.h"
 #include "CoreGraphicsContext.h"
-#include "Shape.h"
 #include "glm/fwd.hpp"
+#include "shape.h"
 
 #include "render_engine/buffers/IndexBuffer.h"
 #include "render_engine/buffers/StorageBuffer.h"

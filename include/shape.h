@@ -1,5 +1,4 @@
 #pragma once
-
 #include <cstdint>
 #include <glm/glm.hpp>
 #include <variant>
@@ -26,3 +25,5 @@ struct Shape {
 
     uint32_t encode_shape_type() const;
 };
+
+std::ostream &operator<<(std::ostream &os, const Shape &shape);

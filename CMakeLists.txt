@@ -30,6 +30,10 @@ foreach(header ${GAME_ENGINE_HEADERS})
     message(STATUS "Found header: ${header}")
 endforeach()
 
+foreach(source_file ${GAME_ENGINE_SOURCES})
+    message(STATUS "Found source file: ${source_file}")
+endforeach()
+
 add_library(game_engine STATIC ${GAME_ENGINE_SOURCES} ${GAME_ENGINE_HEADERS})
 
 target_include_directories(game_engine
@@ -50,23 +54,23 @@ set_target_properties(game_engine
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
 )
 
-file(GLOB_RECURSE DEV_SOURCES "examples/dev/*.cpp")
+file(GLOB_RECURSE DEV_SOURCES "examples/0_collision_detection/*.cpp")
 
-add_executable(dev ${DEV_SOURCES})
+add_executable(0_collision_detection ${DEV_SOURCES})
 
-target_include_directories(dev
+target_include_directories(0_collision_detection
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_link_libraries(dev
+target_link_libraries(0_collision_detection
     PRIVATE
         game_engine
 )
 
 # Output directory for binaries
-set_target_properties(dev
+set_target_properties(0_collision_detection
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )

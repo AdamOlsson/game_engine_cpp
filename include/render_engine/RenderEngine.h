@@ -25,7 +25,9 @@ class RenderEngine {
      */
     void register_mouse_event_callback(MouseEventCallbackFn);
 
-    void render(std::vector<RenderBody> &);
+    void register_keyboard_event_callback(KeyboardEventCallbackFn);
+
+    void render(const std::vector<std::reference_wrapper<const RenderBody>> &bodies);
     void wait_idle();
 
   private:

@@ -1,5 +1,6 @@
 #include "render_engine/RenderEngine.h"
 #include "render_engine/RenderBody.h"
+#include "render_engine/Window.h"
 #include "render_engine/buffers/StorageBuffer.h"
 #include <memory>
 
@@ -11,19 +12,21 @@ RenderEngine::RenderEngine(const uint32_t width, const uint32_t height, char con
 
 RenderEngine::~RenderEngine() { delete graphics_pipeline.release(); }
 
-void RenderEngine::render(std::vector<RenderBody> &bodies) {
+void RenderEngine::render(
+    const std::vector<std::reference_wrapper<const RenderBody>> &bodies) {
 
     std::vector<StorageBufferObject> triangle_instance_data = {};
     std::vector<StorageBufferObject> rectangle_instance_data = {};
     for (auto b : bodies) {
-        switch (b.shape.encode_shape_type()) {
+        auto deref_b = b.get();
+        switch (deref_b.shape.encode_shape_type()) {
         case ShapeTypeEncoding::TriangleShape:
-            triangle_instance_data.push_back(
-                StorageBufferObject(b.position, b.color, b.rotation, b.shape));
+            triangle_instance_data.push_back(StorageBufferObject(
+                deref_b.position, deref_b.color, deref_b.rotation, deref_b.shape));
             break;
         case ShapeTypeEncoding::RectangleShape:
-            rectangle_instance_data.push_back(
-                StorageBufferObject(b.position, b.color, b.rotation, b.shape));
+            rectangle_instance_data.push_back(StorageBufferObject(
+                deref_b.position, deref_b.color, deref_b.rotation, deref_b.shape));
             break;
         default:
             break;
@@ -42,4 +45,8 @@ void RenderEngine::process_window_events() { this->window->process_window_events
 
 void RenderEngine::register_mouse_event_callback(MouseEventCallbackFn cb) {
     this->window->register_mouse_event_callback(cb);
+}
+
+void RenderEngine::register_keyboard_event_callback(KeyboardEventCallbackFn cb) {
+    this->window->register_keyboard_event_callback(cb);
 }

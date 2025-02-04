@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Shape.h"
 #include "glm/fwd.hpp"
+#include "shape.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
 #include <memory>

@@ -1,9 +1,9 @@
-#include "Shape.h"
 #include "glm/ext/scalar_constants.hpp"
 #include "io.h"
 #include "physics_engine/RigidBody.h"
 #include "physics_engine/SAT.cpp"
 #include "physics_engine/SAT.h"
+#include "shape.h"
 #include <gtest/gtest.h>
 #include <optional>
 

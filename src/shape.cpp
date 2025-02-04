@@ -1,4 +1,5 @@
-#include "Shape.h"
+#include "shape.h"
+#include <ostream>
 #include <stdexcept>
 
 Shape Shape::create_triangle_data(float side) { return Shape{Triangle{side}}; }
@@ -20,4 +21,21 @@ uint32_t Shape::encode_shape_type() const {
             }
         },
         params);
+}
+
+std::ostream &operator<<(std::ostream &os, const Shape &shape) {
+    std::visit(
+        [&os](const auto &param) {
+            using T = std::decay_t<decltype(param)>;
+            if constexpr (std::is_same_v<T, std::monostate>) {
+                os << "None";
+            } else if constexpr (std::is_same_v<T, Triangle>) {
+                os << "Triangle( side: " << param.side << ")";
+            } else if constexpr (std::is_same_v<T, Rectangle>) {
+                os << "Rectangle( width: " << param.width << ", height: " << param.height
+                   << ")";
+            }
+        },
+        shape.params);
+    return os;
 }

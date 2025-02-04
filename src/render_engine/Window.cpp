@@ -1,6 +1,42 @@
 #include "render_engine/Window.h"
+#include "vulkan/vulkan_core.h"
 #include <cstdint>
 #include <tuple>
+
+std::ostream &operator<<(std::ostream &os, const KeyEvent &k) {
+    std::string key_string;
+    switch (k) {
+    case KeyEvent::R:
+        key_string = "R";
+        break;
+    case KeyEvent::T:
+        key_string = "T";
+        break;
+    default:
+        key_string = "UNKNOWN";
+        break;
+    }
+    return os << "KeyEvent::" << key_string;
+}
+
+std::ostream &operator<<(std::ostream &os, const KeyState &k) {
+    std::string state_string;
+    switch (k) {
+    case KeyState::UP:
+        state_string = "UP";
+        break;
+    case KeyState::REPEAT:
+        state_string = "REPEAT";
+        break;
+    case KeyState::DOWN:
+        state_string = "DOWN";
+        break;
+    default:
+        state_string = "UNKNOWN";
+        break;
+    }
+    return os << "KeyEvent::" << state_string;
+}
 
 Window::Window(const uint32_t width, const uint32_t height, char const *window_title) {
     glfwInit();
@@ -24,6 +60,11 @@ void Window::register_mouse_event_callback(MouseEventCallbackFn cb) {
     glfwSetCursorPosCallback(this->window, this->cursor_position_callback);
     glfwSetWindowUserPointer(this->window,
                              this); // This should preferably be set elsewhere
+}
+
+void Window::register_keyboard_event_callback(KeyboardEventCallbackFn cb) {
+    this->keyboard_event_cb = cb;
+    glfwSetKeyCallback(this->window, this->keyboard_callback);
 }
 
 VkSurfaceKHR Window::createSurface(VkInstance *instance, GLFWwindow &window) {
@@ -84,5 +125,41 @@ void Window::mouse_button_callback(GLFWwindow *window, int button, int action, i
         glfwGetCursorPos(window, &xpos, &ypos);
         auto p = ViewportPoint(xpos, ypos);
         w->mouse_event_cb.value()(m_event, p);
+    }
+}
+
+void Window::keyboard_callback(GLFWwindow *window, int key, int scancode, int action,
+                               int mods) {
+
+    auto w = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
+    if (w->keyboard_event_cb.has_value()) {
+        KeyState state;
+        switch (action) {
+        case GLFW_PRESS:
+            state = KeyState::DOWN;
+            break;
+        case GLFW_RELEASE:
+            state = KeyState::UP;
+            break;
+        case GLFW_REPEAT:
+            state = KeyState::REPEAT;
+            break;
+        default:
+            return;
+        }
+
+        KeyEvent key_event;
+        switch (key) {
+        case GLFW_KEY_R:
+            key_event = KeyEvent::R;
+            break;
+        case GLFW_KEY_T:
+            key_event = KeyEvent::T;
+            break;
+        default:
+            return;
+        }
+
+        w->keyboard_event_cb.value()(key_event, state);
     }
 }
