@@ -1,2 +1,5 @@
-.cache
-.bin
+.cache/
+bin
+obj
+lib
+build
