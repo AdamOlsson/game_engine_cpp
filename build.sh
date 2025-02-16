@@ -14,6 +14,26 @@ if [ $VERT_COMPILE_STATUS -ne 0 ] || [ $FRAG_COMPILE_STATUS -ne 0 ]; then
     exit 1
 fi
 
+BUILD_TYPE="Debug"
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --debug)
+            BUILD_TYPE="Debug"
+            shift
+            ;;
+        --release)
+            BUILD_TYPE="Release"
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Usage: $0 [--debug|--release]"
+            exit 1
+            ;;
+    esac
+done
+
 # Create build directory and run CMake
 mkdir -p build
-cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && cmake --build build
+cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON  -DCMAKE_BUILD_TYPE=$BUILD_TYPE && cmake --build build
