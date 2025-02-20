@@ -31,12 +31,18 @@ class EntityComponentStorage {
 
   public:
     EntityComponentStorage() = default;
+    ~EntityComponentStorage() {}
 
     EntityId create_entity();
 
     template <typename C, typename = std::enable_if_t<is_valid_component_v<C>>>
     std::optional<std::reference_wrapper<C>> get_component(const EntityId id) {
         return get_store<C>().get(id);
+    }
+
+    template <typename C, typename = std::enable_if_t<is_valid_component_v<C>>>
+    std::optional<std::reference_wrapper<std::vector<C>>> get_component() {
+        return get_store<C>().get_dense();
     }
 
     template <typename C, typename = std::enable_if_t<is_valid_component_v<C>>>
@@ -48,6 +54,15 @@ class EntityComponentStorage {
     template <typename C, typename = std::enable_if_t<is_valid_component_v<C>>>
     void update_component(const EntityId id, std::function<void(C &)> update_fn) {
         get_store<C>().update(id, update_fn);
+    }
+
+    template <typename C, typename = std::enable_if_t<is_valid_component_v<C>>>
+    void apply_fn(std::function<void(EntityId, C &)> apply_fn) {
+        auto &store = get_store<C>();
+        for (auto it = store.begin(); it != store.end(); it++) {
+            auto &component = *it;
+            apply_fn(it.id(), component);
+        }
     }
 
     template <typename C, typename = std::enable_if_t<is_valid_component_v<C>>>

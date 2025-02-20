@@ -2,6 +2,7 @@
 #include "Coordinates.h"
 #include "equations/equations.h"
 #include "io.h"
+#include "physics_engine/RigidBody.h"
 
 std::vector<glm::vec3> get_rectangle_vertices(const RigidBody &body,
                                               const glm::vec3 &translate,
@@ -68,12 +69,14 @@ std::vector<glm::vec3> get_rectangle_normals(const RigidBody &body) {
 
     std::vector<glm::vec3> normals = {left_normal, bottom_normal, right_normal,
                                       top_normal};
-    /*std::cout << "normal 1: " << normals[0] << std::endl;*/
-    /*std::cout << "normal 2: " << normals[1] << std::endl;*/
-    /*std::cout << "normal 2: " << normals[2] << std::endl;*/
-    /*std::cout << "normal 3: " << normals[3] << std::endl;*/
-
     return normals;
+}
+
+float get_rectangle_bounding_volume_radius(const RigidBody &body) {
+    auto rect = body.shape.get<Rectangle>();
+    float half_width = rect.width / 2.0;
+    float half_height = rect.height / 2.0;
+    return std::sqrt(half_width * half_width + half_height * half_height);
 }
 
 bool is_point_inside_rectangle(const RigidBody &body, const WorldPoint &point) {
@@ -111,4 +114,10 @@ WorldPoint closest_point_on_rectangle(const RigidBody &body,
     local_closest_point_on_rect += static_cast<glm::vec3>(body.position);
 
     return static_cast<WorldPoint>(local_closest_point_on_rect);
+}
+
+float rectangle_inertia(const RigidBody &body) {
+    auto rectangle = body.shape.get<Rectangle>();
+    return (rectangle.width * rectangle.width + rectangle.height * rectangle.height) *
+           body.mass / 12.0f;
 }

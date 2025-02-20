@@ -1,5 +1,4 @@
 #include "io.h"
-#include "physics_engine/SAT.h"
 #include <glm/glm.hpp>
 #include <iostream>
 #include <sstream>
