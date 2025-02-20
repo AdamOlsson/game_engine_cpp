@@ -61,6 +61,11 @@ std::vector<glm::vec3> get_triangle_normals(const RigidBody &body) {
     return normals;
 }
 
+float get_triangle_bounding_volume_radius(const RigidBody &body) {
+    auto triangle = body.shape.get<Triangle>();
+    return triangle.side / std::sqrt(3.0f);
+}
+
 bool is_point_inside_triangle(const RigidBody &body, const WorldPoint &point) {
     glm::vec3 local_point = point - body.position;
 

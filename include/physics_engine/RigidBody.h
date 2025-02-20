@@ -21,6 +21,7 @@ struct RigidBody {
     std::vector<glm::vec3> vertices() const;
     std::vector<glm::vec3> normals() const;
     std::vector<glm::vec3> edges() const;
+    float bounding_volume_radius() const;
 
     bool is_point_inside(const WorldPoint &) const;
     WorldPoint closest_point_on_body(const WorldPoint &) const;

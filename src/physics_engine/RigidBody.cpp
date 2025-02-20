@@ -50,6 +50,21 @@ std::vector<glm::vec3> RigidBody::normals() const {
         shape.params);
 }
 
+float RigidBody::bounding_volume_radius() const {
+    return std::visit(
+        [this](auto &&arg) -> float {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, Triangle>) {
+                return get_triangle_bounding_volume_radius(*this);
+            } else if constexpr (std::is_same_v<T, Rectangle>) {
+                return get_rectangle_bounding_volume_radius(*this);
+            } else {
+                throw std::runtime_error("Shape not implemented (is_point_inside())");
+            }
+        },
+        shape.params);
+}
+
 bool RigidBody::is_point_inside(const WorldPoint &point) const {
     return std::visit(
         [this, &point](auto &&arg) -> bool {
