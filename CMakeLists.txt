@@ -55,9 +55,7 @@ set_target_properties(game_engine
 )
 
 file(GLOB_RECURSE DEV_SOURCES "examples/0_collision_detection/*.cpp")
-
 add_executable(0_collision_detection ${DEV_SOURCES})
-
 target_include_directories(0_collision_detection
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -71,6 +69,25 @@ target_link_libraries(0_collision_detection
 
 # Output directory for binaries
 set_target_properties(0_collision_detection
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+
+file(GLOB_RECURSE DEV_SOURCES "examples/1_spatial_subdivision/*.cpp")
+add_executable(1_spatial_subdivision ${DEV_SOURCES})
+target_include_directories(1_spatial_subdivision
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_link_libraries(1_spatial_subdivision
+    PRIVATE
+        game_engine
+)
+
+# Output directory for binaries
+set_target_properties(1_spatial_subdivision
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )

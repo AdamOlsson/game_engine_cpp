@@ -14,40 +14,13 @@
 #include <memory>
 #include <optional>
 
-// DONE: Implement SAT
-// DONE: Either click inside does not fully work or the rendering does not correspond to
-//       the rigidbody (click on triangle does not work properly)
-// DONE: Implement EntityComponentStorage
-// DONE: Implement SAT example
-//        - Add rectangle rendering
-// DONE: Implement Verlet Integration in combination with ECS
-//        - DONE: Replace the ECS with the new one
-//        - DONE: Implement positional updates when dragging an object
-//        - DONE: Builder pattern on RigidBody and RenderBody creation
-//        - DONE: prev_position member on RigidBody
-//
-// TODO: Finalize example
-//        - DONE: implement drag physics
-//        - DONE: Show collision point again
-//        - DONE: Rotate selected object through holding R
-//        - DONE: Toggle between triangle-triangle, triangle-rectangle and
-//                rectangle-rectangle
-// TODO: Make pretty github page for example
-//      - TODO: Record sample
-//      - TODO: Use GIF in readme
-//      - TODO: Write a basic text
 void state0(EntityComponentStorage &ecs);
 void state1(EntityComponentStorage &ecs);
 void state2(EntityComponentStorage &ecs);
 
-class Dev : public Game {
+class Example0CollisionDetection : public Game {
   public:
     EntityComponentStorage ecs;
-
-    using Clock = std::chrono::steady_clock;
-    using TimePoint = std::chrono::time_point<Clock>;
-    using Duration = std::chrono::duration<double>;
-    TimePoint last_tick;
 
     std::optional<size_t> selected_entity_id;
     WorldPoint selected_entity_cursor_offset;
@@ -60,7 +33,7 @@ class Dev : public Game {
     // 2 - Rectangle Rectangle
     uint32_t state = 0;
 
-    Dev()
+    Example0CollisionDetection()
         : selected_entity_id(std::nullopt),
           selected_entity_cursor_offset(WorldPoint(0.0, 0.0, 0.0)),
           camera_center(WorldPoint(400.0f, 400.0f, 0.0f)), ecs(EntityComponentStorage()) {
@@ -69,7 +42,7 @@ class Dev : public Game {
         collision_point = std::nullopt;
     };
 
-    ~Dev() {};
+    ~Example0CollisionDetection() {};
 
     void update(float dt) override {
         const EntityId body_green_id = 0;
@@ -313,7 +286,7 @@ int main() {
     config.window_height = 800;
     config.window_title = "0_collision_detection";
 
-    auto game = std::make_unique<Dev>();
+    auto game = std::make_unique<Example0CollisionDetection>();
     auto game_engine = std::make_unique<GameEngine>(std::move(game), config);
     std::cout << std::endl << std::endl;
     std::cout << "Control:" << std::endl;

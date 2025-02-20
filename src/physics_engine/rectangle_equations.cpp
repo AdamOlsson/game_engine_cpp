@@ -76,6 +76,13 @@ std::vector<glm::vec3> get_rectangle_normals(const RigidBody &body) {
     return normals;
 }
 
+float get_rectangle_bounding_volume_radius(const RigidBody &body) {
+    auto rect = body.shape.get<Rectangle>();
+    float half_width = rect.width / 2.0;
+    float half_height = rect.height / 2.0;
+    return std::sqrt(half_width * half_width + half_height * half_height);
+}
+
 bool is_point_inside_rectangle(const RigidBody &body, const WorldPoint &point) {
     // TODO: Use get_rectangle_vertices as with triangle variant
     glm::vec2 local_point =
