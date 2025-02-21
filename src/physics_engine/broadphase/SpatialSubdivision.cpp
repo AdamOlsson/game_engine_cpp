@@ -1,8 +1,9 @@
 #include "physics_engine/broadphase/SpatialSubdivision.h"
 #include "equations/equations.h"
 #include "glm/fwd.hpp"
+#include "io.h"
 #include "physics_engine/RigidBody.h"
-
+#include <cstddef>
 #include <sys/_types/_u_int8_t.h>
 #include <vector>
 struct BoundingCircle {
@@ -62,13 +63,65 @@ create_phantom_cell_volume_for_bottom_left_cell(const CellVolume &home_cell);
 inline CellVolume
 create_phantom_cell_volume_for_bottom_right_cell(const CellVolume &home_cell);
 inline CellVolume create_phantom_cell_volume_for_right_cell(const CellVolume &home_cell);
+inline size_t cell_id_order(const CellVolume &);
+
+std::vector<std::tuple<size_t, size_t>>
+count_volumes_per_cell(const std::vector<CellVolume> &volumes);
 
 void SpatialSubdivision::collision_detection(const std::vector<const RigidBody> &bodies) {
     BoundingVolumes bounding_volumes = create_bounding_volumes(bodies);
     float cell_width = bounding_volumes.largest_radius * 2.0 * 1.41;
     auto [control_bits, cell_volumes] =
         create_cell_volumes(bounding_volumes.volumes, cell_width);
-    // TODO: Sort the cell_volumes according cell id (x,y,z)
+
+    std::sort(cell_volumes.begin(), cell_volumes.end(), [](const auto &a, const auto &b) {
+        return cell_id_order(a) < cell_id_order(b);
+    });
+
+    auto cell_count = count_volumes_per_cell(cell_volumes);
+    // TODO: Continue
+}
+
+/// Given a vector of cell volumes sorted after which cell the volume occupies, the
+/// function counts the number of volumes occupying the cell each cell and stores the
+/// index where the group starts and how many volumes there are.
+std::vector<std::tuple<size_t, size_t>>
+count_volumes_per_cell(const std::vector<CellVolume> &volumes) {
+    if (volumes.size() == 0) {
+        return {};
+    }
+
+    std::vector<std::tuple<size_t, size_t>> index_list = {};
+    size_t volume_count = 0;
+    size_t current_start_index = 0;
+    auto last_cell = cell_id_order(volumes[0]);
+    for (size_t i = 0; i < volumes.size(); i++) {
+        const auto &vol = volumes[i];
+        const auto current_cell = cell_id_order(vol);
+        ++volume_count;
+
+        /*std::cout << "Cell hash: " << current_cell << std::endl;*/
+        /*std::cout << "i, volumes.size(): " << i << ", " << volumes.size() - 1*/
+        /*          << std::endl;*/
+
+        if (last_cell != current_cell) {
+            index_list.push_back(std::tuple(current_start_index, volume_count - 1));
+
+            if (i == volumes.size() - 1) {
+                index_list.push_back(std::tuple(i, 1));
+            }
+
+            current_start_index = i;
+            volume_count = 1;
+            last_cell = current_cell;
+            continue;
+        }
+
+        if (i == volumes.size() - 1) {
+            index_list.push_back(std::tuple(current_start_index, volume_count));
+        }
+    }
+    return index_list;
 }
 
 BoundingVolumes create_bounding_volumes(const std::vector<const RigidBody> &bodies) {
@@ -318,4 +371,8 @@ inline CellVolume create_phantom_cell_volume_for_left_cell(const CellVolume &hom
                       .z = home_cell.z,
                       .cell_type = CellType::Phantom,
                       .volume_id = home_cell.volume_id};
+}
+
+inline size_t cell_id_order(const CellVolume &v) {
+    return v.x + v.y * 1000 + v.z * 1000000;
 }

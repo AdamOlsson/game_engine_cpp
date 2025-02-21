@@ -1,5 +1,4 @@
 #include "physics_engine/broadphase/SpatialSubdivision.cpp"
-#include "physics_engine/broadphase/SpatialSubdivision.h"
 #include <gtest/gtest.h>
 
 TEST(SpatialSubdivisionTest, TestObjectWithHomeInType2AndOverlapTLeft) {
@@ -210,4 +209,63 @@ TEST(SpatialSubdivisionTest,
     EXPECT_EQ(4, cell_volumes[index].x);
     EXPECT_EQ(0, cell_volumes[index].y);
     EXPECT_EQ(0, cell_volumes[index].z);
+}
+
+TEST(SpatialSubdivisionTest, TestCoundVolumesPerCellTransitions) {
+    std::vector<CellVolume> volumes{
+        CellVolume{.x = 0, .y = 0, .z = 0, .cell_type = CellType::Home, .volume_id = 0},
+        CellVolume{
+            .x = 0, .y = 0, .z = 0, .cell_type = CellType::Phantom, .volume_id = 1},
+        CellVolume{.x = 1, .y = 0, .z = 0, .cell_type = CellType::Home, .volume_id = 1},
+        CellVolume{
+            .x = 1, .y = 0, .z = 0, .cell_type = CellType::Phantom, .volume_id = 0},
+    };
+
+    auto output = count_volumes_per_cell(volumes);
+
+    EXPECT_EQ(2, output.size());
+    EXPECT_EQ(std::tuple(0, 2), output[0]);
+    EXPECT_EQ(std::tuple(2, 2), output[1]);
+}
+
+TEST(SpatialSubdivisionTest, TestCoundVolumesPerCellLastVolumeIncluded) {
+    std::vector<CellVolume> volumes{
+        CellVolume{.x = 0, .y = 0, .z = 0, .cell_type = CellType::Home, .volume_id = 0},
+        CellVolume{
+            .x = 0, .y = 0, .z = 0, .cell_type = CellType::Phantom, .volume_id = 1},
+        CellVolume{.x = 1, .y = 0, .z = 0, .cell_type = CellType::Home, .volume_id = 1},
+        CellVolume{
+            .x = 1, .y = 0, .z = 0, .cell_type = CellType::Phantom, .volume_id = 0},
+        CellVolume{
+            .x = 0, .y = 1, .z = 0, .cell_type = CellType::Phantom, .volume_id = 0},
+    };
+
+    auto output = count_volumes_per_cell(volumes);
+
+    EXPECT_EQ(3, output.size());
+    EXPECT_EQ(std::tuple(0, 2), output[0]);
+    EXPECT_EQ(std::tuple(2, 2), output[1]);
+    EXPECT_EQ(std::tuple(4, 1), output[2]);
+}
+
+TEST(SpatialSubdivisionTest, TestCoundVolumesPerCell3Objects) {
+    std::vector<CellVolume> volumes{
+        CellVolume{.x = 0, .y = 0, .z = 0, .cell_type = CellType::Home, .volume_id = 2},
+        CellVolume{.x = 1, .y = 0, .z = 0, .cell_type = CellType::Home, .volume_id = 1},
+        CellVolume{
+            .x = 1, .y = 0, .z = 0, .cell_type = CellType::Phantom, .volume_id = 0},
+        CellVolume{
+            .x = 0, .y = 1, .z = 0, .cell_type = CellType::Phantom, .volume_id = 0},
+        CellVolume{.x = 1, .y = 1, .z = 0, .cell_type = CellType::Home, .volume_id = 0},
+        CellVolume{
+            .x = 1, .y = 1, .z = 0, .cell_type = CellType::Phantom, .volume_id = 1},
+    };
+
+    auto output = count_volumes_per_cell(volumes);
+
+    EXPECT_EQ(4, output.size());
+    EXPECT_EQ(std::tuple(0, 1), output[0]);
+    EXPECT_EQ(std::tuple(1, 2), output[1]);
+    EXPECT_EQ(std::tuple(3, 1), output[2]);
+    EXPECT_EQ(std::tuple(4, 2), output[3]);
 }
