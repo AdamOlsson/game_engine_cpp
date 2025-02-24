@@ -4,6 +4,7 @@
 #include "io.h"
 #include "physics_engine/RigidBody.h"
 #include <cstddef>
+#include <cstdint>
 #include <sys/_types/_u_int8_t.h>
 #include <vector>
 struct BoundingCircle {
@@ -20,16 +21,16 @@ struct BoundingVolumes {
 };
 
 typedef u_int8_t ControlBits;
-const ControlBits CONTROL_BIT_BOUNDING_VOLUME_1 = 0b0000'0001;
-const ControlBits CONTROL_BIT_BOUNDING_VOLUME_2 = 0b0000'0010;
-const ControlBits CONTROL_BIT_BOUNDING_VOLUME_3 = 0b0000'0100;
-const ControlBits CONTROL_BIT_BOUNDING_VOLUME_4 = 0b0000'1000;
-const ControlBits CONTROL_BIT_HOME_CELL_1 = 0b0000'0000;
-const ControlBits CONTROL_BIT_HOME_CELL_2 = 0b0001'0000;
-const ControlBits CONTROL_BIT_HOME_CELL_3 = 0b0010'0000;
-const ControlBits CONTROL_BIT_HOME_CELL_4 = 0b0011'0000;
-const ControlBits BOUNDING_VOLUME_MASK = 0b0000'1111;
-const ControlBits HOME_CELL_MASK = 0b1111'0000;
+constexpr ControlBits CONTROL_BIT_BOUNDING_VOLUME_1 = 0b0000'0001;
+constexpr ControlBits CONTROL_BIT_BOUNDING_VOLUME_2 = 0b0000'0010;
+constexpr ControlBits CONTROL_BIT_BOUNDING_VOLUME_3 = 0b0000'0100;
+constexpr ControlBits CONTROL_BIT_BOUNDING_VOLUME_4 = 0b0000'1000;
+constexpr ControlBits CONTROL_BIT_HOME_CELL_1 = 0b0000'0000;
+constexpr ControlBits CONTROL_BIT_HOME_CELL_2 = 0b0001'0000;
+constexpr ControlBits CONTROL_BIT_HOME_CELL_3 = 0b0010'0000;
+constexpr ControlBits CONTROL_BIT_HOME_CELL_4 = 0b0011'0000;
+constexpr ControlBits BOUNDING_VOLUME_MASK = 0b0000'1111;
+constexpr ControlBits HOME_CELL_MASK = 0b1111'0000;
 
 enum class CellType { Home, Phantom };
 
@@ -67,7 +68,18 @@ inline size_t cell_id_order(const CellVolume &);
 
 std::vector<std::tuple<size_t, size_t>>
 count_volumes_per_cell(const std::vector<CellVolume> &volumes);
+void create_passes(const std::vector<std::tuple<size_t, size_t>> &cell_volume_count,
+                   const std::vector<CellVolume> &cell_volumes,
+                   const std::vector<ControlBits> &control_bits);
 
+/*inline bool can_we_skip_narrow_collision_check(const uint8_t pass_num,*/
+/*                                               const ControlBits volume_a,*/
+/*                                               const ControlBits &volume_b);*/
+
+/// Runs a broadphase collision detection
+///
+/// Home cell is the cell which the rigid bodys center point is located. Phantom cells
+/// are all cells the rigid bodys bounding circle covers, including the home cell.
 void SpatialSubdivision::collision_detection(const std::vector<const RigidBody> &bodies) {
     BoundingVolumes bounding_volumes = create_bounding_volumes(bodies);
     float cell_width = bounding_volumes.largest_radius * 2.0 * 1.41;
@@ -80,6 +92,44 @@ void SpatialSubdivision::collision_detection(const std::vector<const RigidBody> 
 
     auto cell_count = count_volumes_per_cell(cell_volumes);
     // TODO: Continue
+    create_passes(cell_count, cell_volumes, control_bits);
+}
+
+// Withing one cell, evaluate if we can skip the narrow collision check between all pairs.
+// If not, append the pair to the respecive pass vector
+void create_passes(const std::vector<std::tuple<size_t, size_t>> &cell_volume_count,
+                   const std::vector<CellVolume> &cell_volumes,
+                   const std::vector<ControlBits> &control_bits) {}
+
+inline bool can_we_skip_narrow_collision_check(const uint8_t pass_num,
+                                               const ControlBits ctrl_a,
+                                               const ControlBits ctrl_b) {
+    const ControlBits home_cell_type_a = (ctrl_a & HOME_CELL_MASK) >> 4;
+    const ControlBits home_cell_type_b = (ctrl_b & HOME_CELL_MASK) >> 4;
+
+    // Translate home cell to phantom cell
+    const ControlBits home_cell_a_phantom_bit = 1 << home_cell_type_a;
+    const ControlBits home_cell_b_phantom_bit = 1 << home_cell_type_b;
+
+    const ControlBits phantom_bits_a = ctrl_a & BOUNDING_VOLUME_MASK;
+    const ControlBits phantom_bits_b = ctrl_b & BOUNDING_VOLUME_MASK;
+    const ControlBits phantom_bits_common = phantom_bits_a & phantom_bits_b;
+
+    const bool is_home_cell_a_among_common_phantom_cells =
+        (home_cell_a_phantom_bit & phantom_bits_common) > 0;
+    const bool is_home_cell_b_among_common_phantom_cells =
+        (home_cell_b_phantom_bit & phantom_bits_common) > 0;
+
+    const bool is_home_cell_type_a_less_than_pass_num = (home_cell_type_a + 1) < pass_num;
+    const bool is_home_cell_type_b_less_than_pass_num = (home_cell_type_b + 1) < pass_num;
+
+    const bool predicate_a = is_home_cell_type_b_less_than_pass_num &&
+                             is_home_cell_a_among_common_phantom_cells;
+
+    const bool predicate_b = is_home_cell_type_b_less_than_pass_num &&
+                             is_home_cell_b_among_common_phantom_cells;
+
+    return predicate_a || predicate_b;
 }
 
 /// Given a vector of cell volumes sorted after which cell the volume occupies, the

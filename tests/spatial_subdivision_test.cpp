@@ -1,4 +1,5 @@
 #include "physics_engine/broadphase/SpatialSubdivision.cpp"
+#include <cstdint>
 #include <gtest/gtest.h>
 
 TEST(SpatialSubdivisionTest, TestObjectWithHomeInType2AndOverlapTLeft) {
@@ -268,4 +269,62 @@ TEST(SpatialSubdivisionTest, TestCoundVolumesPerCell3Objects) {
     EXPECT_EQ(std::tuple(1, 2), output[1]);
     EXPECT_EQ(std::tuple(3, 1), output[2]);
     EXPECT_EQ(std::tuple(4, 2), output[3]);
+}
+
+TEST(SpatialSubdivisionSkipNarrowCheckTest,
+     TestTwoObjectsWithDifferentHomeCellsButShareAllBoundingCellsDuringPass1ExpectFalse) {
+    const uint8_t pass_num = 1;
+    const ControlBits ctrl_a = 0b0010'0101;
+    const ControlBits ctrl_b = 0b0000'0101;
+    EXPECT_FALSE(can_we_skip_narrow_collision_check(pass_num, ctrl_a, ctrl_b));
+}
+
+TEST(SpatialSubdivisionSkipNarrowCheckTest,
+     TestTwoObjectsWithDifferentHomeCellsButShareAllBoundingCellsDuringPass3ExpectTrue) {
+    const uint8_t pass_num = 3;
+    const ControlBits ctrl_a = 0b0010'0101;
+    const ControlBits ctrl_b = 0b0000'0101;
+    EXPECT_TRUE(can_we_skip_narrow_collision_check(pass_num, ctrl_a, ctrl_b));
+}
+
+TEST(SpatialSubdivisionSkipNarrowCheckTest,
+     TestTwoObjectsWithDifferentHomeCellsButShareAllBoundingCellsDuringPass3ExpectFalse) {
+    const uint8_t pass_num = 3;
+    const ControlBits ctrl_a = 0b0011'1010;
+    const ControlBits ctrl_b = 0b0010'1010;
+    EXPECT_FALSE(can_we_skip_narrow_collision_check(pass_num, ctrl_a, ctrl_b));
+}
+
+TEST(SpatialSubdivisionSkipNarrowCheckTest,
+     TestTwoObjectsWithDifferentHomeCellsButShareAllBoundingCellsDuringPass4ExpectTrue) {
+    const uint8_t pass_num = 4;
+    const ControlBits ctrl_a = 0b0011'1100;
+    const ControlBits ctrl_b = 0b0010'1100;
+    EXPECT_TRUE(can_we_skip_narrow_collision_check(pass_num, ctrl_a, ctrl_b));
+}
+
+TEST(
+    SpatialSubdivisionSkipNarrowCheckTest,
+    TestTwoObjectsWithDifferentHomeCellsButShareSubsetOfCellTypesDuringPass1ExpectFalse) {
+    const uint8_t pass_num = 1;
+    const ControlBits ctrl_a = 0b0010'0101;
+    const ControlBits ctrl_b = 0b0000'0001;
+    EXPECT_FALSE(can_we_skip_narrow_collision_check(pass_num, ctrl_a, ctrl_b));
+}
+
+TEST(SpatialSubdivisionSkipNarrowCheckTest,
+     TestTwoObjectsWithDifferentHomeCellsButShareSubsetOfCellTypesDuringPass3ExpectTrue) {
+    const uint8_t pass_num = 3;
+    const ControlBits ctrl_a = 0b0010'0101;
+    const ControlBits ctrl_b = 0b0000'0001;
+    EXPECT_TRUE(can_we_skip_narrow_collision_check(pass_num, ctrl_a, ctrl_b));
+}
+
+TEST(
+    SpatialSubdivisionSkipNarrowCheckTest,
+    TestTwoObjectsWithDifferentHomeCellsAndNeitherHomeCellAmongCommonPhantomCellsDuringPass1ExpectFalse) {
+    const uint8_t pass_num = 1;
+    const ControlBits ctrl_a = 0b0001'0011;
+    const ControlBits ctrl_b = 0b0010'0101;
+    EXPECT_FALSE(can_we_skip_narrow_collision_check(pass_num, ctrl_a, ctrl_b));
 }
