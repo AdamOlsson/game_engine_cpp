@@ -14,6 +14,8 @@ struct CollisionInformation {
     size_t deepest_contact_idx;
 };
 
+std::ostream &operator<<(std::ostream &os, const CollisionInformation &ci);
+
 class SAT {
   public:
     SAT() = default;

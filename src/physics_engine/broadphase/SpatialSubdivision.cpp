@@ -7,6 +7,18 @@
 #include <cstdint>
 #include <sys/_types/_u_int8_t.h>
 #include <vector>
+
+constexpr ControlBits CONTROL_BIT_BOUNDING_VOLUME_1 = 0b0000'0001;
+constexpr ControlBits CONTROL_BIT_BOUNDING_VOLUME_2 = 0b0000'0010;
+constexpr ControlBits CONTROL_BIT_BOUNDING_VOLUME_3 = 0b0000'0100;
+constexpr ControlBits CONTROL_BIT_BOUNDING_VOLUME_4 = 0b0000'1000;
+constexpr ControlBits CONTROL_BIT_HOME_CELL_1 = 0b0000'0000;
+constexpr ControlBits CONTROL_BIT_HOME_CELL_2 = 0b0001'0000;
+constexpr ControlBits CONTROL_BIT_HOME_CELL_3 = 0b0010'0000;
+constexpr ControlBits CONTROL_BIT_HOME_CELL_4 = 0b0011'0000;
+constexpr ControlBits BOUNDING_VOLUME_MASK = 0b0000'1111;
+constexpr ControlBits HOME_CELL_MASK = 0b1111'0000;
+
 struct BoundingCircle {
     glm::vec3 center;
     float radius;
@@ -20,18 +32,6 @@ struct BoundingVolumes {
     float min_z = std::numeric_limits<float>::max();
 };
 
-typedef u_int8_t ControlBits;
-constexpr ControlBits CONTROL_BIT_BOUNDING_VOLUME_1 = 0b0000'0001;
-constexpr ControlBits CONTROL_BIT_BOUNDING_VOLUME_2 = 0b0000'0010;
-constexpr ControlBits CONTROL_BIT_BOUNDING_VOLUME_3 = 0b0000'0100;
-constexpr ControlBits CONTROL_BIT_BOUNDING_VOLUME_4 = 0b0000'1000;
-constexpr ControlBits CONTROL_BIT_HOME_CELL_1 = 0b0000'0000;
-constexpr ControlBits CONTROL_BIT_HOME_CELL_2 = 0b0001'0000;
-constexpr ControlBits CONTROL_BIT_HOME_CELL_3 = 0b0010'0000;
-constexpr ControlBits CONTROL_BIT_HOME_CELL_4 = 0b0011'0000;
-constexpr ControlBits BOUNDING_VOLUME_MASK = 0b0000'1111;
-constexpr ControlBits HOME_CELL_MASK = 0b1111'0000;
-
 enum class CellType { Home, Phantom };
 
 struct CellVolume {
@@ -41,6 +41,9 @@ struct CellVolume {
     CellType cell_type;
     size_t volume_id;
 };
+
+std::ostream &operator<<(std::ostream &os, const CellVolume &v);
+std::ostream &operator<<(std::ostream &os, const CellVolume &v);
 
 BoundingVolumes create_bounding_volumes(const std::vector<const RigidBody> &bodies);
 std::tuple<std::vector<ControlBits>, std::vector<CellVolume>>
@@ -68,19 +71,21 @@ inline size_t cell_id_order(const CellVolume &);
 
 std::vector<std::tuple<size_t, size_t>>
 count_volumes_per_cell(const std::vector<CellVolume> &volumes);
-void create_passes(const std::vector<std::tuple<size_t, size_t>> &cell_volume_count,
-                   const std::vector<CellVolume> &cell_volumes,
-                   const std::vector<ControlBits> &control_bits);
+SpatialSubdivisionResult
+create_passes(const std::vector<std::tuple<size_t, size_t>> &cell_volume_count,
+              const std::vector<CellVolume> &cell_volumes,
+              const std::vector<ControlBits> &control_bits);
 
-/*inline bool can_we_skip_narrow_collision_check(const uint8_t pass_num,*/
-/*                                               const ControlBits volume_a,*/
-/*                                               const ControlBits &volume_b);*/
+inline bool can_we_skip_narrow_collision_check(const uint8_t pass_num,
+                                               const ControlBits ctrl_a,
+                                               const ControlBits ctrl_b);
 
 /// Runs a broadphase collision detection
 ///
 /// Home cell is the cell which the rigid bodys center point is located. Phantom cells
 /// are all cells the rigid bodys bounding circle covers, including the home cell.
-void SpatialSubdivision::collision_detection(const std::vector<const RigidBody> &bodies) {
+SpatialSubdivisionResult
+SpatialSubdivision::collision_detection(const std::vector<const RigidBody> &bodies) {
     BoundingVolumes bounding_volumes = create_bounding_volumes(bodies);
     float cell_width = bounding_volumes.largest_radius * 2.0 * 1.41;
     auto [control_bits, cell_volumes] =
@@ -91,15 +96,68 @@ void SpatialSubdivision::collision_detection(const std::vector<const RigidBody> 
     });
 
     auto cell_count = count_volumes_per_cell(cell_volumes);
-    // TODO: Continue
-    create_passes(cell_count, cell_volumes, control_bits);
+    return create_passes(cell_count, cell_volumes, control_bits);
 }
 
 // Withing one cell, evaluate if we can skip the narrow collision check between all pairs.
 // If not, append the pair to the respecive pass vector
-void create_passes(const std::vector<std::tuple<size_t, size_t>> &cell_volume_count,
-                   const std::vector<CellVolume> &cell_volumes,
-                   const std::vector<ControlBits> &control_bits) {}
+SpatialSubdivisionResult SpatialSubdivision::create_passes(
+    const std::vector<std::tuple<size_t, size_t>> &cell_volume_count,
+    const std::vector<CellVolume> &cell_volumes,
+    const std::vector<ControlBits> &control_bits) {
+
+    SpatialSubdivisionResult result{};
+    for (auto [start_idx, count] : cell_volume_count) {
+        if (count < 2) {
+            continue;
+        }
+        const uint8_t pass_num =
+            get_control_bits_for_phantom_cell(cell_volumes[start_idx]);
+        DEBUG_ASSERT(1 <= pass_num && pass_num <= 4,
+                     "Pass number " << pass_num
+                                    << " is outside expected range. Offending volume: "
+                                    << cell_volumes[0]);
+
+        std::vector<CollisionCandidatePair> collision_candidate_pairs = {};
+
+        // Evaluate if any rigid bodies' bounding volume covering the cell needs further
+        // narrow check collision check
+        for (size_t a = start_idx; a < start_idx + count; a++) {
+            const ControlBits ctrl_a = control_bits[a];
+            for (size_t b = a + 1; b < start_idx + count; b++) {
+                const ControlBits ctrl_b = control_bits[b];
+                if (can_we_skip_narrow_collision_check(pass_num, ctrl_a, ctrl_b)) {
+                    continue;
+                }
+                collision_candidate_pairs.push_back(
+                    std::tuple(cell_volumes[a].volume_id, cell_volumes[b].volume_id));
+            }
+        }
+
+        if (collision_candidate_pairs.size() == 0) {
+            continue;
+        }
+
+        switch (pass_num) {
+        case 1:
+            result.pass1.push_back(collision_candidate_pairs);
+            break;
+        case 2:
+            result.pass2.push_back(collision_candidate_pairs);
+            break;
+        case 3:
+            result.pass3.push_back(collision_candidate_pairs);
+            break;
+        case 4:
+            result.pass4.push_back(collision_candidate_pairs);
+            break;
+        }
+    }
+
+    // TODO: debug asserts
+
+    return result;
+}
 
 inline bool can_we_skip_narrow_collision_check(const uint8_t pass_num,
                                                const ControlBits ctrl_a,
@@ -425,4 +483,18 @@ inline CellVolume create_phantom_cell_volume_for_left_cell(const CellVolume &hom
 
 inline size_t cell_id_order(const CellVolume &v) {
     return v.x + v.y * 1000 + v.z * 1000000;
+}
+
+std::ostream &operator<<(std::ostream &os, const CellType &v) {
+    switch (v) {
+    case CellType::Home:
+        return os << "CellType::Home";
+    case CellType::Phantom:
+        return os << "CellType::Phantom";
+    }
+}
+
+std::ostream &operator<<(std::ostream &os, const CellVolume &v) {
+    return os << "CellVolume( cell: (" << v.x << ", " << v.y << ", " << v.z
+              << "), cell_type: " << v.cell_type << "volume_id: " << v.volume_id << ")";
 }

@@ -16,6 +16,7 @@ std::ostream &operator<<(std::ostream &os, const CollisionCorrections &c) {
               << ")";
 }
 
+<<<<<<< HEAD
 inline glm::vec3 positional_correction(const glm::vec3 &collision_normal,
                                        const float penetration_depth,
                                        const RigidBody &this_body,
@@ -23,6 +24,11 @@ inline glm::vec3 positional_correction(const glm::vec3 &collision_normal,
     return (penetration_depth / (this_body.mass + other_body.mass)) * other_body.mass *
            collision_normal;
 }
+=======
+std::optional<CollisionCorrections> resolve_collision(const CollisionInformation &ci,
+                                                      const RigidBody &body_a,
+                                                      const RigidBody &body_b) {
+>>>>>>> 883b73a (wip: identified that I need SAT to identify edge-edge collision)
 
 inline float angular_velocity_correction(const glm::vec3 &center_to_p_perp,
                                          const glm::vec3 &impulse,
@@ -144,11 +150,10 @@ resolve_collision_vertex_vertex(const CollisionInformation &ci, const RigidBody 
 
     const glm::vec3 relative_vel_at_p = body_a_vel_at_p - body_b_vel_at_p;
 
-    // TODO: This does not seem to work properly
     // If objects are moving away from each other we do not consider it a collision
-    /*if (glm::dot(relative_vel_at_p, collision_normal) > 0.0) {*/
-    /*    return std::nullopt;*/
-    /*}*/
+    if (glm::dot(relative_vel_at_p, collision_normal) < 0.0) {
+        return std::nullopt;
+    }
 
     const float c_r = fmin(body_a.collision_restitution, body_b.collision_restitution);
 
@@ -161,12 +166,22 @@ resolve_collision_vertex_vertex(const CollisionInformation &ci, const RigidBody 
     const glm::vec3 body_b_vel_correction =
         velocity_correction(collision_normal, -impulse_magnitude, body_b);
 
+<<<<<<< HEAD
     const glm::vec3 impulse = impulse_magnitude * collision_normal;
     const glm::vec3 neg_impulse = -impulse_magnitude * collision_normal;
     const float body_a_angular_vel_correction =
         angular_velocity_correction(body_a_center_to_p_perp, impulse, body_a);
     const float body_b_angular_vel_correction =
         angular_velocity_correction(body_b_center_to_p_perp, neg_impulse, body_b);
+=======
+    // Post collision (angular) velocities calculation
+    glm::vec3 impulse = impulse_magnitude * collision_normal;
+
+    float body_a_angular_vel_correction =
+        glm::dot(body_a_center_to_p_perp, impulse) / body_a.inertia;
+    float body_b_angular_vel_correction =
+        glm::dot(body_b_center_to_p_perp, -impulse) / body_b.inertia;
+>>>>>>> 883b73a (wip: identified that I need SAT to identify edge-edge collision)
 
     const glm::vec3 body_a_pos_correction =
         positional_correction(-collision_normal, penetration_depth, body_a, body_b) *
@@ -191,6 +206,7 @@ resolve_collision_vertex_vertex(const CollisionInformation &ci, const RigidBody 
             },
     };
     return corrections;
+<<<<<<< HEAD
 }
 
 std::optional<CollisionCorrections>
@@ -212,4 +228,6 @@ resolve_collision(const CollisionInformation &ci, RigidBody &body_a, RigidBody &
         return resolve_collision_edge_edge(ci, body_a, body_b);
     };
     return std::nullopt;
+=======
+>>>>>>> 883b73a (wip: identified that I need SAT to identify edge-edge collision)
 }
