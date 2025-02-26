@@ -56,3 +56,12 @@ void Equations::rotate_mut(glm::vec2 &point, float angle) {
                                  glm::vec3(sin(angle), cos(angle), 0.0f)};
     point = rotation_matrix * point;
 }
+
+glm::vec3 Equations::linear_momentum(const RigidBody &body) {
+    return body.mass * body.velocity;
+}
+
+float Equations::angular_momentum(const RigidBody &body) {
+    return body.inertia * body.angular_velocity +
+           Equations::cross_2d(body.position, body.mass * body.velocity);
+}

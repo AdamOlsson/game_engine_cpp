@@ -1,8 +1,9 @@
 #include "physics_engine/broadphase/SpatialSubdivision.cpp"
+/*#include "physics_engine/broadphase/SpatialSubdivision.h"*/
 #include <cstdint>
 #include <gtest/gtest.h>
 
-TEST(SpatialSubdivisionTest, TestObjectWithHomeInType2AndOverlapTLeft) {
+TEST(SpatialSubdivisionCreateCellVolumeTest, TestObjectWithHomeInType2AndOverlapTLeft) {
     float cell_width = 0.1f;
     std::vector<BoundingCircle> volumes = {
         BoundingCircle{.center = glm::vec3(0.11, 0.025f, 0.0f), .radius = 0.015f}};
@@ -28,7 +29,7 @@ TEST(SpatialSubdivisionTest, TestObjectWithHomeInType2AndOverlapTLeft) {
     EXPECT_EQ(0, cell_volumes[index].z);
 }
 
-TEST(SpatialSubdivisionTest, TestObjectWithHomeInType3AndOverlapTop) {
+TEST(SpatialSubdivisionCreateCellVolumeTest, TestObjectWithHomeInType3AndOverlapTop) {
     float cell_width = 0.1f;
     std::vector<BoundingCircle> volumes = {
         BoundingCircle{.center = glm::vec3(0.025f, 0.11f, 0.0f), .radius = 0.015f}};
@@ -53,7 +54,8 @@ TEST(SpatialSubdivisionTest, TestObjectWithHomeInType3AndOverlapTop) {
     EXPECT_EQ(0, cell_volumes[index].z);
 }
 
-TEST(SpatialSubdivisionTest, TestObjectWithHomeInType4AndOverlapTopAndLeft) {
+TEST(SpatialSubdivisionCreateCellVolumeTest,
+     TestObjectWithHomeInType4AndOverlapTopAndLeft) {
     float cell_width = 0.1f;
     std::vector<BoundingCircle> volumes = {
         BoundingCircle{.center = glm::vec3(0.11f, 0.11f, 0.0f), .radius = 0.0141f}};
@@ -85,7 +87,8 @@ TEST(SpatialSubdivisionTest, TestObjectWithHomeInType4AndOverlapTopAndLeft) {
     EXPECT_EQ(0, cell_volumes[index].z);
 }
 
-TEST(SpatialSubdivisionTest, TestObjectWithHomeInType4AndOverlapLeftTopAndTopLeft) {
+TEST(SpatialSubdivisionCreateCellVolumeTest,
+     TestObjectWithHomeInType4AndOverlapLeftTopAndTopLeft) {
     float cell_width = 0.1f;
     std::vector<BoundingCircle> volumes = {
         BoundingCircle{.center = glm::vec3(0.11f, 0.11f, 0.0f), .radius = 0.02f}};
@@ -124,7 +127,7 @@ TEST(SpatialSubdivisionTest, TestObjectWithHomeInType4AndOverlapLeftTopAndTopLef
     EXPECT_EQ(0, cell_volumes[index].z);
 }
 
-TEST(SpatialSubdivisionTest, TestObjectWithHomeInType2AndOverlapRight) {
+TEST(SpatialSubdivisionCreateCellVolumeTest, TestObjectWithHomeInType2AndOverlapRight) {
     float cell_width = 0.1f;
     std::vector<BoundingCircle> volumes = {
         BoundingCircle{.center = glm::vec3(0.39f, 0.025f, 0.0f), .radius = 0.02f}};
@@ -149,7 +152,7 @@ TEST(SpatialSubdivisionTest, TestObjectWithHomeInType2AndOverlapRight) {
     EXPECT_EQ(0, cell_volumes[index].z);
 }
 
-TEST(SpatialSubdivisionTest, TestObjectWithHomeInType4AndOverlapTop) {
+TEST(SpatialSubdivisionCreateCellVolumeTest, TestObjectWithHomeInType4AndOverlapTop) {
     float cell_width = 0.1f;
     std::vector<BoundingCircle> volumes = {
         BoundingCircle{.center = glm::vec3(0.375f, 0.11f, 0.0f), .radius = 0.02f}};
@@ -173,7 +176,7 @@ TEST(SpatialSubdivisionTest, TestObjectWithHomeInType4AndOverlapTop) {
     EXPECT_EQ(0, cell_volumes[index].z);
 }
 
-TEST(SpatialSubdivisionTest,
+TEST(SpatialSubdivisionCreateCellVolumeTest,
      TestObjectWithHomeInType4AndOverlapWithTopRightAndRightAndTop) {
     float cell_width = 0.1f;
     std::vector<BoundingCircle> volumes = {
@@ -212,7 +215,7 @@ TEST(SpatialSubdivisionTest,
     EXPECT_EQ(0, cell_volumes[index].z);
 }
 
-TEST(SpatialSubdivisionTest, TestCoundVolumesPerCellTransitions) {
+TEST(SpatialSubdivisionCountVolumesPerCellTest, TestCoundVolumesPerCellTransitions) {
     std::vector<CellVolume> volumes{
         CellVolume{.x = 0, .y = 0, .z = 0, .cell_type = CellType::Home, .volume_id = 0},
         CellVolume{
@@ -229,7 +232,8 @@ TEST(SpatialSubdivisionTest, TestCoundVolumesPerCellTransitions) {
     EXPECT_EQ(std::tuple(2, 2), output[1]);
 }
 
-TEST(SpatialSubdivisionTest, TestCoundVolumesPerCellLastVolumeIncluded) {
+TEST(SpatialSubdivisionCountVolumesPerCellTest,
+     TestCoundVolumesPerCellLastVolumeIncluded) {
     std::vector<CellVolume> volumes{
         CellVolume{.x = 0, .y = 0, .z = 0, .cell_type = CellType::Home, .volume_id = 0},
         CellVolume{
@@ -249,7 +253,7 @@ TEST(SpatialSubdivisionTest, TestCoundVolumesPerCellLastVolumeIncluded) {
     EXPECT_EQ(std::tuple(4, 1), output[2]);
 }
 
-TEST(SpatialSubdivisionTest, TestCoundVolumesPerCell3Objects) {
+TEST(SpatialSubdivisionCountVolumesPerCellTest, TestCoundVolumesPerCell3Objects) {
     std::vector<CellVolume> volumes{
         CellVolume{.x = 0, .y = 0, .z = 0, .cell_type = CellType::Home, .volume_id = 2},
         CellVolume{.x = 1, .y = 0, .z = 0, .cell_type = CellType::Home, .volume_id = 1},

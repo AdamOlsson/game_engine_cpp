@@ -13,8 +13,9 @@ std::ostream &operator<<(std::ostream &os, const CollisionCorrections &c) {
               << ")";
 }
 
-std::optional<CollisionCorrections>
-resolve_collision(const CollisionInformation &ci, RigidBody &body_a, RigidBody &body_b) {
+std::optional<CollisionCorrections> resolve_collision(const CollisionInformation &ci,
+                                                      const RigidBody &body_a,
+                                                      const RigidBody &body_b) {
 
     glm::vec3 p = ci.collision_point;
     glm::vec3 collision_normal = ci.normal;
@@ -32,11 +33,10 @@ resolve_collision(const CollisionInformation &ci, RigidBody &body_a, RigidBody &
 
     glm::vec3 relative_vel_at_p = body_a_vel_at_p - body_b_vel_at_p;
 
-    // TODO: This does not seem to work properly
     // If objects are moving away from each other we do not consider it a collision
-    /*if (glm::dot(relative_vel_at_p, collision_normal) > 0.0) {*/
-    /*    return std::nullopt;*/
-    /*}*/
+    if (glm::dot(relative_vel_at_p, collision_normal) < 0.0) {
+        return std::nullopt;
+    }
 
     float c_r = fmin(body_a.collision_restitution, body_b.collision_restitution);
 
@@ -63,6 +63,7 @@ resolve_collision(const CollisionInformation &ci, RigidBody &body_a, RigidBody &
 
     // Post collision (angular) velocities calculation
     glm::vec3 impulse = impulse_magnitude * collision_normal;
+
     float body_a_angular_vel_correction =
         glm::dot(body_a_center_to_p_perp, impulse) / body_a.inertia;
     float body_b_angular_vel_correction =
@@ -89,17 +90,4 @@ resolve_collision(const CollisionInformation &ci, RigidBody &body_a, RigidBody &
             },
     };
     return corrections;
-    /*std::cout << "Body A position correction: " << body_a_pos_correction <<
-       std::endl;*/
-    /*std::cout << "Body B position correction: " << body_b_pos_correction <<
-       std::endl;*/
-    /*body_a.position += body_a_pos_correction;*/
-    /*body_a.velocity += body_a_post_collision_vel;*/
-    /*body_a.prev_position = WorldPoint(body_a.position - body_a.velocity);*/
-    /*body_a.angular_velocity += body_a_post_collision_angular_vel;*/
-    /**/
-    /*body_b.position += body_b_pos_correction;*/
-    /*body_b.velocity += body_b_post_collision_vel;*/
-    /*body_b.prev_position = WorldPoint(body_b.position - body_b.velocity);*/
-    /*body_b.angular_velocity += body_b_post_collision_angular_vel;*/
 }

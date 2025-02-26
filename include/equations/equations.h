@@ -1,6 +1,7 @@
 #pragma once
 
 #include "glm_config.h"
+#include "physics_engine/RigidBody.h"
 
 struct Equations {
 
@@ -19,4 +20,7 @@ struct Equations {
 
     static glm::vec2 rotate(const glm::vec2 &point, float angle);
     static void rotate_mut(glm::vec2 &point, float angle);
+
+    static float angular_momentum(const RigidBody &body);
+    static glm::vec3 linear_momentum(const RigidBody &body);
 };

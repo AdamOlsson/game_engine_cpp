@@ -32,6 +32,7 @@ class EntityComponentStorage {
 
   public:
     EntityComponentStorage() = default;
+    ~EntityComponentStorage() {}
 
     EntityId create_entity();
 
@@ -45,7 +46,6 @@ class EntityComponentStorage {
                 return std::nullopt;
             }
             render_body->get().position = rigid_body->get().position;
-            /*render_body->get().position.y *= -1.0;*/
             render_body->get().rotation = rigid_body->get().rotation;
             render_body->get().shape = rigid_body->get().shape;
             return render_body;
@@ -62,6 +62,15 @@ class EntityComponentStorage {
     template <typename C, typename = std::enable_if_t<is_valid_component_v<C>>>
     void update_component(const EntityId id, std::function<void(C &)> update_fn) {
         get_store<C>().update(id, update_fn);
+    }
+
+    template <typename C, typename = std::enable_if_t<is_valid_component_v<C>>>
+    void apply_fn(std::function<void(EntityId, C &)> apply_fn) {
+        auto &store = get_store<C>();
+        for (auto it = store.begin(); it != store.end(); it++) {
+            auto &component = *it;
+            apply_fn(it.id(), component);
+        }
     }
 
     template <typename C, typename = std::enable_if_t<is_valid_component_v<C>>>

@@ -7,6 +7,8 @@ struct Correction {
     glm::vec3 position;
     glm::vec3 velocity;
     float angular_velocity;
+
+    Correction operator-() const { return {-position, -velocity, -angular_velocity}; }
 };
 
 struct CollisionCorrections {
@@ -17,5 +19,6 @@ struct CollisionCorrections {
 std::ostream &operator<<(std::ostream &os, const Correction &c);
 std::ostream &operator<<(std::ostream &os, const CollisionCorrections &c);
 
-std::optional<CollisionCorrections>
-resolve_collision(const CollisionInformation &ci, RigidBody &body_a, RigidBody &body_b);
+std::optional<CollisionCorrections> resolve_collision(const CollisionInformation &ci,
+                                                      const RigidBody &body_a,
+                                                      const RigidBody &body_b);

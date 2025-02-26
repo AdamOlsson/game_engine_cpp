@@ -6,6 +6,8 @@
 #include <glm/glm.hpp>
 #include <vector>
 
+#include "io.h"
+
 struct RigidBody {
     WorldPoint position;
     WorldPoint prev_position;

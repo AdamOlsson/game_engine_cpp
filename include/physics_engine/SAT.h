@@ -9,6 +9,8 @@ struct CollisionInformation {
     glm::vec3 collision_point;
 };
 
+std::ostream &operator<<(std::ostream &os, const CollisionInformation &ci);
+
 class SAT {
   public:
     SAT() = default;

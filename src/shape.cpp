@@ -8,6 +8,8 @@ Shape Shape::create_rectangle_data(float width, float height) {
     return Shape{Rectangle{width, height}};
 }
 
+Shape Shape::create_circle_data(float radius) { return Shape{Circle{radius}}; }
+
 uint32_t Shape::encode_shape_type() const {
     return std::visit(
         [this](auto &&arg) -> uint32_t {
@@ -16,6 +18,8 @@ uint32_t Shape::encode_shape_type() const {
                 return ShapeTypeEncoding::TriangleShape;
             } else if constexpr (std::is_same_v<T, Rectangle>) {
                 return ShapeTypeEncoding::RectangleShape;
+            } else if constexpr (std::is_same_v<T, Circle>) {
+                return ShapeTypeEncoding::CircleShape;
             } else {
                 throw std::runtime_error("Shape not implemented (encode_shape_type)");
             }
@@ -34,6 +38,8 @@ std::ostream &operator<<(std::ostream &os, const Shape &shape) {
             } else if constexpr (std::is_same_v<T, Rectangle>) {
                 os << "Rectangle( width: " << param.width << ", height: " << param.height
                    << ")";
+            } else if constexpr (std::is_same_v<T, Circle>) {
+                os << "Circle( circle: " << param.radius << ")";
             }
         },
         shape.params);
