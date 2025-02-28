@@ -3,6 +3,10 @@
 
 float Equations::length2(const glm::vec3 &v) { return v.x * v.x + v.y * v.y + v.z * v.z; }
 
+float Equations::distance2(const glm::vec3 &p1, const glm::vec3 &p2) {
+    return length2(p2 - p1);
+}
+
 float Equations::cross_2d(const glm::vec3 &v1, const glm::vec3 &v2) {
     return v1.x * v2.y - v1.y * v2.x;
 }

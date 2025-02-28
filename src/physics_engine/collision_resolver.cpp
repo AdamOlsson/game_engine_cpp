@@ -16,7 +16,7 @@ std::ostream &operator<<(std::ostream &os, const CollisionCorrections &c) {
 std::optional<CollisionCorrections>
 resolve_collision(const CollisionInformation &ci, RigidBody &body_a, RigidBody &body_b) {
 
-    glm::vec3 p = ci.collision_point;
+    glm::vec3 p = ci.contact_patch[ci.deepest_contact_idx];
     glm::vec3 collision_normal = ci.normal;
     float penetration_depth = ci.penetration_depth;
 
@@ -89,17 +89,4 @@ resolve_collision(const CollisionInformation &ci, RigidBody &body_a, RigidBody &
             },
     };
     return corrections;
-    /*std::cout << "Body A position correction: " << body_a_pos_correction <<
-       std::endl;*/
-    /*std::cout << "Body B position correction: " << body_b_pos_correction <<
-       std::endl;*/
-    /*body_a.position += body_a_pos_correction;*/
-    /*body_a.velocity += body_a_post_collision_vel;*/
-    /*body_a.prev_position = WorldPoint(body_a.position - body_a.velocity);*/
-    /*body_a.angular_velocity += body_a_post_collision_angular_vel;*/
-    /**/
-    /*body_b.position += body_b_pos_correction;*/
-    /*body_b.velocity += body_b_post_collision_vel;*/
-    /*body_b.prev_position = WorldPoint(body_b.position - body_b.velocity);*/
-    /*body_b.angular_velocity += body_b_post_collision_angular_vel;*/
 }

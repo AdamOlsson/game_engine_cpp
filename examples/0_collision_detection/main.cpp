@@ -128,9 +128,11 @@ class Dev : public Game {
         }
 
         if (collision_point.has_value()) {
-            RenderBody r = RenderBody{.color = glm::vec3(1.0, 1.0, 0.0),
-                                      .position = collision_point->collision_point,
-                                      .shape = Shape::create_rectangle_data(10.0, 10.0)};
+            RenderBody r = RenderBody{
+                .color = glm::vec3(1.0, 1.0, 0.0),
+                .position =
+                    collision_point->contact_patch[collision_point->deepest_contact_idx],
+                .shape = Shape::create_rectangle_data(10.0, 10.0)};
             render_bodies.push_back(std::cref(r));
         }
 
