@@ -3,8 +3,6 @@
 #include "equations/projection.h"
 #include "glm/geometric.hpp"
 #include "io.h"
-#include <algorithm>
-#include <cfloat>
 #include <iostream>
 #include <optional>
 #include <vector>
@@ -16,20 +14,10 @@ struct CollisionEdge {
     glm::vec3 edge;
 };
 
-/*struct ClippedPoint {*/
-/*    glm::vec3 vertex;*/
-/*    float depth;*/
-/*};*/
-
 struct MTV {
     glm::vec3 direction;
     float magnitude;
 };
-
-/*std::ostream &operator<<(std::ostream &os, const ClippedPoint &cp) {*/
-/*    os << "ClippedPoint( vertex: " << cp.vertex << ", depth: " << cp.depth << ")";*/
-/*    return os;*/
-/*}*/
 
 std::ostream &operator<<(std::ostream &os, const CollisionEdge &ce) {
     os << "CollisionEdge( start: " << ce.start << ", end: " << ce.end
@@ -187,8 +175,6 @@ CollisionInformation find_clipping_points(const CollisionEdge &edge_a,
     std::vector<glm::vec3> clipped_points =
         sat_clip(incident_edge.start, incident_edge.end, reference_edge.edge, offset_1);
 
-    /*std::cout << "First clip: " << clipped_points << std::endl;*/
-
     if (clipped_points.size() < 2) {
         return {};
     }
@@ -196,8 +182,6 @@ CollisionInformation find_clipping_points(const CollisionEdge &edge_a,
     const float offset_2 = glm::dot(reference_edge.edge, reference_edge.end);
     clipped_points =
         sat_clip(clipped_points[0], clipped_points[1], -reference_edge.edge, -offset_2);
-
-    /*std::cout << "Second clip: " << clipped_points << std::endl;*/
 
     if (clipped_points.size() < 2) {
         return {};
@@ -213,8 +197,6 @@ CollisionInformation find_clipping_points(const CollisionEdge &edge_a,
     std::vector<glm::vec3> contact_patch;
     for (size_t i = 0; i < clipped_points.size(); i++) {
         float depth = glm::dot(reference_edge_norm, clipped_points[i]) - max;
-        /*std::cout << "Depth: " << depth << ", point: " << clipped_points[i] <<
-         * std::endl;*/
         if (depth >= 0.0f) {
             contact_patch.push_back(std::move(clipped_points[i]));
             if (max_depth < depth) {
@@ -223,8 +205,6 @@ CollisionInformation find_clipping_points(const CollisionEdge &edge_a,
             }
         }
     }
-
-    /*std::cout << "Final clip: " << contact_patch << std::endl;*/
 
     ContactType contact_type =
         determine_contact_type(contact_patch, reference_edge, incident_edge);
@@ -303,19 +283,4 @@ std::optional<CollisionInformation> SAT::collision_detection(const RigidBody &bo
     }
 
     return info;
-    // Find deepest penetration point
-    // TODO: Remove
-    /*const auto deepest_point = std::max_element(*/
-    /*    clipping_points.begin(), clipping_points.end(),*/
-    /*    [](const ClippedPoint &a, const ClippedPoint &b) { return a.depth <
-     * b.depth;
-     * });*/
-    /**/
-    /*if (deepest_point == clipping_points.end()) {*/
-    /*    return std::nullopt;*/
-    /*}*/
-
-    /*return CollisionInformation{.penetration_depth = deepest_point->depth,*/
-    /*                            .normal = collision_normal,*/
-    /*                            .collision_point = deepest_point->vertex};*/
 }
