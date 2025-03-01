@@ -3,7 +3,6 @@
 #include "equations/projection.h"
 #include "glm/geometric.hpp"
 #include "io.h"
-#include <algorithm>
 #include <iostream>
 #include <optional>
 #include <vector>
@@ -15,20 +14,10 @@ struct CollisionEdge {
     glm::vec3 edge;
 };
 
-struct ClippedPoint {
-    glm::vec3 vertex;
-    float depth;
-};
-
 struct MTV {
     glm::vec3 direction;
     float magnitude;
 };
-
-std::ostream &operator<<(std::ostream &os, const ClippedPoint &cp) {
-    os << "ClippedPoint( vertex: " << cp.vertex << ", depth: " << cp.depth << ")";
-    return os;
-}
 
 std::ostream &operator<<(std::ostream &os, const CollisionEdge &ce) {
     os << "CollisionEdge( start: " << ce.start << ", end: " << ce.end
@@ -41,9 +30,30 @@ std::ostream &operator<<(std::ostream &os, const MTV &mtv) {
     return os;
 }
 
+std::ostream &operator<<(std::ostream &os, const ContactType &c) {
+    switch (c) {
+    case ContactType::VERTEX_VERTEX:
+        return os << "ContactType::VERTEX_VERTEX";
+    case ContactType::VERTEX_EDGE:
+        return os << "ContactType::VERTEX_EDGE";
+    case ContactType::EDGE_EDGE:
+        return os << "ContactType::EDGE_EDGE";
+    default:
+        return os << "ContactType::NONE";
+    }
+}
+
+std::ostream &operator<<(std::ostream &os, const CollisionInformation &ci) {
+    os << "CollisionInformation( contact_type: " << ci.contact_type
+       << " ,contact_patch: " << ci.contact_patch << ", normal: " << ci.normal
+       << ", depth: " << ci.penetration_depth
+       << ", deepest_contact_idx: " << ci.deepest_contact_idx << " )";
+    return os;
+}
+
 // Find the edge most aligned with the collision axis
-CollisionEdge sat_find_collision_edge(const RigidBody &body,
-                                      const glm::vec3 &collision_axis) {
+CollisionEdge find_collision_edge(const RigidBody &body,
+                                  const glm::vec3 &collision_axis) {
     auto vertices = body.vertices();
 
     // Find vertex with maximum projection along collision axis
@@ -58,31 +68,15 @@ CollisionEdge sat_find_collision_edge(const RigidBody &body,
         }
     }
 
-    /*std::cout << std::endl;*/
-    /*std::cout << "Collision axis: " << collision_axis << std::endl;*/
-    /*std::cout << "Index: " << index << std::endl;*/
-    /*std::cout << std::endl;*/
-
     const int num_vertices = vertices.size();
     const glm::vec3 prev_vertex = vertices[(index - 1 + num_vertices) % num_vertices];
     const glm::vec3 mid_vertex = vertices[index];
     const glm::vec3 next_vertex = vertices[(index + 1 + num_vertices) % num_vertices];
 
-    /*std::cout << std::endl;*/
-    /*std::cout << "prev_vert: " << prev_vertex << std::endl;*/
-    /*std::cout << "mid_vert: " << mid_vertex << std::endl;*/
-    /*std::cout << "next_vert: " << next_vertex << std::endl;*/
-    /*std::cout << std::endl;*/
-
     // Be careful when computing the left and right (l and r in the code above) vectors as
     // they both must point towards the maximum point
     glm::vec3 left_edge = mid_vertex - next_vertex;
     glm::vec3 right_edge = mid_vertex - prev_vertex;
-
-    /*std::cout << std::endl;*/
-    /*std::cout << "left edge: " << left_edge << std::endl;*/
-    /*std::cout << "right edge: " << right_edge << std::endl;*/
-    /*std::cout << std::endl;*/
 
     // Normalize edge vectors
     left_edge = glm::normalize(left_edge);
@@ -128,16 +122,38 @@ std::vector<glm::vec3> sat_clip(const glm::vec3 &v1, const glm::vec3 &v2,
     return clipped_points;
 }
 
+ContactType determine_contact_type(const std::vector<glm::vec3> &clipping_points,
+                                   const CollisionEdge &ref_edge,
+                                   const CollisionEdge &inc_edge) {
+
+    if (clipping_points.size() > 1) {
+        // Dot product close to 1 or -1 indicates parallel edges (edges are already
+        // normalized)
+        const float edge_alignment = std::abs(glm::dot(ref_edge.edge, inc_edge.edge));
+        constexpr float alignment_threshold = 0.996; // Roughly within +-5 degrees
+        if (edge_alignment > alignment_threshold) {
+            return ContactType::EDGE_EDGE;
+        }
+    }
+
+    if (clipping_points.size() == 1) {
+        const glm::vec3 &point = clipping_points[0];
+        // Clipping point is always on the incident edge, therefor we only check for
+        // proximity to reference edge start and stop
+        const float distance_start = Equations::distance2(point, ref_edge.start);
+        const float distance_end = Equations::distance2(point, ref_edge.end);
+        constexpr float distance_threshold = 0.01f;
+        if (distance_start < distance_threshold || distance_end < distance_threshold) {
+            return ContactType::VERTEX_VERTEX;
+        }
+    }
+    return ContactType::VERTEX_EDGE;
+}
+
 // Find clipping points between two bodies in collision
-std::vector<ClippedPoint> sat_find_clipping_points(const RigidBody &body_a,
-                                                   const RigidBody &body_b,
-                                                   const glm::vec3 &collision_normal) {
-    auto edge_a = sat_find_collision_edge(body_a, collision_normal);
-    auto edge_b = sat_find_collision_edge(body_b, -collision_normal);
-
-    /*std::cout << "Body A: " << edge_a << std::endl;*/
-    /*std::cout << "Body B: " << edge_b << std::endl;*/
-
+CollisionInformation find_clipping_points(const CollisionEdge &edge_a,
+                                          const CollisionEdge &edge_b,
+                                          const glm::vec3 &collision_normal) {
     // Choose reference edge (the one most perpendicular to collision normal)
     bool flip = false;
     CollisionEdge reference_edge, incident_edge;
@@ -152,12 +168,10 @@ std::vector<ClippedPoint> sat_find_clipping_points(const RigidBody &body_a,
         flip = true;
     }
 
-    /*std::cout << "Reference edge: " << reference_edge << std::endl;*/
-    /*std::cout << "Incident edge: " << incident_edge << std::endl;*/
-
     reference_edge.edge = glm::normalize(reference_edge.edge);
+    incident_edge.edge = glm::normalize(incident_edge.edge);
 
-    float offset_1 = glm::dot(reference_edge.edge, reference_edge.start);
+    const float offset_1 = glm::dot(reference_edge.edge, reference_edge.start);
     std::vector<glm::vec3> clipped_points =
         sat_clip(incident_edge.start, incident_edge.end, reference_edge.edge, offset_1);
 
@@ -165,7 +179,7 @@ std::vector<ClippedPoint> sat_find_clipping_points(const RigidBody &body_a,
         return {};
     }
 
-    float offset_2 = glm::dot(reference_edge.edge, reference_edge.end);
+    const float offset_2 = glm::dot(reference_edge.edge, reference_edge.end);
     clipped_points =
         sat_clip(clipped_points[0], clipped_points[1], -reference_edge.edge, -offset_2);
 
@@ -173,19 +187,35 @@ std::vector<ClippedPoint> sat_find_clipping_points(const RigidBody &body_a,
         return {};
     }
 
-    glm::vec3 reference_edge_norm =
+    const glm::vec3 reference_edge_norm =
         Equations::counterclockwise_perp_z(reference_edge.edge);
-    float max = glm::dot(reference_edge_norm, reference_edge.max);
+    const float max = glm::dot(reference_edge_norm, reference_edge.max);
 
-    std::vector<ClippedPoint> result;
-    for (const auto &point : clipped_points) {
-        float depth = glm::dot(reference_edge_norm, point) - max;
+    // Final clipping
+    float max_depth = 0.0;
+    size_t max_depth_idx = 0;
+    std::vector<glm::vec3> contact_patch;
+    for (size_t i = 0; i < clipped_points.size(); i++) {
+        float depth = glm::dot(reference_edge_norm, clipped_points[i]) - max;
         if (depth >= 0.0f) {
-            result.push_back(ClippedPoint{.vertex = point, .depth = depth});
+            contact_patch.push_back(std::move(clipped_points[i]));
+            if (max_depth < depth) {
+                max_depth = depth;
+                max_depth_idx = i;
+            }
         }
     }
 
-    return result;
+    ContactType contact_type =
+        determine_contact_type(contact_patch, reference_edge, incident_edge);
+
+    return CollisionInformation{
+        .penetration_depth = max_depth,
+        .deepest_contact_idx = max_depth_idx,
+        .normal = std::move(collision_normal),
+        .contact_patch = std::move(contact_patch),
+        .contact_type = contact_type,
+    };
 }
 
 std::optional<MTV> find_mtv(const RigidBody &body_a, const RigidBody &body_b) {
@@ -238,24 +268,19 @@ std::optional<CollisionInformation> SAT::collision_detection(const RigidBody &bo
                                                              const RigidBody &body_b) {
     auto mtv = find_mtv(body_a, body_b);
     if (!mtv.has_value()) {
-        /*std::cout << "No collision" << std::endl;*/
-        return std::nullopt;
-    }
-    glm::vec3 collision_normal = mtv.value().direction;
-
-    std::vector<ClippedPoint> clipping_points =
-        sat_find_clipping_points(body_a, body_b, collision_normal);
-
-    // Find deepest penetration point
-    auto deepest_point = std::max_element(
-        clipping_points.begin(), clipping_points.end(),
-        [](const ClippedPoint &a, const ClippedPoint &b) { return a.depth < b.depth; });
-
-    if (deepest_point == clipping_points.end()) {
         return std::nullopt;
     }
 
-    return CollisionInformation{.penetration_depth = deepest_point->depth,
-                                .normal = collision_normal,
-                                .collision_point = deepest_point->vertex};
+    const glm::vec3 collision_normal = mtv.value().direction;
+
+    auto edge_a = find_collision_edge(body_a, collision_normal);
+    auto edge_b = find_collision_edge(body_b, -collision_normal);
+
+    CollisionInformation info = find_clipping_points(edge_a, edge_b, collision_normal);
+
+    if (info.contact_patch.empty()) {
+        return std::nullopt;
+    }
+
+    return info;
 }

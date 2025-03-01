@@ -81,6 +81,7 @@ file(GLOB_RECURSE TEST_SOURCES "tests/*.cpp")
 add_executable(unit_tests ${TEST_SOURCES})
 target_include_directories(unit_tests
     PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )

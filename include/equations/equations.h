@@ -5,6 +5,7 @@
 struct Equations {
 
     static float length2(const glm::vec3 &v);
+    static float distance2(const glm::vec3 &p1, const glm::vec3 &p2);
     static float cross_2d(const glm::vec3 &v1, const glm::vec3 &v2);
 
     static glm::vec3 counterclockwise_perp_z(const glm::vec3 &);

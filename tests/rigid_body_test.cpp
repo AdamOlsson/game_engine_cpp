@@ -5,14 +5,8 @@
 #include "io.h"
 #include "physics_engine/RigidBody.h"
 #include "shape.h"
+#include "test_utils.h"
 #include <gtest/gtest.h>
-
-void expect_near_rigid_body_test(glm::vec3 &expected, glm::vec3 &v, float epsilon) {
-    std::cout << "Expected " << expected << " found " << v << std::endl;
-    EXPECT_NEAR(expected.x, v.x, epsilon);
-    EXPECT_NEAR(expected.y, v.y, epsilon);
-    EXPECT_NEAR(expected.z, v.z, epsilon);
-}
 
 TEST(RigidBodyTest, GivenRectangleAtOrigoCreatesExpectedVertices) {
     RigidBody test_body = RigidBody{.position = WorldPoint(0.0, 0.0, 0.0),
@@ -626,9 +620,9 @@ TEST(RigidBodyTest, GivenTriangleWhenAtOrigoProducesExpectedEdges) {
     };
 
     float max_diff = 1e-3f;
-    expect_near_rigid_body_test(expected[0], edges[0], max_diff);
-    expect_near_rigid_body_test(expected[1], edges[1], max_diff);
-    expect_near_rigid_body_test(expected[2], edges[2], max_diff);
+    expect_near(expected[0], edges[0], max_diff);
+    expect_near(expected[1], edges[1], max_diff);
+    expect_near(expected[2], edges[2], max_diff);
 }
 
 TEST(RigidBodyTest, GivenPointLeftOfRectangleExpectClosestPointOnBorder) {

@@ -15,6 +15,15 @@ std::ostream &operator<<(std::ostream &os, const glm::vec3 &vec) {
     return os;
 }
 
+std::ostream &operator<<(std::ostream &os, const std::vector<glm::vec3> &vec) {
+    os << "[ ";
+    for (auto v : vec) {
+        os << v << ", ";
+    }
+    os << "]";
+    return os;
+}
+
 std::string vec_to_string(const glm::vec2 &vec) {
     std::ostringstream oss;
     oss << "glm::vec2(" << vec.x << ", " << vec.y << ")";
@@ -29,10 +38,4 @@ std::string mat_to_string(const glm::mat3x3 &mat) {
         << mat[2].x << ", " << mat[2].y << ", " << mat[2].z << std::endl
         << ")";
     return oss.str();
-}
-
-std::ostream &operator<<(std::ostream &os, const CollisionInformation &ci) {
-    os << "CollisionInformation( point: " << ci.collision_point
-       << ", normal: " << ci.normal << ", depth: " << ci.penetration_depth << ")";
-    return os;
 }
