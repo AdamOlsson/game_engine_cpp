@@ -14,28 +14,7 @@
 #include <memory>
 #include <optional>
 
-// DONE: Implement SAT
-// DONE: Either click inside does not fully work or the rendering does not correspond to
-//       the rigidbody (click on triangle does not work properly)
-// DONE: Implement EntityComponentStorage
-// DONE: Implement SAT example
-//        - Add rectangle rendering
-// DONE: Implement Verlet Integration in combination with ECS
-//        - DONE: Replace the ECS with the new one
-//        - DONE: Implement positional updates when dragging an object
-//        - DONE: Builder pattern on RigidBody and RenderBody creation
-//        - DONE: prev_position member on RigidBody
-//
-// TODO: Finalize example
-//        - DONE: implement drag physics
-//        - DONE: Show collision point again
-//        - DONE: Rotate selected object through holding R
-//        - DONE: Toggle between triangle-triangle, triangle-rectangle and
-//                rectangle-rectangle
-// TODO: Make pretty github page for example
-//      - TODO: Record sample
-//      - TODO: Use GIF in readme
-//      - TODO: Write a basic text
+// TODO: Create a line to visualize contact patch
 void state0(EntityComponentStorage &ecs);
 void state1(EntityComponentStorage &ecs);
 void state2(EntityComponentStorage &ecs);
