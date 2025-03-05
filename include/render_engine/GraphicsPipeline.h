@@ -20,16 +20,16 @@
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
-struct Device {
-    VkDevice device;
-    Device(VkDevice device) : device(device) {}
-    ~Device() {
-        if (device == nullptr) {
-            return;
-        }
-        vkDestroyDevice(device, nullptr);
-    }
-};
+/*struct Device {*/
+/*    VkDevice device;*/
+/*    Device(VkDevice device) : device(device) {}*/
+/*    ~Device() {*/
+/*        if (device == nullptr) {*/
+/*            return;*/
+/*        }*/
+/*        vkDestroyDevice(device, nullptr);*/
+/*    }*/
+/*};*/
 
 VKAPI_ATTR inline VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -43,7 +43,7 @@ VKAPI_ATTR inline VkBool32 VKAPI_CALL debugCallback(
 
 class GraphicsPipeline {
   public:
-    GraphicsPipeline(Window &window, CoreGraphicsContext &ctx);
+    GraphicsPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx);
     ~GraphicsPipeline();
 
     void render(Window &window,
@@ -53,7 +53,7 @@ class GraphicsPipeline {
   private:
     uint32_t currentFrame = 0;
 
-    CoreGraphicsContext *ctx;
+    std::shared_ptr<CoreGraphicsContext> ctx;
 
     VkQueue graphicsQueue;
     VkQueue presentQueue;

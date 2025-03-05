@@ -4,22 +4,22 @@
 #include <iostream>
 #include <ostream>
 
-std::unique_ptr<StorageBuffer> createStorageBuffer(VkPhysicalDevice &physicalDevice,
-                                                   VkDevice &device, size_t capacity) {
+std::unique_ptr<StorageBuffer>
+createStorageBuffer(std::shared_ptr<CoreGraphicsContext> &ctx, size_t capacity) {
 
     VkDeviceSize bufferSize = capacity * sizeof(StorageBufferObject);
 
     VkBuffer buffer;
     VkDeviceMemory bufferMemory;
     void *bufferMapped;
-    createBuffer(physicalDevice, device, bufferSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                 buffer, bufferMemory);
+    createBuffer(
+        ctx->physicalDevice, ctx->device, bufferSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        buffer, bufferMemory);
 
-    vkMapMemory(device, bufferMemory, 0, bufferSize, 0, &bufferMapped);
+    vkMapMemory(ctx->device, bufferMemory, 0, bufferSize, 0, &bufferMapped);
 
-    return std::make_unique<StorageBuffer>(buffer, bufferMemory, bufferMapped,
+    return std::make_unique<StorageBuffer>(ctx, buffer, bufferMemory, bufferMapped,
                                            bufferSize);
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "glm/fwd.hpp"
+#include "render_engine/CoreGraphicsContext.h"
 #include "shape.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
@@ -23,16 +24,24 @@ struct StorageBufferObject {
           shape_type(shape.encode_shape_type()), shape(shape) {}
 };
 
-struct StorageBuffer {
+class StorageBuffer {
+  public:
+    std::shared_ptr<CoreGraphicsContext> ctx;
     VkBuffer buffer;
     VkDeviceMemory bufferMemory;
     void *bufferMapped;
     VkDeviceSize size;
 
-    StorageBuffer(VkBuffer &buffer, VkDeviceMemory &bufferMemory, void *bufferMapped,
-                  VkDeviceSize &size)
-        : buffer(buffer), bufferMemory(bufferMemory), bufferMapped(bufferMapped),
-          size(size) {}
+    StorageBuffer(std::shared_ptr<CoreGraphicsContext> ctx, VkBuffer &buffer,
+                  VkDeviceMemory &bufferMemory, void *bufferMapped, VkDeviceSize &size)
+        : ctx(ctx), buffer(buffer), bufferMemory(bufferMemory),
+          bufferMapped(bufferMapped), size(size) {}
+
+    ~StorageBuffer() {
+        vkUnmapMemory(ctx->device, bufferMemory);
+        vkFreeMemory(ctx->device, bufferMemory, nullptr);
+        vkDestroyBuffer(ctx->device, buffer, nullptr);
+    }
 
     void updateStorageBuffer(const std::vector<StorageBufferObject> &ssbo);
 
@@ -42,5 +51,5 @@ struct StorageBuffer {
     void dumpData();
 };
 
-std::unique_ptr<StorageBuffer> createStorageBuffer(VkPhysicalDevice &physicalDevice,
-                                                   VkDevice &device, size_t capacity);
+std::unique_ptr<StorageBuffer>
+createStorageBuffer(std::shared_ptr<CoreGraphicsContext> &ctx, size_t capacity);

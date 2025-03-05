@@ -6,7 +6,7 @@
 
 RenderEngine::RenderEngine(const uint32_t width, const uint32_t height, char const *title)
     : window(std::make_unique<Window>(width, height, title)),
-      g_ctx(CoreGraphicsContext(true, window.get())) {
+      g_ctx(std::make_shared<CoreGraphicsContext>(true, window.get())) {
     graphics_pipeline = std::make_unique<GraphicsPipeline>(*window, g_ctx);
 }
 
@@ -37,7 +37,7 @@ void RenderEngine::render(
                                     rectangle_instance_data);
 }
 
-void RenderEngine::wait_idle() { this->g_ctx.wait_idle(); }
+void RenderEngine::wait_idle() { this->g_ctx->wait_idle(); }
 
 bool RenderEngine::should_window_close() { return this->window->should_window_close(); }
 

@@ -74,11 +74,13 @@ VkExtent2D chooseSwapExtent(GLFWwindow &window,
     }
 }
 
-SwapChain::SwapChain(VkPhysicalDevice &physicalDevice, VkDevice &device,
-                     VkSurfaceKHR &surface, GLFWwindow &window)
-    : cleanup_done(false), device(&device) {
+/*SwapChain::SwapChain(VkPhysicalDevice &physicalDevice, VkDevice &device,*/
+/*                     VkSurfaceKHR &surface, GLFWwindow &window)*/
+SwapChain::SwapChain(std::shared_ptr<CoreGraphicsContext> ctx, GLFWwindow &window)
+
+    : ctx(ctx), cleanup_done(false) {
     SwapChainSupportDetails swapChainSupport =
-        querySwapChainSupport(physicalDevice, surface);
+        querySwapChainSupport(ctx->physicalDevice, ctx->surface);
 
     VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
     VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
@@ -92,7 +94,7 @@ SwapChain::SwapChain(VkPhysicalDevice &physicalDevice, VkDevice &device,
 
     VkSwapchainCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = surface;
+    createInfo.surface = ctx->surface;
     createInfo.minImageCount = imageCount;
     createInfo.imageFormat = surfaceFormat.format;
     createInfo.imageColorSpace = surfaceFormat.colorSpace;
@@ -105,7 +107,7 @@ SwapChain::SwapChain(VkPhysicalDevice &physicalDevice, VkDevice &device,
     //  memory operation to transfer the rendered image to a swap chain image.
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
+    QueueFamilyIndices indices = findQueueFamilies(ctx->physicalDevice, ctx->surface);
     uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(),
                                      indices.presentFamily.value()};
 
@@ -135,19 +137,21 @@ SwapChain::SwapChain(VkPhysicalDevice &physicalDevice, VkDevice &device,
     // future chapter.
     createInfo.oldSwapchain = VK_NULL_HANDLE;
 
-    if (vkCreateSwapchainKHR(device, &createInfo, nullptr, &swapChain) != VK_SUCCESS) {
+    if (vkCreateSwapchainKHR(ctx->device, &createInfo, nullptr, &swapChain) !=
+        VK_SUCCESS) {
         throw std::runtime_error("failed to create swap chain!");
     }
 
-    vkGetSwapchainImagesKHR(device, swapChain, &imageCount, nullptr);
+    vkGetSwapchainImagesKHR(ctx->device, swapChain, &imageCount, nullptr);
 
     swapChainImages.resize(imageCount);
-    vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data());
+    vkGetSwapchainImagesKHR(ctx->device, swapChain, &imageCount, swapChainImages.data());
 
     swapChainImageFormat = surfaceFormat.format;
     swapChainExtent = extent;
 
-    swapChainImageViews = createImageViews(device, swapChainImages, swapChainImageFormat);
+    swapChainImageViews =
+        createImageViews(ctx->device, swapChainImages, swapChainImageFormat);
 }
 
 SwapChain::~SwapChain() { cleanup(); }
@@ -158,15 +162,15 @@ void SwapChain::cleanup() {
         return;
     }
 
-    if (device == nullptr) {
-        std::cout << "Can't cleanup swap chain because device is null." << std::endl;
-        return;
-    }
+    /*if (device == nullptr) {*/
+    /*    std::cout << "Can't cleanup swap chain because device is null." << std::endl;*/
+    /*    return;*/
+    /*}*/
 
     for (size_t i = 0; i < swapChainImageViews.size(); i++) {
-        vkDestroyImageView(*device, swapChainImageViews[i], nullptr);
+        vkDestroyImageView(ctx->device, swapChainImageViews[i], nullptr);
     }
-    vkDestroySwapchainKHR(*device, swapChain, nullptr);
+    vkDestroySwapchainKHR(ctx->device, swapChain, nullptr);
     cleanup_done = true;
 }
 
@@ -187,7 +191,7 @@ std::vector<VkFramebuffer> SwapChain::createFramebuffers(VkRenderPass &renderPas
         framebufferInfo.height = swapChainExtent.height;
         framebufferInfo.layers = 1;
 
-        if (vkCreateFramebuffer(*device, &framebufferInfo, nullptr,
+        if (vkCreateFramebuffer(ctx->device, &framebufferInfo, nullptr,
                                 &swapChainFramebuffers[i]) != VK_SUCCESS) {
             throw std::runtime_error("failed to create framebuffer!");
         }
