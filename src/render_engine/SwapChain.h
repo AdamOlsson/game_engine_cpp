@@ -1,10 +1,16 @@
 #pragma once
 
+#include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/Window.h"
 #include "vulkan/vulkan_core.h"
+#include <memory>
 #include <vector>
 
 class SwapChain {
+  private:
+    std::shared_ptr<CoreGraphicsContext> ctx;
+    bool cleanup_done;
+
   public:
     VkSwapchainKHR swapChain;
     std::vector<VkImage> swapChainImages;
@@ -12,8 +18,7 @@ class SwapChain {
     VkExtent2D swapChainExtent;
     std::vector<VkImageView> swapChainImageViews;
 
-    SwapChain(VkPhysicalDevice &physicalDevice, VkDevice &device, VkSurfaceKHR &surface,
-              GLFWwindow &window);
+    SwapChain(std::shared_ptr<CoreGraphicsContext> ctx, GLFWwindow &window);
 
     ~SwapChain();
 
@@ -21,9 +26,4 @@ class SwapChain {
     std::vector<VkFramebuffer> createFramebuffers(VkRenderPass &renderPass);
 
     void cleanup();
-
-  private:
-    // TODO: Shared ptr
-    VkDevice *device;
-    bool cleanup_done;
 };

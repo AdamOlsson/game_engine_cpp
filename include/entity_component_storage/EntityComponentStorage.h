@@ -1,6 +1,5 @@
 #pragma once
 #include "entity_component_storage/ComponentStore.h"
-#include "io.h"
 #include "physics_engine/RigidBody.h"
 #include "render_engine/RenderBody.h"
 #include <functional>
@@ -37,19 +36,6 @@ class EntityComponentStorage {
 
     template <typename C, typename = std::enable_if_t<is_valid_component_v<C>>>
     std::optional<std::reference_wrapper<C>> get_component(const EntityId id) {
-        if constexpr (std::is_same_v<C, RenderBody>) {
-            // TODO: Currently not possible to have a RenderBody without a RigidBody
-            auto render_body = get_store<RenderBody>().get(id);
-            auto rigid_body = get_store<RigidBody>().get(id);
-            if (!render_body.has_value() || !rigid_body.has_value()) {
-                return std::nullopt;
-            }
-            render_body->get().position = rigid_body->get().position;
-            /*render_body->get().position.y *= -1.0;*/
-            render_body->get().rotation = rigid_body->get().rotation;
-            render_body->get().shape = rigid_body->get().shape;
-            return render_body;
-        }
         return get_store<C>().get(id);
     }
 

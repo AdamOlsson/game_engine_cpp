@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <iostream>
 #include <vulkan/vulkan.h>
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #define GLM_FORCE_RADIANS
@@ -29,3 +30,6 @@ struct Vertex {
         return attributeDescriptions;
     }
 };
+
+std::ostream &operator<<(std::ostream &os, const Vertex &v);
+std::ostream &operator<<(std::ostream &os, const std::vector<Vertex> &vs);

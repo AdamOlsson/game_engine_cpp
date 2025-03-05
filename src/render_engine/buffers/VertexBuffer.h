@@ -1,28 +1,32 @@
 #pragma once
 
+#include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/shapes/Vertex.h"
 #include "vulkan/vulkan_core.h"
+#include <memory>
 
 class VertexBuffer {
+  private:
+    std::shared_ptr<CoreGraphicsContext> ctx;
+    bool cleanup_done;
+
   public:
     VkBuffer buffer;
     VkDeviceMemory bufferMemory;
+    VkDeviceSize size;
+    size_t num_vertices;
 
-    VertexBuffer(VkDevice &device, VkBuffer &buffer, VkDeviceMemory &bufferMemory)
-        : buffer(buffer), bufferMemory(bufferMemory), device(&device) {};
+    VertexBuffer(std::shared_ptr<CoreGraphicsContext> ctx, VkBuffer &buffer,
+                 VkDeviceMemory &bufferMemory, VkDeviceSize size)
+        : buffer(buffer), bufferMemory(bufferMemory), ctx(ctx), size(size),
+          num_vertices(size / sizeof(Vertex)) {};
 
     ~VertexBuffer();
 
     void cleanup();
-
-  private:
-    // TODO: Shared ptr
-    VkDevice *device;
-    bool cleanup_done;
 };
 
-std::unique_ptr<VertexBuffer> createVertexBuffer(VkPhysicalDevice &physicalDevice,
-                                                 VkDevice &device,
-                                                 const std::vector<Vertex> &vertices,
-                                                 VkCommandPool &commandPool,
-                                                 VkQueue &graphicsQueue);
+std::unique_ptr<VertexBuffer>
+createVertexBuffer(std::shared_ptr<CoreGraphicsContext> &ctx,
+                   const std::vector<Vertex> &vertices, const VkCommandPool &commandPool,
+                   const VkQueue &graphicsQueue);

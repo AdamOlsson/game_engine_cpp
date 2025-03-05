@@ -7,21 +7,21 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-std::unique_ptr<UniformBuffer> createUniformBuffer(VkPhysicalDevice &physicalDevice,
-                                                   VkDevice &device, size_t size) {
+std::unique_ptr<UniformBuffer>
+createUniformBuffer(std::shared_ptr<CoreGraphicsContext> &ctx, size_t size) {
     VkDeviceSize bufferSize = size;
 
     VkBuffer buffer;
     VkDeviceMemory bufferMemory;
     void *bufferMapped;
-    createBuffer(physicalDevice, device, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                 buffer, bufferMemory);
+    createBuffer(
+        ctx->physicalDevice, ctx->device, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        buffer, bufferMemory);
 
-    vkMapMemory(device, bufferMemory, 0, bufferSize, 0, &bufferMapped);
+    vkMapMemory(ctx->device, bufferMemory, 0, bufferSize, 0, &bufferMapped);
 
-    return std::make_unique<UniformBuffer>(buffer, bufferMemory, bufferMapped,
+    return std::make_unique<UniformBuffer>(ctx, buffer, bufferMemory, bufferMapped,
                                            bufferSize);
 }
 
