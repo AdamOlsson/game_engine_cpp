@@ -1,6 +1,7 @@
 #pragma once
 
 #include "render_engine/CoreGraphicsContext.h"
+#include "render_engine/RenderableGeometry.h"
 #include "render_engine/SwapChain.h"
 #include "render_engine/Window.h"
 #include "render_engine/buffers/IndexBuffer.h"
@@ -20,17 +21,6 @@
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
-/*struct Device {*/
-/*    VkDevice device;*/
-/*    Device(VkDevice device) : device(device) {}*/
-/*    ~Device() {*/
-/*        if (device == nullptr) {*/
-/*            return;*/
-/*        }*/
-/*        vkDestroyDevice(device, nullptr);*/
-/*    }*/
-/*};*/
-
 VKAPI_ATTR inline VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
@@ -48,7 +38,7 @@ class GraphicsPipeline {
 
     void render(Window &window,
                 const std::vector<StorageBufferObject> &triangle_instance_data,
-                const std::vector<StorageBufferObject> &rectangle_instance_data);
+                std::vector<StorageBufferObject> &&rectangle_instance_data);
 
   private:
     uint32_t currentFrame = 0;
@@ -86,6 +76,8 @@ class GraphicsPipeline {
     std::vector<std::unique_ptr<UniformBuffer>> uniformBuffers;
     std::vector<std::unique_ptr<StorageBuffer>> triangleInstanceBuffers;
     std::vector<std::unique_ptr<StorageBuffer>> rectangleInstanceBuffers;
+
+    /*std::unique_ptr<Geometry_::Rectangle> rectangle_geometry;*/
 
     VkDescriptorPool triangleDescriptorPool;
     VkDescriptorPool rectangleDescriptorPool;

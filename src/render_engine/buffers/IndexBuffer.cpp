@@ -5,8 +5,8 @@
 
 std::unique_ptr<IndexBuffer> createIndexBuffer(std::shared_ptr<CoreGraphicsContext> &ctx,
                                                const std::vector<uint16_t> &indices,
-                                               VkCommandPool &commandPool,
-                                               VkQueue &graphicsQueue) {
+                                               const VkCommandPool &commandPool,
+                                               const VkQueue &graphicsQueue) {
     VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
     VkBuffer stagingBuffer;

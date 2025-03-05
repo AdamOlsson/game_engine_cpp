@@ -25,5 +25,5 @@ class VertexBuffer {
 
 std::unique_ptr<VertexBuffer>
 createVertexBuffer(std::shared_ptr<CoreGraphicsContext> &ctx,
-                   const std::vector<Vertex> &vertices, VkCommandPool &commandPool,
-                   VkQueue &graphicsQueue);
+                   const std::vector<Vertex> &vertices, const VkCommandPool &commandPool,
+                   const VkQueue &graphicsQueue);

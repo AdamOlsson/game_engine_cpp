@@ -17,7 +17,7 @@
 
 static std::vector<char> readFile(const std::string filename);
 
-VkShaderModule createShaderModule(VkDevice &device, const std::vector<char> &code);
+VkShaderModule createShaderModule(const VkDevice &device, const std::vector<char> &code);
 
 void cleanupSwapChainFrameBuffers(VkDevice &device,
                                   std::vector<VkFramebuffer> &swapChainFramebuffers);
@@ -33,7 +33,8 @@ createDescriptorSets(VkDevice &device, VkDescriptorSetLayout &descriptorSetLayou
                      std::vector<std::unique_ptr<StorageBuffer>> &storage_buffers,
                      std::vector<std::unique_ptr<UniformBuffer>> &uniform_buffers);
 
-VkPipeline createGraphicsPipeline(VkDevice &device, const std::string vertex_shader_path,
+VkPipeline createGraphicsPipeline(const VkDevice &device,
+                                  const std::string vertex_shader_path,
                                   const std::string fragment_shader_path,
                                   VkDescriptorSetLayout &descriptorSetLayout,
                                   VkPipelineLayout &pipelineLayout,
@@ -101,6 +102,9 @@ GraphicsPipeline::GraphicsPipeline(Window &window,
         uniformBuffers[i] = createUniformBuffer(ctx, sizeof(UniformBufferObject));
     }
 
+    /*rectangle_geometry =*/
+    /*    std::make_unique<Geometry_::Rectangle>(ctx, commandPool, graphicsQueue);*/
+
     auto [width, height] = window.dimensions();
     UniformBufferObject ubo{
         .dimensions = glm::vec2(static_cast<float>(width), static_cast<float>(height))};
@@ -113,6 +117,11 @@ GraphicsPipeline::GraphicsPipeline(Window &window,
     triangleDescriptorSets = createDescriptorSets(
         ctx->device, bufferDescriptorSetLayout, triangleDescriptorPool,
         MAX_FRAMES_IN_FLIGHT, 0, triangleInstanceBuffers, uniformBuffers);
+
+    /*rectangleDescriptorSets = createDescriptorSets(*/
+    /*    ctx->device, bufferDescriptorSetLayout, rectangleDescriptorPool,*/
+    /*    MAX_FRAMES_IN_FLIGHT, 0, rectangle_geometry->instance_buffers,
+     * uniformBuffers);*/
     rectangleDescriptorSets = createDescriptorSets(
         ctx->device, bufferDescriptorSetLayout, rectangleDescriptorPool,
         MAX_FRAMES_IN_FLIGHT, 0, rectangleInstanceBuffers, uniformBuffers);
@@ -151,7 +160,7 @@ GraphicsPipeline::~GraphicsPipeline() {
 
 void GraphicsPipeline::render(
     Window &window, const std::vector<StorageBufferObject> &triangle_instance_data,
-    const std::vector<StorageBufferObject> &rectangle_instance_data) {
+    std::vector<StorageBufferObject> &&rectangle_instance_data) {
     vkWaitForFences(ctx->device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
     uint32_t imageIndex;
@@ -173,6 +182,8 @@ void GraphicsPipeline::render(
 
     triangleInstanceBuffers[currentFrame]->updateStorageBuffer(triangle_instance_data);
     rectangleInstanceBuffers[currentFrame]->updateStorageBuffer(rectangle_instance_data);
+    /*rectangle_geometry->update_instance_buffer(*/
+    /*    std::forward<std::vector<StorageBufferObject>>(rectangle_instance_data));*/
 
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -248,6 +259,10 @@ void GraphicsPipeline::render(
         vkCmdDrawIndexed(commandBuffers[currentFrame],
                          static_cast<uint32_t>(Geometry::rectangle_indices.size()),
                          num_rectangle_instances, 0, 0, 0);
+        /*rectangle_geometry->record_draw_command(*/
+        /*    commandBuffers[currentFrame], rectangleGraphicsPipeline,*/
+        /*    rectanglePipelineLayout, rectangleDescriptorSets[currentFrame],*/
+        /*    num_rectangle_instances);*/
     }
 
     vkCmdEndRenderPass(commandBuffers[currentFrame]);
@@ -411,7 +426,8 @@ VkDescriptorPool GraphicsPipeline::createDescriptorPool(VkDevice &device,
     return descriptorPool;
 }
 
-VkPipeline createGraphicsPipeline(VkDevice &device, const std::string vertex_shader_path,
+VkPipeline createGraphicsPipeline(const VkDevice &device,
+                                  const std::string vertex_shader_path,
                                   const std::string fragment_shader_path,
                                   VkDescriptorSetLayout &descriptorSetLayout,
                                   VkPipelineLayout &pipelineLayout,
@@ -730,7 +746,7 @@ void cleanupSwapChainFrameBuffers(VkDevice &device,
     }
 }
 
-VkShaderModule createShaderModule(VkDevice &device, const std::vector<char> &code) {
+VkShaderModule createShaderModule(const VkDevice &device, const std::vector<char> &code) {
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     createInfo.codeSize = code.size();

@@ -2,12 +2,14 @@
 
 #include "vulkan/vulkan_core.h"
 
-void createBuffer(VkPhysicalDevice &physicalDevice, VkDevice &device, VkDeviceSize size,
-                  VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
-                  VkBuffer &buffer, VkDeviceMemory &bufferMemory);
+void createBuffer(const VkPhysicalDevice &physicalDevice, VkDevice &device,
+                  const VkDeviceSize size, const VkBufferUsageFlags usage,
+                  const VkMemoryPropertyFlags properties, VkBuffer &buffer,
+                  VkDeviceMemory &bufferMemory);
 
-uint32_t findMemoryType(VkPhysicalDevice &physicalDevice, uint32_t typeFilter,
-                        VkMemoryPropertyFlags properties);
+uint32_t findMemoryType(const VkPhysicalDevice &physicalDevice, const uint32_t typeFilter,
+                        const VkMemoryPropertyFlags properties);
 
-void copyBuffer(VkDevice &device, VkBuffer srcBuffer, VkBuffer dstBuffer,
-                VkDeviceSize size, VkCommandPool &commandPool, VkQueue &graphicsQueue);
+void copyBuffer(const VkDevice &device, const VkBuffer srcBuffer,
+                const VkBuffer dstBuffer, const VkDeviceSize size,
+                const VkCommandPool &commandPool, const VkQueue &graphicsQueue);

@@ -34,7 +34,7 @@ void RenderEngine::render(
     }
 
     this->graphics_pipeline->render(*window, triangle_instance_data,
-                                    rectangle_instance_data);
+                                    std::move(rectangle_instance_data));
 }
 
 void RenderEngine::wait_idle() { this->g_ctx->wait_idle(); }

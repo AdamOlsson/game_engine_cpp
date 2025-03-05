@@ -12,6 +12,7 @@ class IndexBuffer {
   public:
     VkBuffer buffer;
     VkDeviceMemory bufferMemory;
+    size_t num_indices;
 
     IndexBuffer(std::shared_ptr<CoreGraphicsContext> ctx, VkBuffer &buffer,
                 VkDeviceMemory &bufferMemory)
@@ -24,5 +25,5 @@ class IndexBuffer {
 
 std::unique_ptr<IndexBuffer> createIndexBuffer(std::shared_ptr<CoreGraphicsContext> &ctx,
                                                const std::vector<uint16_t> &indices,
-                                               VkCommandPool &commandPool,
-                                               VkQueue &graphicsQueue);
+                                               const VkCommandPool &commandPool,
+                                               const VkQueue &graphicsQueue);
