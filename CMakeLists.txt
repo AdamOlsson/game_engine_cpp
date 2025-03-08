@@ -75,6 +75,28 @@ set_target_properties(0_collision_detection
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 
+
+file(GLOB_RECURSE DEV_SOURCES "examples/2_shape_rendering/*.cpp")
+
+add_executable(2_shape_rendering ${DEV_SOURCES})
+
+target_include_directories(2_shape_rendering
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_link_libraries(2_shape_rendering
+    PRIVATE
+        game_engine
+)
+
+# Output directory for binaries
+set_target_properties(2_shape_rendering
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+
 # Tests configuration
 enable_testing()
 file(GLOB_RECURSE TEST_SOURCES "tests/*.cpp")

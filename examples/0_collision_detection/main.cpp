@@ -3,6 +3,7 @@
 #include "GameEngine.h"
 #include "entity_component_storage/ComponentStore.h"
 #include "entity_component_storage/EntityComponentStorage.h"
+#include "glm/geometric.hpp"
 #include "physics_engine/RigidBody.h"
 #include "physics_engine/SAT.h"
 #include "physics_engine/collision_resolver.h"
@@ -14,28 +15,10 @@
 #include <memory>
 #include <optional>
 
-// DONE: Implement SAT
-// DONE: Either click inside does not fully work or the rendering does not correspond to
-//       the rigidbody (click on triangle does not work properly)
-// DONE: Implement EntityComponentStorage
-// DONE: Implement SAT example
-//        - Add rectangle rendering
-// DONE: Implement Verlet Integration in combination with ECS
-//        - DONE: Replace the ECS with the new one
-//        - DONE: Implement positional updates when dragging an object
-//        - DONE: Builder pattern on RigidBody and RenderBody creation
-//        - DONE: prev_position member on RigidBody
-//
-// TODO: Finalize example
-//        - DONE: implement drag physics
-//        - DONE: Show collision point again
-//        - DONE: Rotate selected object through holding R
-//        - DONE: Toggle between triangle-triangle, triangle-rectangle and
-//                rectangle-rectangle
-// TODO: Make pretty github page for example
-//      - TODO: Record sample
-//      - TODO: Use GIF in readme
-//      - TODO: Write a basic text
+constexpr glm::vec3 RED = glm::vec3(0.5f, 0.0, 0.0);
+constexpr glm::vec3 GREEN = glm::vec3(0.0, 0.5f, 0.0);
+constexpr glm::vec3 YELLOW = glm::vec3(0.5f, 0.5f, 0.0);
+
 void state0(EntityComponentStorage &ecs);
 void state1(EntityComponentStorage &ecs);
 void state2(EntityComponentStorage &ecs);
@@ -121,19 +104,46 @@ class Dev : public Game {
     void render(RenderEngine &render_engine) override {
         std::vector<std::reference_wrapper<const RenderBody>> render_bodies = {};
 
-        // TODO: The common values are only copied during the get_component() function,
-        // therefore we can't use direct access with RenderBodies
         for (auto it = ecs.begin<RenderBody>(); it != ecs.end<RenderBody>(); it++) {
-            render_bodies.push_back(ecs.get_component<RenderBody>(it.id()).value());
+            auto &render_body = *it;
+            auto rigid_body = ecs.get_component<RigidBody>(it.id()).value();
+            render_body.position = rigid_body.get().position;
+            render_body.rotation = rigid_body.get().rotation;
+            render_body.shape = rigid_body.get().shape;
+            render_bodies.push_back(render_body);
         }
 
         if (collision_point.has_value()) {
-            RenderBody r = RenderBody{
-                .color = glm::vec3(1.0, 1.0, 0.0),
-                .position =
-                    collision_point->contact_patch[collision_point->deepest_contact_idx],
-                .shape = Shape::create_rectangle_data(10.0, 10.0)};
-            render_bodies.push_back(std::cref(r));
+            switch (collision_point->contact_type) {
+            case ContactType::NONE:
+                break;
+            case ContactType::VERTEX_VERTEX:
+            case ContactType::VERTEX_EDGE: {
+                const RenderBody r = RenderBody{
+                    .color = YELLOW,
+                    .position = collision_point
+                                    ->contact_patch[collision_point->deepest_contact_idx],
+                    .shape = Shape::create_circle_data(10.0)};
+                render_bodies.push_back(std::cref(r));
+                break;
+            }
+            case ContactType::EDGE_EDGE: {
+                const auto line =
+                    collision_point->contact_patch[1] - collision_point->contact_patch[0];
+                const auto center = collision_point->contact_patch[0] + (line / 2.0f);
+                const float length = glm::length(line);
+                const float thickness = 10.0f;
+                const float rotation =
+                    std::atan2(line.y, line.x); // Crazy expensive operation
+                const RenderBody r =
+                    RenderBody{.color = YELLOW,
+                               .position = center,
+                               .rotation = -rotation, // glm has opposite hand system
+                               .shape = Shape::create_rectangle_data(length, thickness)};
+                render_bodies.push_back(std::cref(r));
+                break;
+            }
+            };
         }
 
         render_engine.render(render_bodies);
@@ -252,8 +262,7 @@ void state0(EntityComponentStorage &ecs) {
                                                .shape(Shape::create_triangle_data(200.0))
                                                .collision_restitution(0.3f)
                                                .build()));
-    ecs.add_component<RenderBody>(
-        e1, std::move(RenderBodyBuilder().color(glm::vec3(0.0, 1.0, 0.0)).build()));
+    ecs.add_component<RenderBody>(e1, std::move(RenderBodyBuilder().color(RED).build()));
 
     EntityId e2 = ecs.create_entity();
     ecs.add_component<RigidBody>(e2, RigidBodyBuilder()
@@ -261,8 +270,7 @@ void state0(EntityComponentStorage &ecs) {
                                          .shape(Shape::create_triangle_data(200.0))
                                          .collision_restitution(0.3f)
                                          .build());
-    ecs.add_component<RenderBody>(
-        e2, RenderBodyBuilder().color(glm::vec3(1.0, 0.0, 0.0)).build());
+    ecs.add_component<RenderBody>(e2, RenderBodyBuilder().color(GREEN).build());
 }
 
 void state1(EntityComponentStorage &ecs) {
@@ -273,8 +281,7 @@ void state1(EntityComponentStorage &ecs) {
                                                .shape(Shape::create_triangle_data(200.0))
                                                .collision_restitution(0.3f)
                                                .build()));
-    ecs.add_component<RenderBody>(
-        e1, std::move(RenderBodyBuilder().color(glm::vec3(0.0, 1.0, 0.0)).build()));
+    ecs.add_component<RenderBody>(e1, std::move(RenderBodyBuilder().color(RED).build()));
 
     EntityId e2 = ecs.create_entity();
     ecs.add_component<RigidBody>(e2,
@@ -283,8 +290,7 @@ void state1(EntityComponentStorage &ecs) {
                                      .shape(Shape::create_rectangle_data(180.0, 180.0))
                                      .collision_restitution(0.3f)
                                      .build());
-    ecs.add_component<RenderBody>(
-        e2, RenderBodyBuilder().color(glm::vec3(1.0, 0.0, 0.0)).build());
+    ecs.add_component<RenderBody>(e2, RenderBodyBuilder().color(GREEN).build());
 }
 
 void state2(EntityComponentStorage &ecs) {
@@ -295,8 +301,7 @@ void state2(EntityComponentStorage &ecs) {
                           .shape(Shape::create_rectangle_data(180.0, 180.0))
                           .collision_restitution(0.3f)
                           .build()));
-    ecs.add_component<RenderBody>(
-        e1, std::move(RenderBodyBuilder().color(glm::vec3(0.0, 1.0, 0.0)).build()));
+    ecs.add_component<RenderBody>(e1, std::move(RenderBodyBuilder().color(RED).build()));
 
     EntityId e2 = ecs.create_entity();
     ecs.add_component<RigidBody>(e2,
@@ -305,8 +310,7 @@ void state2(EntityComponentStorage &ecs) {
                                      .shape(Shape::create_rectangle_data(180.0, 180.0))
                                      .collision_restitution(0.3f)
                                      .build());
-    ecs.add_component<RenderBody>(
-        e2, RenderBodyBuilder().color(glm::vec3(1.0, 0.0, 0.0)).build());
+    ecs.add_component<RenderBody>(e2, RenderBodyBuilder().color(GREEN).build());
 }
 
 int main() {

@@ -1,8 +1,12 @@
 #version 450
 
 #define PI 3.14159265
-#define TRIANGLE 1
-#define RECTANGLE 2
+#define CIRCLE 1
+#define TRIANGLE 2
+#define RECTANGLE 3
+#define HEKTAGON 4
+#define ARROW 5 
+#define LINE 6 
 
 struct Shape {
     float param1;
@@ -41,14 +45,7 @@ mat3 rotationMatrixZ(float theta) {
                 0.0, 0.0, 1.0);
 }
 
-vec3 scale_triangle_vertex(vec3 vertex, float side) {
-    // Since base triangle vertices are in a standard size,
-    // we can just multiply directly by the desired side length
-    return vertex * side;
-}
-
-
-vec3 scale_rectangle_vertex(vec3 vertex, float width, float height) {
+vec3 scale_vertex(vec3 vertex, float width, float height) {
     return vec3(
         vertex.x * width,
         vertex.y * height,
@@ -73,14 +70,13 @@ void main() {
         vec3 scaled_vertex_pos;
         
         switch(instance.shape_type) {
+            case CIRCLE:
             case TRIANGLE:
-                float side = instance.shape.param1;
-                scaled_vertex_pos = scale_triangle_vertex(inPosition, side);
+            case HEKTAGON:
+                scaled_vertex_pos = scale_vertex(inPosition, instance.shape.param1, instance.shape.param1);
                 break;
             case RECTANGLE:
-                float width = instance.shape.param1;
-                float height = instance.shape.param2;
-                scaled_vertex_pos = scale_rectangle_vertex(inPosition, width, height);
+                scaled_vertex_pos = scale_vertex(inPosition, instance.shape.param1, instance.shape.param2);
                 break;
             default:
                 scaled_vertex_pos = inPosition;  // Fallback to original position

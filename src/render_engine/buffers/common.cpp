@@ -2,9 +2,10 @@
 
 #include <stdexcept>
 
-void createBuffer(VkPhysicalDevice &physicalDevice, VkDevice &device, VkDeviceSize size,
-                  VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
-                  VkBuffer &buffer, VkDeviceMemory &bufferMemory) {
+void createBuffer(const VkPhysicalDevice &physicalDevice, VkDevice &device,
+                  const VkDeviceSize size, const VkBufferUsageFlags usage,
+                  const VkMemoryPropertyFlags properties, VkBuffer &buffer,
+                  VkDeviceMemory &bufferMemory) {
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bufferInfo.size = size;
@@ -31,8 +32,8 @@ void createBuffer(VkPhysicalDevice &physicalDevice, VkDevice &device, VkDeviceSi
     vkBindBufferMemory(device, buffer, bufferMemory, 0);
 }
 
-uint32_t findMemoryType(VkPhysicalDevice &physicalDevice, uint32_t typeFilter,
-                        VkMemoryPropertyFlags properties) {
+uint32_t findMemoryType(const VkPhysicalDevice &physicalDevice, const uint32_t typeFilter,
+                        const VkMemoryPropertyFlags properties) {
     VkPhysicalDeviceMemoryProperties memProperties;
     vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
     for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
@@ -44,8 +45,9 @@ uint32_t findMemoryType(VkPhysicalDevice &physicalDevice, uint32_t typeFilter,
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
-void copyBuffer(VkDevice &device, VkBuffer srcBuffer, VkBuffer dstBuffer,
-                VkDeviceSize size, VkCommandPool &commandPool, VkQueue &graphicsQueue) {
+void copyBuffer(const VkDevice &device, const VkBuffer srcBuffer,
+                const VkBuffer dstBuffer, const VkDeviceSize size,
+                const VkCommandPool &commandPool, const VkQueue &graphicsQueue) {
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
