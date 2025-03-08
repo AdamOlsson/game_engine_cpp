@@ -39,3 +39,11 @@ std::string mat_to_string(const glm::mat3x3 &mat) {
         << ")";
     return oss.str();
 }
+
+std::ostream &operator<<(std::ostream &os, const std::vector<uint16_t> &us) {
+    os << "[";
+    for (auto u : us) {
+        os << u << ", ";
+    }
+    return os << "]";
+}

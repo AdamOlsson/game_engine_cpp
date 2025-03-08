@@ -1,38 +1,38 @@
 #include "VertexBuffer.h"
-#include "io.h"
 #include "render_engine/buffers/common.h"
 #include <vector>
 
-std::unique_ptr<VertexBuffer> createVertexBuffer(VkPhysicalDevice &physicalDevice,
-                                                 VkDevice &device,
-                                                 const std::vector<Vertex> &vertices,
-                                                 VkCommandPool &commandPool,
-                                                 VkQueue &graphicsQueue) {
+std::unique_ptr<VertexBuffer>
+createVertexBuffer(std::shared_ptr<CoreGraphicsContext> &ctx,
+                   const std::vector<Vertex> &vertices, const VkCommandPool &commandPool,
+                   const VkQueue &graphicsQueue) {
+
     VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
     VkBuffer stagingBuffer;
     VkDeviceMemory stagingBufferMemory;
-    createBuffer(physicalDevice, device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                 stagingBuffer, stagingBufferMemory);
+    createBuffer(
+        ctx->physicalDevice, ctx->device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        stagingBuffer, stagingBufferMemory);
 
     void *data;
-    vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+    vkMapMemory(ctx->device, stagingBufferMemory, 0, bufferSize, 0, &data);
     memcpy(data, vertices.data(), (size_t)bufferSize);
-    vkUnmapMemory(device, stagingBufferMemory);
+    vkUnmapMemory(ctx->device, stagingBufferMemory);
 
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
-    createBuffer(physicalDevice, device, bufferSize,
+    createBuffer(ctx->physicalDevice, ctx->device, bufferSize,
                  VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
 
-    copyBuffer(device, stagingBuffer, vertexBuffer, bufferSize, commandPool,
+    copyBuffer(ctx->device, stagingBuffer, vertexBuffer, bufferSize, commandPool,
                graphicsQueue);
-    vkDestroyBuffer(device, stagingBuffer, nullptr);
-    vkFreeMemory(device, stagingBufferMemory, nullptr);
+    vkDestroyBuffer(ctx->device, stagingBuffer, nullptr);
+    vkFreeMemory(ctx->device, stagingBufferMemory, nullptr);
 
-    return std::make_unique<VertexBuffer>(device, vertexBuffer, vertexBufferMemory);
+    return std::make_unique<VertexBuffer>(ctx, vertexBuffer, vertexBufferMemory,
+                                          bufferSize);
 }
 
 VertexBuffer::~VertexBuffer() { cleanup(); }
@@ -43,12 +43,7 @@ void VertexBuffer::cleanup() {
         return;
     }
 
-    if (device == nullptr) {
-        std::cout << "Can't cleanup Vertex Buffer because device is null." << std::endl;
-        return;
-    }
-
-    vkDestroyBuffer(*device, buffer, nullptr);
-    vkFreeMemory(*device, bufferMemory, nullptr);
+    vkDestroyBuffer(ctx->device, buffer, nullptr);
+    vkFreeMemory(ctx->device, bufferMemory, nullptr);
     cleanup_done = true;
 }

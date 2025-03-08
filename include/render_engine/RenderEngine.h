@@ -6,6 +6,11 @@
 #include <GLFW/glfw3.h>
 
 class RenderEngine {
+  private:
+    std::unique_ptr<Window> window;
+    std::shared_ptr<CoreGraphicsContext> g_ctx;
+    std::unique_ptr<GraphicsPipeline> graphics_pipeline;
+
   public:
     RenderEngine(const uint32_t width, const uint32_t height, char const *title);
     ~RenderEngine();
@@ -29,9 +34,4 @@ class RenderEngine {
 
     void render(const std::vector<std::reference_wrapper<const RenderBody>> &bodies);
     void wait_idle();
-
-  private:
-    std::unique_ptr<Window> window;
-    CoreGraphicsContext g_ctx;
-    std::unique_ptr<GraphicsPipeline> graphics_pipeline;
 };

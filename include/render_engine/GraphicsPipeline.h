@@ -1,13 +1,11 @@
 #pragma once
 
 #include "render_engine/CoreGraphicsContext.h"
+#include "render_engine/RenderableGeometry.h"
 #include "render_engine/SwapChain.h"
 #include "render_engine/Window.h"
-#include "render_engine/buffers/IndexBuffer.h"
 #include "render_engine/buffers/StorageBuffer.h"
 #include "render_engine/buffers/UniformBuffer.h"
-#include "render_engine/buffers/VertexBuffer.h"
-#include "render_engine/shapes/Geometry.h"
 #include "vulkan/vulkan_core.h"
 #include <iostream>
 #include <memory>
@@ -19,17 +17,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
-
-struct Device {
-    VkDevice device;
-    Device(VkDevice device) : device(device) {}
-    ~Device() {
-        if (device == nullptr) {
-            return;
-        }
-        vkDestroyDevice(device, nullptr);
-    }
-};
 
 VKAPI_ATTR inline VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -43,17 +30,20 @@ VKAPI_ATTR inline VkBool32 VKAPI_CALL debugCallback(
 
 class GraphicsPipeline {
   public:
-    GraphicsPipeline(Window &window, CoreGraphicsContext &ctx);
+    GraphicsPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx);
     ~GraphicsPipeline();
 
-    void render(Window &window,
-                const std::vector<StorageBufferObject> &triangle_instance_data,
-                const std::vector<StorageBufferObject> &rectangle_instance_data);
+    void render(Window &window, std::vector<StorageBufferObject> &&circle_instance_data,
+                std::vector<StorageBufferObject> &&triangle_instance_data,
+                std::vector<StorageBufferObject> &&rectangle_instance_data,
+                std::vector<StorageBufferObject> &&hexagon_instance_data,
+                std::vector<StorageBufferObject> &&arrow_instance_data,
+                std::vector<StorageBufferObject> &&line_instance_data);
 
   private:
     uint32_t currentFrame = 0;
 
-    CoreGraphicsContext *ctx;
+    std::shared_ptr<CoreGraphicsContext> ctx;
 
     VkQueue graphicsQueue;
     VkQueue presentQueue;
@@ -64,33 +54,31 @@ class GraphicsPipeline {
 
     VkDescriptorSetLayout bufferDescriptorSetLayout;
 
-    VkPipelineLayout trianglePipelineLayout;
-    VkPipeline triangleGraphicsPipeline;
-
-    VkPipelineLayout rectanglePipelineLayout;
-    VkPipeline rectangleGraphicsPipeline;
-
-    std::vector<VkFramebuffer> swapChainFramebuffers;
     VkCommandPool commandPool;
+    std::vector<VkFramebuffer> swapChainFramebuffers;
     std::vector<VkCommandBuffer> commandBuffers;
 
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
     std::vector<VkFence> inFlightFences;
 
-    std::unique_ptr<VertexBuffer> triangleVertexBuffer;
-    std::unique_ptr<IndexBuffer> triangleIndexBuffer;
-    std::unique_ptr<VertexBuffer> rectangleVertexBuffer;
-    std::unique_ptr<IndexBuffer> rectangleIndexBuffer;
-
     std::vector<std::unique_ptr<UniformBuffer>> uniformBuffers;
-    std::vector<std::unique_ptr<StorageBuffer>> triangleInstanceBuffers;
-    std::vector<std::unique_ptr<StorageBuffer>> rectangleInstanceBuffers;
 
-    VkDescriptorPool triangleDescriptorPool;
-    VkDescriptorPool rectangleDescriptorPool;
-    std::vector<VkDescriptorSet> triangleDescriptorSets;
-    std::vector<VkDescriptorSet> rectangleDescriptorSets;
+    VkPipelineLayout geometryPipelineLayout;
+    VkPipeline geometryGraphicsPipeline;
+    VkDescriptorPool geometryDescriptorPool;
+
+    std::unique_ptr<Geometry::Circle> circle_geometry;
+    std::vector<VkDescriptorSet> circle_descriptor_sets;
+
+    std::unique_ptr<Geometry::Triangle> triangle_geometry;
+    std::vector<VkDescriptorSet> triangle_descriptor_sets;
+
+    std::unique_ptr<Geometry::Rectangle> rectangle_geometry;
+    std::vector<VkDescriptorSet> rectangle_descriptor_sets;
+
+    std::unique_ptr<Geometry::Hexagon> hexagon_geometry;
+    std::vector<VkDescriptorSet> hexagon_descriptor_sets;
 
     const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 
