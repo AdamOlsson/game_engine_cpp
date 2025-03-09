@@ -201,7 +201,7 @@ CollisionInformation find_clipping_points(const CollisionEdge &edge_a,
             contact_patch.push_back(std::move(clipped_points[i]));
             if (max_depth < depth) {
                 max_depth = depth;
-                max_depth_idx = i;
+                max_depth_idx = contact_patch.size() - 1;
             }
         }
     }
