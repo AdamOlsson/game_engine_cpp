@@ -76,7 +76,6 @@ class Example0CollisionDetection : public Game {
         }
 
         if (ccs.has_value()) {
-            /*std::cout << ccs.value() << std::endl;*/
             // Only update the non-selected object
             if (selected_entity_id.has_value() &&
                 selected_entity_id.value() != body_green_id) {

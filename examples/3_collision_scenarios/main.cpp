@@ -7,12 +7,17 @@
 #include "physics_engine/SAT.h"
 #include "physics_engine/collision_resolver.h"
 #include "render_engine/RenderBody.h"
-#include <cfloat>
 #include <functional>
 #include <memory>
 #include <optional>
 
-void add_initial_entities(EntityComponentStorage &ecs);
+constexpr glm::vec3 RED = glm::vec3(0.5f, 0.0, 0.0);
+constexpr glm::vec3 GREEN = glm::vec3(0.0, 0.5f, 0.0);
+
+using ScenarioFunction = void (*)(EntityComponentStorage &ecs);
+void scenario_0(EntityComponentStorage &ecs);
+void scenario_1(EntityComponentStorage &ecs);
+void scenario_2(EntityComponentStorage &ecs);
 
 void apply_physics(RigidBody &body, float dt) {
     // TODO: Add accelleration
@@ -22,63 +27,38 @@ void apply_physics(RigidBody &body, float dt) {
     body.rotation += body.angular_velocity * dt;
 }
 
-constexpr RigidBody BOTTOM_BORDER =
-    RigidBody{.position = WorldPoint(0.0, -450.0f, 0.0f),
-              .prev_position = WorldPoint(0.0, 450.0f, 0.0f),
-              .mass = FLT_MAX,
-              .shape = Shape{Rectangle{800.0, 100.0}}};
-
-void apply_correction(const Correction &correction, RigidBody &body, float dt) {
-    body.position += correction.position;
-    body.velocity += correction.velocity;
-    body.angular_velocity += correction.angular_velocity;
-    body.rotation += body.angular_velocity * dt;
-    body.prev_position = static_cast<WorldPoint>(body.position - body.velocity * dt);
-}
-
-// TODO: Implement, preferably make use of another body just outside of the screen but
-// don't apply changes to it
-// TODO: Why is it not bouncing? Note that there are tests not translated from Rust
-void constrain_to_window(CollisionSolver &solver, RigidBody &body, float dt) {
-    std::optional<CollisionInformation> bottom_collision_info =
-        SAT::collision_detection(body, BOTTOM_BORDER);
-
-    if (bottom_collision_info.has_value()) {
-        std::optional<CollisionCorrections> correction =
-            solver.resolve_collision(bottom_collision_info.value(), body, BOTTOM_BORDER);
-
-        if (correction.has_value()) {
-            std::cout << bottom_collision_info.value() << std::endl;
-            std::cout << "dynamic body: " << body << std::endl;
-            std::cout << "dynamic correction: " << correction.value().body_a << std::endl;
-            std::cout << "static correction: " << correction.value().body_b << std::endl;
-            apply_correction(correction.value().body_a, body, dt);
-            /*body.position += -correction.value().body_b.position;*/
-
-            std::cout << "corrected dynamic body: " << body << std::endl;
-            std::cout << std::endl;
-        }
-    }
-}
-
-class Example1SpatialSubdivision : public Game {
+class Example3CollisionTypes : public Game {
   public:
     EntityComponentStorage ecs;
     CollisionSolver solver;
 
-    Example1SpatialSubdivision()
-        : ecs(EntityComponentStorage()), solver(CollisionSolver()) {
-        add_initial_entities(ecs);
+    std::vector<ScenarioFunction> scenarios;
+
+    size_t scenario_idx = 0;
+    bool collision_has_occured = false;
+    size_t frame_count = 121;
+    const size_t max_frame_count = 120;
+    Example3CollisionTypes() : ecs(EntityComponentStorage()), solver(CollisionSolver()) {
+        scenarios.push_back(&scenario_2);
+        scenarios.push_back(&scenario_1);
+        scenarios.push_back(&scenario_0);
     };
 
-    ~Example1SpatialSubdivision() {};
+    ~Example3CollisionTypes() {};
 
     void update(float dt) override {
+
+        if (frame_count > max_frame_count) {
+            ecs = EntityComponentStorage(); // reset
+            scenarios[scenario_idx](ecs);
+            collision_has_occured = false;
+            frame_count = 0;
+            scenario_idx = (scenario_idx + 1) % scenarios.size();
+        }
 
         ecs.apply_fn<RigidBody>(
             [dt](EntityId id, RigidBody &body) { apply_physics(body, dt); });
 
-        // TODO: Make use of Spatial Subdivision
         auto body_0 = ecs.get_component<RigidBody>(0);
         auto body_1 = ecs.get_component<RigidBody>(1);
         std::optional<CollisionInformation> collision =
@@ -86,6 +66,7 @@ class Example1SpatialSubdivision : public Game {
 
         std::optional<CollisionCorrections> ccs;
         if (collision.has_value()) {
+            collision_has_occured = true;
             ccs =
                 solver.resolve_collision(collision.value(), body_0->get(), body_1->get());
         }
@@ -105,9 +86,9 @@ class Example1SpatialSubdivision : public Game {
             });
         }
 
-        /*ecs.apply_fn<RigidBody>([dt, this](EntityId id, RigidBody &body) {*/
-        /*    constrain_to_window(solver, body, dt);*/
-        /*});*/
+        if (collision_has_occured) {
+            frame_count++;
+        }
     };
 
     void render(RenderEngine &render_engine) override {
@@ -128,14 +109,65 @@ class Example1SpatialSubdivision : public Game {
     void setup(RenderEngine &render_engine) override {}
 };
 
-void add_initial_entities(EntityComponentStorage &ecs) {
+void scenario_2(EntityComponentStorage &ecs) {
     EntityId e1 = ecs.create_entity();
     ecs.add_component<RigidBody>(
         e1, std::move(RigidBodyBuilder()
                           .position(WorldPoint(-200.0f, 0.0, 0.0))
                           .velocity(glm::vec3(2.0, 0.0, 0.0))
                           .mass(1.0)
-                          /*.rotation(glm::radians(10.0))*/
+                          .angular_velocity(glm::radians(0.0))
+                          .shape(Shape::create_rectangle_data(100.0, 100.0))
+                          .build()));
+    ecs.add_component<RenderBody>(
+        e1, std::move(RenderBodyBuilder().color(glm::vec3(0.0, 1.0, 0.0)).build()));
+
+    EntityId e2 = ecs.create_entity();
+    ecs.add_component<RigidBody>(
+        e2, std::move(RigidBodyBuilder()
+                          .position(WorldPoint(50.0f, -100.0, 0.0))
+                          .velocity(glm::vec3(0.0, 0.0, 0.0))
+                          .mass(1.0)
+                          .angular_velocity(glm::radians(0.0))
+                          .shape(Shape::create_rectangle_data(50.0, 200.0))
+                          .build()));
+    ecs.add_component<RenderBody>(
+        e2, std::move(RenderBodyBuilder().color(glm::vec3(1.0, 0.0, 0.0)).build()));
+}
+
+void scenario_1(EntityComponentStorage &ecs) {
+    EntityId e1 = ecs.create_entity();
+    ecs.add_component<RigidBody>(
+        e1, std::move(RigidBodyBuilder()
+                          .position(WorldPoint(-200.0f, 0.0, 0.0))
+                          .velocity(glm::vec3(2.0, 0.0, 0.0))
+                          .mass(1.0)
+                          .angular_velocity(glm::radians(0.0))
+                          .shape(Shape::create_rectangle_data(100.0, 100.0))
+                          .build()));
+    ecs.add_component<RenderBody>(
+        e1, std::move(RenderBodyBuilder().color(glm::vec3(0.0, 1.0, 0.0)).build()));
+
+    EntityId e2 = ecs.create_entity();
+    ecs.add_component<RigidBody>(
+        e2, std::move(RigidBodyBuilder()
+                          .position(WorldPoint(500.0f, 0.0, 0.0))
+                          .velocity(glm::vec3(0.0, 0.0, 0.0))
+                          .mass(FLT_MAX)
+                          .angular_velocity(glm::radians(0.0))
+                          .shape(Shape::create_rectangle_data(1000.0, 1000.0))
+                          .build()));
+    ecs.add_component<RenderBody>(
+        e2, std::move(RenderBodyBuilder().color(glm::vec3(1.0, 0.0, 0.0)).build()));
+}
+
+void scenario_0(EntityComponentStorage &ecs) {
+    EntityId e1 = ecs.create_entity();
+    ecs.add_component<RigidBody>(
+        e1, std::move(RigidBodyBuilder()
+                          .position(WorldPoint(-200.0f, 0.0, 0.0))
+                          .velocity(glm::vec3(2.0, 0.0, 0.0))
+                          .mass(1.0)
                           .angular_velocity(glm::radians(0.0))
                           .shape(Shape::create_rectangle_data(100.0, 100.0))
                           /*.collision_restitution(0.7f)*/
@@ -146,13 +178,11 @@ void add_initial_entities(EntityComponentStorage &ecs) {
     EntityId e2 = ecs.create_entity();
     ecs.add_component<RigidBody>(
         e2, std::move(RigidBodyBuilder()
-                          .position(WorldPoint(200.0f, -100.0, 0.0))
+                          .position(WorldPoint(50.0f, 0.0, 0.0))
                           .velocity(glm::vec3(0.0, 0.0, 0.0))
                           .mass(1.0)
-                          /*.rotation(glm::radians(10.0))*/
                           .angular_velocity(glm::radians(0.0))
-                          .shape(Shape::create_rectangle_data(50.0, 200.0))
-                          /*.collision_restitution(0.7f)*/
+                          .shape(Shape::create_rectangle_data(100.0, 100.0))
                           .build()));
     ecs.add_component<RenderBody>(
         e2, std::move(RenderBodyBuilder().color(glm::vec3(1.0, 0.0, 0.0)).build()));
@@ -164,7 +194,7 @@ int main() {
     config.window_height = 800;
     config.window_title = "1_collision_detection";
 
-    auto game = std::make_unique<Example1SpatialSubdivision>();
+    auto game = std::make_unique<Example3CollisionTypes>();
     auto game_engine = std::make_unique<GameEngine>(std::move(game), config);
     game_engine->run();
 
