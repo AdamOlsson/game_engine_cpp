@@ -31,7 +31,8 @@ constexpr RigidBody BOTTOM_BORDER =
 void apply_correction(const Correction &correction, RigidBody &body, float dt) {
     body.position += correction.position;
     body.velocity += correction.velocity;
-    body.rotation += correction.angular_velocity * dt;
+    body.angular_velocity += correction.angular_velocity;
+    body.rotation += body.angular_velocity * dt;
     body.prev_position = static_cast<WorldPoint>(body.position - body.velocity * dt);
 }
 
@@ -47,18 +48,10 @@ void constrain_to_window(CollisionSolver &solver, RigidBody &body, float dt) {
             solver.resolve_collision(bottom_collision_info.value(), body, BOTTOM_BORDER);
 
         if (correction.has_value()) {
-            // TODO: The main problem now that when the object eventually meets the static
-            //       edge there will arise an edge-edge collision which I interpret as
-            //       vertex-edge collision (because I can't identify edge-edge). This
-            //       leads to angular velocity changes which should be linear velocity.
-            //       See the test GivenRectangleCollideswithStaticObjectExpectBounce for
-            //       an example. I need to properly identify edge-edge collisions
             std::cout << bottom_collision_info.value() << std::endl;
             std::cout << "dynamic body: " << body << std::endl;
             std::cout << "dynamic correction: " << correction.value().body_a << std::endl;
             std::cout << "static correction: " << correction.value().body_b << std::endl;
-            // TODO: The updates to the rigid body does not seem to be persistent
-            // TODO: The linear velocity is way to small
             apply_correction(correction.value().body_a, body, dt);
             /*body.position += -correction.value().body_b.position;*/
 
@@ -96,10 +89,13 @@ class Example1SpatialSubdivision : public Game {
     void render(RenderEngine &render_engine) override {
         std::vector<std::reference_wrapper<const RenderBody>> render_bodies = {};
 
-        // TODO: The common values are only copied during the get_component()
-        // function, therefore we can't use direct access with RenderBodies
         for (auto it = ecs.begin<RenderBody>(); it != ecs.end<RenderBody>(); it++) {
-            render_bodies.push_back(ecs.get_component<RenderBody>(it.id()).value());
+            auto &render_body = *it;
+            auto rigid_body = ecs.get_component<RigidBody>(it.id()).value();
+            render_body.position = rigid_body.get().position;
+            render_body.rotation = rigid_body.get().rotation;
+            render_body.shape = rigid_body.get().shape;
+            render_bodies.push_back(render_body);
         }
 
         render_engine.render(render_bodies);
@@ -115,7 +111,7 @@ void add_initial_entities(EntityComponentStorage &ecs) {
                                                .position(WorldPoint(-200.0f, 0.0, 0.0))
                                                .velocity(glm::vec3(0.0, -2.0, 0.0))
                                                .mass(1.0)
-                                               .rotation(glm::radians(10.0))
+                                               /*.rotation(glm::radians(10.0))*/
                                                .angular_velocity(glm::radians(0.0))
                                                .shape(Shape::create_triangle_data(200.0))
                                                .collision_restitution(0.7f)

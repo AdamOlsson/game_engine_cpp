@@ -35,15 +35,9 @@ CollisionSolver::resolve_collision(const CollisionInformation &ci,
         return std::nullopt;
     case ContactType::VERTEX_VERTEX:
     case ContactType::VERTEX_EDGE: {
-        const glm::vec3 &contact_point = ci.contact_patch[ci.deepest_contact_idx];
-        const glm::vec3 &normal = ci.normal;
-        const float penetration_depth = ci.penetration_depth;
         return resolve_collision_vertex_vertex(ci, body_a, body_b);
     }
     case ContactType::EDGE_EDGE:
-        const glm::vec3 &contact_point = ci.contact_patch[ci.deepest_contact_idx];
-        const glm::vec3 &normal = ci.normal;
-        const float penetration_depth = ci.penetration_depth;
         return resolve_collision_edge_edge(ci, body_a, body_b);
     };
     return std::nullopt;
@@ -132,6 +126,7 @@ std::optional<CollisionCorrections> CollisionSolver::resolve_collision_vertex_ve
 
     const glm::vec3 relative_vel_at_p = body_a_vel_at_p - body_b_vel_at_p;
 
+    // Note: I have never found this to work as expected...
     // If objects are moving away from each other we do not consider it a collision
     /*if (glm::dot(relative_vel_at_p, collision_normal) < 0.0) {*/
     /*    return std::nullopt;*/

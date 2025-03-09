@@ -23,11 +23,6 @@ void state0(EntityComponentStorage &ecs);
 void state1(EntityComponentStorage &ecs);
 void state2(EntityComponentStorage &ecs);
 
-void apply_physics(RigidBody &body, float dt) {
-    /*body.velocity = (body.position - body.prev_position) / dt;*/
-    /*body.prev_position = body.position;*/
-}
-
 class Example0CollisionDetection : public Game {
   public:
     EntityComponentStorage ecs;
@@ -57,9 +52,6 @@ class Example0CollisionDetection : public Game {
     ~Example0CollisionDetection() {};
 
     void update(float dt) override {
-        ecs.apply_fn<RigidBody>(
-            [dt](EntityId id, RigidBody &body) { apply_physics(body, dt); });
-
         const EntityId body_green_id = 0;
         const EntityId body_red_id = 1;
 
@@ -78,13 +70,13 @@ class Example0CollisionDetection : public Game {
 
         std::optional<CollisionCorrections> ccs;
         if (collision.has_value()) {
-            std::cout << collision.value() << std::endl;
+            /*std::cout << collision.value() << std::endl;*/
             ccs = solver.resolve_collision(collision.value(), body_green->get(),
                                            body_red->get());
         }
 
         if (ccs.has_value()) {
-            std::cout << ccs.value() << std::endl;
+            /*std::cout << ccs.value() << std::endl;*/
             // Only update the non-selected object
             if (selected_entity_id.has_value() &&
                 selected_entity_id.value() != body_green_id) {
@@ -154,6 +146,7 @@ class Example0CollisionDetection : public Game {
         }
 
         render_engine.render(render_bodies);
+        collision_point = std::nullopt;
     };
 
     void setup(RenderEngine &render_engine) override {
