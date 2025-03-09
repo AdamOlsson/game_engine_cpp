@@ -15,13 +15,13 @@ struct RigidBody {
     float angular_velocity = 0.0f;
 
     float mass = 1.0f;
-    float inertia = 0.0f;
     float collision_restitution = 0.0f;
 
     std::vector<glm::vec3> vertices() const;
     std::vector<glm::vec3> normals() const;
     std::vector<glm::vec3> edges() const;
     float bounding_volume_radius() const;
+    float inertia() const;
 
     bool is_point_inside(const WorldPoint &) const;
     WorldPoint closest_point_on_body(const WorldPoint &) const;
@@ -41,7 +41,6 @@ class RigidBodyBuilder {
     glm::vec3 velocity_ = glm::vec3(0.0, 0.0, 0.0);
     float angular_velocity_ = 0.0f;
     float mass_ = 1.0f;
-    float inertia_ = 1.0f;
     float collision_restitution_ = 1.0f;
 
   public:
@@ -83,11 +82,6 @@ class RigidBodyBuilder {
         return *this;
     }
 
-    RigidBodyBuilder &inertia(float i) {
-        inertia_ = i;
-        return *this;
-    }
-
     RigidBodyBuilder &collision_restitution(float c_r) {
         collision_restitution_ = c_r;
         return *this;
@@ -109,7 +103,6 @@ class RigidBodyBuilder {
             .velocity = velocity_,
             .angular_velocity = angular_velocity_,
             .mass = mass_,
-            .inertia = inertia_,
             .collision_restitution = collision_restitution_,
         };
     }

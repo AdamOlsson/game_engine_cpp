@@ -26,7 +26,6 @@ constexpr RigidBody BOTTOM_BORDER =
     RigidBody{.position = WorldPoint(0.0, -450.0f, 0.0f),
               .prev_position = WorldPoint(0.0, 450.0f, 0.0f),
               .mass = FLT_MAX,
-              .inertia = FLT_MAX,
               .shape = Shape{Rectangle{800.0, 100.0}}};
 
 void apply_correction(const Correction &correction, RigidBody &body, float dt) {
@@ -39,13 +38,13 @@ void apply_correction(const Correction &correction, RigidBody &body, float dt) {
 // TODO: Implement, preferably make use of another body just outside of the screen but
 // don't apply changes to it
 // TODO: Why is it not bouncing? Note that there are tests not translated from Rust
-void constrain_to_window(RigidBody &body, float dt) {
+void constrain_to_window(CollisionSolver &solver, RigidBody &body, float dt) {
     std::optional<CollisionInformation> bottom_collision_info =
         SAT::collision_detection(body, BOTTOM_BORDER);
 
     if (bottom_collision_info.has_value()) {
         std::optional<CollisionCorrections> correction =
-            resolve_collision(bottom_collision_info.value(), body, BOTTOM_BORDER);
+            solver.resolve_collision(bottom_collision_info.value(), body, BOTTOM_BORDER);
 
         if (correction.has_value()) {
             // TODO: The main problem now that when the object eventually meets the static
@@ -72,8 +71,10 @@ void constrain_to_window(RigidBody &body, float dt) {
 class Example1SpatialSubdivision : public Game {
   public:
     EntityComponentStorage ecs;
+    CollisionSolver solver;
 
-    Example1SpatialSubdivision() : ecs(EntityComponentStorage()) {
+    Example1SpatialSubdivision()
+        : ecs(EntityComponentStorage()), solver(CollisionSolver()) {
         add_initial_entities(ecs);
     };
 
@@ -87,8 +88,9 @@ class Example1SpatialSubdivision : public Game {
         // TODO: Make use of Spatial Subdivision
         // TODO: Make use of SAT
 
-        ecs.apply_fn<RigidBody>(
-            [dt](EntityId id, RigidBody &body) { constrain_to_window(body, dt); });
+        ecs.apply_fn<RigidBody>([dt, this](EntityId id, RigidBody &body) {
+            constrain_to_window(solver, body, dt);
+        });
     };
 
     void render(RenderEngine &render_engine) override {

@@ -142,3 +142,10 @@ WorldPoint closest_point_on_triangle(const RigidBody &body,
 
     return WorldPoint(0.0f, 0.0f, 0.0f);
 }
+
+float triangle_inertia(const RigidBody &body) {
+    auto triangle = body.shape.get<Triangle>();
+    const float height = 0.8660254 * triangle.side; // 0.8860254 = sqrt(3)/2
+    const float base = triangle.side;
+    return (height * height + base * base) * body.mass / 18.0f;
+}

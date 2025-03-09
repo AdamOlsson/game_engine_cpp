@@ -122,7 +122,6 @@ target_link_libraries(unit_tests
         game_engine
         GTest::gtest_main
 )
-
 include(GoogleTest)
 gtest_discover_tests(unit_tests)
 

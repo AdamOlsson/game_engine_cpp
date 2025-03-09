@@ -23,6 +23,11 @@ void state0(EntityComponentStorage &ecs);
 void state1(EntityComponentStorage &ecs);
 void state2(EntityComponentStorage &ecs);
 
+void apply_physics(RigidBody &body, float dt) {
+    /*body.velocity = (body.position - body.prev_position) / dt;*/
+    /*body.prev_position = body.position;*/
+}
+
 class Example0CollisionDetection : public Game {
   public:
     EntityComponentStorage ecs;
@@ -30,6 +35,7 @@ class Example0CollisionDetection : public Game {
     std::optional<size_t> selected_entity_id;
     WorldPoint selected_entity_cursor_offset;
     WorldPoint camera_center;
+    CollisionSolver solver;
 
     std::optional<CollisionInformation> collision_point;
 
@@ -41,7 +47,8 @@ class Example0CollisionDetection : public Game {
     Example0CollisionDetection()
         : selected_entity_id(std::nullopt),
           selected_entity_cursor_offset(WorldPoint(0.0, 0.0, 0.0)),
-          camera_center(WorldPoint(400.0f, 400.0f, 0.0f)), ecs(EntityComponentStorage()) {
+          camera_center(WorldPoint(400.0f, 400.0f, 0.0f)), ecs(EntityComponentStorage()),
+          solver(CollisionSolver()) {
 
         state0(ecs);
         collision_point = std::nullopt;
@@ -50,6 +57,9 @@ class Example0CollisionDetection : public Game {
     ~Example0CollisionDetection() {};
 
     void update(float dt) override {
+        ecs.apply_fn<RigidBody>(
+            [dt](EntityId id, RigidBody &body) { apply_physics(body, dt); });
+
         const EntityId body_green_id = 0;
         const EntityId body_red_id = 1;
 
@@ -68,11 +78,13 @@ class Example0CollisionDetection : public Game {
 
         std::optional<CollisionCorrections> ccs;
         if (collision.has_value()) {
-            ccs =
-                resolve_collision(collision.value(), body_green->get(), body_red->get());
+            std::cout << collision.value() << std::endl;
+            ccs = solver.resolve_collision(collision.value(), body_green->get(),
+                                           body_red->get());
         }
 
         if (ccs.has_value()) {
+            std::cout << ccs.value() << std::endl;
             // Only update the non-selected object
             if (selected_entity_id.has_value() &&
                 selected_entity_id.value() != body_green_id) {

@@ -45,7 +45,7 @@ std::ostream &operator<<(std::ostream &os, const ContactType &c) {
 
 std::ostream &operator<<(std::ostream &os, const CollisionInformation &ci) {
     os << "CollisionInformation( contact_type: " << ci.contact_type
-       << " ,contact_patch: " << ci.contact_patch << ", normal: " << ci.normal
+       << ", contact_patch: " << ci.contact_patch << ", normal: " << ci.normal
        << ", depth: " << ci.penetration_depth
        << ", deepest_contact_idx: " << ci.deepest_contact_idx << " )";
     return os;

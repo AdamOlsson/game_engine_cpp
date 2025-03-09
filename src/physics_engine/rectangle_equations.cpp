@@ -2,6 +2,7 @@
 #include "Coordinates.h"
 #include "equations/equations.h"
 #include "io.h"
+#include "physics_engine/RigidBody.h"
 
 std::vector<glm::vec3> get_rectangle_vertices(const RigidBody &body,
                                               const glm::vec3 &translate,
@@ -118,4 +119,10 @@ WorldPoint closest_point_on_rectangle(const RigidBody &body,
     local_closest_point_on_rect += static_cast<glm::vec3>(body.position);
 
     return static_cast<WorldPoint>(local_closest_point_on_rect);
+}
+
+float rectangle_inertia(const RigidBody &body) {
+    auto rectangle = body.shape.get<Rectangle>();
+    return (rectangle.width * rectangle.width + rectangle.height * rectangle.height) *
+           body.mass / 12.0f;
 }

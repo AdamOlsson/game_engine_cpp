@@ -62,6 +62,6 @@ glm::vec3 Equations::linear_momentum(const RigidBody &body) {
 }
 
 float Equations::angular_momentum(const RigidBody &body) {
-    return body.inertia * body.angular_velocity +
+    return body.inertia() * body.angular_velocity +
            Equations::cross_2d(body.position, body.mass * body.velocity);
 }

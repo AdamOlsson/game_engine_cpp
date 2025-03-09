@@ -96,10 +96,25 @@ WorldPoint RigidBody::closest_point_on_body(const WorldPoint &point) const {
         shape.params);
 }
 
+float RigidBody::inertia() const {
+    return std::visit(
+        [this](auto &&arg) -> float {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, Triangle>) {
+                return triangle_inertia(*this);
+            } else if constexpr (std::is_same_v<T, Rectangle>) {
+                return rectangle_inertia(*this);
+            } else {
+                throw std::runtime_error("Shape not implemented (inertia())");
+            }
+        },
+        shape.params);
+}
+
 std::ostream &operator<<(std::ostream &os, const RigidBody &b) {
     os << "RigidBody( position: " << b.position << ", prev_position: " << b.prev_position
        << ", velocity: " << b.velocity << ", angular_velocity: " << b.angular_velocity
        << ", rotation: " << b.rotation << ", mass: " << b.mass
-       << ", inertia: " << b.inertia << ", shape: " << b.shape << ")";
+       << ", inertia: " << b.inertia() << ", shape: " << b.shape << ")";
     return os;
 }

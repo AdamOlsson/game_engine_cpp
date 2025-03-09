@@ -19,6 +19,25 @@ struct CollisionCorrections {
 std::ostream &operator<<(std::ostream &os, const Correction &c);
 std::ostream &operator<<(std::ostream &os, const CollisionCorrections &c);
 
-std::optional<CollisionCorrections> resolve_collision(const CollisionInformation &ci,
-                                                      const RigidBody &body_a,
-                                                      const RigidBody &body_b);
+class CollisionSolver {
+  private:
+    CollisionSolver(const CollisionSolver &);
+    CollisionSolver &operator=(const CollisionSolver &);
+
+    std::optional<CollisionCorrections>
+    resolve_collision_edge_edge(const CollisionInformation &ci, const RigidBody &body_a,
+                                const RigidBody &body_b);
+    std::optional<CollisionCorrections>
+    resolve_collision_vertex_vertex(const CollisionInformation &ci,
+                                    const RigidBody &body_a, const RigidBody &body_b);
+
+  public:
+    float baumgarte_factor;
+
+    CollisionSolver();
+    CollisionSolver(float baumgarte_factor);
+    ~CollisionSolver() = default;
+    std::optional<CollisionCorrections> resolve_collision(const CollisionInformation &ci,
+                                                          const RigidBody &body_a,
+                                                          const RigidBody &body_b);
+};
