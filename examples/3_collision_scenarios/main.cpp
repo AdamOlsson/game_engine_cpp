@@ -13,17 +13,23 @@
 
 constexpr glm::vec3 RED = glm::vec3(0.5f, 0.0, 0.0);
 constexpr glm::vec3 GREEN = glm::vec3(0.0, 0.5f, 0.0);
-
 using ScenarioFunction = void (*)(EntityComponentStorage &ecs);
 void scenario_0(EntityComponentStorage &ecs);
 void scenario_1(EntityComponentStorage &ecs);
 void scenario_2(EntityComponentStorage &ecs);
+void scenario_3(EntityComponentStorage &ecs);
+void scenario_4(EntityComponentStorage &ecs);
+void scenario_5(EntityComponentStorage &ecs);
+void scenario_6(EntityComponentStorage &ecs);
+void scenario_7(
+    EntityComponentStorage &ecs); // TODO: Acceleration does not behave properly
 
 void apply_physics(RigidBody &body, float dt) {
-    // TODO: Add accelleration
+    WorldPoint temp_position = body.position;
+    body.position = static_cast<WorldPoint>(2.0f * body.position - body.prev_position +
+                                            body.acceleration * dt * dt);
+    body.prev_position = temp_position;
     body.velocity = (body.position - body.prev_position) / dt;
-    body.prev_position = body.position;
-    body.position = static_cast<WorldPoint>(body.position + body.velocity * dt);
     body.rotation += body.angular_velocity * dt;
 }
 
@@ -39,6 +45,11 @@ class Example3CollisionTypes : public Game {
     size_t frame_count = 121;
     const size_t max_frame_count = 120;
     Example3CollisionTypes() : ecs(EntityComponentStorage()), solver(CollisionSolver()) {
+        scenarios.push_back(&scenario_7);
+        scenarios.push_back(&scenario_6);
+        scenarios.push_back(&scenario_5);
+        scenarios.push_back(&scenario_4);
+        scenarios.push_back(&scenario_3);
         scenarios.push_back(&scenario_2);
         scenarios.push_back(&scenario_1);
         scenarios.push_back(&scenario_0);
@@ -47,7 +58,6 @@ class Example3CollisionTypes : public Game {
     ~Example3CollisionTypes() {};
 
     void update(float dt) override {
-
         if (frame_count > max_frame_count) {
             ecs = EntityComponentStorage(); // reset
             scenarios[scenario_idx](ecs);
@@ -75,13 +85,13 @@ class Example3CollisionTypes : public Game {
             ecs.update_component<RigidBody>(0, [ccs, dt](RigidBody &a) {
                 a.position += ccs->body_a.position;
                 a.velocity += ccs->body_a.velocity;
-                a.rotation += ccs->body_a.angular_velocity;
+                a.angular_velocity += ccs->body_a.angular_velocity;
                 a.prev_position = WorldPoint(a.position - a.velocity * dt);
             });
             ecs.update_component<RigidBody>(1, [ccs, dt](RigidBody &b) {
                 b.position += ccs->body_b.position;
                 b.velocity += ccs->body_b.velocity;
-                b.rotation += ccs->body_b.angular_velocity;
+                b.angular_velocity += ccs->body_b.angular_velocity;
                 b.prev_position = WorldPoint(b.position - b.velocity * dt);
             });
         }
@@ -108,6 +118,137 @@ class Example3CollisionTypes : public Game {
 
     void setup(RenderEngine &render_engine) override {}
 };
+
+void scenario_7(EntityComponentStorage &ecs) {
+    EntityId e1 = ecs.create_entity();
+    ecs.add_component<RigidBody>(
+        e1, std::move(RigidBodyBuilder()
+                          .position(WorldPoint(0.0f, -400.0f, 0.0))
+                          .velocity(glm::vec3(0.0, 0.0, 0.0))
+                          .mass(FLT_MAX)
+                          .shape(Shape::create_rectangle_data(800.0f, 100.0f))
+                          .build()));
+    ecs.add_component<RenderBody>(
+        e1, std::move(RenderBodyBuilder().color(glm::vec3(0.0, 1.0, 0.0)).build()));
+
+    EntityId e2 = ecs.create_entity();
+    ecs.add_component<RigidBody>(e2,
+                                 std::move(RigidBodyBuilder()
+                                               .position(WorldPoint(0.0f, 300.0, 0.0))
+                                               .velocity(glm::vec3(0.0, 0.0, 0.0))
+                                               .acceleration(glm::vec3(0.0, -9.82, 0.0))
+                                               .mass(1.0)
+                                               .angular_velocity(glm::radians(20.0))
+                                               .shape(Shape::create_triangle_data(150.0))
+                                               .build()));
+    ecs.add_component<RenderBody>(
+        e2, std::move(RenderBodyBuilder().color(glm::vec3(1.0, 0.0, 0.0)).build()));
+}
+
+void scenario_6(EntityComponentStorage &ecs) {
+    EntityId e1 = ecs.create_entity();
+    ecs.add_component<RigidBody>(e1,
+                                 std::move(RigidBodyBuilder()
+                                               .position(WorldPoint(0.0f, -400.0f, 0.0))
+                                               .velocity(glm::vec3(0.0, 0.0, 0.0))
+                                               .mass(FLT_MAX)
+                                               .angular_velocity(glm::radians(30.0f))
+                                               .shape(Shape::create_triangle_data(400.0))
+                                               .build()));
+    ecs.add_component<RenderBody>(
+        e1, std::move(RenderBodyBuilder().color(glm::vec3(0.0, 1.0, 0.0)).build()));
+
+    EntityId e2 = ecs.create_entity();
+    ecs.add_component<RigidBody>(e2,
+                                 std::move(RigidBodyBuilder()
+                                               .position(WorldPoint(100.0f, 100.0, 0.0))
+                                               .velocity(glm::vec3(0.0, -1.0, 0.0))
+                                               .mass(1.0)
+                                               .angular_velocity(glm::radians(0.0))
+                                               .shape(Shape::create_triangle_data(150.0))
+                                               .build()));
+    ecs.add_component<RenderBody>(
+        e2, std::move(RenderBodyBuilder().color(glm::vec3(1.0, 0.0, 0.0)).build()));
+}
+
+void scenario_5(EntityComponentStorage &ecs) {
+    EntityId e1 = ecs.create_entity();
+    ecs.add_component<RigidBody>(e1,
+                                 std::move(RigidBodyBuilder()
+                                               .position(WorldPoint(0.0f, -200.0f, 0.0))
+                                               .velocity(glm::vec3(0.0, 1.0, 0.0))
+                                               .mass(1.0)
+                                               .rotation(glm::radians(180.0f))
+                                               .angular_velocity(glm::radians(0.0))
+                                               .shape(Shape::create_triangle_data(150.0))
+                                               .build()));
+    ecs.add_component<RenderBody>(
+        e1, std::move(RenderBodyBuilder().color(glm::vec3(0.0, 1.0, 0.0)).build()));
+
+    EntityId e2 = ecs.create_entity();
+    ecs.add_component<RigidBody>(e2,
+                                 std::move(RigidBodyBuilder()
+                                               .position(WorldPoint(100.0f, 100.0, 0.0))
+                                               .velocity(glm::vec3(0.0, -1.0, 0.0))
+                                               .mass(1.0)
+                                               .angular_velocity(glm::radians(0.0))
+                                               .shape(Shape::create_triangle_data(150.0))
+                                               .build()));
+    ecs.add_component<RenderBody>(
+        e2, std::move(RenderBodyBuilder().color(glm::vec3(1.0, 0.0, 0.0)).build()));
+}
+
+void scenario_4(EntityComponentStorage &ecs) {
+    EntityId e1 = ecs.create_entity();
+    ecs.add_component<RigidBody>(
+        e1, std::move(RigidBodyBuilder()
+                          .position(WorldPoint(0.0f, -200.0f, 0.0))
+                          .velocity(glm::vec3(0.0, 1.0, 0.0))
+                          .mass(1.0)
+                          .angular_velocity(glm::radians(0.0))
+                          .shape(Shape::create_rectangle_data(300.0, 50.0))
+                          .build()));
+    ecs.add_component<RenderBody>(
+        e1, std::move(RenderBodyBuilder().color(glm::vec3(0.0, 1.0, 0.0)).build()));
+
+    EntityId e2 = ecs.create_entity();
+    ecs.add_component<RigidBody>(e2,
+                                 std::move(RigidBodyBuilder()
+                                               .position(WorldPoint(100.0f, 100.0, 0.0))
+                                               .velocity(glm::vec3(0.0, -1.0, 0.0))
+                                               .mass(1.0)
+                                               .angular_velocity(glm::radians(0.0))
+                                               .shape(Shape::create_triangle_data(150.0))
+                                               .build()));
+    ecs.add_component<RenderBody>(
+        e2, std::move(RenderBodyBuilder().color(glm::vec3(1.0, 0.0, 0.0)).build()));
+}
+
+void scenario_3(EntityComponentStorage &ecs) {
+    EntityId e1 = ecs.create_entity();
+    ecs.add_component<RigidBody>(
+        e1, std::move(RigidBodyBuilder()
+                          .position(WorldPoint(0.0f, 200.0f, 0.0))
+                          .velocity(glm::vec3(0.0, -1.0, 0.0))
+                          .mass(1.0)
+                          .angular_velocity(glm::radians(0.0))
+                          .shape(Shape::create_rectangle_data(300.0, 50.0))
+                          .build()));
+    ecs.add_component<RenderBody>(
+        e1, std::move(RenderBodyBuilder().color(glm::vec3(0.0, 1.0, 0.0)).build()));
+
+    EntityId e2 = ecs.create_entity();
+    ecs.add_component<RigidBody>(e2,
+                                 std::move(RigidBodyBuilder()
+                                               .position(WorldPoint(100.0f, -100.0, 0.0))
+                                               .velocity(glm::vec3(0.0, 1.0, 0.0))
+                                               .mass(1.0)
+                                               .angular_velocity(glm::radians(0.0))
+                                               .shape(Shape::create_triangle_data(150.0))
+                                               .build()));
+    ecs.add_component<RenderBody>(
+        e2, std::move(RenderBodyBuilder().color(glm::vec3(1.0, 0.0, 0.0)).build()));
+}
 
 void scenario_2(EntityComponentStorage &ecs) {
     EntityId e1 = ecs.create_entity();

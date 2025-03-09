@@ -11,7 +11,8 @@ struct RigidBody {
     WorldPoint prev_position;
     Shape shape;
     float rotation = 0.0f;
-    glm::vec3 velocity = glm::vec3(0.0, 0.0, 0.0);
+    glm::vec3 velocity = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 acceleration = glm::vec3(0.0f, 0.0f, 0.0f);
     float angular_velocity = 0.0f;
 
     float mass = 1.0f;
@@ -37,8 +38,9 @@ class RigidBodyBuilder {
     bool shape_has_value_ = false;
 
     float rotation_ = 0.0f;
-    WorldPoint prev_position_ = WorldPoint(0.0, 0.0, 0.0);
-    glm::vec3 velocity_ = glm::vec3(0.0, 0.0, 0.0);
+    WorldPoint prev_position_ = WorldPoint(0.0f, 0.0f, 0.0f);
+    glm::vec3 velocity_ = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 acceleration_ = glm::vec3(0.0f, 0.0f, 0.0f);
     float angular_velocity_ = 0.0f;
     float mass_ = 1.0f;
     float collision_restitution_ = 1.0f;
@@ -72,6 +74,11 @@ class RigidBodyBuilder {
         return *this;
     }
 
+    RigidBodyBuilder &acceleration(const glm::vec3 &a) {
+        acceleration_ = a;
+        return *this;
+    }
+
     RigidBodyBuilder &angular_velocity(float ang_vel) {
         angular_velocity_ = ang_vel;
         return *this;
@@ -101,6 +108,7 @@ class RigidBodyBuilder {
             .shape = shape_.value(),
             .rotation = rotation_,
             .velocity = velocity_,
+            .acceleration = acceleration_,
             .angular_velocity = angular_velocity_,
             .mass = mass_,
             .collision_restitution = collision_restitution_,
