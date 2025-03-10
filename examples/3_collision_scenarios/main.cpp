@@ -21,13 +21,12 @@ void scenario_3(EntityComponentStorage &ecs);
 void scenario_4(EntityComponentStorage &ecs);
 void scenario_5(EntityComponentStorage &ecs);
 void scenario_6(EntityComponentStorage &ecs);
-void scenario_7(
-    EntityComponentStorage &ecs); // TODO: Acceleration does not behave properly
+void scenario_7(EntityComponentStorage &ecs);
 
 void apply_physics(RigidBody &body, float dt) {
     WorldPoint temp_position = body.position;
     body.position = static_cast<WorldPoint>(2.0f * body.position - body.prev_position +
-                                            body.acceleration * dt * dt);
+                                            0.5f * body.acceleration * dt * dt);
     body.prev_position = temp_position;
     body.velocity = (body.position - body.prev_position) / dt;
     body.rotation += body.angular_velocity * dt;
@@ -44,6 +43,7 @@ class Example3CollisionTypes : public Game {
     bool collision_has_occured = false;
     size_t frame_count = 121;
     const size_t max_frame_count = 120;
+
     Example3CollisionTypes() : ecs(EntityComponentStorage()), solver(CollisionSolver()) {
         scenarios.push_back(&scenario_7);
         scenarios.push_back(&scenario_6);
@@ -136,7 +136,7 @@ void scenario_7(EntityComponentStorage &ecs) {
                                  std::move(RigidBodyBuilder()
                                                .position(WorldPoint(0.0f, 300.0, 0.0))
                                                .velocity(glm::vec3(0.0, 0.0, 0.0))
-                                               .acceleration(glm::vec3(0.0, -9.82, 0.0))
+                                               .acceleration(glm::vec3(0.0, -1000.0, 0.0))
                                                .mass(1.0)
                                                .angular_velocity(glm::radians(20.0))
                                                .shape(Shape::create_triangle_data(150.0))
@@ -162,7 +162,8 @@ void scenario_6(EntityComponentStorage &ecs) {
     ecs.add_component<RigidBody>(e2,
                                  std::move(RigidBodyBuilder()
                                                .position(WorldPoint(100.0f, 100.0, 0.0))
-                                               .velocity(glm::vec3(0.0, -1.0, 0.0))
+                                               .velocity(glm::vec3(0.0, 0.0, 0.0))
+                                               .acceleration(glm::vec3(0.0, -1000.0, 0.0))
                                                .mass(1.0)
                                                .angular_velocity(glm::radians(0.0))
                                                .shape(Shape::create_triangle_data(150.0))
@@ -176,7 +177,7 @@ void scenario_5(EntityComponentStorage &ecs) {
     ecs.add_component<RigidBody>(e1,
                                  std::move(RigidBodyBuilder()
                                                .position(WorldPoint(0.0f, -200.0f, 0.0))
-                                               .velocity(glm::vec3(0.0, 1.0, 0.0))
+                                               .velocity(glm::vec3(0.0, 5.0, 0.0))
                                                .mass(1.0)
                                                .rotation(glm::radians(180.0f))
                                                .angular_velocity(glm::radians(0.0))
@@ -189,7 +190,7 @@ void scenario_5(EntityComponentStorage &ecs) {
     ecs.add_component<RigidBody>(e2,
                                  std::move(RigidBodyBuilder()
                                                .position(WorldPoint(100.0f, 100.0, 0.0))
-                                               .velocity(glm::vec3(0.0, -1.0, 0.0))
+                                               .velocity(glm::vec3(0.0, -5.0, 0.0))
                                                .mass(1.0)
                                                .angular_velocity(glm::radians(0.0))
                                                .shape(Shape::create_triangle_data(150.0))
@@ -203,7 +204,7 @@ void scenario_4(EntityComponentStorage &ecs) {
     ecs.add_component<RigidBody>(
         e1, std::move(RigidBodyBuilder()
                           .position(WorldPoint(0.0f, -200.0f, 0.0))
-                          .velocity(glm::vec3(0.0, 1.0, 0.0))
+                          .velocity(glm::vec3(0.0, 5.0, 0.0))
                           .mass(1.0)
                           .angular_velocity(glm::radians(0.0))
                           .shape(Shape::create_rectangle_data(300.0, 50.0))
@@ -215,7 +216,7 @@ void scenario_4(EntityComponentStorage &ecs) {
     ecs.add_component<RigidBody>(e2,
                                  std::move(RigidBodyBuilder()
                                                .position(WorldPoint(100.0f, 100.0, 0.0))
-                                               .velocity(glm::vec3(0.0, -1.0, 0.0))
+                                               .velocity(glm::vec3(0.0, -5.0, 0.0))
                                                .mass(1.0)
                                                .angular_velocity(glm::radians(0.0))
                                                .shape(Shape::create_triangle_data(150.0))
@@ -229,7 +230,7 @@ void scenario_3(EntityComponentStorage &ecs) {
     ecs.add_component<RigidBody>(
         e1, std::move(RigidBodyBuilder()
                           .position(WorldPoint(0.0f, 200.0f, 0.0))
-                          .velocity(glm::vec3(0.0, -1.0, 0.0))
+                          .velocity(glm::vec3(0.0, -5.0, 0.0))
                           .mass(1.0)
                           .angular_velocity(glm::radians(0.0))
                           .shape(Shape::create_rectangle_data(300.0, 50.0))
@@ -241,7 +242,7 @@ void scenario_3(EntityComponentStorage &ecs) {
     ecs.add_component<RigidBody>(e2,
                                  std::move(RigidBodyBuilder()
                                                .position(WorldPoint(100.0f, -100.0, 0.0))
-                                               .velocity(glm::vec3(0.0, 1.0, 0.0))
+                                               .velocity(glm::vec3(0.0, 5.0, 0.0))
                                                .mass(1.0)
                                                .angular_velocity(glm::radians(0.0))
                                                .shape(Shape::create_triangle_data(150.0))
@@ -255,7 +256,7 @@ void scenario_2(EntityComponentStorage &ecs) {
     ecs.add_component<RigidBody>(
         e1, std::move(RigidBodyBuilder()
                           .position(WorldPoint(-200.0f, 0.0, 0.0))
-                          .velocity(glm::vec3(2.0, 0.0, 0.0))
+                          .velocity(glm::vec3(10.0, 0.0, 0.0))
                           .mass(1.0)
                           .angular_velocity(glm::radians(0.0))
                           .shape(Shape::create_rectangle_data(100.0, 100.0))
@@ -281,7 +282,7 @@ void scenario_1(EntityComponentStorage &ecs) {
     ecs.add_component<RigidBody>(
         e1, std::move(RigidBodyBuilder()
                           .position(WorldPoint(-200.0f, 0.0, 0.0))
-                          .velocity(glm::vec3(2.0, 0.0, 0.0))
+                          .velocity(glm::vec3(10.0, 0.0, 0.0))
                           .mass(1.0)
                           .angular_velocity(glm::radians(0.0))
                           .shape(Shape::create_rectangle_data(100.0, 100.0))
@@ -307,7 +308,7 @@ void scenario_0(EntityComponentStorage &ecs) {
     ecs.add_component<RigidBody>(
         e1, std::move(RigidBodyBuilder()
                           .position(WorldPoint(-200.0f, 0.0, 0.0))
-                          .velocity(glm::vec3(2.0, 0.0, 0.0))
+                          .velocity(glm::vec3(10.0, 0.0, 0.0))
                           .mass(1.0)
                           .angular_velocity(glm::radians(0.0))
                           .shape(Shape::create_rectangle_data(100.0, 100.0))
@@ -333,7 +334,7 @@ int main() {
     GameEngineConfig config{};
     config.window_width = 800;
     config.window_height = 800;
-    config.window_title = "1_collision_detection";
+    config.window_title = "3_collision_scenarios";
 
     auto game = std::make_unique<Example3CollisionTypes>();
     auto game_engine = std::make_unique<GameEngine>(std::move(game), config);

@@ -102,9 +102,14 @@ class RigidBodyBuilder {
             throw std::runtime_error("Shape must be set");
         }
 
+        // TODO: Velocity and acceleration are specified s/pixel, this results in that you
+        // need very large values to get somewhat realistic simulations (1000x expected).
+        // I should find a way where I can enter normal values (9.82m/s*s as acceleration
+        // etc.) and get a realistic simulation
+        const float dt = 0.167f; // 60fps
         return RigidBody{
             .position = position_.value(),
-            .prev_position = WorldPoint(position_.value() - velocity_),
+            .prev_position = WorldPoint(position_.value() - velocity_ * dt),
             .shape = shape_.value(),
             .rotation = rotation_,
             .velocity = velocity_,
