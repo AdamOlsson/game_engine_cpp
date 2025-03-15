@@ -4,7 +4,8 @@
 float Equations::length2(const glm::vec3 &v) { return v.x * v.x + v.y * v.y + v.z * v.z; }
 
 float Equations::distance2(const glm::vec3 &p1, const glm::vec3 &p2) {
-    return length2(p2 - p1);
+    const glm::vec3 diff = p2 - p1;
+    return length2(diff);
 }
 
 float Equations::cross_2d(const glm::vec3 &v1, const glm::vec3 &v2) {
@@ -54,4 +55,13 @@ void Equations::rotate_mut(glm::vec2 &point, float angle) {
     glm::mat2 rotation_matrix = {glm::vec3(cos(angle), -sin(angle), 0.0f),
                                  glm::vec3(sin(angle), cos(angle), 0.0f)};
     point = rotation_matrix * point;
+}
+
+glm::vec3 Equations::linear_momentum(const RigidBody &body) {
+    return body.mass * body.velocity;
+}
+
+float Equations::angular_momentum(const RigidBody &body) {
+    return body.inertia() * body.angular_velocity +
+           Equations::cross_2d(body.position, body.mass * body.velocity);
 }

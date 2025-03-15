@@ -4,6 +4,21 @@
 #include <iostream>
 #include <string>
 
+#ifdef NDEBUG
+#define DEBUG_ASSERT(condition, message) ((void)0)
+#else
+#define DEBUG_ASSERT(condition, message)                                                 \
+    do {                                                                                 \
+        if (!(condition)) {                                                              \
+            std::cerr << "Assertion failed: (" << #condition << "), "                    \
+                      << "function " << __FUNCTION__ << ", file " << __FILE__            \
+                      << ", line " << __LINE__ << ".\n"                                  \
+                      << "Message: " << message << std::endl;                            \
+            std::abort();                                                                \
+        }                                                                                \
+    } while (false)
+#endif
+
 std::string vec_to_string(const glm::vec3 &vec);
 std::string vec_to_string(const glm::vec2 &vec);
 std::string mat_to_string(const glm::mat3 &mat);

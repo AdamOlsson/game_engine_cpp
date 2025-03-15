@@ -55,9 +55,7 @@ set_target_properties(game_engine
 )
 
 file(GLOB_RECURSE DEV_SOURCES "examples/0_collision_detection/*.cpp")
-
 add_executable(0_collision_detection ${DEV_SOURCES})
-
 target_include_directories(0_collision_detection
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -75,24 +73,53 @@ set_target_properties(0_collision_detection
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 
+file(GLOB_RECURSE DEV_SOURCES "examples/1_spatial_subdivision/*.cpp")
+add_executable(1_spatial_subdivision ${DEV_SOURCES})
+target_include_directories(1_spatial_subdivision
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(1_spatial_subdivision
+    PRIVATE
+        game_engine
+)
+# Output directory for binaries
+set_target_properties(1_spatial_subdivision
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
 
 file(GLOB_RECURSE DEV_SOURCES "examples/2_shape_rendering/*.cpp")
-
 add_executable(2_shape_rendering ${DEV_SOURCES})
-
 target_include_directories(2_shape_rendering
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
-
 target_link_libraries(2_shape_rendering
     PRIVATE
         game_engine
 )
-
 # Output directory for binaries
 set_target_properties(2_shape_rendering
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+
+file(GLOB_RECURSE DEV_SOURCES "examples/3_collision_scenarios/*.cpp")
+add_executable(3_collision_scenarios ${DEV_SOURCES})
+target_include_directories(3_collision_scenarios
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(3_collision_scenarios
+    PRIVATE
+        game_engine
+)
+# Output directory for binaries
+set_target_properties(3_collision_scenarios
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
@@ -112,7 +139,6 @@ target_link_libraries(unit_tests
         game_engine
         GTest::gtest_main
 )
-
 include(GoogleTest)
 gtest_discover_tests(unit_tests)
 

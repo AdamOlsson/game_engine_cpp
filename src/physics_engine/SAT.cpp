@@ -45,7 +45,7 @@ std::ostream &operator<<(std::ostream &os, const ContactType &c) {
 
 std::ostream &operator<<(std::ostream &os, const CollisionInformation &ci) {
     os << "CollisionInformation( contact_type: " << ci.contact_type
-       << " ,contact_patch: " << ci.contact_patch << ", normal: " << ci.normal
+       << ", contact_patch: " << ci.contact_patch << ", normal: " << ci.normal
        << ", depth: " << ci.penetration_depth
        << ", deepest_contact_idx: " << ci.deepest_contact_idx << " )";
     return os;
@@ -201,7 +201,7 @@ CollisionInformation find_clipping_points(const CollisionEdge &edge_a,
             contact_patch.push_back(std::move(clipped_points[i]));
             if (max_depth < depth) {
                 max_depth = depth;
-                max_depth_idx = i;
+                max_depth_idx = contact_patch.size() - 1;
             }
         }
     }

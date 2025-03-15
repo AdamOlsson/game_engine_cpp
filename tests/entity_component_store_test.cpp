@@ -228,3 +228,21 @@ TEST(ECSTest, TestIteratingOverComponentAndPerformUpdates) {
     EXPECT_EQ(220.0, r2->get().shape.get<Rectangle>().width);
     EXPECT_EQ(330.0, r2->get().shape.get<Rectangle>().height);
 }
+
+TEST(ECSTest, TestAccessToComponentDenseVector) {
+    EntityComponentStorage ecs = EntityComponentStorage();
+    ecs.add_component<RigidBody>(ecs.create_entity(),
+                                 RigidBodyBuilder()
+                                     .position(WorldPoint(0.0f, 0.0f, 0.0f))
+                                     .shape(Shape::create_rectangle_data(100.0f, 100.0f))
+                                     .build());
+
+    auto rigid_bodies = ecs.get_component<RigidBody>();
+    EXPECT_TRUE(rigid_bodies.has_value());
+
+    rigid_bodies->get()[0].shape = Shape::create_triangle_data(200.0f);
+
+    auto body = ecs.get_component<RigidBody>(0);
+    EXPECT_TRUE(body.has_value());
+    EXPECT_EQ(200.0f, body->get().shape.get<Triangle>().side);
+}

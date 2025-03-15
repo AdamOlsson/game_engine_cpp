@@ -23,18 +23,14 @@ void state0(EntityComponentStorage &ecs);
 void state1(EntityComponentStorage &ecs);
 void state2(EntityComponentStorage &ecs);
 
-class Dev : public Game {
+class Example0CollisionDetection : public Game {
   public:
     EntityComponentStorage ecs;
-
-    using Clock = std::chrono::steady_clock;
-    using TimePoint = std::chrono::time_point<Clock>;
-    using Duration = std::chrono::duration<double>;
-    TimePoint last_tick;
 
     std::optional<size_t> selected_entity_id;
     WorldPoint selected_entity_cursor_offset;
     WorldPoint camera_center;
+    CollisionSolver solver;
 
     std::optional<CollisionInformation> collision_point;
 
@@ -43,16 +39,17 @@ class Dev : public Game {
     // 2 - Rectangle Rectangle
     uint32_t state = 0;
 
-    Dev()
+    Example0CollisionDetection()
         : selected_entity_id(std::nullopt),
           selected_entity_cursor_offset(WorldPoint(0.0, 0.0, 0.0)),
-          camera_center(WorldPoint(400.0f, 400.0f, 0.0f)), ecs(EntityComponentStorage()) {
+          camera_center(WorldPoint(400.0f, 400.0f, 0.0f)), ecs(EntityComponentStorage()),
+          solver(CollisionSolver()) {
 
         state0(ecs);
         collision_point = std::nullopt;
     };
 
-    ~Dev() {};
+    ~Example0CollisionDetection() {};
 
     void update(float dt) override {
         const EntityId body_green_id = 0;
@@ -73,8 +70,8 @@ class Dev : public Game {
 
         std::optional<CollisionCorrections> ccs;
         if (collision.has_value()) {
-            ccs =
-                resolve_collision(collision.value(), body_green->get(), body_red->get());
+            ccs = solver.resolve_collision(collision.value(), body_green->get(),
+                                           body_red->get());
         }
 
         if (ccs.has_value()) {
@@ -147,6 +144,7 @@ class Dev : public Game {
         }
 
         render_engine.render(render_bodies);
+        collision_point = std::nullopt;
     };
 
     void setup(RenderEngine &render_engine) override {
@@ -319,7 +317,7 @@ int main() {
     config.window_height = 800;
     config.window_title = "0_collision_detection";
 
-    auto game = std::make_unique<Dev>();
+    auto game = std::make_unique<Example0CollisionDetection>();
     auto game_engine = std::make_unique<GameEngine>(std::move(game), config);
     std::cout << std::endl << std::endl;
     std::cout << "Control:" << std::endl;

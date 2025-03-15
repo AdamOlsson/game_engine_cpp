@@ -1,6 +1,5 @@
 #pragma once
 
-#include "io.h"
 #include "render_engine/Window.h"
 #include "vulkan/vulkan_core.h"
 #include <vector>

@@ -18,5 +18,3 @@ $ ./build/bin/0_collision_detection
 - Press T to toggle between different shape types
 - Press R while a shape is selected to rotate
 
-## Improvements 
-- The current implementation of SAT assumes that all collisions are vertex to vertex. This causes some unrealistic responses when resolving the collision. An improvement is to also determine the type of collision (vertex-vertex, edge-vertex or edge-edge) and create an approproate response calculation.

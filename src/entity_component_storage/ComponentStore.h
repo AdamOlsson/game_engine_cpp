@@ -28,6 +28,10 @@ template <typename T> class ComponentStore {
         return std::ref(dense[sparse[id].value()]);
     }
 
+    std::optional<std::reference_wrapper<std::vector<T>>> get_dense() {
+        return std::ref(dense);
+    }
+
     T &add(const EntityId id, T &&component) {
         if (sparse.size() <= id) {
             sparse.resize(std::max(sparse.size() * 2 + 1, id + 1));
