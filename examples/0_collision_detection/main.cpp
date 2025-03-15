@@ -70,7 +70,6 @@ class Example0CollisionDetection : public Game {
 
         std::optional<CollisionCorrections> ccs;
         if (collision.has_value()) {
-            /*std::cout << collision.value() << std::endl;*/
             ccs = solver.resolve_collision(collision.value(), body_green->get(),
                                            body_red->get());
         }

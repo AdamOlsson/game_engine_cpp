@@ -221,9 +221,5 @@ inline float calculate_impulse_magnitude(const glm::vec3 &collision_normal,
     const float denom_term3 =
         pow(Equations::cross_2d(body_b_center_to_p, collision_normal), 2.0f) /
         body_b.inertia();
-    /*std::cout << "nom: " << nominator << std::endl;*/
-    /*std::cout << "denom1: " << denom_term1 << std::endl;*/
-    /*std::cout << "denom2: " << denom_term2 << std::endl;*/
-    /*std::cout << "denom3: " << denom_term3 << std::endl;*/
     return nominator / (denom_term1 + denom_term2 + denom_term3);
 }
