@@ -9,6 +9,7 @@ struct GameEngineConfig {
     uint32_t window_height;
     char const *window_title;
     float ticks_per_second = 60.0f;
+    UseFont use_font = UseFont::None;
 };
 
 class GameEngine {

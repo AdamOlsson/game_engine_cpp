@@ -11,6 +11,7 @@ struct RenderBody {
     glm::vec3 position = glm::vec3(0.0, 0.0, 0.0);
     glm::float32 rotation = 0.0;
     Shape shape = Shape::create_rectangle_data(1.0, 1.0);
+    glm::vec4 uvwt = glm::vec4(-1.0f);
 };
 
 std::ostream &operator<<(std::ostream &os, const RenderBody &b);
@@ -25,6 +26,8 @@ class RenderBodyBuilder {
     glm::vec3 position_ = glm::vec3(0.0, 0.0, 0.0);
     glm::float32 rotation_ = 0.0;
     Shape shape_ = Shape::create_rectangle_data(1.0, 1.0);
+
+    glm::vec4 uvwt_ = glm::vec4(-1.0f);
 
   public:
     RenderBodyBuilder() = default;
@@ -50,6 +53,11 @@ class RenderBodyBuilder {
         return *this;
     }
 
+    RenderBodyBuilder &uvwt(const glm::vec4 uv_wt) {
+        uvwt_ = uv_wt;
+        return *this;
+    }
+
     RenderBody build() const {
         if (!color_has_value_) {
             throw std::runtime_error("Color must be set");
@@ -60,6 +68,7 @@ class RenderBodyBuilder {
         body.position = position_;
         body.rotation = rotation_;
         body.shape = shape_;
+        body.uvwt = uvwt_;
 
         return body;
     }

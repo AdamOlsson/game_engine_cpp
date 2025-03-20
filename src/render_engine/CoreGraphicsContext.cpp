@@ -1,9 +1,9 @@
 #include "CoreGraphicsContext.h"
-#include "io.h"
 #include "render_engine/Window.h"
 #include "util.h"
 #include "vulkan/vulkan_beta.h"
 #include "vulkan/vulkan_core.h"
+#include <iostream>
 #include <set>
 #include <stdexcept>
 #include <tuple>
@@ -260,8 +260,8 @@ bool isDeviceSuitable(const VkPhysicalDevice &physicalDevice, VkSurfaceKHR &surf
     /*VkPhysicalDeviceProperties deviceProperties;*/
     /*vkGetPhysicalDeviceProperties(device, &deviceProperties);*/
 
-    /*VkPhysicalDeviceFeatures deviceFeatures;*/
-    /*vkGetPhysicalDeviceFeatures(device, &deviceFeatures);*/
+    VkPhysicalDeviceFeatures deviceFeatures;
+    vkGetPhysicalDeviceFeatures(physicalDevice, &deviceFeatures);
 
     QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
     bool extensionsSupported = checkDeviceExtensionSupport(physicalDevice);
@@ -274,7 +274,8 @@ bool isDeviceSuitable(const VkPhysicalDevice &physicalDevice, VkSurfaceKHR &surf
             !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
     }
 
-    return indices.isComplete() && extensionsSupported && swapChainAdequate;
+    return indices.isComplete() && extensionsSupported && swapChainAdequate &&
+           deviceFeatures.samplerAnisotropy;
 }
 
 VkPhysicalDevice pickPhysicalDevice(VkInstance &instance, VkSurfaceKHR &surface) {
@@ -322,6 +323,7 @@ VkDevice createLogicalDevice(VkPhysicalDevice &physicalDevice, VkSurfaceKHR &sur
     }
 
     VkPhysicalDeviceFeatures deviceFeatures{};
+    deviceFeatures.samplerAnisotropy = VK_TRUE;
 
     std::vector<const char *> extendedDeviceExtensions(deviceExtensions);
     if (enableValidationLayers) {

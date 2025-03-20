@@ -10,33 +10,30 @@ struct UniformBufferObject {
 };
 
 class UniformBuffer {
-  public:
+  private:
     std::shared_ptr<CoreGraphicsContext> ctx;
 
+  public:
     VkBuffer buffer;
-    VkDeviceMemory bufferMemory;
-    void *bufferMapped;
-
+    VkDeviceMemory buffer_memory;
+    void *buffer_mapped;
     VkDeviceSize size;
 
-    UniformBuffer(std::shared_ptr<CoreGraphicsContext> ctx, VkBuffer &buffer,
-                  VkDeviceMemory &bufferMemory, void *bufferMapped, VkDeviceSize &size)
-        : buffer(buffer), bufferMemory(bufferMemory), bufferMapped(bufferMapped),
-          size(size), ctx(ctx) {}
+    UniformBuffer();
+    UniformBuffer(std::shared_ptr<CoreGraphicsContext> ctx, const size_t size);
 
-    ~UniformBuffer() {
-        vkUnmapMemory(ctx->device, bufferMemory);
-        vkFreeMemory(ctx->device, bufferMemory, nullptr);
-        vkDestroyBuffer(ctx->device, buffer, nullptr);
-    }
+    UniformBuffer(UniformBuffer &&) noexcept;            // Move constructor
+    UniformBuffer &operator=(UniformBuffer &&) noexcept; // Move assignment
+
+    ~UniformBuffer();
+
+    UniformBuffer(const UniformBuffer &) = delete;            // Copy constructor
+    UniformBuffer &operator=(const UniformBuffer &) = delete; // Copy assignment
 
     void updateUniformBuffer(const UniformBufferObject &);
 
-    static std::unique_ptr<VkDescriptorSetLayoutBinding>
+    static VkDescriptorSetLayoutBinding
     createDescriptorSetLayoutBinding(uint32_t binding_num);
 
     void dumpData();
 };
-
-std::unique_ptr<UniformBuffer>
-createUniformBuffer(std::shared_ptr<CoreGraphicsContext> &ctx, size_t size);

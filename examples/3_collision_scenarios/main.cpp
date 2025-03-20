@@ -113,7 +113,17 @@ class Example3CollisionTypes : public Game {
             render_bodies.push_back(render_body);
         }
 
+        bool success = render_engine.begin_render_pass();
+        if (!success) {
+            return;
+        }
+
         render_engine.render(render_bodies);
+
+        success = render_engine.end_render_pass();
+        if (!success) {
+            return;
+        }
     };
 
     void setup(RenderEngine &render_engine) override {}

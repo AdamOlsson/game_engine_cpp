@@ -1,8 +1,11 @@
 #pragma once
 
+#include "render_engine/CommandHandler.h"
 #include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/RenderableGeometry.h"
+#include "render_engine/Sampler.h"
 #include "render_engine/SwapChain.h"
+#include "render_engine/Texture.h"
 #include "render_engine/Window.h"
 #include "render_engine/buffers/StorageBuffer.h"
 #include "render_engine/buffers/UniformBuffer.h"
@@ -30,89 +33,49 @@ VKAPI_ATTR inline VkBool32 VKAPI_CALL debugCallback(
 
 class GraphicsPipeline {
   public:
-    GraphicsPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx);
+    GraphicsPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
+                     CommandHandler &command_handler, SwapChain &swap_chain,
+                     VkRenderPass &render_pass,
+                     std::vector<UniformBuffer> &uniform_buffers,
+                     VkDescriptorSetLayout &geometry_descriptor_set_layout,
+                     Sampler &sampler, Texture &texture);
     ~GraphicsPipeline();
 
-    void render(Window &window, std::vector<StorageBufferObject> &&circle_instance_data,
-                std::vector<StorageBufferObject> &&triangle_instance_data,
-                std::vector<StorageBufferObject> &&rectangle_instance_data,
-                std::vector<StorageBufferObject> &&hexagon_instance_data,
-                std::vector<StorageBufferObject> &&arrow_instance_data,
-                std::vector<StorageBufferObject> &&line_instance_data);
+    // TODO: These render function should merge into one generic call
+    void render_circles(const VkCommandBuffer &command_buffer,
+                        std::vector<StorageBufferObject> &&circle_instance_data);
+    void render_triangles(const VkCommandBuffer &command_buffer,
+                          std::vector<StorageBufferObject> &&triangle_instance_data);
+    void render_rectangles(const VkCommandBuffer &command_buffer,
+                           std::vector<StorageBufferObject> &&rectangle_instance_data);
+    void render_hexagons(const VkCommandBuffer &command_buffer,
+                         std::vector<StorageBufferObject> &&hexagon_instance_data);
 
   private:
-    uint32_t currentFrame = 0;
-
     std::shared_ptr<CoreGraphicsContext> ctx;
 
-    VkQueue graphicsQueue;
-    VkQueue presentQueue;
-
-    SwapChain swapChain;
-
-    VkRenderPass renderPass;
-
-    VkDescriptorSetLayout bufferDescriptorSetLayout;
-
-    VkCommandPool commandPool;
-    std::vector<VkFramebuffer> swapChainFramebuffers;
-    std::vector<VkCommandBuffer> commandBuffers;
-
-    std::vector<VkSemaphore> imageAvailableSemaphores;
-    std::vector<VkSemaphore> renderFinishedSemaphores;
-    std::vector<VkFence> inFlightFences;
-
-    std::vector<std::unique_ptr<UniformBuffer>> uniformBuffers;
-
-    VkPipelineLayout geometryPipelineLayout;
-    VkPipeline geometryGraphicsPipeline;
-    VkDescriptorPool geometryDescriptorPool;
+    VkPipelineLayout pipeline_layout;
+    VkPipeline graphics_pipeline;
+    VkDescriptorPool descriptor_pool;
 
     std::unique_ptr<Geometry::Circle> circle_geometry;
-    std::vector<VkDescriptorSet> circle_descriptor_sets;
-
     std::unique_ptr<Geometry::Triangle> triangle_geometry;
-    std::vector<VkDescriptorSet> triangle_descriptor_sets;
-
     std::unique_ptr<Geometry::Rectangle> rectangle_geometry;
-    std::vector<VkDescriptorSet> rectangle_descriptor_sets;
-
     std::unique_ptr<Geometry::Hexagon> hexagon_geometry;
-    std::vector<VkDescriptorSet> hexagon_descriptor_sets;
 
     const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 
     bool framebufferResized = false;
 
-    void recreateSwapChain(VkPhysicalDevice &physicalDevice, VkDevice &device,
-                           VkSurfaceKHR &surface, GLFWwindow &window);
-
-    std::vector<VkImageView> createImageViews(VkDevice &device,
-                                              std::vector<VkImage> &swapChainImages);
-
-    std::tuple<VkSwapchainKHR, std::vector<VkImage>, VkFormat, VkExtent2D>
-    createSwapChain(VkPhysicalDevice &physicalDevice, VkDevice &device,
-                    GLFWwindow &window);
-
     bool checkDeviceExtensionSupport(const VkPhysicalDevice &physicalDevice);
 
-    std::vector<VkCommandBuffer> createCommandBuffers(VkDevice &device,
-                                                      const int capacity);
-
-    std::vector<VkFramebuffer>
-    createFramebuffers(VkDevice &device, std::vector<VkImageView> &swapChainImageViews,
-                       VkRenderPass &renderPass, VkExtent2D &swapChainExtent);
-
-    VkCommandPool createCommandPool(VkPhysicalDevice &physicalDevice, VkDevice &device,
-                                    VkSurfaceKHR &surface);
-
     void updateUniformBuffer(uint32_t currentImage);
-
-    VkDescriptorPool createDescriptorPool(VkDevice &device, const int capacity);
-
-    void DestroyDebugUtilsMessengerEXT(VkInstance instance,
-                                       VkDebugUtilsMessengerEXT debugMessenger,
-                                       const VkAllocationCallbacks *pAllocator);
-
-    /*void cleanupSwapChain(VkDevice &device, SwapChain &);*/
 };
+
+VkDescriptorPool createDescriptorPool(VkDevice &device, const int capacity);
+VkPipeline createGraphicsPipeline(const VkDevice &device,
+                                  const std::string vertex_shader_path,
+                                  const std::string fragment_shader_path,
+                                  VkDescriptorSetLayout &descriptorSetLayout,
+                                  VkPipelineLayout &pipelineLayout,
+                                  VkRenderPass &renderPass, SwapChain &swapChain);

@@ -4,6 +4,7 @@
 #include "entity_component_storage/ComponentStore.h"
 #include "entity_component_storage/EntityComponentStorage.h"
 #include "render_engine/RenderBody.h"
+#include "render_engine/fonts/Font.h"
 #include "shape.h"
 #include <functional>
 #include <memory>
@@ -33,6 +34,7 @@ class ShapeRendering : public Game {
                                      .position(WorldPoint(-100, 300))
                                      .shape(Shape::create_rectangle_data(80.0f, 80.0f))
                                      .color(glm::vec3(0.0, 0.0, 1.0))
+                                     .uvwt(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f))
                                      .build());
 
         ecs.add_component<RenderBody>(ecs.create_entity(),
@@ -41,6 +43,37 @@ class ShapeRendering : public Game {
                                           .shape(Shape::create_hexagon_data(80.0f))
                                           .color(glm::vec3(1.0, 0.0, 0.0))
                                           .build());
+        ecs.add_component<RenderBody>(
+            ecs.create_entity(), RenderBodyBuilder()
+                                     .position(WorldPoint(-292, 192))
+                                     .shape(Shape::create_rectangle_data(80.0f, 80.0f))
+                                     .color(glm::vec3(0.0, 0.0, 1.0))
+                                     .uvwt(glm::vec4(0.0f, 0.0f, 0.5f, 0.5f))
+                                     .build());
+
+        ecs.add_component<RenderBody>(
+            ecs.create_entity(), RenderBodyBuilder()
+                                     .position(WorldPoint(-208, 192))
+                                     .shape(Shape::create_rectangle_data(80.0f, 80.0f))
+                                     .color(glm::vec3(0.0, 0.0, 1.0))
+                                     .uvwt(glm::vec4(0.5f, 0.0f, 1.0f, 0.5f))
+                                     .build());
+
+        ecs.add_component<RenderBody>(
+            ecs.create_entity(), RenderBodyBuilder()
+                                     .position(WorldPoint(-292, 108))
+                                     .shape(Shape::create_rectangle_data(80.0f, 80.0f))
+                                     .color(glm::vec3(0.0, 0.0, 1.0))
+                                     .uvwt(glm::vec4(0.0f, 0.5f, 0.5f, 1.0f))
+                                     .build());
+
+        ecs.add_component<RenderBody>(
+            ecs.create_entity(), RenderBodyBuilder()
+                                     .position(WorldPoint(-208, 108))
+                                     .shape(Shape::create_rectangle_data(80.0f, 80.0f))
+                                     .color(glm::vec3(0.0, 0.0, 1.0))
+                                     .uvwt(glm::vec4(0.5f, 0.5f, 1.0f, 1.0f))
+                                     .build());
     };
 
     ~ShapeRendering() {};
@@ -53,7 +86,19 @@ class ShapeRendering : public Game {
             render_bodies.push_back(ecs.get_component<RenderBody>(it.id()).value());
         }
 
+        bool success = render_engine.begin_render_pass();
+        if (!success) {
+            return;
+        }
+
         render_engine.render(render_bodies);
+        render_engine.render_text("ADAM", glm::vec2(0.0f, 0.0f), 128);
+        render_engine.render_text("LINDA", glm::vec2(0.0f, 100.0f), 64);
+
+        success = render_engine.end_render_pass();
+        if (!success) {
+            return;
+        }
     };
 
     void setup(RenderEngine &render_engine) override {}
@@ -64,6 +109,7 @@ int main() {
     config.window_width = 800;
     config.window_height = 800;
     config.window_title = "2_shape_rendering";
+    config.use_font = UseFont::Default;
 
     auto game = std::make_unique<ShapeRendering>();
     auto game_engine = std::make_unique<GameEngine>(std::move(game), config);

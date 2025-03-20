@@ -1,18 +1,69 @@
 #pragma once
+#include "render_engine/CommandHandler.h"
 #include "render_engine/CoreGraphicsContext.h"
+#include "render_engine/Fence.h"
+#include "render_engine/FrameBuffer.h"
 #include "render_engine/GraphicsPipeline.h"
 #include "render_engine/RenderBody.h"
+#include "render_engine/Semaphore.h"
+#include "render_engine/TextPipeline.h"
 #include "render_engine/Window.h"
+#include "render_engine/fonts/Font.h"
+#include "vulkan/vulkan_core.h"
 #include <GLFW/glfw3.h>
+
+using UniformBufferCollection = std::unique_ptr<std::vector<UniformBuffer>>;
 
 class RenderEngine {
   private:
+    bool framebuffer_resized = false;
+
     std::unique_ptr<Window> window;
     std::shared_ptr<CoreGraphicsContext> g_ctx;
-    std::unique_ptr<GraphicsPipeline> graphics_pipeline;
+
+    VkQueue graphics_queue;
+    VkQueue present_queue;
+
+    UniformBufferCollection window_dimension_buffers;
+    std::unique_ptr<Semaphore> image_available_semaphore;
+    std::unique_ptr<Semaphore> render_completed_semaphore;
+    std::unique_ptr<Fence> in_flight_fence;
+
+    std::unique_ptr<CommandHandler> command_handler;
+    std::unique_ptr<SwapChain> swap_chain;
+    VkRenderPass render_pass;
+    std::unique_ptr<FrameBuffer> swap_chain_frame_buffer;
+
+    std::unique_ptr<Sampler> sampler;
+    std::unique_ptr<Texture> texture;
+
+    VkDescriptorSetLayout geometry_descriptor_set_layout;
+    std::unique_ptr<GraphicsPipeline> geometry_pipeline;
+
+    std::unique_ptr<Font> font;
+    VkDescriptorSetLayout text_descriptor_set_layout;
+    std::unique_ptr<TextPipeline> text_pipeline;
+
+    // TODO: Is this the way to go?
+    struct {
+        Window *window = nullptr;
+        uint32_t image_index = 0;
+        // TODO: Not actually optional but had to solve it like this for the construcors
+        // sake. Also, should not command_buffer and command_buffer_wrapper be merged?
+        std::optional<CommandBuffer> command_buffer_wrapper;
+        VkCommandBuffer command_buffer = nullptr;
+        VkSemaphore image_available_semaphore = nullptr;
+        VkSemaphore signal_semaphore = nullptr;
+        VkFence in_flight_fence = nullptr;
+        SwapChain *swap_chain = nullptr;
+    } current_render_pass;
+
+    VkRenderPass create_render_pass(VkDevice &device, VkFormat &swapChainImageFormat);
+    void recreate_swap_chain();
 
   public:
-    RenderEngine(const uint32_t width, const uint32_t height, char const *title);
+    RenderEngine(const uint32_t width, const uint32_t height, char const *title,
+                 const UseFont use_font);
     ~RenderEngine();
 
     bool should_window_close();
@@ -33,5 +84,12 @@ class RenderEngine {
     void register_keyboard_event_callback(KeyboardEventCallbackFn);
 
     void render(const std::vector<std::reference_wrapper<const RenderBody>> &bodies);
+
+    void render_text(const std::string &text, const glm::vec2 &location, const uint size);
+
     void wait_idle();
+
+    bool begin_render_pass();
+
+    bool end_render_pass();
 };

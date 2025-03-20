@@ -1,54 +1,53 @@
 #include "RenderableGeometry.h"
+#include "render_engine/DescriptorSet.h"
+#include "render_engine/buffers/IndexBuffer.h"
+#include "render_engine/buffers/VertexBuffer.h"
+#include "vulkan/vulkan_core.h"
+#include <memory>
+
+Geometry::RenderableGeometry::RenderableGeometry()
+    : capacity(0), buffer_idx(0), shape_type_encoding(ShapeTypeEncoding::None),
+      vertex_buffer(VertexBuffer()), index_buffer(IndexBuffer()),
+      descriptor_set(DescriptorSet()) {}
 
 Geometry::RenderableGeometry::RenderableGeometry(
-    std::shared_ptr<CoreGraphicsContext> &ctx, const VkCommandPool &command_pool,
+    std::shared_ptr<CoreGraphicsContext> ctx, const VkCommandPool &command_pool,
     const VkQueue &graphics_queue, const ShapeTypeEncoding shape_type_encoding,
-    const std::vector<Vertex> &vertices, const std::vector<uint16_t> &indices)
-    : shape_type_encoding(shape_type_encoding),
-      vertex_buffer(
-          std::move(createVertexBuffer(ctx, vertices, command_pool, graphics_queue))),
-      index_buffer(
-          std::move(createIndexBuffer(ctx, indices, command_pool, graphics_queue))),
-      instance_buffers(create_instance_buffers(ctx)) {}
+    const std::vector<Vertex> &vertices, const std::vector<uint16_t> &indices,
+    DescriptorSet &&descriptor_set)
+
+    : capacity(descriptor_set.instance_buffers.size()), buffer_idx(0),
+      shape_type_encoding(shape_type_encoding),
+      vertex_buffer(VertexBuffer(ctx, vertices, command_pool, graphics_queue)),
+      index_buffer(IndexBuffer(ctx, indices, command_pool, graphics_queue)),
+      descriptor_set(std::move(descriptor_set)) {}
 
 Geometry::RenderableGeometry::~RenderableGeometry() {}
 
 void Geometry::RenderableGeometry::record_draw_command(
     const VkCommandBuffer &command_buffer, const VkPipeline &graphics_pipeline,
-    const VkPipelineLayout &pipeline_layout, const VkDescriptorSet &descriptor_set,
-    const size_t num_instances) {
+    const VkPipelineLayout &pipeline_layout, const size_t num_instances) {
     const VkDeviceSize vertex_buffers_offset = 0;
     vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline);
 
+    auto desc = descriptor_set.get();
     vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            pipeline_layout, 0, 1, &descriptor_set, 0, nullptr);
+                            pipeline_layout, 0, 1, &desc, 0, nullptr);
     vkCmdPushConstants(command_buffer, pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0,
                        sizeof(uint32_t), &shape_type_encoding);
 
-    vkCmdBindVertexBuffers(command_buffer, 0, 1, &vertex_buffer->buffer,
+    vkCmdBindVertexBuffers(command_buffer, 0, 1, &vertex_buffer.buffer,
                            &vertex_buffers_offset);
-    vkCmdBindIndexBuffer(command_buffer, index_buffer->buffer, 0, VK_INDEX_TYPE_UINT16);
-    vkCmdDrawIndexed(command_buffer, index_buffer->num_indices, num_instances, 0, 0, 0);
+    vkCmdBindIndexBuffer(command_buffer, index_buffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+    vkCmdDrawIndexed(command_buffer, index_buffer.num_indices, num_instances, 0, 0, 0);
 
-    buffer_idx = (buffer_idx + 1) % num_instance_buffers;
+    buffer_idx = (buffer_idx + 1) % capacity;
 }
 
 void Geometry::RenderableGeometry::update_instance_buffer(
     std::vector<StorageBufferObject> &&instance_data) {
-    instance_buffers[buffer_idx]->updateStorageBuffer(
+    descriptor_set.instance_buffers[buffer_idx].updateStorageBuffer(
         std::forward<std::vector<StorageBufferObject>>(instance_data));
-}
-
-std::vector<std::unique_ptr<StorageBuffer>>
-Geometry::RenderableGeometry::create_instance_buffers(
-    std::shared_ptr<CoreGraphicsContext> &ctx) {
-    auto instance_buffers = std::vector<std::unique_ptr<StorageBuffer>>{};
-    instance_buffers.resize(num_instance_buffers);
-    size_t size = 1024;
-    for (size_t i = 0; i < num_instance_buffers; i++) {
-        instance_buffers[i] = createStorageBuffer(ctx, size);
-    }
-    return instance_buffers;
 }
 
 std::vector<Vertex> Geometry::generate_circle_vertices(int num_points) {

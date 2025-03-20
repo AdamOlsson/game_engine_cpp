@@ -143,7 +143,17 @@ class Example0CollisionDetection : public Game {
             };
         }
 
+        bool success = render_engine.begin_render_pass();
+        if (!success) {
+            return;
+        }
+
         render_engine.render(render_bodies);
+
+        success = render_engine.end_render_pass();
+        if (!success) {
+            return;
+        }
         collision_point = std::nullopt;
     };
 

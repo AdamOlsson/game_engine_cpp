@@ -16,7 +16,7 @@ struct QueueFamilyIndices {
 };
 
 QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice &device,
-                                     VkSurfaceKHR &surface);
+                                     const VkSurfaceKHR &surface);
 
 SwapChainSupportDetails querySwapChainSupport(const VkPhysicalDevice &physicalDevice,
                                               VkSurfaceKHR &surface);
