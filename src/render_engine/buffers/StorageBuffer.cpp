@@ -4,42 +4,73 @@
 #include <iostream>
 #include <ostream>
 
-std::unique_ptr<StorageBuffer>
-createStorageBuffer(std::shared_ptr<CoreGraphicsContext> &ctx, size_t capacity) {
+StorageBuffer::StorageBuffer()
+    : ctx(nullptr), size(0), buffer(VK_NULL_HANDLE), bufferMemory(VK_NULL_HANDLE),
+      bufferMapped(nullptr) {}
 
-    VkDeviceSize bufferSize = capacity * sizeof(StorageBufferObject);
+StorageBuffer::StorageBuffer(std::shared_ptr<CoreGraphicsContext> ctx, size_t capacity)
+    : ctx(ctx), size(capacity * sizeof(StorageBufferObject)) {
 
-    VkBuffer buffer;
-    VkDeviceMemory bufferMemory;
-    void *bufferMapped;
     createBuffer(
-        ctx->physicalDevice, ctx->device, bufferSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+        ctx->physicalDevice, ctx->device, size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
         buffer, bufferMemory);
 
-    vkMapMemory(ctx->device, bufferMemory, 0, bufferSize, 0, &bufferMapped);
-
-    return std::make_unique<StorageBuffer>(ctx, buffer, bufferMemory, bufferMapped,
-                                           bufferSize);
+    vkMapMemory(ctx->device, bufferMemory, 0, size, 0, &bufferMapped);
 }
 
-std::unique_ptr<VkDescriptorSetLayoutBinding>
-StorageBuffer::createDescriptorSetLayoutBinding(uint32_t binding_num) {
-    auto layoutBinding = std::make_unique<VkDescriptorSetLayoutBinding>();
-    layoutBinding->binding = binding_num;
-    layoutBinding->descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    layoutBinding->descriptorCount = 1;
-    layoutBinding->stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    layoutBinding->pImmutableSamplers = nullptr; // Optional
+StorageBuffer::~StorageBuffer() {
+    if (buffer == VK_NULL_HANDLE) {
+        return;
+    }
+    vkUnmapMemory(ctx->device, bufferMemory);
+    vkFreeMemory(ctx->device, bufferMemory, nullptr);
+    vkDestroyBuffer(ctx->device, buffer, nullptr);
+}
 
-    return layoutBinding;
+// Move constructor
+StorageBuffer::StorageBuffer(StorageBuffer &&other) noexcept
+    : ctx(std::move(other.ctx)), buffer(other.buffer), bufferMemory(other.bufferMemory),
+      bufferMapped(other.bufferMapped), size(other.size) {
+    other.buffer = VK_NULL_HANDLE;
+    other.bufferMemory = VK_NULL_HANDLE;
+    other.bufferMapped = nullptr;
+    other.size = 0;
+}
+
+// Move assignement
+StorageBuffer &StorageBuffer::operator=(StorageBuffer &&other) noexcept {
+    if (this != &other) {
+        ctx = std::move(other.ctx);
+        buffer = other.buffer;
+        bufferMemory = other.bufferMemory;
+        bufferMapped = other.bufferMapped;
+        size = other.size;
+
+        other.buffer = VK_NULL_HANDLE;
+        other.bufferMemory = VK_NULL_HANDLE;
+        other.bufferMapped = nullptr;
+        other.size = 0;
+    }
+
+    return *this;
+}
+
+VkDescriptorSetLayoutBinding
+StorageBuffer::createDescriptorSetLayoutBinding(uint32_t binding_num) {
+    VkDescriptorSetLayoutBinding layout_binding{};
+    layout_binding.binding = binding_num;
+    layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    layout_binding.descriptorCount = 1;
+    layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    layout_binding.pImmutableSamplers = nullptr; // Optional
+    return layout_binding;
 }
 
 void StorageBuffer::updateStorageBuffer(const std::vector<StorageBufferObject> &ssbo) {
     const size_t write_size = sizeof(ssbo[0]) * ssbo.size();
     const size_t diff = size - write_size;
     memcpy(bufferMapped, &ssbo[0], write_size);
-    /*memset((char *)bufferMapped + write_size, 0, diff);*/
 }
 
 void StorageBuffer::dumpData() {

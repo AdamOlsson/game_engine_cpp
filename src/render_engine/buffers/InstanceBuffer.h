@@ -1,19 +1,18 @@
-#pragma once
-
-#include "vulkan/vulkan_core.h"
-#include <sys/types.h>
-#include <vector>
-
-struct InstanceBuffer {
-    VkBuffer buffer;
-    VkDeviceMemory bufferMemory;
-
-    InstanceBuffer(VkBuffer &buffer, VkDeviceMemory &bufferMemory)
-        : buffer(buffer), bufferMemory(bufferMemory) {};
-};
-
-std::unique_ptr<InstanceBuffer> createInstanceBuffer(VkPhysicalDevice &physicalDevice,
-                                                     VkDevice &device,
-                                                     const std::vector<uint> &vertices,
-                                                     VkCommandPool &commandPool,
-                                                     VkQueue &graphicsQueue);
+/*#pragma once*/
+/**/
+/*#include "render_engine/buffers/StorageBuffer.h"*/
+/*#include <vector>*/
+/*class InstanceBuffer {*/
+/*  private:*/
+/*    std::vector<StorageBuffer> buffers;*/
+/*    size_t size;*/
+/*    size_t next;*/
+/**/
+/*  public:*/
+/*    InstanceBuffer(std::shared_ptr<CoreGraphicsContext> &ctx, const size_t
+ * num_buffers,*/
+/*                   const size_t capacity_per_buffer);*/
+/*    ~InstanceBuffer() = default;*/
+/**/
+/*    StorageBuffer &get();*/
+/*};*/

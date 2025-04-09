@@ -1,7 +1,7 @@
 #include "util.h"
 
 QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice &device,
-                                     VkSurfaceKHR &surface) {
+                                     const VkSurfaceKHR &surface) {
     QueueFamilyIndices indices;
 
     uint32_t queueFamilyCount = 0;

@@ -7,7 +7,7 @@ GameEngine::GameEngine(std::unique_ptr<Game> game, GameEngineConfig &config)
       tick_delta(1.0 / config.ticks_per_second) {
 
     render_engine = std::make_unique<RenderEngine>(
-        config.window_width, config.window_height, config.window_title);
+        config.window_width, config.window_height, config.window_title, config.use_font);
 }
 
 GameEngine::~GameEngine() {}

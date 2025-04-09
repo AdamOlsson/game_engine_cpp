@@ -1,8 +1,10 @@
 #include "render_engine/GraphicsPipeline.h"
 #include "CoreGraphicsContext.h"
-#include "glm/fwd.hpp"
-#include "io.h"
+#include "render_engine/CommandHandler.h"
+#include "render_engine/DescriptorSet.h"
 #include "render_engine/RenderableGeometry.h"
+#include "render_engine/Sampler.h"
+#include "render_engine/Texture.h"
 #include "render_engine/buffers/StorageBuffer.h"
 #include "render_engine/buffers/UniformBuffer.h"
 #include "util.h"
@@ -18,392 +20,128 @@ static std::vector<char> readFile(const std::string filename);
 
 VkShaderModule createShaderModule(const VkDevice &device, const std::vector<char> &code);
 
-void cleanupSwapChainFrameBuffers(VkDevice &device,
-                                  std::vector<VkFramebuffer> &swapChainFramebuffers);
-std::tuple<std::vector<VkSemaphore>, std::vector<VkSemaphore>, std::vector<VkFence>>
-createSyncObjects(VkDevice &device, const int capacity);
-
-VkRenderPass createRenderPass(VkDevice &device, VkFormat &swapChainImageFormat);
-
-std::vector<VkDescriptorSet>
-createDescriptorSets(VkDevice &device, VkDescriptorSetLayout &descriptorSetLayout,
-                     VkDescriptorPool &descriptorPool, const int capacity,
-                     const VkDeviceSize offset,
-                     std::vector<std::unique_ptr<StorageBuffer>> &storage_buffers,
-                     std::vector<std::unique_ptr<UniformBuffer>> &uniform_buffers);
-
 VkPipeline createGraphicsPipeline(const VkDevice &device,
                                   const std::string vertex_shader_path,
                                   const std::string fragment_shader_path,
                                   VkDescriptorSetLayout &descriptorSetLayout,
                                   VkPipelineLayout &pipelineLayout,
-                                  VkRenderPass &renderPass, SwapChain &swapChain);
+                                  VkRenderPass &renderPass, SwapChain &swap_chain);
 
 GraphicsPipeline::GraphicsPipeline(Window &window,
-                                   std::shared_ptr<CoreGraphicsContext> ctx)
-    : ctx(ctx), swapChain(SwapChain(ctx, *window.window)) {
+                                   std::shared_ptr<CoreGraphicsContext> ctx,
+                                   CommandHandler &command_handler, SwapChain &swap_chain,
+                                   VkRenderPass &render_pass,
+                                   std::vector<UniformBuffer> &uniform_buffers,
+                                   VkDescriptorSetLayout &descriptor_set_layout,
+                                   Sampler &sampler, Texture &texture)
+    : ctx(ctx) {
 
-    auto [_graphicsQueue, _presentQueue] = ctx->get_device_queues();
-    graphicsQueue = _graphicsQueue;
-    presentQueue = _presentQueue;
+    auto [graphicsQueue, presentQueue] = ctx->get_device_queues();
 
-    renderPass = createRenderPass(ctx->device, swapChain.swapChainImageFormat);
-    swapChainFramebuffers = swapChain.createFramebuffers(renderPass);
-
-    auto storageBufferSetLayoutBinding =
-        StorageBuffer::createDescriptorSetLayoutBinding(0);
-
-    auto uniformBufferSetLayoutBinding =
-        UniformBuffer::createDescriptorSetLayoutBinding(1);
-
-    std::vector<VkDescriptorSetLayoutBinding> layoutBindings = {
-        *storageBufferSetLayoutBinding, *uniformBufferSetLayoutBinding};
-
-    VkDescriptorSetLayoutCreateInfo layoutInfo{};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = layoutBindings.size();
-    layoutInfo.pBindings = layoutBindings.data();
-
-    if (vkCreateDescriptorSetLayout(ctx->device, &layoutInfo, nullptr,
-                                    &bufferDescriptorSetLayout) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create descriptor set layout!");
-    }
-
-    geometryGraphicsPipeline = createGraphicsPipeline(
+    graphics_pipeline = createGraphicsPipeline(
         ctx->device, "src/render_engine/shaders/vert.spv",
-        "src/render_engine/shaders/frag.spv", bufferDescriptorSetLayout,
-        geometryPipelineLayout, renderPass, swapChain);
+        "src/render_engine/shaders/geometry_fragment.spv", descriptor_set_layout,
+        pipeline_layout, render_pass, swap_chain);
 
-    commandPool = createCommandPool(ctx->physicalDevice, ctx->device, ctx->surface);
-
-    auto [width, height] = window.dimensions();
-    UniformBufferObject ubo{
-        .dimensions = glm::vec2(static_cast<float>(width), static_cast<float>(height))};
-    uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        uniformBuffers[i] = createUniformBuffer(ctx, sizeof(UniformBufferObject));
-        uniformBuffers[i]->updateUniformBuffer(ubo);
-    }
-
-    circle_geometry = std::make_unique<Geometry::Circle>(ctx, commandPool, graphicsQueue);
-    triangle_geometry =
-        std::make_unique<Geometry::Triangle>(ctx, commandPool, graphicsQueue);
-    rectangle_geometry =
-        std::make_unique<Geometry::Rectangle>(ctx, commandPool, graphicsQueue);
-    hexagon_geometry =
-        std::make_unique<Geometry::Hexagon>(ctx, commandPool, graphicsQueue);
+    VkCommandPool command_pool = command_handler.pool();
 
     const int num_geometries = 6;
-    geometryDescriptorPool =
+    descriptor_pool =
         createDescriptorPool(ctx->device, MAX_FRAMES_IN_FLIGHT * num_geometries);
 
-    // TODO: The descriptor sets should best be included into the geometry
-    circle_descriptor_sets = createDescriptorSets(
-        ctx->device, bufferDescriptorSetLayout, geometryDescriptorPool,
-        MAX_FRAMES_IN_FLIGHT, 0, circle_geometry->instance_buffers, uniformBuffers);
-    triangle_descriptor_sets = createDescriptorSets(
-        ctx->device, bufferDescriptorSetLayout, geometryDescriptorPool,
-        MAX_FRAMES_IN_FLIGHT, 0, triangle_geometry->instance_buffers, uniformBuffers);
-    rectangle_descriptor_sets = createDescriptorSets(
-        ctx->device, bufferDescriptorSetLayout, geometryDescriptorPool,
-        MAX_FRAMES_IN_FLIGHT, 0, rectangle_geometry->instance_buffers, uniformBuffers);
-    hexagon_descriptor_sets = createDescriptorSets(
-        ctx->device, bufferDescriptorSetLayout, geometryDescriptorPool,
-        MAX_FRAMES_IN_FLIGHT, 0, hexagon_geometry->instance_buffers, uniformBuffers);
+    auto circle_descriptor_set =
+        DescriptorSet(ctx, descriptor_set_layout, descriptor_pool, MAX_FRAMES_IN_FLIGHT,
+                      &uniform_buffers, &texture, &sampler);
+    circle_geometry = std::make_unique<Geometry::Circle>(
+        ctx, command_pool, graphicsQueue, std::move(circle_descriptor_set));
 
-    commandBuffers = createCommandBuffers(ctx->device, MAX_FRAMES_IN_FLIGHT);
+    auto triangle_descriptor_set =
+        DescriptorSet(ctx, descriptor_set_layout, descriptor_pool, MAX_FRAMES_IN_FLIGHT,
+                      &uniform_buffers, &texture, &sampler);
+    triangle_geometry = std::make_unique<Geometry::Triangle>(
+        ctx, command_pool, graphicsQueue, std::move(triangle_descriptor_set));
 
-    auto [_imageAvailableSemaphores, _renderFinishedSemaphores, _inFlightFences] =
-        createSyncObjects(ctx->device, MAX_FRAMES_IN_FLIGHT);
-    imageAvailableSemaphores = _imageAvailableSemaphores;
-    renderFinishedSemaphores = _renderFinishedSemaphores;
-    inFlightFences = _inFlightFences;
+    auto rectangle_descriptor_set =
+        DescriptorSet(ctx, descriptor_set_layout, descriptor_pool, MAX_FRAMES_IN_FLIGHT,
+                      &uniform_buffers, &texture, &sampler);
+    rectangle_geometry = std::make_unique<Geometry::Rectangle>(
+        ctx, command_pool, graphicsQueue, std::move(rectangle_descriptor_set));
+
+    auto hexagon_descriptor_set =
+        DescriptorSet(ctx, descriptor_set_layout, descriptor_pool, MAX_FRAMES_IN_FLIGHT,
+                      &uniform_buffers, &texture, &sampler);
+    hexagon_geometry = std::make_unique<Geometry::Hexagon>(
+        ctx, command_pool, graphicsQueue, std::move(hexagon_descriptor_set));
 }
 
 GraphicsPipeline::~GraphicsPipeline() {
     // Order of these functions matter
-    cleanupSwapChainFrameBuffers(ctx->device, swapChainFramebuffers);
-    swapChain.cleanup();
-
-    vkDestroyDescriptorPool(ctx->device, geometryDescriptorPool, nullptr);
-    vkDestroyDescriptorSetLayout(ctx->device, bufferDescriptorSetLayout, nullptr);
-
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        vkDestroySemaphore(ctx->device, renderFinishedSemaphores[i], nullptr);
-        vkDestroySemaphore(ctx->device, imageAvailableSemaphores[i], nullptr);
-        vkDestroyFence(ctx->device, inFlightFences[i], nullptr);
-    }
-    vkDestroyCommandPool(ctx->device, commandPool, nullptr);
-
-    vkDestroyPipeline(ctx->device, geometryGraphicsPipeline, nullptr);
-    vkDestroyPipelineLayout(ctx->device, geometryPipelineLayout, nullptr);
-    vkDestroyRenderPass(ctx->device, renderPass, nullptr);
+    vkDestroyDescriptorPool(ctx->device, descriptor_pool, nullptr);
+    vkDestroyPipeline(ctx->device, graphics_pipeline, nullptr);
+    vkDestroyPipelineLayout(ctx->device, pipeline_layout, nullptr);
 }
 
-void GraphicsPipeline::render(Window &window,
-                              std::vector<StorageBufferObject> &&circle_instance_data,
-                              std::vector<StorageBufferObject> &&triangle_instance_data,
-                              std::vector<StorageBufferObject> &&rectangle_instance_data,
-                              std::vector<StorageBufferObject> &&hexagon_instance_data,
-                              std::vector<StorageBufferObject> &&arrow_instance_data,
-                              std::vector<StorageBufferObject> &&line_instance_data) {
-    vkWaitForFences(ctx->device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
-
-    uint32_t imageIndex;
-    VkResult result = vkAcquireNextImageKHR(ctx->device, swapChain.swapChain, UINT64_MAX,
-                                            imageAvailableSemaphores[currentFrame],
-                                            VK_NULL_HANDLE, &imageIndex);
-    if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-        recreateSwapChain(ctx->physicalDevice, ctx->device, ctx->surface, *window.window);
-        return;
-    } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-        throw std::runtime_error("failed to acquire swap chain image!");
-    }
-
-    vkResetFences(ctx->device, 1, &inFlightFences[currentFrame]);
-    vkResetCommandBuffer(commandBuffers[currentFrame], 0);
-
+void GraphicsPipeline::render_circles(
+    const VkCommandBuffer &command_buffer,
+    std::vector<StorageBufferObject> &&circle_instance_data) {
     circle_geometry->update_instance_buffer(
         std::forward<std::vector<StorageBufferObject>>(circle_instance_data));
+    uint32_t num_instances = circle_instance_data.size();
+    if (num_instances > 0) {
+        circle_geometry->record_draw_command(command_buffer, graphics_pipeline,
+                                             pipeline_layout, num_instances);
+    }
+}
+
+void GraphicsPipeline::render_triangles(
+
+    const VkCommandBuffer &command_buffer,
+    std::vector<StorageBufferObject> &&triangle_instance_data) {
     triangle_geometry->update_instance_buffer(
         std::forward<std::vector<StorageBufferObject>>(triangle_instance_data));
+    uint32_t num_instances = triangle_instance_data.size();
+    if (num_instances > 0) {
+        triangle_geometry->record_draw_command(command_buffer, graphics_pipeline,
+                                               pipeline_layout, num_instances);
+    }
+}
+
+void GraphicsPipeline::render_rectangles(
+    const VkCommandBuffer &command_buffer,
+    std::vector<StorageBufferObject> &&rectangle_instance_data) {
     rectangle_geometry->update_instance_buffer(
         std::forward<std::vector<StorageBufferObject>>(rectangle_instance_data));
+    size_t num_instances = rectangle_instance_data.size();
+    if (num_instances > 0) {
+        rectangle_geometry->record_draw_command(command_buffer, graphics_pipeline,
+                                                pipeline_layout, num_instances);
+    }
+}
+
+void GraphicsPipeline::render_hexagons(
+    const VkCommandBuffer &command_buffer,
+    std::vector<StorageBufferObject> &&hexagon_instance_data) {
     hexagon_geometry->update_instance_buffer(
         std::forward<std::vector<StorageBufferObject>>(hexagon_instance_data));
-
-    VkCommandBufferBeginInfo beginInfo{};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    beginInfo.flags = 0;                  // Optional
-    beginInfo.pInheritanceInfo = nullptr; // Optional
-    if (vkBeginCommandBuffer(commandBuffers[currentFrame], &beginInfo) != VK_SUCCESS) {
-        throw std::runtime_error("failed to begin recording command buffer!");
-    }
-
-    VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
-    VkRenderPassBeginInfo renderPassInfo{};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = renderPass;
-    renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
-    renderPassInfo.renderArea.offset = {0, 0};
-    renderPassInfo.renderArea.extent = swapChain.swapChainExtent;
-    renderPassInfo.clearValueCount = 1;
-    renderPassInfo.pClearValues = &clearColor;
-
-    vkCmdBeginRenderPass(commandBuffers[currentFrame], &renderPassInfo,
-                         VK_SUBPASS_CONTENTS_INLINE);
-    VkViewport viewport{};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = static_cast<float>(swapChain.swapChainExtent.width);
-    viewport.height = static_cast<float>(swapChain.swapChainExtent.height);
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-    vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &viewport);
-
-    VkRect2D scissor{};
-    scissor.offset = {0, 0};
-    scissor.extent = swapChain.swapChainExtent;
-    vkCmdSetScissor(commandBuffers[currentFrame], 0, 1, &scissor);
-
-    uint32_t num_instances = 0;
-
-    num_instances = circle_instance_data.size();
-    /*std::cout << "Num circles: " << num_instances << std::endl;*/
+    size_t num_instances = hexagon_instance_data.size();
     if (num_instances > 0) {
-        circle_geometry->record_draw_command(
-            commandBuffers[currentFrame], geometryGraphicsPipeline,
-            geometryPipelineLayout, circle_descriptor_sets[currentFrame], num_instances);
+        hexagon_geometry->record_draw_command(command_buffer, graphics_pipeline,
+                                              pipeline_layout, num_instances);
     }
-
-    num_instances = triangle_instance_data.size();
-    /*std::cout << "Num triangles: " << num_instances << std::endl;*/
-    if (num_instances > 0) {
-        triangle_geometry->record_draw_command(
-            commandBuffers[currentFrame], geometryGraphicsPipeline,
-            geometryPipelineLayout, triangle_descriptor_sets[currentFrame],
-            num_instances);
-    }
-
-    num_instances = rectangle_instance_data.size();
-    /*std::cout << "Num rectangles: " << num_instances << std::endl;*/
-    if (num_instances > 0) {
-        rectangle_geometry->record_draw_command(
-            commandBuffers[currentFrame], geometryGraphicsPipeline,
-            geometryPipelineLayout, rectangle_descriptor_sets[currentFrame],
-            num_instances);
-    }
-
-    num_instances = hexagon_instance_data.size();
-    /*std::cout << "Num hexagons: " << num_instances << std::endl;*/
-    if (num_instances > 0) {
-        hexagon_geometry->record_draw_command(
-            commandBuffers[currentFrame], geometryGraphicsPipeline,
-            geometryPipelineLayout, hexagon_descriptor_sets[currentFrame], num_instances);
-    }
-
-    /*num_instances = arrow_instance_data.size();*/
-    /*if (num_instances > 0) {*/
-    /*    hexagon_geometry->record_draw_command(*/
-    /*        commandBuffers[currentFrame], geometryGraphicsPipeline,*/
-    /*        geometryPipelineLayout, arrow_descriptor_sets[currentFrame],
-     * num_instances);*/
-    /*}*/
-
-    /*num_instances = line_instance_data.size();*/
-    /*if (num_instances > 0) {*/
-    /*    hexagon_geometry->record_draw_command(*/
-    /*        commandBuffers[currentFrame], geometryGraphicsPipeline,*/
-    /*        geometryPipelineLayout, line_descriptor_sets[currentFrame],
-     * num_instances);*/
-    /*}*/
-
-    vkCmdEndRenderPass(commandBuffers[currentFrame]);
-    if (vkEndCommandBuffer(commandBuffers[currentFrame]) != VK_SUCCESS) {
-        throw std::runtime_error("failed to record command buffer!");
-    }
-
-    VkSubmitInfo submitInfo{};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.pCommandBuffers = &commandBuffers[currentFrame];
-
-    VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]};
-    VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-    submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = waitSemaphores;
-    submitInfo.pWaitDstStageMask = waitStages;
-    submitInfo.commandBufferCount = 1;
-
-    VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
-    submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = signalSemaphores;
-
-    if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) !=
-        VK_SUCCESS) {
-        throw std::runtime_error("failed to submit draw command buffer!");
-    }
-
-    VkPresentInfoKHR presentInfo{};
-    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
-    presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = signalSemaphores;
-
-    VkSwapchainKHR swapChains[] = {swapChain.swapChain};
-    presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = swapChains;
-    presentInfo.pImageIndices = &imageIndex;
-    presentInfo.pResults = nullptr; // Optional
-
-    result = vkQueuePresentKHR(presentQueue, &presentInfo);
-
-    // TODO: framebufferResized needs to be set from the window callback when the
-    // window is resized
-    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
-        framebufferResized) {
-        recreateSwapChain(ctx->physicalDevice, ctx->device, ctx->surface, *window.window);
-
-        // It is important to do this after vkQueuePresentKHR to ensure that the
-        // semaphores are in a consistent state, otherwise a signaled semaphore
-        // may never be properly waited upon.
-        framebufferResized = false;
-    } else if (result != VK_SUCCESS) {
-        throw std::runtime_error("failed to present swap chain image!");
-    }
-
-    currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void GraphicsPipeline::recreateSwapChain(VkPhysicalDevice &physicalDevice,
-                                         VkDevice &device, VkSurfaceKHR &surface,
-                                         GLFWwindow &window) {
-    // All execution is paused when the window is minimized
-    int width = 0, height = 0;
-    glfwGetFramebufferSize(&window, &width, &height);
-    while (width == 0 || height == 0) {
-        glfwGetFramebufferSize(&window, &width, &height);
-        glfwWaitEvents();
-    }
-
-    vkDeviceWaitIdle(device);
-    cleanupSwapChainFrameBuffers(device, swapChainFramebuffers);
-    swapChain.cleanup(); // No need to explicitly cleanup
-    swapChain = SwapChain(ctx, window);
-    swapChainFramebuffers = swapChain.createFramebuffers(renderPass);
-}
-
-std::vector<VkImageView>
-GraphicsPipeline::createImageViews(VkDevice &device,
-                                   std::vector<VkImage> &swapChainImages) {
-    std::vector<VkImageView> swapChainImageViews;
-    swapChainImageViews.resize(swapChainImages.size());
-    for (size_t i = 0; i < swapChainImages.size(); i++) {
-        VkImageViewCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        createInfo.image = swapChainImages[i];
-        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        createInfo.format = swapChain.swapChainImageFormat;
-        createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        createInfo.subresourceRange.baseMipLevel = 0;
-        createInfo.subresourceRange.levelCount = 1;
-        createInfo.subresourceRange.baseArrayLayer = 0;
-        createInfo.subresourceRange.layerCount = 1;
-        if (vkCreateImageView(device, &createInfo, nullptr, &swapChainImageViews[i]) !=
-            VK_SUCCESS) {
-            throw std::runtime_error("failed to create image views!");
-        }
-    }
-    return swapChainImageViews;
-}
-
-std::vector<VkCommandBuffer> GraphicsPipeline::createCommandBuffers(VkDevice &device,
-                                                                    const int capacity) {
-    std::vector<VkCommandBuffer> commandBuffers;
-    commandBuffers.resize(capacity);
-
-    VkCommandBufferAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = commandPool;
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandBufferCount = (uint32_t)commandBuffers.size();
-
-    if (vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data()) !=
-        VK_SUCCESS) {
-        throw std::runtime_error("failed to allocate command buffers!");
-    }
-    return commandBuffers;
-}
-
-VkCommandPool GraphicsPipeline::createCommandPool(VkPhysicalDevice &physicalDevice,
-                                                  VkDevice &device,
-                                                  VkSurfaceKHR &surface) {
-    QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice, surface);
-
-    VkCommandPoolCreateInfo poolInfo{};
-    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-    poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
-
-    VkCommandPool commandPool;
-    if (vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create command pool!");
-    }
-    return commandPool;
-}
-
-VkDescriptorPool GraphicsPipeline::createDescriptorPool(VkDevice &device,
-                                                        const int capacity) {
-    std::array<VkDescriptorPoolSize, 2> poolSizes{};
+VkDescriptorPool createDescriptorPool(VkDevice &device, const int capacity) {
+    std::array<VkDescriptorPoolSize, 3> poolSizes{};
 
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     poolSizes[0].descriptorCount = static_cast<uint32_t>(capacity);
 
     poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     poolSizes[1].descriptorCount = static_cast<uint32_t>(capacity);
+
+    // TODO: Do we really need this many samplers?
+    poolSizes[2].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    poolSizes[2].descriptorCount = static_cast<uint32_t>(capacity);
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -592,151 +330,6 @@ VkPipeline createGraphicsPipeline(const VkDevice &device,
     vkDestroyShaderModule(device, fragShaderModule, nullptr);
     vkDestroyShaderModule(device, vertShaderModule, nullptr);
     return graphicsPipeline;
-}
-
-std::vector<VkDescriptorSet>
-createDescriptorSets(VkDevice &device, VkDescriptorSetLayout &descriptorSetLayout,
-                     VkDescriptorPool &descriptorPool, const int capacity,
-                     const VkDeviceSize offset,
-                     std::vector<std::unique_ptr<StorageBuffer>> &storage_buffers,
-                     std::vector<std::unique_ptr<UniformBuffer>> &uniform_buffers) {
-
-    std::vector<VkDescriptorSetLayout> layouts(capacity, descriptorSetLayout);
-
-    VkDescriptorSetAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfo.descriptorPool = descriptorPool;
-    allocInfo.descriptorSetCount = static_cast<uint32_t>(capacity);
-    allocInfo.pSetLayouts = layouts.data();
-
-    std::vector<VkDescriptorSet> descriptorSets;
-    descriptorSets.resize(capacity);
-    if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data()) !=
-        VK_SUCCESS) {
-        throw std::runtime_error("failed to allocate descriptor sets!");
-    }
-
-    for (size_t i = 0; i < capacity; i++) {
-        VkDescriptorBufferInfo storageBufferInfo{};
-        storageBufferInfo.buffer = storage_buffers[i]->buffer;
-        storageBufferInfo.offset = offset;
-        storageBufferInfo.range = storage_buffers[i]->size;
-
-        VkWriteDescriptorSet storageBufferDescriptorWrite{};
-        storageBufferDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        storageBufferDescriptorWrite.dstSet = descriptorSets[i];
-        storageBufferDescriptorWrite.dstBinding = 0;
-        storageBufferDescriptorWrite.dstArrayElement = 0;
-        storageBufferDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-        storageBufferDescriptorWrite.descriptorCount = 1;
-        storageBufferDescriptorWrite.pBufferInfo = &storageBufferInfo;
-        storageBufferDescriptorWrite.pImageInfo = nullptr;       // Optional
-        storageBufferDescriptorWrite.pTexelBufferView = nullptr; // Optional
-
-        VkDescriptorBufferInfo uniformBufferInfo{};
-        uniformBufferInfo.buffer = uniform_buffers[i]->buffer;
-        uniformBufferInfo.offset = 0;
-        uniformBufferInfo.range = uniform_buffers[i]->size;
-
-        VkWriteDescriptorSet uniformBufferDescriptorWrite{};
-        uniformBufferDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        uniformBufferDescriptorWrite.dstSet = descriptorSets[i];
-        uniformBufferDescriptorWrite.dstBinding = 1;
-        uniformBufferDescriptorWrite.dstArrayElement = 0;
-        uniformBufferDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uniformBufferDescriptorWrite.descriptorCount = 1;
-        uniformBufferDescriptorWrite.pBufferInfo = &uniformBufferInfo;
-
-        std::array<VkWriteDescriptorSet, 2> descriptorWrites = {
-            storageBufferDescriptorWrite, uniformBufferDescriptorWrite};
-
-        vkUpdateDescriptorSets(device, descriptorWrites.size(), descriptorWrites.data(),
-                               0, nullptr);
-    }
-    return descriptorSets;
-}
-
-VkRenderPass createRenderPass(VkDevice &device, VkFormat &swapChainImageFormat) {
-    VkAttachmentDescription colorAttachment{};
-    colorAttachment.format = swapChainImageFormat;
-    colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-    colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-    VkAttachmentReference colorAttachmentRef{};
-    colorAttachmentRef.attachment = 0;
-    colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-    VkSubpassDescription subpass{};
-    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    subpass.colorAttachmentCount = 1;
-    subpass.pColorAttachments = &colorAttachmentRef;
-
-    VkSubpassDependency dependency{};
-    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-    dependency.dstSubpass = 0;
-    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependency.srcAccessMask = 0;
-    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-    VkRenderPassCreateInfo renderPassInfo{};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    renderPassInfo.attachmentCount = 1;
-    renderPassInfo.pAttachments = &colorAttachment;
-    renderPassInfo.subpassCount = 1;
-    renderPassInfo.pSubpasses = &subpass;
-    renderPassInfo.dependencyCount = 1;
-    renderPassInfo.pDependencies = &dependency;
-
-    VkRenderPass renderPass;
-    if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create render pass!");
-    }
-    return renderPass;
-}
-
-std::tuple<std::vector<VkSemaphore>, std::vector<VkSemaphore>, std::vector<VkFence>>
-createSyncObjects(VkDevice &device, const int capacity) {
-    std::vector<VkSemaphore> imageAvailableSemaphores;
-    std::vector<VkSemaphore> renderFinishedSemaphores;
-    std::vector<VkFence> inFlightFences;
-    imageAvailableSemaphores.resize(capacity);
-    renderFinishedSemaphores.resize(capacity);
-    inFlightFences.resize(capacity);
-
-    VkSemaphoreCreateInfo semaphoreInfo{};
-    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-    VkFenceCreateInfo fenceInfo{};
-    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-    for (size_t i = 0; i < capacity; i++) {
-        if (vkCreateSemaphore(device, &semaphoreInfo, nullptr,
-                              &imageAvailableSemaphores[i]) != VK_SUCCESS ||
-            vkCreateSemaphore(device, &semaphoreInfo, nullptr,
-                              &renderFinishedSemaphores[i]) != VK_SUCCESS ||
-            vkCreateFence(device, &fenceInfo, nullptr, &inFlightFences[i]) !=
-                VK_SUCCESS) {
-
-            throw std::runtime_error(
-                "failed to create synchronization objects for a frame!");
-        }
-    }
-    return std::make_tuple(imageAvailableSemaphores, renderFinishedSemaphores,
-                           inFlightFences);
-}
-
-void cleanupSwapChainFrameBuffers(VkDevice &device,
-                                  std::vector<VkFramebuffer> &swapChainFramebuffers) {
-    for (size_t i = 0; i < swapChainFramebuffers.size(); i++) {
-        vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
-    }
 }
 
 VkShaderModule createShaderModule(const VkDevice &device, const std::vector<char> &code) {

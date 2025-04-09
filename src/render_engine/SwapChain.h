@@ -18,12 +18,9 @@ class SwapChain {
     VkExtent2D swapChainExtent;
     std::vector<VkImageView> swapChainImageViews;
 
-    SwapChain(std::shared_ptr<CoreGraphicsContext> ctx, GLFWwindow &window);
+    SwapChain(std::shared_ptr<CoreGraphicsContext> ctx, const Window *window);
 
     ~SwapChain();
-
-    // TODO: Make Framebuffer its own class
-    std::vector<VkFramebuffer> createFramebuffers(VkRenderPass &renderPass);
 
     void cleanup();
 };

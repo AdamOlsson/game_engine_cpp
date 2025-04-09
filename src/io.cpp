@@ -14,6 +14,10 @@ std::ostream &operator<<(std::ostream &os, const glm::vec3 &vec) {
     return os;
 }
 
+std::ostream &operator<<(std::ostream &os, const glm::vec4 &vec) {
+    os << "glm::vec4(" << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w << ")";
+    return os;
+}
 std::ostream &operator<<(std::ostream &os, const std::vector<glm::vec3> &vec) {
     os << "[ ";
     for (auto v : vec) {

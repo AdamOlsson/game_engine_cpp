@@ -4,12 +4,16 @@
 /Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc ./src/render_engine/shaders/shader.vert -o ./src/render_engine/shaders/vert.spv
 VERT_COMPILE_STATUS=$?
 
-# Compile fragment shader
-/Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc ./src/render_engine/shaders/shader.frag -o ./src/render_engine/shaders/frag.spv
-FRAG_COMPILE_STATUS=$?
+# Compile geometry fragment shader
+/Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc ./src/render_engine/shaders/geometry.frag -o ./src/render_engine/shaders/geometry_fragment.spv
+GEOMETRY_FRAG_COMPILE_STATUS=$?
+
+# Compile text fragment shader
+/Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc ./src/render_engine/shaders/text.frag -o ./src/render_engine/shaders/text_fragment.spv
+TEXT_FRAG_COMPILE_STATUS=$?
 
 # Check compilation status
-if [ $VERT_COMPILE_STATUS -ne 0 ] || [ $FRAG_COMPILE_STATUS -ne 0 ]; then
+if [ $VERT_COMPILE_STATUS -ne 0 ] || [ $GEOMETRY_FRAG_COMPILE_STATUS -ne 0 ] || [ $TEXT_FRAG_COMPILE_STATUS -ne 0 ]; then
     echo "Shader compilation failed"
     exit 1
 fi

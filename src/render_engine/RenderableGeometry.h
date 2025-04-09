@@ -1,8 +1,8 @@
 #pragma once
 
 #include "render_engine/CoreGraphicsContext.h"
+#include "render_engine/DescriptorSet.h"
 #include "render_engine/buffers/IndexBuffer.h"
-#include "render_engine/buffers/StorageBuffer.h"
 #include "render_engine/buffers/VertexBuffer.h"
 #include "shape.h"
 #include "vulkan/vulkan_core.h"
@@ -20,31 +20,33 @@ std::vector<uint16_t> generate_circle_indices(int num_points);
 /// at most as long as GraphicsPipeline.
 class RenderableGeometry {
   private:
-    const size_t num_instance_buffers = 2;
-    size_t buffer_idx = 0;
+    size_t capacity;
+    size_t buffer_idx;
     ShapeTypeEncoding shape_type_encoding;
-    std::unique_ptr<VertexBuffer> vertex_buffer;
-    std::unique_ptr<IndexBuffer> index_buffer;
-
-    std::vector<std::unique_ptr<StorageBuffer>>
-    create_instance_buffers(std::shared_ptr<CoreGraphicsContext> &ctx);
+    VertexBuffer vertex_buffer;
+    IndexBuffer index_buffer;
+    DescriptorSet descriptor_set;
 
   public:
-    // TODO: This should be private but we have a whole descriptorSet problem to fix first
-    std::vector<std::unique_ptr<StorageBuffer>> instance_buffers;
-
-    RenderableGeometry(std::shared_ptr<CoreGraphicsContext> &ctx,
+    RenderableGeometry();
+    RenderableGeometry(std::shared_ptr<CoreGraphicsContext> ctx,
                        const VkCommandPool &command_pool, const VkQueue &graphics_queue,
+                       // Shape specific
                        const ShapeTypeEncoding shape_type_encoding,
                        const std::vector<Vertex> &vertices,
-                       const std::vector<uint16_t> &indices);
+                       const std::vector<uint16_t> &indices,
+                       DescriptorSet &&descriptor_set);
 
     ~RenderableGeometry();
+
+    RenderableGeometry(RenderableGeometry &&other) noexcept = delete;
+    RenderableGeometry &operator=(RenderableGeometry &&other) noexcept = delete;
+    RenderableGeometry(const RenderableGeometry &other) = delete;
+    RenderableGeometry &operator=(const RenderableGeometry &other) = delete;
 
     void record_draw_command(const VkCommandBuffer &command_buffer,
                              const VkPipeline &graphics_pipeline,
                              const VkPipelineLayout &pipeline_layout,
-                             const VkDescriptorSet &descriptor_set,
                              const size_t num_instances);
 
     void update_instance_buffer(std::vector<StorageBufferObject> &&instance_data);
@@ -56,10 +58,10 @@ const std::vector<Vertex> circle_vertices = generate_circle_vertices(180);
 class Circle : public RenderableGeometry {
   public:
     Circle(std::shared_ptr<CoreGraphicsContext> &ctx, const VkCommandPool &command_pool,
-           const VkQueue &graphics_queue)
+           const VkQueue &graphics_queue, DescriptorSet &&descriptor_set)
         : RenderableGeometry(ctx, command_pool, graphics_queue,
                              ShapeTypeEncoding::CircleShape, circle_vertices,
-                             circle_indices) {}
+                             circle_indices, std::move(descriptor_set)) {}
 };
 
 // TODO: Should we make this constexpr?
@@ -71,10 +73,10 @@ const std::vector<Vertex> triangle_vertices = {
 class Triangle : public RenderableGeometry {
   public:
     Triangle(std::shared_ptr<CoreGraphicsContext> &ctx, const VkCommandPool &command_pool,
-             const VkQueue &graphics_queue)
+             const VkQueue &graphics_queue, DescriptorSet &&descriptor_set)
         : RenderableGeometry(ctx, command_pool, graphics_queue,
                              ShapeTypeEncoding::TriangleShape, triangle_vertices,
-                             triangle_indices) {}
+                             triangle_indices, std::move(descriptor_set)) {}
 };
 
 // TODO: Should we make this constexpr?
@@ -85,10 +87,11 @@ const std::vector<Vertex> rectangle_vertices = {
 class Rectangle : public RenderableGeometry {
   public:
     Rectangle(std::shared_ptr<CoreGraphicsContext> &ctx,
-              const VkCommandPool &command_pool, const VkQueue &graphics_queue)
+              const VkCommandPool &command_pool, const VkQueue &graphics_queue,
+              DescriptorSet &&descriptor_set)
         : RenderableGeometry(ctx, command_pool, graphics_queue,
                              ShapeTypeEncoding::RectangleShape, rectangle_vertices,
-                             rectangle_indices) {}
+                             rectangle_indices, std::move(descriptor_set)) {}
 };
 
 // TODO: Should we make this constexpr?
@@ -101,10 +104,10 @@ const std::vector<Vertex> hexagon_vertices = {
 class Hexagon : public RenderableGeometry {
   public:
     Hexagon(std::shared_ptr<CoreGraphicsContext> &ctx, const VkCommandPool &command_pool,
-            const VkQueue &graphics_queue)
+            const VkQueue &graphics_queue, DescriptorSet &&descriptor_set)
         : RenderableGeometry(ctx, command_pool, graphics_queue,
                              ShapeTypeEncoding::HexagonShape, hexagon_vertices,
-                             hexagon_indices) {}
+                             hexagon_indices, std::move(descriptor_set)) {}
 };
 
 }; // namespace Geometry

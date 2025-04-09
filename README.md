@@ -1,6 +1,14 @@
 # Description
 This project is a physics engine and render engine to support for my personal game development.
 
+## Plan
+1. (DONE) Finish texture rendering
+2. (DONE) Render text using texture rendering
+3. Figure out why the performance is abysmal for the spatial subdivision example
+4. Implement SAT for circle-polygon
+5. Implement SAT for circle-circle
+6. Implement tiling system OR camera movement
+
 ## Examples
 - [Example 0](examples/0_collision_detection/): Narrowphase collision detection using SAT
 - [Example 1](examples/1_spatial_subdivision/): Broadphase collision detection using Spatial Subdivision 
@@ -10,8 +18,6 @@ This project is a physics engine and render engine to support for my personal ga
 
 ## Features To Implement
 - SAT circle-circle, circle-polygon collision detection
-- Text rendering
-- Texture rendering
 - UI Rendering
 - Procedural generation
 - Tiling system
@@ -20,7 +26,6 @@ This project is a physics engine and render engine to support for my personal ga
 - Procedural animations
 - 3D objects
 - Lighting
-- Texture rendering
 
 
 ## Refactoring To Perform

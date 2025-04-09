@@ -93,7 +93,7 @@ template <typename T> class ComponentStoreIterator {
 
     EntityId id() const { return *current_id; }
     EntityId next() {
-        this ++;
+        ++(*this);
         return *current_id;
     }
 };

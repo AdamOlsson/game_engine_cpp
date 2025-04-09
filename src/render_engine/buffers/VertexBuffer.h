@@ -8,7 +8,11 @@
 class VertexBuffer {
   private:
     std::shared_ptr<CoreGraphicsContext> ctx;
-    bool cleanup_done;
+
+    VertexBuffer &operator=(const VertexBuffer &);     // Copy assignment
+    VertexBuffer &operator=(VertexBuffer &&) noexcept; // Move assignment
+    VertexBuffer(const VertexBuffer &);                // Copy
+    VertexBuffer(VertexBuffer &&) noexcept;            // Move
 
   public:
     VkBuffer buffer;
@@ -16,17 +20,10 @@ class VertexBuffer {
     VkDeviceSize size;
     size_t num_vertices;
 
-    VertexBuffer(std::shared_ptr<CoreGraphicsContext> ctx, VkBuffer &buffer,
-                 VkDeviceMemory &bufferMemory, VkDeviceSize size)
-        : buffer(buffer), bufferMemory(bufferMemory), ctx(ctx), size(size),
-          num_vertices(size / sizeof(Vertex)) {};
+    VertexBuffer();
+    VertexBuffer(std::shared_ptr<CoreGraphicsContext> ctx,
+                 const std::vector<Vertex> &vertices, const VkCommandPool &commandPool,
+                 const VkQueue &graphicsQueue);
 
     ~VertexBuffer();
-
-    void cleanup();
 };
-
-std::unique_ptr<VertexBuffer>
-createVertexBuffer(std::shared_ptr<CoreGraphicsContext> &ctx,
-                   const std::vector<Vertex> &vertices, const VkCommandPool &commandPool,
-                   const VkQueue &graphicsQueue);

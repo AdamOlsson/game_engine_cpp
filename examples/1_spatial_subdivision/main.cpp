@@ -131,7 +131,18 @@ class Example1SpatialSubdivision : public Game {
         SPINNER_RENDER_BODY.shape = SPINNER_RIGID_BODY.shape;
         render_bodies.push_back(std::ref(SPINNER_RENDER_BODY));
 
+        bool success = render_engine.begin_render_pass();
+        if (!success) {
+            return;
+        }
+
         render_engine.render(render_bodies);
+
+        success = render_engine.end_render_pass();
+        if (!success) {
+            return;
+        }
+
         render_count++;
     };
 
