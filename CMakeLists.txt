@@ -24,8 +24,8 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-file(GLOB_RECURSE GAME_ENGINE_SOURCES "src/*.cpp")
-file(GLOB_RECURSE GAME_ENGINE_HEADERS "include/*.h")
+file(GLOB_RECURSE GAME_ENGINE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+file(GLOB_RECURSE GAME_ENGINE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h")
 
 foreach(header ${GAME_ENGINE_HEADERS})
     message(STATUS "Found header: ${header}")
@@ -35,7 +35,12 @@ foreach(source_file ${GAME_ENGINE_SOURCES})
     message(STATUS "Found source file: ${source_file}")
 endforeach()
 
-add_library(game_engine STATIC ${GAME_ENGINE_SOURCES} ${GAME_ENGINE_HEADERS})
+
+add_library(game_engine 
+    STATIC 
+        ${GAME_ENGINE_SOURCES} 
+        ${GAME_ENGINE_HEADERS} 
+)
 
 target_include_directories(game_engine
     PUBLIC 

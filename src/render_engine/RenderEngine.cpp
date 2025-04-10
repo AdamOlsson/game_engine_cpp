@@ -5,6 +5,8 @@
 #include "render_engine/Window.h"
 #include "render_engine/buffers/StorageBuffer.h"
 #include "render_engine/fonts/Font.h"
+#include "render_engine/resources/ResourceManager.h"
+#include "render_engine/resources/images/ImageResource.h"
 #include <memory>
 
 UniformBufferCollection
@@ -28,6 +30,10 @@ RenderEngine::RenderEngine(const uint32_t width, const uint32_t height, char con
           std::make_unique<FrameBuffer>(g_ctx, *swap_chain, render_pass)),
       sampler(std::make_unique<Sampler>(g_ctx)) {
 
+    register_all_fonts();
+    register_all_images();
+    register_all_shaders();
+
     auto [_graphicsQueue, _presentQueue] = g_ctx->get_device_queues();
     graphics_queue = _graphicsQueue;
     present_queue = _presentQueue;
@@ -40,8 +46,11 @@ RenderEngine::RenderEngine(const uint32_t width, const uint32_t height, char con
 
     VkCommandPool command_pool = command_handler->pool();
 
+    auto &resource_manager = ResourceManager::get_instance();
+    auto dog_image = resource_manager.get_resource<ImageResource>("DogImage");
     texture = std::make_unique<Texture>(g_ctx, command_pool, graphics_queue,
-                                        "assets/images/dog.jpeg");
+                                        dog_image->bytes(), dog_image->length());
+
     geometry_descriptor_set_layout = descriptor_set_layout_builder.build(g_ctx.get());
     geometry_pipeline = std::make_unique<GraphicsPipeline>(
         *window, g_ctx, *command_handler, *swap_chain, render_pass,
@@ -49,6 +58,7 @@ RenderEngine::RenderEngine(const uint32_t width, const uint32_t height, char con
 
     switch (use_font) {
     case UseFont::Default: {
+        auto default_font = resource_manager.get_resource<FontResource>("DefaultFont");
         font = std::make_unique<Font>(g_ctx, command_pool, graphics_queue, default_font);
         break;
     }
