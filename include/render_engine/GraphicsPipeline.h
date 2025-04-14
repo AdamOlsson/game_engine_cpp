@@ -31,6 +31,17 @@ VKAPI_ATTR inline VkBool32 VKAPI_CALL debugCallback(
     return VK_FALSE;
 }
 
+std::vector<char> readFile(const std::string filename);
+VkShaderModule createShaderModule(const VkDevice &device, const uint8_t *data,
+                                  const size_t len);
+VkDescriptorPool createDescriptorPool(VkDevice &device, const int capacity);
+VkPipeline createGraphicsPipeline(const VkDevice &device,
+                                  const VkShaderModule vertShaderModule,
+                                  const VkShaderModule fragShaderModule,
+                                  VkDescriptorSetLayout &descriptorSetLayout,
+                                  VkPipelineLayout &pipelineLayout,
+                                  VkRenderPass &renderPass, SwapChain &swapChain);
+
 class GraphicsPipeline {
   public:
     GraphicsPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
@@ -71,11 +82,3 @@ class GraphicsPipeline {
 
     void updateUniformBuffer(uint32_t currentImage);
 };
-
-VkDescriptorPool createDescriptorPool(VkDevice &device, const int capacity);
-VkPipeline createGraphicsPipeline(const VkDevice &device,
-                                  const std::string vertex_shader_path,
-                                  const std::string fragment_shader_path,
-                                  VkDescriptorSetLayout &descriptorSetLayout,
-                                  VkPipelineLayout &pipelineLayout,
-                                  VkRenderPass &renderPass, SwapChain &swapChain);

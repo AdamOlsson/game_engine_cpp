@@ -14,17 +14,6 @@
 #include <memory>
 #include <optional>
 
-// TODO: Write a nice README for example 2
-// TODO: Write a nice README for example 3
-// TODO: In this example:
-// --- NOTE: Do not optimize this exmaple YET, do the below points THEN optimize if you
-// --- want. It is better to first create an good example we then can show someone, after
-// --- that we can optimize.
-// - DONE: Look at exmaple 3 for update physics
-// - DONE: Bind objects to window
-// - DONE: Make use of SAT
-// - DONE: Make use of Spatial Subdivision
-// - DONE: Make a nice README
 // - TODO: I think that some objects disappear due to NaN, fix this
 
 class Example1SpatialSubdivision : public Game {
@@ -33,7 +22,7 @@ class Example1SpatialSubdivision : public Game {
     SpatialSubdivision broadphase;
     CollisionSolver solver;
     const size_t solver_steps = 6;
-    const size_t num_entities = 1000;
+    const size_t num_entities = 300;
 
     std::vector<RigidBody> non_spawned_rigid_bodies{};
     std::vector<RenderBody> non_spawned_render_bodies{};

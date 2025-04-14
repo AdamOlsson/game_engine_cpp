@@ -7,6 +7,7 @@
 #include "render_engine/Texture.h"
 #include "render_engine/buffers/StorageBuffer.h"
 #include "render_engine/buffers/UniformBuffer.h"
+#include "render_engine/resources/ResourceManager.h"
 #include "util.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
@@ -15,17 +16,6 @@
 #include <memory>
 #include <stdexcept>
 #include <vector>
-
-static std::vector<char> readFile(const std::string filename);
-
-VkShaderModule createShaderModule(const VkDevice &device, const std::vector<char> &code);
-
-VkPipeline createGraphicsPipeline(const VkDevice &device,
-                                  const std::string vertex_shader_path,
-                                  const std::string fragment_shader_path,
-                                  VkDescriptorSetLayout &descriptorSetLayout,
-                                  VkPipelineLayout &pipelineLayout,
-                                  VkRenderPass &renderPass, SwapChain &swap_chain);
 
 GraphicsPipeline::GraphicsPipeline(Window &window,
                                    std::shared_ptr<CoreGraphicsContext> ctx,
@@ -38,10 +28,24 @@ GraphicsPipeline::GraphicsPipeline(Window &window,
 
     auto [graphicsQueue, presentQueue] = ctx->get_device_queues();
 
-    graphics_pipeline = createGraphicsPipeline(
-        ctx->device, "src/render_engine/shaders/vert.spv",
-        "src/render_engine/shaders/geometry_fragment.spv", descriptor_set_layout,
-        pipeline_layout, render_pass, swap_chain);
+    // TODO: Script that automatically includes compiled textures into ResourceManager
+    auto &resoure_manager = ResourceManager::get_instance();
+    auto vert_shader_code = resoure_manager.get_resource<ShaderResource>("Vert");
+    auto frag_shader_code =
+        resoure_manager.get_resource<ShaderResource>("GeometryFragment");
+
+    VkShaderModule vert_shader_module = createShaderModule(
+        ctx->device, vert_shader_code->bytes(), vert_shader_code->length());
+
+    VkShaderModule frag_shader_module = createShaderModule(
+        ctx->device, frag_shader_code->bytes(), frag_shader_code->length());
+
+    graphics_pipeline = createGraphicsPipeline(ctx->device, vert_shader_module,
+                                               frag_shader_module, descriptor_set_layout,
+                                               pipeline_layout, render_pass, swap_chain);
+
+    vkDestroyShaderModule(ctx->device, vert_shader_module, nullptr);
+    vkDestroyShaderModule(ctx->device, frag_shader_module, nullptr);
 
     VkCommandPool command_pool = command_handler.pool();
 
@@ -158,17 +162,11 @@ VkDescriptorPool createDescriptorPool(VkDevice &device, const int capacity) {
 }
 
 VkPipeline createGraphicsPipeline(const VkDevice &device,
-                                  const std::string vertex_shader_path,
-                                  const std::string fragment_shader_path,
+                                  const VkShaderModule vertShaderModule,
+                                  const VkShaderModule fragShaderModule,
                                   VkDescriptorSetLayout &descriptorSetLayout,
                                   VkPipelineLayout &pipelineLayout,
                                   VkRenderPass &renderPass, SwapChain &swapChain) {
-
-    auto vertShaderCode = readFile(vertex_shader_path);
-    auto fragShaderCode = readFile(fragment_shader_path);
-
-    VkShaderModule vertShaderModule = createShaderModule(device, vertShaderCode);
-    VkShaderModule fragShaderModule = createShaderModule(device, fragShaderCode);
 
     // Note from tutorial:
     // There is one more (optional) member, pSpecializationInfo, which we won't
@@ -327,16 +325,15 @@ VkPipeline createGraphicsPipeline(const VkDevice &device,
     // execution by the GPU doesn't happen until the graphics pipeline is
     // created. That means that we're allowed to destroy the shader modules
     // again as soon as pipeline creation is finished
-    vkDestroyShaderModule(device, fragShaderModule, nullptr);
-    vkDestroyShaderModule(device, vertShaderModule, nullptr);
     return graphicsPipeline;
 }
 
-VkShaderModule createShaderModule(const VkDevice &device, const std::vector<char> &code) {
+VkShaderModule createShaderModule(const VkDevice &device, const uint8_t *data,
+                                  const size_t len) {
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    createInfo.codeSize = code.size();
-    createInfo.pCode = reinterpret_cast<const uint32_t *>(code.data());
+    createInfo.codeSize = len;
+    createInfo.pCode = reinterpret_cast<const uint32_t *>(data);
 
     VkShaderModule shaderModule;
     if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
@@ -346,7 +343,7 @@ VkShaderModule createShaderModule(const VkDevice &device, const std::vector<char
     return shaderModule;
 }
 
-static std::vector<char> readFile(const std::string filename) {
+std::vector<char> readFile(const std::string filename) {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
     if (!file.is_open()) {

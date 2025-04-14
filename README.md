@@ -4,7 +4,7 @@ This project is a physics engine and render engine to support for my personal ga
 ## Plan
 1. (DONE) Finish texture rendering
 2. (DONE) Render text using texture rendering
-3. Figure out why the performance is abysmal for the spatial subdivision example
+3. (DONE) Figure out why the performance is abysmal for the spatial subdivision example
 4. Implement SAT for circle-polygon
 5. Implement SAT for circle-circle
 6. Implement tiling system OR camera movement
@@ -17,6 +17,7 @@ This project is a physics engine and render engine to support for my personal ga
 
 
 ## Features To Implement
+- Script that compiles assets and adds them to the ResourceManager automatically during building
 - SAT circle-circle, circle-polygon collision detection
 - UI Rendering
 - Procedural generation

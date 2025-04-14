@@ -1,8 +1,8 @@
 #pragma once
 
 #include "render_engine/Texture.h"
+#include "render_engine/resources/fonts/FontResource.h"
 #include <cstddef>
-#include <iostream>
 
 enum class UseFont {
     None,
@@ -17,14 +17,8 @@ struct FontDescription {
     // do this differently?
     uint32_t atlas_width_px;
     uint32_t atlas_height_px;
-};
-
-const FontDescription default_font{
-    .path = "assets/fonts/atlas.png",
-    .char_width_px = 64,
-    .char_height_px = 64,
-    .atlas_width_px = 512,
-    .atlas_height_px = 512,
+    unsigned int atlas_bytes_len;
+    std::vector<unsigned char> atlas_bytes;
 };
 
 class Font {
@@ -42,6 +36,17 @@ class Font {
     Font()
         : char_width_px(0), char_height_px(0), font_atlas(nullptr), atlas_width_px(0),
           atlas_height_px(0), atlas_width(0), atlas_height(0) {}
+
+    Font(std::shared_ptr<CoreGraphicsContext> &g_ctx, const VkCommandPool &command_pool,
+         const VkQueue &graphics_queue, const FontResource *resource)
+        : char_width_px(resource->char_width_px),
+          char_height_px(resource->char_height_px),
+          atlas_width_px(resource->atlas_width_px),
+          atlas_height_px(resource->atlas_height_px),
+          atlas_width(atlas_width_px / char_width_px),
+          atlas_height(atlas_height_px / char_height_px),
+          font_atlas(std::make_unique<Texture>(g_ctx, command_pool, graphics_queue,
+                                               resource->bytes(), resource->length())) {}
 
     Font(std::shared_ptr<CoreGraphicsContext> &g_ctx, const VkCommandPool &command_pool,
          const VkQueue &graphics_queue, const FontDescription &description)

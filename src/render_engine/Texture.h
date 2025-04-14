@@ -15,6 +15,10 @@ class Texture {
     Texture(std::shared_ptr<CoreGraphicsContext> ctx, const VkCommandPool &command_pool,
             const VkQueue &graphics_queue, const char *filepath);
 
+    Texture(std::shared_ptr<CoreGraphicsContext> ctx, const VkCommandPool &command_pool,
+            const VkQueue &graphics_queue, const uint8_t *bytes,
+            const unsigned int length);
+
     ~Texture();
 
     Texture(Texture &&other) noexcept;

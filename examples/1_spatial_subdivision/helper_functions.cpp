@@ -1,5 +1,4 @@
 #include "helper_functions.h"
-#include "io.h"
 
 void apply_physics(const float dt, RigidBody &body) {
     WorldPoint temp_position = body.position;

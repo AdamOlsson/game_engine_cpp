@@ -8,22 +8,12 @@
 #include "render_engine/Texture.h"
 #include "render_engine/buffers/StorageBuffer.h"
 #include "render_engine/buffers/UniformBuffer.h"
+#include "render_engine/resources/ResourceManager.h"
 #include "util.h"
 #include "vulkan/vulkan_core.h"
 #include <cstring>
 #include <memory>
 #include <vector>
-
-static std::vector<char> readFile(const std::string filename);
-
-VkShaderModule createShaderModule(const VkDevice &device, const std::vector<char> &code);
-
-VkPipeline createGraphicsPipeline(const VkDevice &device,
-                                  const std::string vertex_shader_path,
-                                  const std::string fragment_shader_path,
-                                  VkDescriptorSetLayout &descriptorSetLayout,
-                                  VkPipelineLayout &pipelineLayout,
-                                  VkRenderPass &renderPass, SwapChain &swap_chain);
 
 TextPipeline::TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
                            CommandHandler &command_handler, SwapChain &swap_chain,
@@ -35,12 +25,23 @@ TextPipeline::TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> 
 
     auto [graphicsQueue, presentQueue] = ctx->get_device_queues();
 
-    // TODO: Not needed to include the bytes of the shader twice. Move shader module
-    // creation to parent
-    graphics_pipeline = createGraphicsPipeline(
-        ctx->device, "src/render_engine/shaders/vert.spv",
-        "src/render_engine/shaders/text_fragment.spv", descriptor_set_layout,
-        pipeline_layout, render_pass, swap_chain);
+    // TODO: Script that automatically includes compiled textures into ResourceManager
+    auto &resoure_manager = ResourceManager::get_instance();
+    auto vert_shader_code = resoure_manager.get_resource<ShaderResource>("Vert");
+    auto frag_shader_code = resoure_manager.get_resource<ShaderResource>("TextFragment");
+
+    VkShaderModule vert_shader_module = createShaderModule(
+        ctx->device, vert_shader_code->bytes(), vert_shader_code->length());
+
+    VkShaderModule frag_shader_module = createShaderModule(
+        ctx->device, frag_shader_code->bytes(), frag_shader_code->length());
+
+    graphics_pipeline = createGraphicsPipeline(ctx->device, vert_shader_module,
+                                               frag_shader_module, descriptor_set_layout,
+                                               pipeline_layout, render_pass, swap_chain);
+
+    vkDestroyShaderModule(ctx->device, vert_shader_module, nullptr);
+    vkDestroyShaderModule(ctx->device, frag_shader_module, nullptr);
 
     VkCommandPool command_pool = command_handler.pool();
 
