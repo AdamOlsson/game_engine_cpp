@@ -3,8 +3,11 @@
 #include "equations/projection.h"
 #include "glm/geometric.hpp"
 #include "io.h"
+#include "shape.h"
 #include <iostream>
 #include <optional>
+#include <type_traits>
+#include <variant>
 #include <vector>
 
 struct CollisionEdge {
@@ -18,6 +21,49 @@ struct MTV {
     glm::vec3 direction;
     float magnitude;
 };
+
+std::ostream &operator<<(std::ostream &os, const CollisionEdge &ce);
+std::ostream &operator<<(std::ostream &os, const MTV &mtv);
+std::ostream &operator<<(std::ostream &os, const ContactType &c);
+std::ostream &operator<<(std::ostream &os, const CollisionInformation &ci);
+
+CollisionEdge find_collision_edge(const RigidBody &body, const glm::vec3 &collision_axis);
+std::vector<glm::vec3> sat_clip(const glm::vec3 &v1, const glm::vec3 &v2,
+                                const glm::vec3 &ref_edge, float offset);
+ContactType determine_contact_type(const std::vector<glm::vec3> &clipping_points,
+                                   const CollisionEdge &ref_edge,
+                                   const CollisionEdge &inc_edge);
+CollisionInformation find_clipping_points(const CollisionEdge &edge_a,
+                                          const CollisionEdge &edge_b,
+                                          const glm::vec3 &collision_normal);
+std::optional<MTV> find_mtv(const RigidBody &body_a, const RigidBody &body_b);
+
+std::optional<CollisionInformation> SAT::collision_detection(const RigidBody &body_a,
+                                                             const RigidBody &body_b) {
+
+    return std::visit(
+        [&body_a, &body_b](const auto &a,
+                           const auto &b) -> std::optional<CollisionInformation> {
+            using ShapeA = std::decay_t<decltype(a)>;
+            using ShapeB = std::decay_t<decltype(b)>;
+
+            if constexpr (std::is_same_v<ShapeA, Circle> &&
+                          std::is_same_v<ShapeB, Circle>) {
+                return SAT::collision_detection_circle(body_a, body_b);
+                return std::nullopt;
+            } else if constexpr (std::is_same_v<ShapeA, Circle> &&
+                                 !std::is_same_v<ShapeB, Circle>) {
+                return SAT::collision_detection_circle_polygon(body_a, body_b);
+                return std::nullopt;
+            } else if (!std::is_same_v<ShapeA, Circle> &&
+                       std::is_same_v<ShapeB, Circle>) {
+                return SAT::collision_detection_circle_polygon(body_b, body_a);
+            } else {
+                return SAT::collision_detection_polygon(body_a, body_b);
+            }
+        },
+        body_a.shape.params, body_b.shape.params);
+}
 
 std::ostream &operator<<(std::ostream &os, const CollisionEdge &ce) {
     os << "CollisionEdge( start: " << ce.start << ", end: " << ce.end
@@ -218,16 +264,59 @@ CollisionInformation find_clipping_points(const CollisionEdge &edge_a,
     };
 }
 
-std::optional<MTV> find_mtv(const RigidBody &body_a, const RigidBody &body_b) {
+inline std::optional<MTV> find_mtv_circle(const RigidBody &body_a,
+                                          const RigidBody &body_b) {
+    const auto radius_a = body_a.shape.get<Circle>().radius;
+    const auto radius_b = body_b.shape.get<Circle>().radius;
+    const float distance2 = Equations::distance2(body_b.position, body_a.position);
+    if (distance2 >= pow(radius_a + radius_b, 2)) {
+        return std::nullopt;
+    }
+    const float distance = sqrt(distance2);
+    const float overlap = radius_a + radius_b - distance;
+    return MTV{.direction = glm::normalize(body_b.position - body_a.position),
+               .magnitude = overlap};
+}
+
+inline std::optional<MTV> find_mtv_circle_polygon(const RigidBody &circle,
+                                                  const RigidBody &polygon) {
+
+    std::vector<glm::vec3> polygon_axis = polygon.normals();
+    float min_overlap = std::numeric_limits<float>::infinity();
+    glm::vec3 axis;
+
+    for (size_t i = 0; i < polygon_axis.size(); ++i) {
+        Projection poly_proj =
+            Projection::project_polygon_on_axis(polygon, polygon_axis[i]);
+        Projection circle_proj =
+            Projection::project_circle_on_axis(circle, polygon_axis[i]);
+        Overlap overlap = poly_proj.overlap(circle_proj);
+
+        if (overlap.distance <= 0.0f) {
+            return std::nullopt; // No collision
+        }
+
+        if (overlap.distance < min_overlap) {
+            min_overlap = overlap.distance;
+            axis = polygon_axis[i];
+        }
+    }
+
+    return MTV{.direction = -axis, .magnitude = min_overlap};
+}
+
+inline std::optional<MTV> find_mtv_polygon(const RigidBody &body_a,
+                                           const RigidBody &body_b) {
+
     std::vector<glm::vec3> axii_a = body_a.normals();
     std::vector<glm::vec3> axii_b = body_b.normals();
 
     float min_overlap = std::numeric_limits<float>::infinity();
-    std::optional<glm::vec3> axis = std::nullopt;
+    glm::vec3 axis;
 
     for (size_t i = 0; i < axii_a.size(); ++i) {
-        Projection proj_a = Projection::project_body_on_axis(body_a, axii_a[i]);
-        Projection proj_b = Projection::project_body_on_axis(body_b, axii_a[i]);
+        Projection proj_a = Projection::project_polygon_on_axis(body_a, axii_a[i]);
+        Projection proj_b = Projection::project_polygon_on_axis(body_b, axii_a[i]);
         Overlap overlap = proj_a.overlap(proj_b);
 
         if (overlap.distance <= 0.0f) {
@@ -237,13 +326,12 @@ std::optional<MTV> find_mtv(const RigidBody &body_a, const RigidBody &body_b) {
         if (overlap.distance < min_overlap) {
             min_overlap = overlap.distance;
             axis = axii_a[i];
-            /*min_index_a = i;*/
         }
     }
 
     for (size_t i = 0; i < axii_b.size(); ++i) {
-        Projection proj_a = Projection::project_body_on_axis(body_a, axii_b[i]);
-        Projection proj_b = Projection::project_body_on_axis(body_b, axii_b[i]);
+        Projection proj_a = Projection::project_polygon_on_axis(body_a, axii_b[i]);
+        Projection proj_b = Projection::project_polygon_on_axis(body_b, axii_b[i]);
         Overlap overlap = proj_a.overlap(proj_b);
 
         if (overlap.distance <= 0.0f) {
@@ -257,16 +345,48 @@ std::optional<MTV> find_mtv(const RigidBody &body_a, const RigidBody &body_b) {
     }
 
     glm::vec3 direction_a_to_b = body_b.position - body_a.position;
-    glm::vec3 final_axis = axis.value();
+    glm::vec3 final_axis = axis;
     if (glm::dot(final_axis, direction_a_to_b) < 0) {
         final_axis = -final_axis;
     }
     return MTV{.direction = final_axis, .magnitude = min_overlap};
 }
 
-std::optional<CollisionInformation> SAT::collision_detection(const RigidBody &body_a,
-                                                             const RigidBody &body_b) {
-    auto mtv = find_mtv(body_a, body_b);
+inline std::optional<CollisionInformation>
+SAT::collision_detection_circle(const RigidBody &body_a, const RigidBody &body_b) {
+    const auto mtv = find_mtv_circle(body_a, body_b);
+    if (!mtv.has_value()) {
+        return std::nullopt;
+    }
+    const auto radius_a = body_a.shape.get<Circle>().radius;
+    return CollisionInformation{
+        .penetration_depth = mtv->magnitude,
+        .normal = mtv->direction,
+        .contact_type = ContactType::VERTEX_VERTEX,
+        .contact_patch = {body_a.position + mtv->direction * radius_a},
+        .deepest_contact_idx = 0};
+}
+
+inline std::optional<CollisionInformation>
+SAT::collision_detection_circle_polygon(const RigidBody &circle,
+                                        const RigidBody &polygon) {
+
+    const auto mtv = find_mtv_circle_polygon(circle, polygon);
+    if (!mtv.has_value()) {
+        return std::nullopt;
+    }
+    const float radius = circle.shape.get<Circle>().radius;
+    return CollisionInformation{
+        .penetration_depth = mtv->magnitude,
+        .normal = mtv->direction,
+        .contact_type = ContactType::VERTEX_VERTEX,
+        .contact_patch = {circle.position + mtv->direction * radius},
+        .deepest_contact_idx = 0};
+}
+
+inline std::optional<CollisionInformation>
+SAT::collision_detection_polygon(const RigidBody &body_a, const RigidBody &body_b) {
+    const auto mtv = find_mtv_polygon(body_a, body_b);
     if (!mtv.has_value()) {
         return std::nullopt;
     }

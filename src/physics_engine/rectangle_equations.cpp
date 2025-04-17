@@ -1,7 +1,6 @@
 #include "rectangle_equations.h"
 #include "Coordinates.h"
 #include "equations/equations.h"
-#include "io.h"
 #include "physics_engine/RigidBody.h"
 
 std::vector<glm::vec3> get_rectangle_vertices(const RigidBody &body,
@@ -92,6 +91,8 @@ bool is_point_inside_rectangle(const RigidBody &body, const WorldPoint &point) {
            std::abs(local_point.y) <= half_height;
 };
 
+/// For a given point, calculate the closest point on the rigid body. If the
+/// given point is inside the rigid body, the given point will be returned.
 WorldPoint closest_point_on_rectangle(const RigidBody &body,
                                       const WorldPoint &other_point) {
 
@@ -99,13 +100,13 @@ WorldPoint closest_point_on_rectangle(const RigidBody &body,
     float width = rectangle.width;
     float height = rectangle.height;
 
-    auto local_circle_center = other_point - body.position;
-    Equations::rotate_z_mut(local_circle_center, -body.rotation);
+    auto local_rect_center = other_point - body.position;
+    Equations::rotate_z_mut(local_rect_center, -body.rotation);
 
     float local_closest_point_on_rect_x =
-        std::max(-width / 2.0f, std::min(local_circle_center.x, width / 2.0f));
+        std::max(-width / 2.0f, std::min(local_rect_center.x, width / 2.0f));
     float local_closest_point_on_rect_y =
-        std::max(-height / 2.0f, std::min(local_circle_center.y, height / 2.0f));
+        std::max(-height / 2.0f, std::min(local_rect_center.y, height / 2.0f));
 
     glm::vec3 local_closest_point_on_rect(local_closest_point_on_rect_x,
                                           local_closest_point_on_rect_y, 0.0f);

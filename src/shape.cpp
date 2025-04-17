@@ -2,7 +2,7 @@
 #include <ostream>
 #include <stdexcept>
 
-Shape Shape::create_circle_data(float radius) { return Shape{Circle{radius}}; }
+Shape Shape::create_circle_data(float diameter) { return Shape{Circle{diameter / 2.0f}}; }
 Shape Shape::create_triangle_data(float side) { return Shape{Triangle{side}}; }
 Shape Shape::create_rectangle_data(float width, float height) {
     return Shape{Rectangle{width, height}};

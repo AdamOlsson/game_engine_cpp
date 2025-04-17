@@ -1,6 +1,5 @@
 #include "triangle_equations.h"
 #include "equations/equations.h"
-#include "io.h"
 
 std::vector<glm::vec3> get_triangle_vertices(const RigidBody &body,
                                              const glm::vec3 &translate,

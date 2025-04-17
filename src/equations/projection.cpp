@@ -1,4 +1,5 @@
 #include "equations/projection.h"
+#include "glm/geometric.hpp"
 #include <iostream>
 
 bool operator==(const Projection &lhs, const Projection &rhs) {
@@ -12,9 +13,9 @@ std::ostream &operator<<(std::ostream &os, const Projection &projection) {
     return os;
 }
 
-Projection Projection::project_body_on_axis(const RigidBody &body,
-                                            const glm::vec3 &axis) {
-    std::vector<glm::vec3> corners = body.vertices();
+Projection Projection::project_polygon_on_axis(const RigidBody &polygon,
+                                               const glm::vec3 &axis) {
+    std::vector<glm::vec3> corners = polygon.vertices();
 
     float min = std::numeric_limits<float>::max();
     float max = std::numeric_limits<float>::lowest();
@@ -26,6 +27,16 @@ Projection Projection::project_body_on_axis(const RigidBody &body,
     }
 
     return Projection{min, max};
+}
+
+Projection Projection::project_circle_on_axis(const RigidBody &circle,
+                                              const glm::vec3 &axis) {
+    const float radius = circle.shape.get<Circle>().radius;
+    const glm::vec3 axis_norm = glm::normalize(axis);
+    const WorldPoint extent = static_cast<WorldPoint>(axis_norm * radius);
+    const glm::vec3 lower = circle.position - extent;
+    const glm::vec3 upper = circle.position + extent;
+    return Projection{.min = glm::dot(axis, lower), .max = glm::dot(axis, upper)};
 }
 
 Overlap Projection::overlap(const Projection &other) const {
