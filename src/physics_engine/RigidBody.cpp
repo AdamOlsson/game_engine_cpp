@@ -20,11 +20,10 @@ std::vector<glm::vec3> RigidBody::edges() const {
                 return get_triangle_edges(*this);
             } else if constexpr (std::is_same_v<T, Rectangle>) {
                 return get_rectangle_edges(*this);
-            } else {
-                std::ostringstream oss;
-                oss << "Shape::" << this->shape << " not implemented (edges())";
-                throw std::runtime_error(oss.str());
             }
+            std::ostringstream oss;
+            oss << "Shape::" << this->shape << " not implemented (edges())";
+            throw std::runtime_error(oss.str());
         },
         shape.params);
 }
@@ -42,11 +41,10 @@ std::vector<glm::vec3> RigidBody::vertices() const {
                 return get_triangle_vertices(*this);
             } else if constexpr (std::is_same_v<T, Rectangle>) {
                 return get_rectangle_vertices(*this);
-            } else {
-                std::ostringstream oss;
-                oss << "Shape::" << this->shape << " not implemented (vertices())";
-                throw std::runtime_error(oss.str());
             }
+            std::ostringstream oss;
+            oss << "Shape::" << this->shape << " not implemented (vertices())";
+            throw std::runtime_error(oss.str());
         },
         shape.params);
 }
@@ -64,11 +62,10 @@ std::vector<glm::vec3> RigidBody::normals() const {
                 return get_triangle_normals(*this);
             } else if constexpr (std::is_same_v<T, Rectangle>) {
                 return get_rectangle_normals(*this);
-            } else {
-                std::ostringstream oss;
-                oss << "Shape::" << this->shape << " not implemented (normals())";
-                throw std::runtime_error(oss.str());
             }
+            std::ostringstream oss;
+            oss << "Shape::" << this->shape << " not implemented (normals())";
+            throw std::runtime_error(oss.str());
         },
         shape.params);
 }
@@ -83,12 +80,11 @@ float RigidBody::bounding_volume_radius() const {
                 return get_triangle_bounding_volume_radius(*this);
             } else if constexpr (std::is_same_v<T, Rectangle>) {
                 return get_rectangle_bounding_volume_radius(*this);
-            } else {
-                std::ostringstream oss;
-                oss << "Shape::" << this->shape
-                    << " not implemented (bounding_volume_radius())";
-                throw std::runtime_error(oss.str());
             }
+            std::ostringstream oss;
+            oss << "Shape::" << this->shape
+                << " not implemented (bounding_volume_radius())";
+            throw std::runtime_error(oss.str());
         },
         shape.params);
 }
@@ -103,11 +99,10 @@ bool RigidBody::is_point_inside(const WorldPoint &point) const {
                 return is_point_inside_triangle(*this, point);
             } else if constexpr (std::is_same_v<T, Rectangle>) {
                 return is_point_inside_rectangle(*this, point);
-            } else {
-                std::ostringstream oss;
-                oss << "Shape::" << this->shape << " not implemented (is_point_inside())";
-                throw std::runtime_error(oss.str());
             }
+            std::ostringstream oss;
+            oss << "Shape::" << this->shape << " not implemented (is_point_inside())";
+            throw std::runtime_error(oss.str());
         },
         shape.params);
 }
@@ -122,12 +117,11 @@ WorldPoint RigidBody::closest_point_on_body(const WorldPoint &point) const {
                 return closest_point_on_triangle(*this, point);
             } else if constexpr (std::is_same_v<T, Rectangle>) {
                 return closest_point_on_rectangle(*this, point);
-            } else {
-                std::ostringstream oss;
-                oss << "Shape::" << this->shape
-                    << " not implemented (closest_point_on_body())";
-                throw std::runtime_error(oss.str());
             }
+            std::ostringstream oss;
+            oss << "Shape::" << this->shape
+                << " not implemented (closest_point_on_body())";
+            throw std::runtime_error(oss.str());
         },
         shape.params);
 }
@@ -142,11 +136,10 @@ float RigidBody::inertia() const {
                 return triangle_inertia(*this);
             } else if constexpr (std::is_same_v<T, Rectangle>) {
                 return rectangle_inertia(*this);
-            } else {
-                std::ostringstream oss;
-                oss << "Shape::" << this->shape << " not implemented (inertia())";
-                throw std::runtime_error(oss.str());
             }
+            std::ostringstream oss;
+            oss << "Shape::" << this->shape << " not implemented (inertia())";
+            throw std::runtime_error(oss.str());
         },
         shape.params);
 }
