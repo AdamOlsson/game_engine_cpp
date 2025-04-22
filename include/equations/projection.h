@@ -18,7 +18,7 @@ struct Projection {
     static Projection project_polygon_on_axis(const RigidBody &polygon,
                                               const glm::vec3 &axis);
 
-    /// Projects a circle onto a given axis, assumes the axis is normalized.
+    /// Projects a circle onto a given axis
     static Projection project_circle_on_axis(const RigidBody &circle,
                                              const glm::vec3 &axis);
 };
