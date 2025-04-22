@@ -51,7 +51,7 @@ struct Shape {
     template <typename T> bool is() const { return std::holds_alternative<T>(params); }
     template <typename T> T get() const { return std::get<T>(params); }
 
-    static Shape create_circle_data(float radius);
+    static Shape create_circle_data(float diameter);
     static Shape create_triangle_data(float side);
     static Shape create_rectangle_data(float width, float height);
     static Shape create_hexagon_data(float height);

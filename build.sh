@@ -18,6 +18,16 @@ if [ $VERT_COMPILE_STATUS -ne 0 ] || [ $GEOMETRY_FRAG_COMPILE_STATUS -ne 0 ] || 
     exit 1
 fi
 
+python3 compile_assets.py
+ASSETS_COMPILE_STATUS=$?
+
+# Check if compile_assets.py was successful
+if [ $ASSETS_COMPILE_STATUS -ne 0 ]; then
+    echo "Assets compilation failed"
+    exit 1
+fi
+
+
 BUILD_TYPE="Debug"
 
 while [[ $# -gt 0 ]]; do

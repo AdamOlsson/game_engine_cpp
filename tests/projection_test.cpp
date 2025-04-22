@@ -4,12 +4,60 @@
 #include "physics_engine/RigidBody.h"
 #include <gtest/gtest.h>
 
+TEST(ProjectionTest, GivenCircleAtOrigo) {
+    RigidBody test_body = RigidBody{.position = WorldPoint(0.0, 0.0, 0.0),
+                                    .shape = Shape::create_circle_data(1.0)};
+    glm::vec3 project_axis = glm::vec3(1.0, 0.0, 0.0);
+    Projection output = Projection::project_circle_on_axis(test_body, project_axis);
+    Round::round_mut(output);
+
+    Projection expected = Projection{
+        .min = -0.5,
+        .max = 0.5,
+    };
+
+    EXPECT_EQ(expected, output)
+        << "Expected " << expected << " but found " << output << std::endl;
+}
+
+TEST(ProjectionTest, GivenCircleNotAtOrigo) {
+    RigidBody test_body = RigidBody{.position = WorldPoint(-200.0, 0.0, 0.0),
+                                    .shape = Shape::create_circle_data(1.0)};
+    glm::vec3 project_axis = glm::vec3(1.0, 0.0, 0.0);
+    Projection output = Projection::project_circle_on_axis(test_body, project_axis);
+    Round::round_mut(output);
+
+    Projection expected = Projection{
+        .min = -200.5,
+        .max = -199.5,
+    };
+
+    EXPECT_EQ(expected, output)
+        << "Expected " << expected << " but found " << output << std::endl;
+}
+
+TEST(ProjectionTest, GivenCircleNotAtOrigo2) {
+    RigidBody test_body = RigidBody{.position = WorldPoint(-200.0, 0.0, 0.0),
+                                    .shape = Shape::create_circle_data(1.0)};
+    glm::vec3 project_axis = glm::vec3(0.0, -1.0, 0.0);
+    Projection output = Projection::project_circle_on_axis(test_body, project_axis);
+    Round::round_mut(output);
+
+    Projection expected = Projection{
+        .min = -0.5,
+        .max = 0.5,
+    };
+
+    EXPECT_EQ(expected, output)
+        << "Expected " << expected << " but found " << output << std::endl;
+}
+
 TEST(ProjectionTest, GivenTriangleAtOrigoCreatesExpectedProjection) {
     RigidBody test_body = RigidBody{.position = WorldPoint(0.0, 0.0, 0.0),
                                     .rotation = 0.0,
                                     .shape = Shape::create_triangle_data(1.0)};
     glm::vec3 project_axis = glm::vec3(1.0, 0.0, 0.0);
-    Projection output = Projection::project_body_on_axis(test_body, project_axis);
+    Projection output = Projection::project_polygon_on_axis(test_body, project_axis);
     Round::round_mut(output);
 
     Projection expected = Projection{
@@ -26,7 +74,7 @@ TEST(ProjectionTest, GivenTriangleIsOffsetCreatesExpectedProjection) {
                                     .rotation = 0.0,
                                     .shape = Shape::create_triangle_data(1.0f)};
     glm::vec3 project_axis = glm::vec3(0.0, 1.0, 0.0);
-    Projection output = Projection::project_body_on_axis(test_body, project_axis);
+    Projection output = Projection::project_polygon_on_axis(test_body, project_axis);
     Round::round_mut(output);
 
     Projection expected = Projection{
@@ -44,7 +92,7 @@ TEST(ProjectionTest, GivenTriangleAtOrigoAndRotatedCreatesExpectedProjection) {
                                     .rotation = degrees_30,
                                     .shape = Shape::create_triangle_data(1.0)};
     glm::vec3 project_axis = glm::vec3(0.0, -1.0, 0.0);
-    Projection output = Projection::project_body_on_axis(test_body, project_axis);
+    Projection output = Projection::project_polygon_on_axis(test_body, project_axis);
     Round::round_mut(output);
 
     Projection expected = Projection{
@@ -62,7 +110,7 @@ TEST(ProjectionTest, GivenTriangleIsOffsetAndRotatedCreatesExpectedProjection) {
                                     .rotation = degrees_30,
                                     .shape = Shape::create_triangle_data(1.0)};
     glm::vec3 project_axis = glm::vec3(0.0, -1.0, 0.0);
-    Projection output = Projection::project_body_on_axis(test_body, project_axis);
+    Projection output = Projection::project_polygon_on_axis(test_body, project_axis);
     Round::round_mut(output);
 
     Projection expected = Projection{

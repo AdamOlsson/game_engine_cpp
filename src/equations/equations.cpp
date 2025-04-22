@@ -3,9 +3,18 @@
 
 float Equations::length2(const glm::vec3 &v) { return v.x * v.x + v.y * v.y + v.z * v.z; }
 
+float Equations::length(const glm::vec3 &v) {
+    return glm::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+}
+
 float Equations::distance2(const glm::vec3 &p1, const glm::vec3 &p2) {
     const glm::vec3 diff = p2 - p1;
     return length2(diff);
+}
+
+float Equations::distance(const glm::vec3 &p1, const glm::vec3 &p2) {
+    const glm::vec3 diff = p2 - p1;
+    return glm::sqrt(length2(diff));
 }
 
 float Equations::cross_2d(const glm::vec3 &v1, const glm::vec3 &v2) {

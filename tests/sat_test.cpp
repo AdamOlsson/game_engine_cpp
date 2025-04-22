@@ -1,5 +1,4 @@
 #include "glm/ext/scalar_constants.hpp"
-#include "io.h"
 #include "physics_engine/RigidBody.h"
 #include "physics_engine/SAT.cpp"
 #include "physics_engine/SAT.h"
@@ -14,6 +13,68 @@ void expect_near(const CollisionEdge &expected, const CollisionEdge &v,
     expect_near(expected.start, v.start, epsilon);
     expect_near(expected.end, v.end, epsilon);
     expect_near(expected.edge, v.edge, epsilon);
+}
+
+TEST(SATTest, GivenCircleAndRectangleDoNotCollide) {
+    const RigidBody body_a = RigidBodyBuilder()
+                                 .position(WorldPoint(-11.0, 0.0, 0.0))
+                                 .shape(Shape::create_circle_data(20.0))
+                                 .build();
+    const RigidBody body_b = RigidBodyBuilder()
+                                 .position(WorldPoint(11.0, 0.0, 0.0))
+                                 .shape(Shape::create_rectangle_data(20.0, 20.0))
+                                 .build();
+    const auto output = SAT::collision_detection(body_a, body_b);
+    EXPECT_FALSE(output.has_value());
+}
+
+TEST(SATTest, GivenCircleAndRectangleDoCollide) {
+    const RigidBody body_a = RigidBodyBuilder()
+                                 .position(WorldPoint(-9.0, 0.0, 0.0))
+                                 .shape(Shape::create_circle_data(20.0))
+                                 .build();
+    const RigidBody body_b = RigidBodyBuilder()
+                                 .position(WorldPoint(10.0, 0.0, 0.0))
+                                 .shape(Shape::create_rectangle_data(20.0, 20.0))
+                                 .build();
+    const auto output = SAT::collision_detection(body_a, body_b);
+    EXPECT_TRUE(output.has_value());
+    EXPECT_NEAR(1.0f, output->penetration_depth, MAX_DIFF);
+    expect_near(glm::vec3(1.0f, 0.0, 0.0), output->normal, MAX_DIFF);
+    EXPECT_EQ(ContactType::VERTEX_VERTEX, output->contact_type);
+    expect_near(glm::vec3(1.0f, 0.0, 0.0), output->contact_patch[0], MAX_DIFF);
+    EXPECT_EQ(0, output->deepest_contact_idx);
+}
+
+TEST(SATTest, GivenCirclesDoNotCollide) {
+    const RigidBody body_a = RigidBodyBuilder()
+                                 .position(WorldPoint(-11.0, 0.0, 0.0))
+                                 .shape(Shape::create_circle_data(20.0))
+                                 .build();
+    const RigidBody body_b = RigidBodyBuilder()
+                                 .position(WorldPoint(11.0, 0.0, 0.0))
+                                 .shape(Shape::create_circle_data(20.0))
+                                 .build();
+    const auto output = SAT::collision_detection(body_a, body_b);
+    EXPECT_FALSE(output.has_value());
+}
+
+TEST(SATTest, GivenCirclesDoCollide) {
+    const RigidBody body_a = RigidBodyBuilder()
+                                 .position(WorldPoint(-9.0, 0.0, 0.0))
+                                 .shape(Shape::create_circle_data(20.0))
+                                 .build();
+    const RigidBody body_b = RigidBodyBuilder()
+                                 .position(WorldPoint(10.0, 0.0, 0.0))
+                                 .shape(Shape::create_circle_data(20.0))
+                                 .build();
+    const auto output = SAT::collision_detection(body_a, body_b);
+    EXPECT_TRUE(output.has_value());
+    EXPECT_NEAR(1.0f, output->penetration_depth, MAX_DIFF);
+    expect_near(glm::vec3(1.0f, 0.0, 0.0), output->normal, MAX_DIFF);
+    EXPECT_EQ(ContactType::VERTEX_VERTEX, output->contact_type);
+    expect_near(glm::vec3(1.0f, 0.0, 0.0), output->contact_patch[0], MAX_DIFF);
+    EXPECT_EQ(0, output->deepest_contact_idx);
 }
 
 TEST(SATTest, GivenRectanglesAreAxisAlignedWhenDoNotCollideExpectNoCollision) {
@@ -597,7 +658,7 @@ TEST(SATTest, GivenExample1AtDyn4jTestFindMTV) {
                                  .shape(Shape::create_rectangle_data(8.0, 3.0))
                                  .build();
 
-    const auto mtv_ = find_mtv(body_a, body_b);
+    const auto mtv_ = find_mtv_polygon(body_a, body_b);
     EXPECT_TRUE(mtv_.has_value());
     const MTV mtv = mtv_.value();
     const MTV expected = MTV{.direction = glm::vec3(0.0, -1.0, 0.0), .magnitude = 1.0};
@@ -621,7 +682,7 @@ TEST(SATTest, GivenExample1AtDyn4jTestFindMTVSwap) {
                                  .shape(Shape::create_rectangle_data(8.0, 3.0))
                                  .build();
 
-    const auto mtv_ = find_mtv(body_b, body_a);
+    const auto mtv_ = find_mtv_polygon(body_b, body_a);
     EXPECT_TRUE(mtv_.has_value());
     const MTV mtv = mtv_.value();
     const MTV expected = MTV{.direction = glm::vec3(0.0, 1.0, 0.0), .magnitude = 1.0};
@@ -644,7 +705,7 @@ TEST(SATTest, GivenTwoTrianglesTestFindMTV) {
                                  .shape(Shape::create_triangle_data(10.0))
                                  .build();
 
-    const auto mtv_ = find_mtv(body_a, body_b);
+    const auto mtv_ = find_mtv_polygon(body_a, body_b);
 
     EXPECT_TRUE(mtv_.has_value());
     const MTV mtv = mtv_.value();
@@ -668,7 +729,7 @@ TEST(SATTest, GivenTwoTrianglesTestFindMTVSwap) {
                                  .shape(Shape::create_triangle_data(10.0))
                                  .build();
 
-    const auto mtv_ = find_mtv(body_b, body_a);
+    const auto mtv_ = find_mtv_polygon(body_b, body_a);
 
     EXPECT_TRUE(mtv_.has_value());
     const MTV mtv = mtv_.value();
@@ -692,7 +753,7 @@ TEST(SATTest, GivenExample2AtDyn4jTestFindMTV) {
                                  .shape(Shape::create_rectangle_data(8.0, 3.0))
                                  .build();
 
-    const auto mtv_ = find_mtv(body_a, body_b);
+    const auto mtv_ = find_mtv_polygon(body_a, body_b);
 
     EXPECT_TRUE(mtv_.has_value());
     const MTV mtv = mtv_.value();
@@ -715,7 +776,7 @@ TEST(SATTest, GivenExample2AtDyn4jTestFindMTVSwap) {
                                  .shape(Shape::create_rectangle_data(8.0, 3.0))
                                  .build();
 
-    const auto mtv_ = find_mtv(body_b, body_a);
+    const auto mtv_ = find_mtv_polygon(body_b, body_a);
 
     EXPECT_TRUE(mtv_.has_value());
     const MTV mtv = mtv_.value();
@@ -738,7 +799,7 @@ TEST(SATTest, GivenExample3AtDyn4jTestFindMTV) {
                                  .shape(Shape::create_rectangle_data(8.0, 3.0))
                                  .build();
 
-    const auto mtv_ = find_mtv(body_a, body_b);
+    const auto mtv_ = find_mtv_polygon(body_a, body_b);
 
     EXPECT_TRUE(mtv_.has_value());
     const MTV mtv = mtv_.value();
@@ -765,7 +826,7 @@ TEST(SATTest, GivenExample3AtDyn4jTestFindMTVSwap) {
                                  .shape(Shape::create_rectangle_data(8.0, 3.0))
                                  .build();
 
-    const auto mtv_ = find_mtv(body_b, body_a);
+    const auto mtv_ = find_mtv_polygon(body_b, body_a);
 
     EXPECT_TRUE(mtv_.has_value());
     const MTV mtv = mtv_.value();

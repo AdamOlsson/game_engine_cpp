@@ -4,7 +4,7 @@
 #define CIRCLE 1
 #define TRIANGLE 2
 #define RECTANGLE 3
-#define HEKTAGON 4
+#define HEXAGON 4
 #define ARROW 5 
 #define LINE 6 
 
@@ -97,8 +97,10 @@ void main() {
         
         switch(instance.shape_type) {
             case CIRCLE:
+                scaled_vertex_pos = scale_vertex(inPosition, instance.shape.param1 * 2.0, instance.shape.param1 * 2.0);
+                break;
             case TRIANGLE:
-            case HEKTAGON:
+            case HEXAGON:
                 scaled_vertex_pos = scale_vertex(inPosition, instance.shape.param1, instance.shape.param1);
                 break;
             case RECTANGLE:

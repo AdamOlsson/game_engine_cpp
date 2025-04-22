@@ -17,6 +17,16 @@ struct CollisionInformation {
 std::ostream &operator<<(std::ostream &os, const CollisionInformation &ci);
 
 class SAT {
+  private:
+    static std::optional<CollisionInformation>
+    collision_detection_polygon(const RigidBody &body_a, const RigidBody &body_b);
+
+    static std::optional<CollisionInformation>
+    collision_detection_circle(const RigidBody &body_a, const RigidBody &body_b);
+
+    static std::optional<CollisionInformation>
+    collision_detection_circle_polygon(const RigidBody &body_a, const RigidBody &body_b);
+
   public:
     SAT() = default;
     ~SAT() = default;

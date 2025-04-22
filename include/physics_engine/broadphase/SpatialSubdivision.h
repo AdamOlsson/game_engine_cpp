@@ -16,6 +16,9 @@ struct SpatialSubdivisionResult {
     std::vector<CollisionCandidates> pass2;
     std::vector<CollisionCandidates> pass3;
     std::vector<CollisionCandidates> pass4;
+
+    /// Returns the total number of collision across all 4 passes
+    size_t size() { return pass1.size() + pass2.size() + pass3.size() + pass4.size(); }
 };
 
 std::ostream &operator<<(std::ostream &os, const CollisionCandidatePair &ccp);
