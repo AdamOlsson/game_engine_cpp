@@ -77,9 +77,9 @@ Texture::Texture(std::shared_ptr<CoreGraphicsContext> ctx,
     int texture_height;
     int texture_channels;
 
-    stbi_uc *pixels =
-        stbi_load_from_memory(bytes, length, &texture_width, &texture_height,
-                              &texture_channels, STBI_rgb_alpha);
+    stbi_uc *pixels = stbi_load_from_memory(
+        reinterpret_cast<const unsigned char *>(bytes), length, &texture_width,
+        &texture_height, &texture_channels, STBI_rgb_alpha);
     VkDeviceSize texture_size = texture_width * texture_height * 4;
 
     if (!pixels) {

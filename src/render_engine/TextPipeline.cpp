@@ -25,14 +25,12 @@ TextPipeline::TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> 
 
     auto [graphicsQueue, presentQueue] = ctx->get_device_queues();
 
-    // TODO: Script that automatically includes compiled textures into ResourceManager
     auto &resoure_manager = ResourceManager::get_instance();
     auto vert_shader_code = resoure_manager.get_resource<ShaderResource>("Vert");
     auto frag_shader_code = resoure_manager.get_resource<ShaderResource>("TextFragment");
 
     VkShaderModule vert_shader_module = createShaderModule(
         ctx->device, vert_shader_code->bytes(), vert_shader_code->length());
-
     VkShaderModule frag_shader_module = createShaderModule(
         ctx->device, frag_shader_code->bytes(), frag_shader_code->length());
 

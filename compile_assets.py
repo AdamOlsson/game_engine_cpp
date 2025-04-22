@@ -6,12 +6,15 @@ IMAGE_RESOURCE = "ImageResource"
 FONT_RESOURCE = "FontResource"
 
 class Asset:
-    def __init__(self, filename, target_dir, outputfile, resource_type, resource_name):
+    def __init__(self, filename, target_dir, outputfile, resource_type, resource_name, atlas_dims=None, char_dims=None):
         self.filename = filename
         self.target_dir = target_dir
         self.outputfile = outputfile
         self.resource_type = resource_type
         self.resource_name = resource_name
+        if atlas_dims and char_dims:
+            self.atlas_dims = atlas_dims
+            self.char_dims = char_dims 
 
 assets = [
     Asset("text_fragment.spv",
@@ -33,7 +36,8 @@ assets = [
           "assets/fonts",
           "src/render_engine/resources/fonts/default/default.cpp",
           FONT_RESOURCE,
-          "DefaultFont"),
+          "DefaultFont",
+          atlas_dims=(512,512), char_dims=(64,64)),
     Asset("dog.jpeg",
           "assets/images",
           "src/render_engine/resources/images/dog/dog.cpp",
@@ -84,11 +88,31 @@ std::unique_ptr<{}> {}::create_resource() {{
 }}
 """
 
+create_font_resource_template = """\
+std::unique_ptr<{}> {}::create_resource() {{
+    return {}Builder()
+        .name(std::move(resource_name))
+        .length({}_len)
+        .bytes(&{}[0])
+        .atlas_width({})
+        .atlas_height({})
+        .char_width({})
+        .char_height({})
+        .build();
+}}
+"""
+
 def compile_asset(asset):
     base_var_name = asset.filename.replace(".", "_")
     header_name = asset.filename.split(".")[0]
     file_content = xxd_to_include(asset.filename, asset.target_dir)
-    create_resource_fn = create_resource_template.format(asset.resource_type, asset.resource_name, 
+    if asset.resource_type == FONT_RESOURCE:
+        create_resource_fn = create_font_resource_template.format(asset.resource_type, asset.resource_name, 
+                                asset.resource_type, base_var_name, base_var_name,
+                                asset.atlas_dims[0], asset.atlas_dims[1],
+                                asset.char_dims[0], asset.char_dims[1])
+    else:
+        create_resource_fn = create_resource_template.format(asset.resource_type, asset.resource_name, 
                                 asset.resource_type, base_var_name, base_var_name)
     complete_file = file_template.format(header_name, asset.resource_name, file_content, create_resource_fn)
     

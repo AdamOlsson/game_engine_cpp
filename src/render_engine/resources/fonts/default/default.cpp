@@ -5524,6 +5524,10 @@ std::unique_ptr<FontResource> DefaultFont::create_resource() {
         .name(std::move(resource_name))
         .length(default_png_len)
         .bytes(&default_png[0])
+        .atlas_width(512)
+        .atlas_height(512)
+        .char_width(64)
+        .char_height(64)
         .build();
 }
 

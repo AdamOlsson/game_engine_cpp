@@ -91,6 +91,7 @@ class ShapeRendering : public Game {
             return;
         }
 
+        // TODO: Fix this
         render_engine.render(render_bodies);
         render_engine.render_text("ADAM", glm::vec2(0.0f, 0.0f), 128);
         render_engine.render_text("LINDA", glm::vec2(0.0f, 100.0f), 64);

@@ -1,6 +1,8 @@
 #include "render_engine/RenderEngine.h"
+#include "io.h"
 #include "render_engine/DescriptorSetLayoutBuilder.h"
 #include "render_engine/FrameBuffer.h"
+#include "render_engine/GraphicsPipeline.h"
 #include "render_engine/RenderBody.h"
 #include "render_engine/Window.h"
 #include "render_engine/buffers/StorageBuffer.h"
@@ -148,6 +150,7 @@ void RenderEngine::render_text(const std::string &text, const glm::vec2 &locatio
     const glm::vec3 loc(location.x, location.y, 0.0f);
     float count = 0;
     for (const char &c : text) {
+
         instance_data.push_back(
             StorageBufferObject(loc + offset * count, glm::vec3(0.0f, 0.0f, 0.0f), 0.0f,
                                 Shape::create_rectangle_data(size, size),

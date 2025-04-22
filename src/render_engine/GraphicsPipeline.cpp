@@ -28,7 +28,6 @@ GraphicsPipeline::GraphicsPipeline(Window &window,
 
     auto [graphicsQueue, presentQueue] = ctx->get_device_queues();
 
-    // TODO: Script that automatically includes compiled textures into ResourceManager
     auto &resoure_manager = ResourceManager::get_instance();
     auto vert_shader_code = resoure_manager.get_resource<ShaderResource>("Vert");
     auto frag_shader_code =

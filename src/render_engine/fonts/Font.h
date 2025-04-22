@@ -3,6 +3,7 @@
 #include "render_engine/Texture.h"
 #include "render_engine/resources/fonts/FontResource.h"
 #include <cstddef>
+#include <iostream>
 
 enum class UseFont {
     None,
