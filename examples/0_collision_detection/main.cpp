@@ -322,10 +322,9 @@ void state2(EntityComponentStorage &ecs) {
 }
 
 int main() {
-    GameEngineConfig config{};
-    config.window_width = 800;
-    config.window_height = 800;
-    config.window_title = "0_collision_detection";
+    GameEngineConfig config{.window_config =
+                                WindowConfig{.dims = WindowDimensions(800, 800),
+                                             .title = "0_collision_detection"}};
 
     auto game = std::make_unique<Example0CollisionDetection>();
     auto game_engine = std::make_unique<GameEngine>(std::move(game), config);

@@ -6,13 +6,13 @@
 #include <iostream>
 #include <set>
 #include <stdexcept>
-#include <tuple>
 
-CoreGraphicsContext::CoreGraphicsContext(bool enableValidationLayers, Window *window)
+CoreGraphicsContext::CoreGraphicsContext(const bool enableValidationLayers,
+                                         const Window &window)
     : enableValidationLayers(enableValidationLayers),
       instance(createInstance(enableValidationLayers)),
       debugMessenger(setupDebugMessenger(instance, enableValidationLayers)),
-      surface(createSurface(instance, *window->window)),
+      surface(createSurface(instance, *window.window)),
       physicalDevice(pickPhysicalDevice(instance, surface)),
       device(createLogicalDevice(physicalDevice, surface, deviceExtensions,
                                  enableValidationLayers)) {}
@@ -30,14 +30,14 @@ CoreGraphicsContext::~CoreGraphicsContext() {
 
 void CoreGraphicsContext::wait_idle() { vkDeviceWaitIdle(device); }
 
-std::tuple<VkQueue, VkQueue> CoreGraphicsContext::get_device_queues() {
+DeviceQueues CoreGraphicsContext::get_device_queues() {
     QueueFamilyIndices indices_ = findQueueFamilies(physicalDevice, surface);
-    VkQueue graphicsQueue;
-    VkQueue presentQueue;
+    VkQueue graphics_queue;
+    VkQueue present_queue;
     uint32_t index = 0;
-    vkGetDeviceQueue(device, indices_.graphicsFamily.value(), index, &graphicsQueue);
-    vkGetDeviceQueue(device, indices_.presentFamily.value(), index, &presentQueue);
-    return std::make_tuple(graphicsQueue, presentQueue);
+    vkGetDeviceQueue(device, indices_.graphicsFamily.value(), index, &graphics_queue);
+    vkGetDeviceQueue(device, indices_.presentFamily.value(), index, &present_queue);
+    return DeviceQueues{.graphics_queue = graphics_queue, .present_queue = present_queue};
 }
 
 VKAPI_ATTR inline VkBool32 VKAPI_CALL debugCallback(

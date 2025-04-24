@@ -8,6 +8,7 @@
 #include "render_engine/Semaphore.h"
 #include "render_engine/TextPipeline.h"
 #include "render_engine/Window.h"
+#include "render_engine/WindowConfig.h"
 #include "render_engine/fonts/Font.h"
 #include "vulkan/vulkan_core.h"
 #include <GLFW/glfw3.h>
@@ -18,16 +19,15 @@ class RenderEngine {
   private:
     bool framebuffer_resized = false;
 
-    std::unique_ptr<Window> m_window;
+    Window m_window;
     std::shared_ptr<CoreGraphicsContext> m_ctx;
 
-    VkQueue m_graphics_queue;
-    VkQueue m_present_queue;
+    DeviceQueues m_device_queues;
 
     UniformBufferCollection m_window_dimension_buffers;
-    std::unique_ptr<Semaphore> m_image_available_semaphore;
-    std::unique_ptr<Semaphore> m_render_completed_semaphore;
-    std::unique_ptr<Fence> m_in_flight_fence;
+    Semaphore m_image_available_semaphore;
+    Semaphore m_render_completed_semaphore;
+    Fence m_in_flight_fence;
 
     std::unique_ptr<CommandHandler> m_command_handler;
     std::unique_ptr<SwapChain> m_swap_chain;
@@ -58,12 +58,11 @@ class RenderEngine {
         SwapChain *swap_chain = nullptr;
     } m_current_render_pass;
 
-    VkRenderPass create_render_pass(VkDevice &device, VkFormat &swapChainImageFormat);
+    VkRenderPass create_render_pass(CoreGraphicsContext *ctx, SwapChain *swap_chain);
     void recreate_swap_chain();
 
   public:
-    RenderEngine(const uint32_t width, const uint32_t height, char const *title,
-                 const UseFont use_font);
+    RenderEngine(const WindowConfig &window_config, const UseFont use_font);
     ~RenderEngine();
 
     bool should_window_close();

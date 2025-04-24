@@ -1,48 +1,15 @@
 #include "render_engine/Window.h"
+#include "render_engine/WindowConfig.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
 #include <tuple>
 
-std::ostream &operator<<(std::ostream &os, const KeyEvent &k) {
-    std::string key_string;
-    switch (k) {
-    case KeyEvent::R:
-        key_string = "R";
-        break;
-    case KeyEvent::T:
-        key_string = "T";
-        break;
-    default:
-        key_string = "UNKNOWN";
-        break;
-    }
-    return os << "KeyEvent::" << key_string;
-}
-
-std::ostream &operator<<(std::ostream &os, const KeyState &k) {
-    std::string state_string;
-    switch (k) {
-    case KeyState::UP:
-        state_string = "UP";
-        break;
-    case KeyState::REPEAT:
-        state_string = "REPEAT";
-        break;
-    case KeyState::DOWN:
-        state_string = "DOWN";
-        break;
-    default:
-        state_string = "UNKNOWN";
-        break;
-    }
-    return os << "KeyEvent::" << state_string;
-}
-
-Window::Window(const uint32_t width, const uint32_t height, char const *window_title) {
+Window::Window(const WindowConfig &config) {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-    this->window = glfwCreateWindow(width, height, window_title, nullptr, nullptr);
+    this->window = glfwCreateWindow(config.dims.width, config.dims.height, config.title,
+                                    nullptr, nullptr);
 }
 
 Window::~Window() {
@@ -162,4 +129,39 @@ void Window::keyboard_callback(GLFWwindow *window, int key, int scancode, int ac
 
         w->keyboard_event_cb.value()(key_event, state);
     }
+}
+
+std::ostream &operator<<(std::ostream &os, const KeyEvent &k) {
+    std::string key_string;
+    switch (k) {
+    case KeyEvent::R:
+        key_string = "R";
+        break;
+    case KeyEvent::T:
+        key_string = "T";
+        break;
+    default:
+        key_string = "UNKNOWN";
+        break;
+    }
+    return os << "KeyEvent::" << key_string;
+}
+
+std::ostream &operator<<(std::ostream &os, const KeyState &k) {
+    std::string state_string;
+    switch (k) {
+    case KeyState::UP:
+        state_string = "UP";
+        break;
+    case KeyState::REPEAT:
+        state_string = "REPEAT";
+        break;
+    case KeyState::DOWN:
+        state_string = "DOWN";
+        break;
+    default:
+        state_string = "UNKNOWN";
+        break;
+    }
+    return os << "KeyEvent::" << state_string;
 }

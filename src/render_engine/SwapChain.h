@@ -18,7 +18,7 @@ class SwapChain {
     VkExtent2D swapChainExtent;
     std::vector<VkImageView> swapChainImageViews;
 
-    SwapChain(std::shared_ptr<CoreGraphicsContext> ctx, const Window *window);
+    SwapChain(std::shared_ptr<CoreGraphicsContext> ctx, const Window &window);
 
     ~SwapChain();
 

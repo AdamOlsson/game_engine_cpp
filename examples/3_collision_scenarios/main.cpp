@@ -475,10 +475,9 @@ void scenario_0(EntityComponentStorage &ecs) {
 }
 
 int main() {
-    GameEngineConfig config{};
-    config.window_width = 800;
-    config.window_height = 800;
-    config.window_title = "3_collision_scenarios";
+    GameEngineConfig config{.window_config =
+                                WindowConfig{.dims = WindowDimensions(800, 800),
+                                             .title = "3_collision_scenarios"}};
 
     auto game = std::make_unique<Example3CollisionTypes>();
     auto game_engine = std::make_unique<GameEngine>(std::move(game), config);

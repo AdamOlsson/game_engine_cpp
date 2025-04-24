@@ -3,7 +3,9 @@
 #include "render_engine/FrameBuffer.h"
 #include "render_engine/GraphicsPipeline.h"
 #include "render_engine/RenderBody.h"
+#include "render_engine/SwapChain.h"
 #include "render_engine/Window.h"
+#include "render_engine/WindowConfig.h"
 #include "render_engine/buffers/StorageBuffer.h"
 #include "render_engine/fonts/Font.h"
 #include "render_engine/resources/ResourceManager.h"
@@ -13,22 +15,18 @@
 UniformBufferCollection create_uniform_buffers(std::shared_ptr<CoreGraphicsContext> &ctx,
                                                Window &window);
 
-RenderEngine::RenderEngine(const uint32_t width, const uint32_t height, char const *title,
-                           const UseFont use_font)
-    : m_window(std::make_unique<Window>(width, height, title)),
-      m_ctx(std::make_shared<CoreGraphicsContext>(true, m_window.get())),
-      m_window_dimension_buffers(std::move(create_uniform_buffers(m_ctx, *m_window))),
+RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_font)
+    : m_window(Window(window_config)),
+      m_ctx(std::make_shared<CoreGraphicsContext>(true, m_window)),
+      m_window_dimension_buffers(std::move(create_uniform_buffers(m_ctx, m_window))),
 
-      m_image_available_semaphore(
-          std::make_unique<Semaphore>(m_ctx, MAX_FRAMES_IN_FLIGHT)),
-      m_render_completed_semaphore(
-          std::make_unique<Semaphore>(m_ctx, MAX_FRAMES_IN_FLIGHT)),
-      m_in_flight_fence(std::make_unique<Fence>(m_ctx, MAX_FRAMES_IN_FLIGHT)),
+      m_image_available_semaphore(Semaphore(m_ctx, MAX_FRAMES_IN_FLIGHT)),
+      m_render_completed_semaphore(Semaphore(m_ctx, MAX_FRAMES_IN_FLIGHT)),
+      m_in_flight_fence(Fence(m_ctx, MAX_FRAMES_IN_FLIGHT)),
 
       m_command_handler(std::make_unique<CommandHandler>(m_ctx, MAX_FRAMES_IN_FLIGHT)),
-      m_swap_chain(std::make_unique<SwapChain>(m_ctx, m_window.get())),
-      m_render_pass(
-          create_render_pass(m_ctx->device, m_swap_chain->swapChainImageFormat)),
+      m_swap_chain(std::make_unique<SwapChain>(m_ctx, m_window)),
+      m_render_pass(create_render_pass(m_ctx.get(), m_swap_chain.get())),
       m_swap_chain_frame_buffer(
           std::make_unique<FrameBuffer>(m_ctx, *m_swap_chain, m_render_pass)),
       m_sampler(std::make_unique<Sampler>(m_ctx)) {
@@ -37,9 +35,7 @@ RenderEngine::RenderEngine(const uint32_t width, const uint32_t height, char con
     register_all_images();
     register_all_shaders();
 
-    auto [_graphicsQueue, _presentQueue] = m_ctx->get_device_queues();
-    m_graphics_queue = _graphicsQueue;
-    m_present_queue = _presentQueue;
+    m_device_queues = m_ctx->get_device_queues();
 
     auto descriptor_set_layout_builder =
         DescriptorSetLayoutBuilder()
@@ -51,20 +47,21 @@ RenderEngine::RenderEngine(const uint32_t width, const uint32_t height, char con
 
     auto &resource_manager = ResourceManager::get_instance();
     auto dog_image = resource_manager.get_resource<ImageResource>("DogImage");
-    m_texture = std::make_unique<Texture>(m_ctx, command_pool, m_graphics_queue,
-                                          dog_image->bytes(), dog_image->length());
+    m_texture =
+        std::make_unique<Texture>(m_ctx, command_pool, m_device_queues.graphics_queue,
+                                  dog_image->bytes(), dog_image->length());
 
     m_geometry_descriptor_set_layout = descriptor_set_layout_builder.build(m_ctx.get());
     m_geometry_pipeline = std::make_unique<GraphicsPipeline>(
-        *m_window, m_ctx, *m_command_handler, *m_swap_chain, m_render_pass,
+        m_window, m_ctx, *m_command_handler, *m_swap_chain, m_render_pass,
         *m_window_dimension_buffers, m_geometry_descriptor_set_layout, *m_sampler,
         *m_texture);
 
     switch (use_font) {
     case UseFont::Default: {
         auto default_font = resource_manager.get_resource<FontResource>("DefaultFont");
-        m_font =
-            std::make_unique<Font>(m_ctx, command_pool, m_graphics_queue, default_font);
+        m_font = std::make_unique<Font>(m_ctx, command_pool,
+                                        m_device_queues.graphics_queue, default_font);
         break;
     }
     default:
@@ -75,7 +72,7 @@ RenderEngine::RenderEngine(const uint32_t width, const uint32_t height, char con
     if (m_font != nullptr) {
         m_text_descriptor_set_layout = descriptor_set_layout_builder.build(m_ctx.get());
         m_text_pipeline = std::make_unique<TextPipeline>(
-            *m_window, m_ctx, *m_command_handler, *m_swap_chain, m_render_pass,
+            m_window, m_ctx, *m_command_handler, *m_swap_chain, m_render_pass,
             *m_window_dimension_buffers, m_text_descriptor_set_layout, *m_sampler,
             *m_font->font_atlas);
     }
@@ -167,40 +164,40 @@ void RenderEngine::render_text(const std::string &text, const glm::vec2 &locatio
                                  std::move(instance_data));
 }
 
-void RenderEngine::wait_idle() { this->m_ctx->wait_idle(); }
+void RenderEngine::wait_idle() { m_ctx->wait_idle(); }
 
-bool RenderEngine::should_window_close() { return this->m_window->should_window_close(); }
+bool RenderEngine::should_window_close() { return m_window.should_window_close(); }
 
-void RenderEngine::process_window_events() { this->m_window->process_window_events(); }
+void RenderEngine::process_window_events() { m_window.process_window_events(); }
 
 void RenderEngine::register_mouse_event_callback(MouseEventCallbackFn cb) {
-    this->m_window->register_mouse_event_callback(cb);
+    m_window.register_mouse_event_callback(cb);
 }
 
 void RenderEngine::register_keyboard_event_callback(KeyboardEventCallbackFn cb) {
-    this->m_window->register_keyboard_event_callback(cb);
+    m_window.register_keyboard_event_callback(cb);
 }
 
-VkRenderPass RenderEngine::create_render_pass(VkDevice &device,
-                                              VkFormat &swapChainImageFormat) {
-    VkAttachmentDescription colorAttachment{};
-    colorAttachment.format = swapChainImageFormat;
-    colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-    colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+VkRenderPass RenderEngine::create_render_pass(CoreGraphicsContext *ctx,
+                                              SwapChain *swap_chain) {
+    VkAttachmentDescription color_attachment{};
+    color_attachment.format = swap_chain->swapChainImageFormat;
+    color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-    VkAttachmentReference colorAttachmentRef{};
-    colorAttachmentRef.attachment = 0;
-    colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    VkAttachmentReference color_attachment_ref{};
+    color_attachment_ref.attachment = 0;
+    color_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
     VkSubpassDescription subpass{};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subpass.colorAttachmentCount = 1;
-    subpass.pColorAttachments = &colorAttachmentRef;
+    subpass.pColorAttachments = &color_attachment_ref;
 
     VkSubpassDependency dependency{};
     dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -210,33 +207,34 @@ VkRenderPass RenderEngine::create_render_pass(VkDevice &device,
     dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-    VkRenderPassCreateInfo renderPassInfo{};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    renderPassInfo.attachmentCount = 1;
-    renderPassInfo.pAttachments = &colorAttachment;
-    renderPassInfo.subpassCount = 1;
-    renderPassInfo.pSubpasses = &subpass;
-    renderPassInfo.dependencyCount = 1;
-    renderPassInfo.pDependencies = &dependency;
+    VkRenderPassCreateInfo render_pass_info{};
+    render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+    render_pass_info.attachmentCount = 1;
+    render_pass_info.pAttachments = &color_attachment;
+    render_pass_info.subpassCount = 1;
+    render_pass_info.pSubpasses = &subpass;
+    render_pass_info.dependencyCount = 1;
+    render_pass_info.pDependencies = &dependency;
 
-    VkRenderPass renderPass;
-    if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
+    VkRenderPass render_pass;
+    if (vkCreateRenderPass(ctx->device, &render_pass_info, nullptr, &render_pass) !=
+        VK_SUCCESS) {
         throw std::runtime_error("failed to create render pass!");
     }
-    return renderPass;
+    return render_pass;
 }
 
 void RenderEngine::recreate_swap_chain() {
     // All execution is paused when the window is minimized
     int width = 0, height = 0;
-    glfwGetFramebufferSize(m_window->window, &width, &height);
+    glfwGetFramebufferSize(m_window.window, &width, &height);
     while (width == 0 || height == 0) {
-        glfwGetFramebufferSize(m_window->window, &width, &height);
+        glfwGetFramebufferSize(m_window.window, &width, &height);
         glfwWaitEvents();
     }
 
     vkDeviceWaitIdle(m_ctx->device);
-    m_swap_chain = std::make_unique<SwapChain>(m_ctx, m_window.get());
+    m_swap_chain = std::make_unique<SwapChain>(m_ctx, m_window);
     m_swap_chain_frame_buffer =
         std::make_unique<FrameBuffer>(m_ctx, *m_swap_chain, m_render_pass);
 }
@@ -258,9 +256,9 @@ UniformBufferCollection create_uniform_buffers(std::shared_ptr<CoreGraphicsConte
 // TODO: begin_render_pass should instead return some struct instead of setting
 // internals
 bool RenderEngine::begin_render_pass() {
-    const VkSemaphore _image_available_semaphore = m_image_available_semaphore->get();
-    const VkSemaphore _signal_semaphore = m_render_completed_semaphore->get();
-    const VkFence _in_flight_fence = m_in_flight_fence->get();
+    const VkSemaphore _image_available_semaphore = m_image_available_semaphore.get();
+    const VkSemaphore _signal_semaphore = m_render_completed_semaphore.get();
+    const VkFence _in_flight_fence = m_in_flight_fence.get();
 
     vkWaitForFences(m_ctx->device, 1, &_in_flight_fence, VK_TRUE, UINT64_MAX);
 
@@ -305,7 +303,7 @@ bool RenderEngine::begin_render_pass() {
     scissor.extent = m_swap_chain->swapChainExtent;
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
-    m_current_render_pass.window = m_window.get();
+    m_current_render_pass.window = &m_window;
     m_current_render_pass.image_index = imageIndex;
     m_current_render_pass.command_buffer_wrapper = command_buffer_wrapper;
     m_current_render_pass.command_buffer = command_buffer;
@@ -346,7 +344,8 @@ bool RenderEngine::end_render_pass() {
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
-    if (vkQueueSubmit(m_graphics_queue, 1, &submitInfo, in_flight_fence) != VK_SUCCESS) {
+    if (vkQueueSubmit(m_device_queues.graphics_queue, 1, &submitInfo, in_flight_fence) !=
+        VK_SUCCESS) {
         throw std::runtime_error("failed to submit draw command buffer!");
     }
 
@@ -362,7 +361,7 @@ bool RenderEngine::end_render_pass() {
     presentInfo.pImageIndices = &image_index;
     presentInfo.pResults = nullptr; // Optional
 
-    VkResult result = vkQueuePresentKHR(m_present_queue, &presentInfo);
+    VkResult result = vkQueuePresentKHR(m_device_queues.present_queue, &presentInfo);
 
     // TODO: framebufferResized needs to be set from the window callback when the
     // window is resized

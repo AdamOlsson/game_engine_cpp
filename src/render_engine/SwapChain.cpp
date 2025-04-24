@@ -58,7 +58,7 @@ VkExtent2D chooseSwapExtent(GLFWwindow &window,
     }
 }
 
-SwapChain::SwapChain(std::shared_ptr<CoreGraphicsContext> ctx, const Window *window)
+SwapChain::SwapChain(std::shared_ptr<CoreGraphicsContext> ctx, const Window &window)
 
     : ctx(ctx), cleanup_done(false) {
     SwapChainSupportDetails swapChainSupport =
@@ -66,7 +66,7 @@ SwapChain::SwapChain(std::shared_ptr<CoreGraphicsContext> ctx, const Window *win
 
     VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
     VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
-    VkExtent2D extent = chooseSwapExtent(*window->window, swapChainSupport.capabilities);
+    VkExtent2D extent = chooseSwapExtent(*window.window, swapChainSupport.capabilities);
 
     uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
     if (swapChainSupport.capabilities.maxImageCount > 0 &&

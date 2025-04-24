@@ -4,6 +4,7 @@
 #include "entity_component_storage/ComponentStore.h"
 #include "entity_component_storage/EntityComponentStorage.h"
 #include "render_engine/RenderBody.h"
+#include "render_engine/WindowConfig.h"
 #include "render_engine/fonts/Font.h"
 #include "shape.h"
 #include <functional>
@@ -105,11 +106,12 @@ class ShapeRendering : public Game {
 };
 
 int main() {
-    GameEngineConfig config{};
-    config.window_width = 800;
-    config.window_height = 800;
-    config.window_title = "2_shape_rendering";
-    config.use_font = UseFont::Default;
+
+    GameEngineConfig config{
+        .window_config = WindowConfig{.dims = WindowDimensions(800, 800),
+                                      .title = "2_shape_rendering"},
+        .use_font = UseFont::Default,
+    };
 
     auto game = std::make_unique<ShapeRendering>();
     auto game_engine = std::make_unique<GameEngine>(std::move(game), config);
