@@ -18,31 +18,31 @@ class RenderEngine {
   private:
     bool framebuffer_resized = false;
 
-    std::unique_ptr<Window> window;
-    std::shared_ptr<CoreGraphicsContext> g_ctx;
+    std::unique_ptr<Window> m_window;
+    std::shared_ptr<CoreGraphicsContext> m_ctx;
 
-    VkQueue graphics_queue;
-    VkQueue present_queue;
+    VkQueue m_graphics_queue;
+    VkQueue m_present_queue;
 
-    UniformBufferCollection window_dimension_buffers;
-    std::unique_ptr<Semaphore> image_available_semaphore;
-    std::unique_ptr<Semaphore> render_completed_semaphore;
-    std::unique_ptr<Fence> in_flight_fence;
+    UniformBufferCollection m_window_dimension_buffers;
+    std::unique_ptr<Semaphore> m_image_available_semaphore;
+    std::unique_ptr<Semaphore> m_render_completed_semaphore;
+    std::unique_ptr<Fence> m_in_flight_fence;
 
-    std::unique_ptr<CommandHandler> command_handler;
-    std::unique_ptr<SwapChain> swap_chain;
-    VkRenderPass render_pass;
-    std::unique_ptr<FrameBuffer> swap_chain_frame_buffer;
+    std::unique_ptr<CommandHandler> m_command_handler;
+    std::unique_ptr<SwapChain> m_swap_chain;
+    VkRenderPass m_render_pass;
+    std::unique_ptr<FrameBuffer> m_swap_chain_frame_buffer;
 
-    std::unique_ptr<Sampler> sampler;
-    std::unique_ptr<Texture> texture;
+    std::unique_ptr<Sampler> m_sampler;
+    std::unique_ptr<Texture> m_texture;
 
-    VkDescriptorSetLayout geometry_descriptor_set_layout;
-    std::unique_ptr<GraphicsPipeline> geometry_pipeline;
+    VkDescriptorSetLayout m_geometry_descriptor_set_layout;
+    std::unique_ptr<GraphicsPipeline> m_geometry_pipeline;
 
-    std::unique_ptr<Font> font;
-    VkDescriptorSetLayout text_descriptor_set_layout;
-    std::unique_ptr<TextPipeline> text_pipeline;
+    std::unique_ptr<Font> m_font;
+    VkDescriptorSetLayout m_text_descriptor_set_layout;
+    std::unique_ptr<TextPipeline> m_text_pipeline;
 
     // TODO: Is this the way to go?
     struct {
@@ -56,7 +56,7 @@ class RenderEngine {
         VkSemaphore signal_semaphore = nullptr;
         VkFence in_flight_fence = nullptr;
         SwapChain *swap_chain = nullptr;
-    } current_render_pass;
+    } m_current_render_pass;
 
     VkRenderPass create_render_pass(VkDevice &device, VkFormat &swapChainImageFormat);
     void recreate_swap_chain();
