@@ -27,14 +27,15 @@ class Font {
 
     Font(std::shared_ptr<CoreGraphicsContext> &g_ctx, const VkCommandPool &command_pool,
          const VkQueue &graphics_queue, const FontResource *resource)
+
         : char_width_px(resource->char_width_px),
           char_height_px(resource->char_height_px),
           atlas_width_px(resource->atlas_width_px),
           atlas_height_px(resource->atlas_height_px),
           atlas_width(atlas_width_px / char_width_px),
           atlas_height(atlas_height_px / char_height_px),
-          font_atlas(std::make_unique<Texture>(g_ctx, command_pool, graphics_queue,
-                                               resource->bytes(), resource->length())) {}
+          font_atlas(Texture::unique_from_bytes(g_ctx, command_pool, graphics_queue,
+                                                resource->bytes(), resource->length())) {}
 
     ~Font() = default;
 

@@ -1,156 +1,110 @@
 #include "Texture.h"
 #include "render_engine/CoreGraphicsContext.h"
-#include "render_engine/buffers/common.h"
+#include "render_engine/GraphicsPipeline.h"
+#include "render_engine/ImageData.h"
+#include "render_engine/buffers/StagingBuffer.h"
 #include "vulkan/vulkan_core.h"
-#include <iostream>
-#include <sstream>
-
-#define STB_IMAGE_IMPLEMENTATION
-#include "third_party/stb/stb_image.h"
-
-Texture::Texture()
-    : ctx(nullptr), texture_image(VK_NULL_HANDLE), texture_image_memory(VK_NULL_HANDLE),
-      texture_image_view(VK_NULL_HANDLE) {}
+#include <memory>
 
 Texture::Texture(std::shared_ptr<CoreGraphicsContext> ctx,
-                 const VkCommandPool &command_pool, const VkQueue &graphics_queue,
-                 const char *filepath)
-    : ctx(ctx) {
+                 const CommandPool &command_pool, const VkQueue &graphics_queue,
+                 const ImageData &image_data)
+    : m_ctx(ctx), m_texture_image(TextureImage(
+                      m_ctx, TextureImageDimension::from(image_data.dimension))) {
 
-    // ------- Load image
-    int texture_width;
-    int texture_height;
-    int texture_channels;
-    stbi_uc *pixels = stbi_load(filepath, &texture_width, &texture_height,
-                                &texture_channels, STBI_rgb_alpha);
-    VkDeviceSize texture_size = texture_width * texture_height * 4;
+    StagingBuffer staging_buffer = StagingBuffer(m_ctx, image_data.size);
 
-    if (!pixels) {
-        std::stringstream ss;
-        ss << "Failed to load image bytes from " << filepath << std::endl;
-        throw std::runtime_error(ss.str());
-    }
+    m_texture_image.transition_image_layout(command_pool, graphics_queue,
+                                            VK_IMAGE_LAYOUT_UNDEFINED,
+                                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-    VkBuffer staging_buffer;
-    VkDeviceMemory staging_buffer_memory;
-    createBuffer(
-        ctx->physicalDevice, ctx->device, texture_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        staging_buffer, staging_buffer_memory);
+    staging_buffer.transfer_image_to_device_image(image_data, m_texture_image,
+                                                  command_pool, graphics_queue);
 
-    void *data;
-    vkMapMemory(ctx->device, staging_buffer_memory, 0, texture_size, 0, &data);
-    memcpy(data, pixels, static_cast<size_t>(texture_size));
-    vkUnmapMemory(ctx->device, staging_buffer_memory);
-
-    stbi_image_free(pixels);
-
-    // ------- Create texture
-    create_image(ctx.get(), texture_width, texture_height, texture_image,
-                 texture_image_memory);
-
-    transition_image_layout(ctx->device, command_pool, graphics_queue, texture_image,
-                            VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED,
-                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-    copy_buffer_to_image(ctx->device, command_pool, graphics_queue, staging_buffer,
-                         texture_image, static_cast<uint32_t>(texture_width),
-                         static_cast<uint32_t>(texture_height));
-    transition_image_layout(ctx->device, command_pool, graphics_queue, texture_image,
-                            VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-    vkDestroyBuffer(ctx->device, staging_buffer, nullptr);
-    vkFreeMemory(ctx->device, staging_buffer_memory, nullptr);
-
-    // ------- Create texture view
-    texture_image_view =
-        create_image_view(ctx->device, texture_image, VK_FORMAT_R8G8B8A8_SRGB);
+    m_texture_image.transition_image_layout(command_pool, graphics_queue,
+                                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
-Texture::Texture(std::shared_ptr<CoreGraphicsContext> ctx,
-                 const VkCommandPool &command_pool, const VkQueue &graphics_queue,
-                 const uint8_t *bytes, const unsigned int length)
-    : ctx(ctx) {
+Texture Texture::from_filepath(std::shared_ptr<CoreGraphicsContext> &ctx,
+                               const CommandPool &command_pool,
+                               const VkQueue &graphics_queue, const char *filepath) {
+    const auto bytes = readFile(filepath);
+    const ImageData image_data = ImageData::load_rgba_image(
+        reinterpret_cast<const uint8_t *>(bytes.data()), bytes.size());
+    return Texture(ctx, command_pool, graphics_queue, image_data);
+}
 
-    // ------- Load image
-    int texture_width;
-    int texture_height;
-    int texture_channels;
+std::unique_ptr<Texture>
+Texture::unique_from_filepath(std::shared_ptr<CoreGraphicsContext> &ctx,
+                              const CommandPool &command_pool,
+                              const VkQueue &graphics_queue, const char *filepath) {
+    const auto bytes = readFile(filepath);
+    const ImageData image_data = ImageData::load_rgba_image(
+        reinterpret_cast<const uint8_t *>(bytes.data()), bytes.size());
+    return std::move(
+        std::make_unique<Texture>(ctx, command_pool, graphics_queue, image_data));
+}
 
-    stbi_uc *pixels = stbi_load_from_memory(
-        reinterpret_cast<const unsigned char *>(bytes), length, &texture_width,
-        &texture_height, &texture_channels, STBI_rgb_alpha);
-    VkDeviceSize texture_size = texture_width * texture_height * 4;
+Texture Texture::from_bytes(std::shared_ptr<CoreGraphicsContext> &ctx,
+                            const CommandPool &command_pool,
+                            const VkQueue &graphics_queue, const uint8_t *bytes,
+                            const unsigned int length) {
+    const ImageData image_data = ImageData::load_rgba_image(bytes, length);
+    return Texture(ctx, command_pool, graphics_queue, image_data);
+}
 
-    if (!pixels) {
-        std::stringstream ss;
-        ss << "Failed to load image bytes from memory" << std::endl;
-        throw std::runtime_error(ss.str());
-    }
+std::unique_ptr<Texture>
+Texture::unique_from_bytes(std::shared_ptr<CoreGraphicsContext> &ctx,
+                           const CommandPool &command_pool, const VkQueue &graphics_queue,
+                           const uint8_t *bytes, const unsigned int length) {
+    const ImageData image_data = ImageData::load_rgba_image(bytes, length);
+    return std::move(
+        std::make_unique<Texture>(ctx, command_pool, graphics_queue, image_data));
+}
 
-    VkBuffer staging_buffer;
-    VkDeviceMemory staging_buffer_memory;
-    createBuffer(
-        ctx->physicalDevice, ctx->device, texture_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        staging_buffer, staging_buffer_memory);
+Texture Texture::from_image_resource(std::shared_ptr<CoreGraphicsContext> &ctx,
+                                     const CommandPool &command_pool,
+                                     const VkQueue &graphics_queue,
+                                     const ImageResource *resource) {
+    const ImageData image_data =
+        ImageData::load_rgba_image(resource->bytes(), resource->length());
+    return Texture(ctx, command_pool, graphics_queue, image_data);
+}
 
-    void *data;
-    vkMapMemory(ctx->device, staging_buffer_memory, 0, texture_size, 0, &data);
-    memcpy(data, pixels, static_cast<size_t>(texture_size));
-    vkUnmapMemory(ctx->device, staging_buffer_memory);
-
-    stbi_image_free(pixels);
-
-    // ------- Create texture
-    create_image(ctx.get(), texture_width, texture_height, texture_image,
-                 texture_image_memory);
-
-    transition_image_layout(ctx->device, command_pool, graphics_queue, texture_image,
-                            VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED,
-                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-    copy_buffer_to_image(ctx->device, command_pool, graphics_queue, staging_buffer,
-                         texture_image, static_cast<uint32_t>(texture_width),
-                         static_cast<uint32_t>(texture_height));
-    transition_image_layout(ctx->device, command_pool, graphics_queue, texture_image,
-                            VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-    vkDestroyBuffer(ctx->device, staging_buffer, nullptr);
-    vkFreeMemory(ctx->device, staging_buffer_memory, nullptr);
-
-    // ------- Create texture view
-    texture_image_view =
-        create_image_view(ctx->device, texture_image, VK_FORMAT_R8G8B8A8_SRGB);
+std::unique_ptr<Texture> Texture::unique_from_image_resource(
+    std::shared_ptr<CoreGraphicsContext> &ctx, const CommandPool &command_pool,
+    const VkQueue &graphics_queue, const ImageResource *resource) {
+    const ImageData image_data =
+        ImageData::load_rgba_image(resource->bytes(), resource->length());
+    return std::move(
+        std::make_unique<Texture>(ctx, command_pool, graphics_queue, image_data));
 }
 
 Texture::Texture(Texture &&other) noexcept
-    : ctx(std::move(other.ctx)), texture_image(other.texture_image),
-      texture_image_memory(other.texture_image_memory),
-      texture_image_view(other.texture_image_view) {
-    other.texture_image = VK_NULL_HANDLE;
-    other.texture_image_memory = VK_NULL_HANDLE;
-    other.texture_image_view = VK_NULL_HANDLE;
+    : m_ctx(std::move(other.m_ctx)), m_texture_image(std::move(other.m_texture_image)) {
+    other.m_texture_image.m_image = nullptr;
+    other.m_texture_image.m_image_memory = nullptr;
+    other.m_texture_image.m_image_view = VK_NULL_HANDLE;
 }
 
 Texture &Texture::operator=(Texture &&other) noexcept {
     if (this != &other) {
-        ctx = std::move(ctx);
-        texture_image = other.texture_image;
-        texture_image_memory = other.texture_image_memory;
-        texture_image_view = other.texture_image_view;
+        m_ctx = std::move(m_ctx);
+        m_texture_image = std::move(other.m_texture_image);
 
-        other.texture_image = VK_NULL_HANDLE;
-        other.texture_image_memory = VK_NULL_HANDLE;
-        other.texture_image_view = VK_NULL_HANDLE;
+        /*other.m_texture_image = VK_NULL_HANDLE;*/
+        other.m_texture_image.m_image = nullptr;
+        other.m_texture_image.m_image_memory = nullptr;
+        other.m_texture_image.m_image_view = nullptr;
     }
     return *this;
 }
 
 Texture::~Texture() {
-    vkDestroyImageView(ctx->device, texture_image_view, nullptr);
-    vkDestroyImage(ctx->device, texture_image, nullptr);
-    vkFreeMemory(ctx->device, texture_image_memory, nullptr);
+    /*vkDestroyImageView(m_ctx->device, m_texture_image.image_view, nullptr);*/
+    /*vkDestroyImage(m_ctx->device, m_texture_image.image, nullptr);*/
+    /*vkFreeMemory(m_ctx->device, m_texture_image.image_memory, nullptr);*/
 }
 
-VkImageView Texture::view() { return texture_image_view; }
+VkImageView Texture::view() { return m_texture_image.m_image_view; }

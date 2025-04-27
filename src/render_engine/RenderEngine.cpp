@@ -12,6 +12,14 @@
 #include "render_engine/resources/images/ImageResource.h"
 #include <memory>
 
+// TODO: Texture should only have a certain "level" of classes, what I mean is in short
+//       that any Vulkan classes should not be exposed. This also goes for the
+//       RenderEngine
+// TODO: How could we improve the API of the Font constructor
+// TODO: How could we improve the API of the Texture constructor
+// TODO: How could we improve the API of the TextPipeline constructor
+// TODO: Do the same evaluation done for the RenderEngine on the GameEngine
+
 UniformBufferCollection create_uniform_buffers(std::shared_ptr<CoreGraphicsContext> &ctx,
                                                Window &window);
 
@@ -24,12 +32,11 @@ RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_
       m_render_completed_semaphore(Semaphore(m_ctx, MAX_FRAMES_IN_FLIGHT)),
       m_in_flight_fence(Fence(m_ctx, MAX_FRAMES_IN_FLIGHT)),
 
-      m_command_handler(std::make_unique<CommandHandler>(m_ctx, MAX_FRAMES_IN_FLIGHT)),
-      m_swap_chain(std::make_unique<SwapChain>(m_ctx, m_window)),
-      m_render_pass(create_render_pass(m_ctx.get(), m_swap_chain.get())),
-      m_swap_chain_frame_buffer(
-          std::make_unique<FrameBuffer>(m_ctx, *m_swap_chain, m_render_pass)),
-      m_sampler(std::make_unique<Sampler>(m_ctx)) {
+      m_command_handler(CommandHandler(m_ctx, MAX_FRAMES_IN_FLIGHT)),
+      m_swap_chain(SwapChain(m_ctx, m_window)),
+      m_render_pass(create_render_pass(m_ctx.get(), m_swap_chain)),
+      m_swap_chain_frame_buffer(FrameBuffer(m_ctx, m_swap_chain, m_render_pass)),
+      m_sampler(Sampler(m_ctx)) {
 
     register_all_fonts();
     register_all_images();
@@ -43,18 +50,17 @@ RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_
             .add(UniformBuffer::createDescriptorSetLayoutBinding(1))
             .add(Sampler::create_descriptor_set_layout_binding(2));
 
-    VkCommandPool command_pool = m_command_handler->pool();
+    CommandPool command_pool = m_command_handler.pool();
 
     auto &resource_manager = ResourceManager::get_instance();
     auto dog_image = resource_manager.get_resource<ImageResource>("DogImage");
-    m_texture =
-        std::make_unique<Texture>(m_ctx, command_pool, m_device_queues.graphics_queue,
-                                  dog_image->bytes(), dog_image->length());
+    m_texture = Texture::unique_from_image_resource(
+        m_ctx, command_pool, m_device_queues.graphics_queue, dog_image);
 
     m_geometry_descriptor_set_layout = descriptor_set_layout_builder.build(m_ctx.get());
     m_geometry_pipeline = std::make_unique<GraphicsPipeline>(
-        m_window, m_ctx, *m_command_handler, *m_swap_chain, m_render_pass,
-        *m_window_dimension_buffers, m_geometry_descriptor_set_layout, *m_sampler,
+        m_window, m_ctx, m_command_handler, m_swap_chain, m_render_pass,
+        *m_window_dimension_buffers, m_geometry_descriptor_set_layout, m_sampler,
         *m_texture);
 
     switch (use_font) {
@@ -72,8 +78,8 @@ RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_
     if (m_font != nullptr) {
         m_text_descriptor_set_layout = descriptor_set_layout_builder.build(m_ctx.get());
         m_text_pipeline = std::make_unique<TextPipeline>(
-            m_window, m_ctx, *m_command_handler, *m_swap_chain, m_render_pass,
-            *m_window_dimension_buffers, m_text_descriptor_set_layout, *m_sampler,
+            m_window, m_ctx, m_command_handler, m_swap_chain, m_render_pass,
+            *m_window_dimension_buffers, m_text_descriptor_set_layout, m_sampler,
             *m_font->font_atlas);
     }
 }
@@ -179,9 +185,9 @@ void RenderEngine::register_keyboard_event_callback(KeyboardEventCallbackFn cb) 
 }
 
 VkRenderPass RenderEngine::create_render_pass(CoreGraphicsContext *ctx,
-                                              SwapChain *swap_chain) {
+                                              SwapChain &swap_chain) {
     VkAttachmentDescription color_attachment{};
-    color_attachment.format = swap_chain->swapChainImageFormat;
+    color_attachment.format = swap_chain.image_format;
     color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
     color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -234,9 +240,8 @@ void RenderEngine::recreate_swap_chain() {
     }
 
     vkDeviceWaitIdle(m_ctx->device);
-    m_swap_chain = std::make_unique<SwapChain>(m_ctx, m_window);
-    m_swap_chain_frame_buffer =
-        std::make_unique<FrameBuffer>(m_ctx, *m_swap_chain, m_render_pass);
+    m_swap_chain = SwapChain(m_ctx, m_window);
+    m_swap_chain_frame_buffer = FrameBuffer(m_ctx, m_swap_chain, m_render_pass);
 }
 
 UniformBufferCollection create_uniform_buffers(std::shared_ptr<CoreGraphicsContext> &ctx,
@@ -264,7 +269,7 @@ bool RenderEngine::begin_render_pass() {
 
     uint32_t imageIndex;
     VkResult result =
-        vkAcquireNextImageKHR(m_ctx->device, m_swap_chain->swapChain, UINT64_MAX,
+        vkAcquireNextImageKHR(m_ctx->device, m_swap_chain.swap_chain, UINT64_MAX,
                               _image_available_semaphore, VK_NULL_HANDLE, &imageIndex);
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
         recreate_swap_chain();
@@ -275,16 +280,16 @@ bool RenderEngine::begin_render_pass() {
 
     vkResetFences(m_ctx->device, 1, &_in_flight_fence);
 
-    auto &command_buffer_wrapper = m_command_handler->buffer();
+    auto &command_buffer_wrapper = m_command_handler.buffer();
     const auto command_buffer = command_buffer_wrapper.begin();
 
     VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
     VkRenderPassBeginInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     renderPassInfo.renderPass = m_render_pass;
-    renderPassInfo.framebuffer = m_swap_chain_frame_buffer->get();
+    renderPassInfo.framebuffer = m_swap_chain_frame_buffer.get();
     renderPassInfo.renderArea.offset = {0, 0};
-    renderPassInfo.renderArea.extent = m_swap_chain->swapChainExtent;
+    renderPassInfo.renderArea.extent = m_swap_chain.extent;
     renderPassInfo.clearValueCount = 1;
     renderPassInfo.pClearValues = &clearColor;
 
@@ -292,15 +297,15 @@ bool RenderEngine::begin_render_pass() {
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = static_cast<float>(m_swap_chain->swapChainExtent.width);
-    viewport.height = static_cast<float>(m_swap_chain->swapChainExtent.height);
+    viewport.width = static_cast<float>(m_swap_chain.extent.width);
+    viewport.height = static_cast<float>(m_swap_chain.extent.height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     vkCmdSetViewport(command_buffer, 0, 1, &viewport);
 
     VkRect2D scissor{};
     scissor.offset = {0, 0};
-    scissor.extent = m_swap_chain->swapChainExtent;
+    scissor.extent = m_swap_chain.extent;
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
     m_current_render_pass.window = &m_window;
@@ -310,7 +315,7 @@ bool RenderEngine::begin_render_pass() {
     m_current_render_pass.image_available_semaphore = _image_available_semaphore;
     m_current_render_pass.signal_semaphore = _signal_semaphore;
     m_current_render_pass.in_flight_fence = _in_flight_fence;
-    m_current_render_pass.swap_chain = m_swap_chain.get();
+    m_current_render_pass.swap_chain = &m_swap_chain;
 
     return true;
 }
@@ -355,7 +360,7 @@ bool RenderEngine::end_render_pass() {
     presentInfo.waitSemaphoreCount = 1;
     presentInfo.pWaitSemaphores = signalSemaphores;
 
-    VkSwapchainKHR swapChains[] = {swap_chain->swapChain};
+    VkSwapchainKHR swapChains[] = {swap_chain->swap_chain};
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = swapChains;
     presentInfo.pImageIndices = &image_index;

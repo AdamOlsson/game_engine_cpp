@@ -12,15 +12,18 @@ class SwapChain {
     bool cleanup_done;
 
   public:
-    VkSwapchainKHR swapChain;
-    std::vector<VkImage> swapChainImages;
-    VkFormat swapChainImageFormat;
-    VkExtent2D swapChainExtent;
-    std::vector<VkImageView> swapChainImageViews;
+    VkSwapchainKHR swap_chain;
+    std::vector<VkImage> images;
+    VkFormat image_format;
+    VkExtent2D extent;
+    std::vector<VkImageView> image_views;
 
     SwapChain(std::shared_ptr<CoreGraphicsContext> ctx, const Window &window);
+    SwapChain(SwapChain &&other) noexcept;
+    SwapChain &operator=(SwapChain &&other) noexcept;
+
+    SwapChain(const SwapChain &other) = delete;
+    SwapChain &operator=(const SwapChain &other) = delete;
 
     ~SwapChain();
-
-    void cleanup();
 };

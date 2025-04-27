@@ -174,46 +174,6 @@ void transition_image_layout(const VkDevice &device, const VkCommandPool &comman
     end_single_time_commands(device, command_pool, command_buffer, graphics_queue);
 }
 
-void create_image(const CoreGraphicsContext *ctx, const uint32_t texture_width,
-                  const uint32_t texture_height, VkImage &texture_image,
-                  VkDeviceMemory &texture_image_memory) {
-    VkImageCreateInfo image_info{};
-    image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    image_info.imageType = VK_IMAGE_TYPE_2D;
-    image_info.extent.width = texture_width;
-    image_info.extent.height = texture_height;
-    image_info.extent.depth = 1;
-    image_info.mipLevels = 1;
-    image_info.arrayLayers = 1;
-    image_info.format = VK_FORMAT_R8G8B8A8_SRGB;
-    image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
-    image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    image_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-    image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    image_info.samples = VK_SAMPLE_COUNT_1_BIT;
-    image_info.flags = 0;
-
-    if (vkCreateImage(ctx->device, &image_info, nullptr, &texture_image) != VK_SUCCESS) {
-        throw std::runtime_error("Failed to create texture image");
-    }
-
-    VkMemoryRequirements mem_requirements;
-    vkGetImageMemoryRequirements(ctx->device, texture_image, &mem_requirements);
-
-    VkMemoryAllocateInfo alloc_info{};
-    alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    alloc_info.allocationSize = mem_requirements.size;
-    alloc_info.memoryTypeIndex =
-        findMemoryType(ctx->physicalDevice, mem_requirements.memoryTypeBits,
-                       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    if (vkAllocateMemory(ctx->device, &alloc_info, nullptr, &texture_image_memory) !=
-        VK_SUCCESS) {
-        throw std::runtime_error("Failed to create texture image memory");
-    }
-
-    vkBindImageMemory(ctx->device, texture_image, texture_image_memory, 0);
-}
-
 VkImageView create_image_view(const VkDevice &device, const VkImage &image,
                               const VkFormat &format) {
     VkImageViewCreateInfo createInfo{};

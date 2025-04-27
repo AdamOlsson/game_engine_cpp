@@ -29,13 +29,13 @@ class RenderEngine {
     Semaphore m_render_completed_semaphore;
     Fence m_in_flight_fence;
 
-    std::unique_ptr<CommandHandler> m_command_handler;
-    std::unique_ptr<SwapChain> m_swap_chain;
+    CommandHandler m_command_handler;
+    SwapChain m_swap_chain;
     VkRenderPass m_render_pass;
-    std::unique_ptr<FrameBuffer> m_swap_chain_frame_buffer;
+    FrameBuffer m_swap_chain_frame_buffer;
 
-    std::unique_ptr<Sampler> m_sampler;
-    std::unique_ptr<Texture> m_texture;
+    Sampler m_sampler;
+    std::unique_ptr<Texture> m_texture; // Having this unique prevents a segfault
 
     VkDescriptorSetLayout m_geometry_descriptor_set_layout;
     std::unique_ptr<GraphicsPipeline> m_geometry_pipeline;
@@ -58,7 +58,7 @@ class RenderEngine {
         SwapChain *swap_chain = nullptr;
     } m_current_render_pass;
 
-    VkRenderPass create_render_pass(CoreGraphicsContext *ctx, SwapChain *swap_chain);
+    VkRenderPass create_render_pass(CoreGraphicsContext *ctx, SwapChain &swap_chain);
     void recreate_swap_chain();
 
   public:
