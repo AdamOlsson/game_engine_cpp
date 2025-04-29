@@ -100,8 +100,8 @@ void TextureImage::transition_image_layout(const VkCommandPool &command_pool,
     barrier.subresourceRange.levelCount = 1;
     barrier.subresourceRange.baseArrayLayer = 0;
     barrier.subresourceRange.layerCount = 1;
-    barrier.srcAccessMask = 0; // TODO
-    barrier.dstAccessMask = 0; // TODO
+    barrier.srcAccessMask = 0;
+    barrier.dstAccessMask = 0;
 
     VkPipelineStageFlagBits2 source_stage;
     VkPipelineStageFlagBits2 destination_stage;

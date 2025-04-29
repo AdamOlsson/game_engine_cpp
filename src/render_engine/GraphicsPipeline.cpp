@@ -210,14 +210,14 @@ VkPipeline createGraphicsPipeline(const VkDevice &device,
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = (float)swapChain.extent.width;
-    viewport.height = (float)swapChain.extent.height;
+    viewport.width = (float)swapChain.m_extent.width;
+    viewport.height = (float)swapChain.m_extent.height;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     VkRect2D scissor{};
     scissor.offset = {0, 0};
-    scissor.extent = swapChain.extent;
+    scissor.extent = swapChain.m_extent;
 
     std::vector<VkDynamicState> dynamicStates = {VK_DYNAMIC_STATE_VIEWPORT,
                                                  VK_DYNAMIC_STATE_SCISSOR};

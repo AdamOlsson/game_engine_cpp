@@ -2,7 +2,6 @@
 #include "render_engine/CommandHandler.h"
 #include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/Fence.h"
-#include "render_engine/FrameBuffer.h"
 #include "render_engine/GraphicsPipeline.h"
 #include "render_engine/RenderBody.h"
 #include "render_engine/Semaphore.h"
@@ -14,6 +13,15 @@
 #include <GLFW/glfw3.h>
 
 using UniformBufferCollection = std::unique_ptr<std::vector<UniformBuffer>>;
+
+struct Dimension {
+    uint32_t width;
+    uint32_t height;
+    Dimension(uint32_t width, uint32_t height) : width(width), height(height) {}
+    static Dimension from_extent2d(VkExtent2D &extent) {
+        return Dimension{extent.width, extent.height};
+    }
+};
 
 class RenderEngine {
   private:
@@ -31,8 +39,6 @@ class RenderEngine {
 
     CommandHandler m_command_handler;
     SwapChain m_swap_chain;
-    VkRenderPass m_render_pass;
-    FrameBuffer m_swap_chain_frame_buffer;
 
     Sampler m_sampler;
     std::unique_ptr<Texture> m_texture; // Having this unique prevents a segfault
@@ -44,6 +50,17 @@ class RenderEngine {
     VkDescriptorSetLayout m_text_descriptor_set_layout;
     std::unique_ptr<TextPipeline> m_text_pipeline;
 
+    std::optional<uint32_t> get_next_image_index(VkSemaphore &image_available);
+    void begin_render_pass_(const VkCommandBuffer &command_buffer, SwapChain &swap_chain);
+    void set_viewport(const VkCommandBuffer &command_buffer, const Dimension &dim);
+    void set_scissor(const VkCommandBuffer &command_buffer, const VkExtent2D &extent);
+    void submit_render_pass(const VkCommandBuffer &command_buffer,
+                            const VkSemaphore &image_available,
+                            const VkSemaphore &submit_completed,
+                            const VkFence &in_flight);
+    VkResult present_render_pass(SwapChain &swap_chain, const VkQueue &present_queue,
+                                 const VkSemaphore &submit_completed,
+                                 const uint32_t image_index);
     // TODO: Is this the way to go?
     struct {
         Window *window = nullptr;
@@ -53,12 +70,10 @@ class RenderEngine {
         std::optional<CommandBuffer> command_buffer_wrapper;
         VkCommandBuffer command_buffer = nullptr;
         VkSemaphore image_available_semaphore = nullptr;
-        VkSemaphore signal_semaphore = nullptr;
         VkFence in_flight_fence = nullptr;
         SwapChain *swap_chain = nullptr;
     } m_current_render_pass;
 
-    VkRenderPass create_render_pass(CoreGraphicsContext *ctx, SwapChain &swap_chain);
     void recreate_swap_chain();
 
   public:
