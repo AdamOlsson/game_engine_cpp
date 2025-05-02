@@ -12,14 +12,6 @@
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
-// TODO: Fix the todos in the begin_render_pass() function
-// TODO: Texture should only have a certain "level" of classes, what I mean is in short
-//       that any Vulkan classes should not be exposed. This also goes for the
-//       RenderEngine
-// TODO: How could we improve the API of the Font constructor
-// TODO: How could we improve the API of the TextPipeline constructor
-// TODO: Do the same evaluation done for the RenderEngine on the GameEngine
-
 UniformBufferCollection create_uniform_buffers(std::shared_ptr<CoreGraphicsContext> &ctx,
                                                Window &window);
 
