@@ -6,7 +6,8 @@ VertexBuffer::VertexBuffer() {}
 
 VertexBuffer::VertexBuffer(std::shared_ptr<CoreGraphicsContext> ctx,
                            const std::vector<Vertex> &vertices,
-                           const VkCommandPool &commandPool, const VkQueue &graphicsQueue)
+                           SwapChainManager &swap_chain_manager,
+                           const VkQueue &graphicsQueue)
     : ctx(ctx), size(sizeof(Vertex) * vertices.size()),
       num_vertices(num_vertices = size / sizeof(Vertex)) {
 
@@ -26,7 +27,8 @@ VertexBuffer::VertexBuffer(std::shared_ptr<CoreGraphicsContext> ctx,
                  VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer, bufferMemory);
 
-    copyBuffer(ctx->device, stagingBuffer, buffer, size, commandPool, graphicsQueue);
+    copy_buffer(ctx->device, stagingBuffer, buffer, size, swap_chain_manager,
+                graphicsQueue);
     vkDestroyBuffer(ctx->device, stagingBuffer, nullptr);
     vkFreeMemory(ctx->device, stagingBufferMemory, nullptr);
 }

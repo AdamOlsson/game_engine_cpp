@@ -1,5 +1,6 @@
 #include "StagingBuffer.h"
 #include "render_engine/ImageData.h"
+#include "render_engine/SwapChainManager.h"
 #include "render_engine/TextureImage.h"
 #include "render_engine/buffers/common.h"
 
@@ -22,11 +23,11 @@ void StagingBuffer::map_memory(const ImageData &image) {
 
 void StagingBuffer::transfer_image_to_device_image(const ImageData &src,
                                                    const TextureImage &dst,
-                                                   const CommandPool &command_pool,
+                                                   SwapChainManager &swap_chain_manager,
                                                    const VkQueue &graphics_queue) {
 
     map_memory(src);
-    copy_buffer_to_image(command_pool, graphics_queue, dst.m_image, src.dimension);
+    copy_buffer_to_image(swap_chain_manager, graphics_queue, dst.m_image, src.dimension);
 }
 
 Buffer StagingBuffer::create_staging_buffer() {
@@ -39,12 +40,13 @@ Buffer StagingBuffer::create_staging_buffer() {
     return buf;
 }
 
-void StagingBuffer::copy_buffer_to_image(const VkCommandPool &command_pool,
+void StagingBuffer::copy_buffer_to_image(SwapChainManager &swap_chain_manager,
                                          const VkQueue &graphics_queue,
                                          const VkImage &image,
                                          const ImageDimension &dim) {
-    VkCommandBuffer command_buffer =
-        begin_single_time_commands(m_ctx->device, command_pool);
+    SingleTimeCommandBuffer command_buffer =
+        swap_chain_manager.get_single_time_command_buffer();
+    command_buffer.begin();
 
     VkBufferImageCopy region{};
     region.bufferOffset = 0;
@@ -59,8 +61,8 @@ void StagingBuffer::copy_buffer_to_image(const VkCommandPool &command_pool,
     region.imageOffset = {0, 0, 0};
     region.imageExtent = {dim.width, dim.height, 1};
 
-    vkCmdCopyBufferToImage(command_buffer, m_staging_buffer.buffer, image,
-                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
-
-    end_single_time_commands(m_ctx->device, command_pool, command_buffer, graphics_queue);
+    vkCmdCopyBufferToImage(command_buffer.m_command_buffer, m_staging_buffer.buffer,
+                           image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+    command_buffer.end();
+    command_buffer.submit(graphics_queue);
 }

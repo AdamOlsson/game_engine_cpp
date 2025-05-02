@@ -1,5 +1,7 @@
 #include "TextureImage.h"
 #include "buffers/common.h"
+#include "render_engine/SingleTimeCommandBuffer.h"
+#include "render_engine/SwapChainManager.h"
 #include "render_engine/buffers/common.h"
 
 TextureImage::TextureImage()
@@ -81,12 +83,13 @@ TextureImage::~TextureImage() {
     vkFreeMemory(m_ctx->device, m_image_memory, nullptr);
 }
 
-void TextureImage::transition_image_layout(const VkCommandPool &command_pool,
+void TextureImage::transition_image_layout(SwapChainManager &swap_chain_manager,
                                            const VkQueue &graphics_queue,
                                            const VkImageLayout old_layout,
                                            const VkImageLayout new_layout) {
-    VkCommandBuffer command_buffer =
-        begin_single_time_commands(m_ctx->device, command_pool);
+    SingleTimeCommandBuffer command_buffer =
+        swap_chain_manager.get_single_time_command_buffer();
+    command_buffer.begin();
 
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -122,8 +125,9 @@ void TextureImage::transition_image_layout(const VkCommandPool &command_pool,
         throw std::invalid_argument("Unsupported layout transition!");
     }
 
-    vkCmdPipelineBarrier(command_buffer, source_stage, destination_stage, 0, 0, nullptr,
-                         0, nullptr, 1, &barrier);
+    vkCmdPipelineBarrier(command_buffer.m_command_buffer, source_stage, destination_stage,
+                         0, 0, nullptr, 0, nullptr, 1, &barrier);
 
-    end_single_time_commands(m_ctx->device, command_pool, command_buffer, graphics_queue);
+    command_buffer.end();
+    command_buffer.submit(graphics_queue);
 }

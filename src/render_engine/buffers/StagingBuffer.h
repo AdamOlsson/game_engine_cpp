@@ -1,6 +1,5 @@
 #pragma once
 
-#include "render_engine/CommandHandler.h"
 #include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/ImageData.h"
 #include "render_engine/TextureImage.h"
@@ -17,10 +16,9 @@ class StagingBuffer {
     const size_t m_staging_buffer_size;
     Buffer m_staging_buffer;
 
-  public:
     Buffer create_staging_buffer();
     void map_memory(const ImageData &image);
-    void copy_buffer_to_image(const VkCommandPool &command_pool,
+    void copy_buffer_to_image(SwapChainManager &swap_chain_manager,
                               const VkQueue &graphics_queue, const VkImage &image,
                               const ImageDimension &dim);
 
@@ -34,6 +32,6 @@ class StagingBuffer {
     ~StagingBuffer();
 
     void transfer_image_to_device_image(const ImageData &src, const TextureImage &dst,
-                                        const CommandPool &command_pool,
+                                        SwapChainManager &swap_chain_manager,
                                         const VkQueue &graphics_queue);
 };

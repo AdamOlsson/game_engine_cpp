@@ -1,6 +1,7 @@
 #pragma once
 
 #include "render_engine/CoreGraphicsContext.h"
+#include "render_engine/SwapChainManager.h"
 #include "render_engine/shapes/Vertex.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
@@ -22,8 +23,8 @@ class VertexBuffer {
 
     VertexBuffer();
     VertexBuffer(std::shared_ptr<CoreGraphicsContext> ctx,
-                 const std::vector<Vertex> &vertices, const VkCommandPool &commandPool,
-                 const VkQueue &graphicsQueue);
+                 const std::vector<Vertex> &vertices,
+                 SwapChainManager &swap_chain_manager, const VkQueue &graphicsQueue);
 
     ~VertexBuffer();
 };

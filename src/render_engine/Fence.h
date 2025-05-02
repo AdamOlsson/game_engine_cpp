@@ -13,12 +13,11 @@ class Fence {
     size_t next;
     std::vector<VkFence> fences;
 
-    Fence(const Fence &);
-    Fence &operator=(const Fence &);
-
   public:
     Fence(std::shared_ptr<CoreGraphicsContext> ctx, const size_t size);
     ~Fence();
+    /*Fence(const Fence &);*/
+    /*Fence &operator=(const Fence &);*/
 
     const VkFence get();
 };

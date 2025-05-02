@@ -1,6 +1,5 @@
 #include "render_engine/TextPipeline.h"
 #include "CoreGraphicsContext.h"
-#include "render_engine/CommandHandler.h"
 #include "render_engine/DescriptorSet.h"
 #include "render_engine/GraphicsPipeline.h"
 #include "render_engine/RenderableGeometry.h"
@@ -9,15 +8,13 @@
 #include "render_engine/buffers/StorageBuffer.h"
 #include "render_engine/buffers/UniformBuffer.h"
 #include "render_engine/resources/ResourceManager.h"
-#include "util.h"
 #include "vulkan/vulkan_core.h"
 #include <cstring>
 #include <memory>
 #include <vector>
 
 TextPipeline::TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
-                           CommandHandler &command_handler, SwapChain &swap_chain,
-                           VkRenderPass &render_pass,
+                           SwapChainManager &swap_chain_manager,
                            std::vector<UniformBuffer> &uniform_buffers,
                            VkDescriptorSetLayout &descriptor_set_layout, Sampler &sampler,
                            Texture &texture)
@@ -36,19 +33,17 @@ TextPipeline::TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> 
 
     graphics_pipeline = createGraphicsPipeline(ctx->device, vert_shader_module,
                                                frag_shader_module, descriptor_set_layout,
-                                               pipeline_layout, render_pass, swap_chain);
+                                               pipeline_layout, swap_chain_manager);
 
     vkDestroyShaderModule(ctx->device, vert_shader_module, nullptr);
     vkDestroyShaderModule(ctx->device, frag_shader_module, nullptr);
-
-    VkCommandPool command_pool = command_handler.pool();
 
     descriptor_pool = createDescriptorPool(ctx->device, MAX_FRAMES_IN_FLIGHT);
     auto descriptor_set =
         DescriptorSet(ctx, descriptor_set_layout, descriptor_pool, MAX_FRAMES_IN_FLIGHT,
                       &uniform_buffers, &texture, &sampler);
-    geometry = std::make_unique<Geometry::Rectangle>(ctx, command_pool, graphicsQueue,
-                                                     std::move(descriptor_set));
+    geometry = std::make_unique<Geometry::Rectangle>(
+        ctx, swap_chain_manager, graphicsQueue, std::move(descriptor_set));
 }
 
 TextPipeline::~TextPipeline() {

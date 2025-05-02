@@ -1,5 +1,6 @@
 #pragma once
 
+#include "render_engine/SwapChainManager.h"
 #include "render_engine/Texture.h"
 #include "render_engine/resources/fonts/FontResource.h"
 #include <cstddef>
@@ -25,8 +26,9 @@ class Font {
         : char_width_px(0), char_height_px(0), font_atlas(nullptr), atlas_width_px(0),
           atlas_height_px(0), atlas_width(0), atlas_height(0) {}
 
-    Font(std::shared_ptr<CoreGraphicsContext> &g_ctx, const VkCommandPool &command_pool,
-         const VkQueue &graphics_queue, const FontResource *resource)
+    Font(std::shared_ptr<CoreGraphicsContext> &g_ctx,
+         SwapChainManager &swap_chain_manager, const VkQueue &graphics_queue,
+         const FontResource *resource)
 
         : char_width_px(resource->char_width_px),
           char_height_px(resource->char_height_px),
@@ -34,7 +36,7 @@ class Font {
           atlas_height_px(resource->atlas_height_px),
           atlas_width(atlas_width_px / char_width_px),
           atlas_height(atlas_height_px / char_height_px),
-          font_atlas(Texture::unique_from_bytes(g_ctx, command_pool, graphics_queue,
+          font_atlas(Texture::unique_from_bytes(g_ctx, swap_chain_manager, graphics_queue,
                                                 resource->bytes(), resource->length())) {}
 
     ~Font() = default;

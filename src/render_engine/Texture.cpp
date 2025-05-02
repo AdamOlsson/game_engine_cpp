@@ -7,78 +7,77 @@
 #include <memory>
 
 Texture::Texture(std::shared_ptr<CoreGraphicsContext> ctx,
-                 const CommandPool &command_pool, const VkQueue &graphics_queue,
+                 SwapChainManager &swap_chain_manager, const VkQueue &graphics_queue,
                  const ImageData &image_data)
     : m_ctx(ctx), m_texture_image(TextureImage(
                       m_ctx, TextureImageDimension::from(image_data.dimension))) {
 
     StagingBuffer staging_buffer = StagingBuffer(m_ctx, image_data.size);
 
-    m_texture_image.transition_image_layout(command_pool, graphics_queue,
+    m_texture_image.transition_image_layout(swap_chain_manager, graphics_queue,
                                             VK_IMAGE_LAYOUT_UNDEFINED,
                                             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
     staging_buffer.transfer_image_to_device_image(image_data, m_texture_image,
-                                                  command_pool, graphics_queue);
+                                                  swap_chain_manager, graphics_queue);
 
-    m_texture_image.transition_image_layout(command_pool, graphics_queue,
+    m_texture_image.transition_image_layout(swap_chain_manager, graphics_queue,
                                             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                                             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
 Texture Texture::from_filepath(std::shared_ptr<CoreGraphicsContext> &ctx,
-                               const CommandPool &command_pool,
+                               SwapChainManager &swap_chain_manager,
                                const VkQueue &graphics_queue, const char *filepath) {
     const auto bytes = readFile(filepath);
     const ImageData image_data = ImageData::load_rgba_image(
         reinterpret_cast<const uint8_t *>(bytes.data()), bytes.size());
-    return Texture(ctx, command_pool, graphics_queue, image_data);
+    return Texture(ctx, swap_chain_manager, graphics_queue, image_data);
 }
 
 std::unique_ptr<Texture>
 Texture::unique_from_filepath(std::shared_ptr<CoreGraphicsContext> &ctx,
-                              const CommandPool &command_pool,
+                              SwapChainManager &swap_chain_manager,
                               const VkQueue &graphics_queue, const char *filepath) {
     const auto bytes = readFile(filepath);
     const ImageData image_data = ImageData::load_rgba_image(
         reinterpret_cast<const uint8_t *>(bytes.data()), bytes.size());
     return std::move(
-        std::make_unique<Texture>(ctx, command_pool, graphics_queue, image_data));
+        std::make_unique<Texture>(ctx, swap_chain_manager, graphics_queue, image_data));
 }
 
 Texture Texture::from_bytes(std::shared_ptr<CoreGraphicsContext> &ctx,
-                            const CommandPool &command_pool,
+                            SwapChainManager &swap_chain_manager,
                             const VkQueue &graphics_queue, const uint8_t *bytes,
                             const unsigned int length) {
     const ImageData image_data = ImageData::load_rgba_image(bytes, length);
-    return Texture(ctx, command_pool, graphics_queue, image_data);
+    return Texture(ctx, swap_chain_manager, graphics_queue, image_data);
 }
 
-std::unique_ptr<Texture>
-Texture::unique_from_bytes(std::shared_ptr<CoreGraphicsContext> &ctx,
-                           const CommandPool &command_pool, const VkQueue &graphics_queue,
-                           const uint8_t *bytes, const unsigned int length) {
+std::unique_ptr<Texture> Texture::unique_from_bytes(
+    std::shared_ptr<CoreGraphicsContext> &ctx, SwapChainManager &swap_chain_manager,
+    const VkQueue &graphics_queue, const uint8_t *bytes, const unsigned int length) {
     const ImageData image_data = ImageData::load_rgba_image(bytes, length);
     return std::move(
-        std::make_unique<Texture>(ctx, command_pool, graphics_queue, image_data));
+        std::make_unique<Texture>(ctx, swap_chain_manager, graphics_queue, image_data));
 }
 
 Texture Texture::from_image_resource(std::shared_ptr<CoreGraphicsContext> &ctx,
-                                     const CommandPool &command_pool,
+                                     SwapChainManager &swap_chain_manager,
                                      const VkQueue &graphics_queue,
                                      const ImageResource *resource) {
     const ImageData image_data =
         ImageData::load_rgba_image(resource->bytes(), resource->length());
-    return Texture(ctx, command_pool, graphics_queue, image_data);
+    return Texture(ctx, swap_chain_manager, graphics_queue, image_data);
 }
 
 std::unique_ptr<Texture> Texture::unique_from_image_resource(
-    std::shared_ptr<CoreGraphicsContext> &ctx, const CommandPool &command_pool,
+    std::shared_ptr<CoreGraphicsContext> &ctx, SwapChainManager &swap_chain_manager,
     const VkQueue &graphics_queue, const ImageResource *resource) {
     const ImageData image_data =
         ImageData::load_rgba_image(resource->bytes(), resource->length());
     return std::move(
-        std::make_unique<Texture>(ctx, command_pool, graphics_queue, image_data));
+        std::make_unique<Texture>(ctx, swap_chain_manager, graphics_queue, image_data));
 }
 
 Texture::Texture(Texture &&other) noexcept

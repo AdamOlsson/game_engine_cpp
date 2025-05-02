@@ -1,6 +1,5 @@
 #include "render_engine/GraphicsPipeline.h"
 #include "CoreGraphicsContext.h"
-#include "render_engine/CommandHandler.h"
 #include "render_engine/DescriptorSet.h"
 #include "render_engine/RenderableGeometry.h"
 #include "render_engine/Sampler.h"
@@ -8,7 +7,6 @@
 #include "render_engine/buffers/StorageBuffer.h"
 #include "render_engine/buffers/UniformBuffer.h"
 #include "render_engine/resources/ResourceManager.h"
-#include "util.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
 #include <cstring>
@@ -19,8 +17,7 @@
 
 GraphicsPipeline::GraphicsPipeline(Window &window,
                                    std::shared_ptr<CoreGraphicsContext> ctx,
-                                   CommandHandler &command_handler, SwapChain &swap_chain,
-                                   VkRenderPass &render_pass,
+                                   SwapChainManager &swap_chain_manager,
                                    std::vector<UniformBuffer> &uniform_buffers,
                                    VkDescriptorSetLayout &descriptor_set_layout,
                                    Sampler &sampler, Texture &texture)
@@ -41,12 +38,10 @@ GraphicsPipeline::GraphicsPipeline(Window &window,
 
     graphics_pipeline = createGraphicsPipeline(ctx->device, vert_shader_module,
                                                frag_shader_module, descriptor_set_layout,
-                                               pipeline_layout, render_pass, swap_chain);
+                                               pipeline_layout, swap_chain_manager);
 
     vkDestroyShaderModule(ctx->device, vert_shader_module, nullptr);
     vkDestroyShaderModule(ctx->device, frag_shader_module, nullptr);
-
-    VkCommandPool command_pool = command_handler.pool();
 
     const int num_geometries = 6;
     descriptor_pool =
@@ -56,25 +51,25 @@ GraphicsPipeline::GraphicsPipeline(Window &window,
         DescriptorSet(ctx, descriptor_set_layout, descriptor_pool, MAX_FRAMES_IN_FLIGHT,
                       &uniform_buffers, &texture, &sampler);
     circle_geometry = std::make_unique<Geometry::Circle>(
-        ctx, command_pool, graphicsQueue, std::move(circle_descriptor_set));
+        ctx, swap_chain_manager, graphicsQueue, std::move(circle_descriptor_set));
 
     auto triangle_descriptor_set =
         DescriptorSet(ctx, descriptor_set_layout, descriptor_pool, MAX_FRAMES_IN_FLIGHT,
                       &uniform_buffers, &texture, &sampler);
     triangle_geometry = std::make_unique<Geometry::Triangle>(
-        ctx, command_pool, graphicsQueue, std::move(triangle_descriptor_set));
+        ctx, swap_chain_manager, graphicsQueue, std::move(triangle_descriptor_set));
 
     auto rectangle_descriptor_set =
         DescriptorSet(ctx, descriptor_set_layout, descriptor_pool, MAX_FRAMES_IN_FLIGHT,
                       &uniform_buffers, &texture, &sampler);
     rectangle_geometry = std::make_unique<Geometry::Rectangle>(
-        ctx, command_pool, graphicsQueue, std::move(rectangle_descriptor_set));
+        ctx, swap_chain_manager, graphicsQueue, std::move(rectangle_descriptor_set));
 
     auto hexagon_descriptor_set =
         DescriptorSet(ctx, descriptor_set_layout, descriptor_pool, MAX_FRAMES_IN_FLIGHT,
                       &uniform_buffers, &texture, &sampler);
     hexagon_geometry = std::make_unique<Geometry::Hexagon>(
-        ctx, command_pool, graphicsQueue, std::move(hexagon_descriptor_set));
+        ctx, swap_chain_manager, graphicsQueue, std::move(hexagon_descriptor_set));
 }
 
 GraphicsPipeline::~GraphicsPipeline() {
@@ -165,7 +160,7 @@ VkPipeline createGraphicsPipeline(const VkDevice &device,
                                   const VkShaderModule fragShaderModule,
                                   VkDescriptorSetLayout &descriptorSetLayout,
                                   VkPipelineLayout &pipelineLayout,
-                                  VkRenderPass &renderPass, SwapChain &swapChain) {
+                                  SwapChainManager &swap_chain_manager) {
 
     // Note from tutorial:
     // There is one more (optional) member, pSpecializationInfo, which we won't
@@ -210,14 +205,14 @@ VkPipeline createGraphicsPipeline(const VkDevice &device,
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = (float)swapChain.m_extent.width;
-    viewport.height = (float)swapChain.m_extent.height;
+    viewport.width = (float)swap_chain_manager.m_swap_chain.m_extent.width;
+    viewport.height = (float)swap_chain_manager.m_swap_chain.m_extent.height;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     VkRect2D scissor{};
     scissor.offset = {0, 0};
-    scissor.extent = swapChain.m_extent;
+    scissor.extent = swap_chain_manager.m_swap_chain.m_extent;
 
     std::vector<VkDynamicState> dynamicStates = {VK_DYNAMIC_STATE_VIEWPORT,
                                                  VK_DYNAMIC_STATE_SCISSOR};
@@ -296,7 +291,7 @@ VkPipeline createGraphicsPipeline(const VkDevice &device,
 
     VkGraphicsPipelineCreateInfo pipelineInfo{};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    pipelineInfo.renderPass = renderPass;
+    pipelineInfo.renderPass = swap_chain_manager.m_swap_chain.m_render_pass;
     pipelineInfo.stageCount = 2;
     pipelineInfo.pStages = shaderStages;
     pipelineInfo.pVertexInputState = &vertexInputInfo;

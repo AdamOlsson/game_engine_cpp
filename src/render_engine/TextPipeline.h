@@ -1,10 +1,9 @@
 #pragma once
 
-#include "render_engine/CommandHandler.h"
 #include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/RenderableGeometry.h"
 #include "render_engine/Sampler.h"
-#include "render_engine/SwapChain.h"
+#include "render_engine/SwapChainManager.h"
 #include "render_engine/Texture.h"
 #include "render_engine/Window.h"
 #include "render_engine/buffers/UniformBuffer.h"
@@ -20,8 +19,8 @@
 class TextPipeline {
   public:
     TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
-                 CommandHandler &command_handler, SwapChain &swap_chain,
-                 VkRenderPass &render_pass, std::vector<UniformBuffer> &uniform_buffers,
+                 SwapChainManager &swap_chain,
+                 std::vector<UniformBuffer> &uniform_buffers,
                  VkDescriptorSetLayout &descriptor_set_layout, Sampler &sampler,
                  Texture &texture);
     ~TextPipeline();

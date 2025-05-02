@@ -2,6 +2,7 @@
 
 #include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/ImageData.h"
+#include "render_engine/SwapChainManager.h"
 #include "vulkan/vulkan_core.h"
 
 struct TextureImageDimension {
@@ -34,7 +35,7 @@ class TextureImage {
 
     ~TextureImage();
 
-    void transition_image_layout(const VkCommandPool &command_pool,
+    void transition_image_layout(SwapChainManager &swap_chain_manager,
                                  const VkQueue &graphics_queue,
                                  const VkImageLayout old_layout,
                                  const VkImageLayout new_layout);

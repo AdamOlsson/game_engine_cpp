@@ -1,10 +1,9 @@
 #pragma once
 
-#include "render_engine/CommandHandler.h"
 #include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/RenderableGeometry.h"
 #include "render_engine/Sampler.h"
-#include "render_engine/SwapChain.h"
+#include "render_engine/SwapChainManager.h"
 #include "render_engine/Texture.h"
 #include "render_engine/Window.h"
 #include "render_engine/buffers/StorageBuffer.h"
@@ -40,16 +39,15 @@ VkPipeline createGraphicsPipeline(const VkDevice &device,
                                   const VkShaderModule fragShaderModule,
                                   VkDescriptorSetLayout &descriptorSetLayout,
                                   VkPipelineLayout &pipelineLayout,
-                                  VkRenderPass &renderPass, SwapChain &swapChain);
+                                  SwapChainManager &swap_chain_manager);
 
 class GraphicsPipeline {
   public:
     GraphicsPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
-                     CommandHandler &command_handler, SwapChain &swap_chain,
-                     VkRenderPass &render_pass,
+                     SwapChainManager &swap_chain_manager,
                      std::vector<UniformBuffer> &uniform_buffers,
-                     VkDescriptorSetLayout &geometry_descriptor_set_layout,
-                     Sampler &sampler, Texture &texture);
+                     VkDescriptorSetLayout &descriptor_set_layout, Sampler &sampler,
+                     Texture &texture);
     ~GraphicsPipeline();
 
     // TODO: These render function should merge into one generic call

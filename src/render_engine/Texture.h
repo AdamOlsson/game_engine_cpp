@@ -1,6 +1,5 @@
 #pragma once
 
-#include "render_engine/CommandHandler.h"
 #include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/TextureImage.h"
 #include "render_engine/resources/images/ImageResource.h"
@@ -17,34 +16,35 @@ class Texture {
 
     // As the make_unique needs to have access to the constructor it needs to be left
     // public
-    Texture(std::shared_ptr<CoreGraphicsContext> ctx, const CommandPool &command_pool,
-            const VkQueue &graphics_queue, const ImageData &image_data);
+    Texture(std::shared_ptr<CoreGraphicsContext> ctx,
+            SwapChainManager &swap_chain_manager, const VkQueue &graphics_queue,
+            const ImageData &image_data);
 
     static Texture from_filepath(std::shared_ptr<CoreGraphicsContext> &ctx,
-                                 const CommandPool &command_pool,
+                                 SwapChainManager &swap_chain_manager,
                                  const VkQueue &graphics_queue, const char *filepath);
     static std::unique_ptr<Texture>
     unique_from_filepath(std::shared_ptr<CoreGraphicsContext> &ctx,
-                         const CommandPool &command_pool, const VkQueue &graphics_queue,
-                         const char *filepath);
+                         SwapChainManager &swap_chain_manager,
+                         const VkQueue &graphics_queue, const char *filepath);
 
     static Texture from_bytes(std::shared_ptr<CoreGraphicsContext> &ctx,
-                              const CommandPool &command_pool,
+                              SwapChainManager &swap_chain_manager,
                               const VkQueue &graphics_queue, const uint8_t *bytes,
                               const unsigned int length);
 
     static std::unique_ptr<Texture>
     unique_from_bytes(std::shared_ptr<CoreGraphicsContext> &ctx,
-                      const CommandPool &command_pool, const VkQueue &graphics_queue,
+                      SwapChainManager &swap_chain_manager, const VkQueue &graphics_queue,
                       const uint8_t *bytes, const unsigned int length);
 
     static Texture from_image_resource(std::shared_ptr<CoreGraphicsContext> &ctx,
-                                       const CommandPool &command_pool,
+                                       SwapChainManager &swap_chain_manager,
                                        const VkQueue &graphics_queue,
                                        const ImageResource *resource);
 
     static std::unique_ptr<Texture> unique_from_image_resource(
-        std::shared_ptr<CoreGraphicsContext> &ctx, const CommandPool &command_pool,
+        std::shared_ptr<CoreGraphicsContext> &ctx, SwapChainManager &swap_chain_manager,
         const VkQueue &graphics_queue, const ImageResource *resource);
 
     ~Texture();
