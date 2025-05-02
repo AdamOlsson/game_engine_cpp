@@ -30,10 +30,10 @@ class UniformBuffer {
     UniformBuffer(const UniformBuffer &) = delete;            // Copy constructor
     UniformBuffer &operator=(const UniformBuffer &) = delete; // Copy assignment
 
-    void updateUniformBuffer(const UniformBufferObject &);
+    void update_uniform_buffer(const UniformBufferObject &);
 
     static VkDescriptorSetLayoutBinding
-    createDescriptorSetLayoutBinding(uint32_t binding_num);
+    create_descriptor_set_layout_binding(uint32_t binding_num);
 
-    void dumpData();
+    void dump_data();
 };

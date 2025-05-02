@@ -57,12 +57,12 @@ UniformBuffer::~UniformBuffer() {
     vkDestroyBuffer(ctx->device, buffer, nullptr);
 }
 
-void UniformBuffer::updateUniformBuffer(const UniformBufferObject &ssbo) {
+void UniformBuffer::update_uniform_buffer(const UniformBufferObject &ssbo) {
     memcpy(buffer_mapped, &ssbo, sizeof(ssbo));
 }
 
 VkDescriptorSetLayoutBinding
-UniformBuffer::createDescriptorSetLayoutBinding(uint32_t binding_num) {
+UniformBuffer::create_descriptor_set_layout_binding(uint32_t binding_num) {
     VkDescriptorSetLayoutBinding layout_binding{};
     layout_binding.binding = binding_num;
     layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -72,7 +72,7 @@ UniformBuffer::createDescriptorSetLayoutBinding(uint32_t binding_num) {
     return layout_binding;
 }
 
-void UniformBuffer::dumpData() {
+void UniformBuffer::dump_data() {
     auto *mappedData = reinterpret_cast<UniformBufferObject *>(buffer_mapped);
     std::cout << "Uniform Buffer Data Dump:" << std::endl;
     std::cout << "Size of UniformBufferObject: " << sizeof(UniformBufferObject)

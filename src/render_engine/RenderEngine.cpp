@@ -28,8 +28,8 @@ RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_
 
     auto descriptor_set_layout_builder =
         DescriptorSetLayoutBuilder()
-            .add(StorageBuffer::createDescriptorSetLayoutBinding(0))
-            .add(UniformBuffer::createDescriptorSetLayoutBinding(1))
+            .add(StorageBuffer::create_descriptor_set_layout_binding(0))
+            .add(UniformBuffer::create_descriptor_set_layout_binding(1))
             .add(Sampler::create_descriptor_set_layout_binding(2));
 
     auto &resource_manager = ResourceManager::get_instance();
@@ -169,7 +169,7 @@ UniformBufferCollection create_uniform_buffers(std::shared_ptr<CoreGraphicsConte
     uniform_buffers->reserve(MAX_FRAMES_IN_FLIGHT);
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         uniform_buffers->emplace_back(ctx, sizeof(UniformBufferObject));
-        uniform_buffers->at(i).updateUniformBuffer(ubo);
+        uniform_buffers->at(i).update_uniform_buffer(ubo);
     }
     return std::move(uniform_buffers);
 }

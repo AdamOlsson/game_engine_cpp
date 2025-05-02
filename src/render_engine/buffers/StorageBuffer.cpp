@@ -57,7 +57,7 @@ StorageBuffer &StorageBuffer::operator=(StorageBuffer &&other) noexcept {
 }
 
 VkDescriptorSetLayoutBinding
-StorageBuffer::createDescriptorSetLayoutBinding(uint32_t binding_num) {
+StorageBuffer::create_descriptor_set_layout_binding(uint32_t binding_num) {
     VkDescriptorSetLayoutBinding layout_binding{};
     layout_binding.binding = binding_num;
     layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
@@ -67,13 +67,13 @@ StorageBuffer::createDescriptorSetLayoutBinding(uint32_t binding_num) {
     return layout_binding;
 }
 
-void StorageBuffer::updateStorageBuffer(const std::vector<StorageBufferObject> &ssbo) {
+void StorageBuffer::update_storage_buffer(const std::vector<StorageBufferObject> &ssbo) {
     const size_t write_size = sizeof(ssbo[0]) * ssbo.size();
     const size_t diff = size - write_size;
     memcpy(bufferMapped, &ssbo[0], write_size);
 }
 
-void StorageBuffer::dumpData() {
+void StorageBuffer::dump_data() {
     // Dump the data to verify
     auto *mappedData = reinterpret_cast<StorageBufferObject *>(bufferMapped);
     std::cout << "SSBO Data Dump:" << std::endl;

@@ -46,7 +46,7 @@ void Geometry::RenderableGeometry::record_draw_command(
 
 void Geometry::RenderableGeometry::update_instance_buffer(
     std::vector<StorageBufferObject> &&instance_data) {
-    descriptor_set.instance_buffers[buffer_idx].updateStorageBuffer(
+    descriptor_set.instance_buffers[buffer_idx].update_storage_buffer(
         std::forward<std::vector<StorageBufferObject>>(instance_data));
 }
 
