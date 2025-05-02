@@ -1,6 +1,5 @@
 #include "render_engine/RenderEngine.h"
 #include "render_engine/DescriptorSetLayoutBuilder.h"
-#include "render_engine/GraphicsPipeline.h"
 #include "render_engine/RenderBody.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/Window.h"
@@ -39,7 +38,7 @@ RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_
         m_ctx, m_swap_chain_manager, m_device_queues.graphics_queue, dog_image);
 
     m_geometry_descriptor_set_layout = descriptor_set_layout_builder.build(m_ctx.get());
-    m_geometry_pipeline = std::make_unique<GraphicsPipeline>(
+    m_geometry_pipeline = std::make_unique<GeometryPipeline>(
         m_window, m_ctx, m_swap_chain_manager, *m_window_dimension_buffers,
         m_geometry_descriptor_set_layout, m_sampler, *m_texture);
 

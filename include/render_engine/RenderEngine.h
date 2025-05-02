@@ -1,6 +1,6 @@
 #pragma once
 #include "render_engine/CoreGraphicsContext.h"
-#include "render_engine/GraphicsPipeline.h"
+#include "render_engine/GeometryPipeline.h"
 #include "render_engine/RenderBody.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/TextPipeline.h"
@@ -26,7 +26,7 @@ class RenderEngine {
     std::unique_ptr<Texture> m_texture; // Having this unique prevents a segfault
 
     VkDescriptorSetLayout m_geometry_descriptor_set_layout;
-    std::unique_ptr<GraphicsPipeline> m_geometry_pipeline;
+    std::unique_ptr<GeometryPipeline> m_geometry_pipeline;
 
     std::unique_ptr<Font> m_font;
     VkDescriptorSetLayout m_text_descriptor_set_layout;

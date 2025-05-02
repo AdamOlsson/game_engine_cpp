@@ -1,5 +1,5 @@
 #include "SwapChainManager.h"
-#include "render_engine/GraphicsPipeline.h"
+#include "render_engine/GeometryPipeline.h"
 #include "vulkan/vulkan_core.h"
 #include <optional>
 
@@ -11,28 +11,6 @@ SwapChainManager::SwapChainManager(std::shared_ptr<CoreGraphicsContext> ctx,
       m_image_available(Semaphore(m_ctx, MAX_FRAMES_IN_FLIGHT)),
       m_submit_completed(Semaphore(m_ctx, MAX_FRAMES_IN_FLIGHT)),
       m_in_flight_fence(Fence(m_ctx, MAX_FRAMES_IN_FLIGHT)) {}
-
-SwapChainManager::SwapChainManager(SwapChainManager &&other) noexcept
-    : m_window(std::move(other.m_window)), m_ctx(std::move(other.m_ctx)),
-      m_next_frame_buffer(other.m_next_frame_buffer),
-      m_command_buffer_manager(std::move(other.m_command_buffer_manager)),
-      m_image_available(std::move(other.m_image_available)),
-      m_submit_completed(std::move(other.m_submit_completed)),
-      m_in_flight_fence(std::move(other.m_in_flight_fence)),
-      m_swap_chain(std::move(other.m_swap_chain)) {}
-
-SwapChainManager &SwapChainManager::operator=(SwapChainManager &&other) noexcept {
-    if (this != &other) {
-        m_window = std::move(other.m_window);
-        m_ctx = std::move(other.m_ctx);
-        m_next_frame_buffer = other.m_next_frame_buffer;
-        m_swap_chain = std::move(other.m_swap_chain),
-        m_command_buffer_manager = std::move(other.m_command_buffer_manager);
-        m_image_available = std::move(other.m_image_available);
-        m_submit_completed = std::move(other.m_submit_completed);
-    }
-    return *this;
-}
 
 SwapChainManager::~SwapChainManager() {}
 

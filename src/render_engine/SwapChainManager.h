@@ -28,10 +28,10 @@ class SwapChainManager {
     SwapChain m_swap_chain;
 
     SwapChainManager(std::shared_ptr<CoreGraphicsContext> ctx, const Window &window);
-    // TODO: UPDATE THESE AFTER REFACTORING
-    SwapChainManager(SwapChainManager &&other) noexcept;
+
+    SwapChainManager(SwapChainManager &&other) noexcept = default;
     SwapChainManager(const SwapChainManager &other) = delete;
-    SwapChainManager &operator=(SwapChainManager &&other) noexcept;
+    SwapChainManager &operator=(SwapChainManager &&other) noexcept = default;
     SwapChainManager &operator=(const SwapChainManager &other) = delete;
 
     ~SwapChainManager();

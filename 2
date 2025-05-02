@@ -1,0 +1,23 @@
+#pragma once
+
+#include "render_engine/CoreGraphicsContext.h"
+#include "vulkan/vulkan_core.h"
+class DescriptorPool {
+  private:
+    std::shared_ptr<CoreGraphicsContext> m_ctx;
+
+    VkDescriptorPool create_descriptor_pool(const int capacity);
+
+  public:
+    VkDescriptorPool m_descriptor_pool;
+
+    DescriptorPool() = default;
+    DescriptorPool(std::shared_ptr<CoreGraphicsContext> &ctx);
+
+    ~DescriptorPool();
+    DescriptorPool(const DescriptorPool &other) = delete;
+    DescriptorPool(DescriptorPool &&other) noexcept = default;
+
+    DescriptorPool &operator=(const DescriptorPool &other) = delete;
+    DescriptorPool &operator=(DescriptorPool &&other) noexcept = default;
+};

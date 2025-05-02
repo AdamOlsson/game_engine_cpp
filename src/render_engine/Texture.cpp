@@ -1,6 +1,6 @@
 #include "Texture.h"
 #include "render_engine/CoreGraphicsContext.h"
-#include "render_engine/GraphicsPipeline.h"
+#include "render_engine/GeometryPipeline.h"
 #include "render_engine/ImageData.h"
 #include "render_engine/buffers/StagingBuffer.h"
 #include "vulkan/vulkan_core.h"

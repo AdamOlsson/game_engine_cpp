@@ -1,6 +1,8 @@
 #pragma once
 
 #include "render_engine/CoreGraphicsContext.h"
+#include "render_engine/DescriptorPool.h"
+#include "render_engine/Pipeline.h"
 #include "render_engine/RenderableGeometry.h"
 #include "render_engine/Sampler.h"
 #include "render_engine/SwapChainManager.h"
@@ -34,38 +36,13 @@ std::vector<char> readFile(const std::string filename);
 VkShaderModule createShaderModule(const VkDevice &device, const uint8_t *data,
                                   const size_t len);
 VkDescriptorPool createDescriptorPool(VkDevice &device, const int capacity);
-VkPipeline createGraphicsPipeline(const VkDevice &device,
-                                  const VkShaderModule vertShaderModule,
-                                  const VkShaderModule fragShaderModule,
-                                  VkDescriptorSetLayout &descriptorSetLayout,
-                                  VkPipelineLayout &pipelineLayout,
-                                  SwapChainManager &swap_chain_manager);
 
-class GraphicsPipeline {
-  public:
-    GraphicsPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
-                     SwapChainManager &swap_chain_manager,
-                     std::vector<UniformBuffer> &uniform_buffers,
-                     VkDescriptorSetLayout &descriptor_set_layout, Sampler &sampler,
-                     Texture &texture);
-    ~GraphicsPipeline();
-
-    // TODO: These render function should merge into one generic call
-    void render_circles(const VkCommandBuffer &command_buffer,
-                        std::vector<StorageBufferObject> &&circle_instance_data);
-    void render_triangles(const VkCommandBuffer &command_buffer,
-                          std::vector<StorageBufferObject> &&triangle_instance_data);
-    void render_rectangles(const VkCommandBuffer &command_buffer,
-                           std::vector<StorageBufferObject> &&rectangle_instance_data);
-    void render_hexagons(const VkCommandBuffer &command_buffer,
-                         std::vector<StorageBufferObject> &&hexagon_instance_data);
-
+class GeometryPipeline {
   private:
-    std::shared_ptr<CoreGraphicsContext> ctx;
+    std::shared_ptr<CoreGraphicsContext> m_ctx;
 
-    VkPipelineLayout pipeline_layout;
-    VkPipeline graphics_pipeline;
-    VkDescriptorPool descriptor_pool;
+    Pipeline m_pipeline;
+    DescriptorPool m_descriptor_pool;
 
     std::unique_ptr<Geometry::Circle> circle_geometry;
     std::unique_ptr<Geometry::Triangle> triangle_geometry;
@@ -76,7 +53,27 @@ class GraphicsPipeline {
 
     bool framebufferResized = false;
 
+    Pipeline create_pipeline(VkDescriptorSetLayout &descriptorSetLayout,
+                             SwapChainManager &swap_chain_manager);
     bool checkDeviceExtensionSupport(const VkPhysicalDevice &physicalDevice);
 
     void updateUniformBuffer(uint32_t currentImage);
+
+  public:
+    GeometryPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
+                     SwapChainManager &swap_chain_manager,
+                     std::vector<UniformBuffer> &uniform_buffers,
+                     VkDescriptorSetLayout &descriptor_set_layout, Sampler &sampler,
+                     Texture &texture);
+    ~GeometryPipeline();
+
+    // TODO: These render function should merge into one generic call
+    void render_circles(const VkCommandBuffer &command_buffer,
+                        std::vector<StorageBufferObject> &&circle_instance_data);
+    void render_triangles(const VkCommandBuffer &command_buffer,
+                          std::vector<StorageBufferObject> &&triangle_instance_data);
+    void render_rectangles(const VkCommandBuffer &command_buffer,
+                           std::vector<StorageBufferObject> &&rectangle_instance_data);
+    void render_hexagons(const VkCommandBuffer &command_buffer,
+                         std::vector<StorageBufferObject> &&hexagon_instance_data);
 };
