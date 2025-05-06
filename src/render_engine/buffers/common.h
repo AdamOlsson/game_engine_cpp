@@ -1,8 +1,6 @@
 #pragma once
 
-#include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/SwapChainManager.h"
-#include "render_engine/buffers/StorageBuffer.h"
 #include "vulkan/vulkan_core.h"
 
 void createBuffer(const VkPhysicalDevice &physicalDevice, VkDevice &device,
@@ -23,6 +21,3 @@ void copy_buffer_to_image(const VkDevice &device, const VkCommandPool &command_p
 
 VkImageView create_image_view(const VkDevice &device, const VkImage &image,
                               const VkFormat &format);
-
-std::vector<StorageBuffer>
-create_instance_buffers(std::shared_ptr<CoreGraphicsContext> &ctx, const size_t capacity);

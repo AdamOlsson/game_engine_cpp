@@ -27,27 +27,27 @@ GeometryPipeline::GeometryPipeline(Window &window,
 
     auto [graphicsQueue, presentQueue] = ctx->get_device_queues();
 
-    auto circle_descriptor_set =
-        DescriptorSet(ctx, descriptor_set_layout, m_descriptor_pool.m_descriptor_pool,
-                      MAX_FRAMES_IN_FLIGHT, &uniform_buffers, &texture, &sampler);
+    auto descriptor_set_builder = DescriptorSetBuilder()
+                                      .set_descriptor_set_layout(descriptor_set_layout)
+                                      .set_descriptor_pool(&m_descriptor_pool)
+                                      .set_capacity(MAX_FRAMES_IN_FLIGHT)
+                                      .set_uniform_buffers(&uniform_buffers)
+                                      .set_texture(&texture)
+                                      .set_sampler(&sampler);
+
+    DescriptorSet circle_descriptor_set = descriptor_set_builder.build(m_ctx);
     circle_geometry = std::make_unique<Geometry::Circle>(
         ctx, swap_chain_manager, graphicsQueue, std::move(circle_descriptor_set));
 
-    auto triangle_descriptor_set =
-        DescriptorSet(ctx, descriptor_set_layout, m_descriptor_pool.m_descriptor_pool,
-                      MAX_FRAMES_IN_FLIGHT, &uniform_buffers, &texture, &sampler);
+    DescriptorSet triangle_descriptor_set = descriptor_set_builder.build(m_ctx);
     triangle_geometry = std::make_unique<Geometry::Triangle>(
         ctx, swap_chain_manager, graphicsQueue, std::move(triangle_descriptor_set));
 
-    auto rectangle_descriptor_set =
-        DescriptorSet(ctx, descriptor_set_layout, m_descriptor_pool.m_descriptor_pool,
-                      MAX_FRAMES_IN_FLIGHT, &uniform_buffers, &texture, &sampler);
+    DescriptorSet rectangle_descriptor_set = descriptor_set_builder.build(m_ctx);
     rectangle_geometry = std::make_unique<Geometry::Rectangle>(
         ctx, swap_chain_manager, graphicsQueue, std::move(rectangle_descriptor_set));
 
-    auto hexagon_descriptor_set =
-        DescriptorSet(ctx, descriptor_set_layout, m_descriptor_pool.m_descriptor_pool,
-                      MAX_FRAMES_IN_FLIGHT, &uniform_buffers, &texture, &sampler);
+    DescriptorSet hexagon_descriptor_set = descriptor_set_builder.build(m_ctx);
     hexagon_geometry = std::make_unique<Geometry::Hexagon>(
         ctx, swap_chain_manager, graphicsQueue, std::move(hexagon_descriptor_set));
 }

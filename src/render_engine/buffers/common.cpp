@@ -1,8 +1,6 @@
 #include "common.h"
-#include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/SingleTimeCommandBuffer.h"
 #include "render_engine/SwapChainManager.h"
-#include "render_engine/buffers/StorageBuffer.h"
 #include "vulkan/vulkan_core.h"
 
 #include <cstdint>
@@ -90,16 +88,4 @@ VkImageView create_image_view(const VkDevice &device, const VkImage &image,
         throw std::runtime_error("failed to create image views!");
     }
     return image_view;
-}
-
-std::vector<StorageBuffer>
-create_instance_buffers(std::shared_ptr<CoreGraphicsContext> &ctx,
-                        const size_t capacity) {
-
-    size_t num_buffer_slots = 1024;
-    std::vector<StorageBuffer> instance_buffers;
-    for (auto i = 0; i < capacity; i++) {
-        instance_buffers.emplace_back(ctx, num_buffer_slots);
-    }
-    return instance_buffers;
 }
