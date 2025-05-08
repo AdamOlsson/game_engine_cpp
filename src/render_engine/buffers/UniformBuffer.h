@@ -11,7 +11,7 @@ struct UniformBufferObject {
 
 class UniformBuffer {
   private:
-    std::shared_ptr<CoreGraphicsContext> ctx;
+    std::shared_ptr<CoreGraphicsContext> m_ctx;
 
   public:
     VkBuffer buffer;

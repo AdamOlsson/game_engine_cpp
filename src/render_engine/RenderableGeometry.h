@@ -31,7 +31,6 @@ class RenderableGeometry {
     RenderableGeometry();
     RenderableGeometry(std::shared_ptr<CoreGraphicsContext> ctx,
                        SwapChainManager &swap_chain_manager,
-                       const VkQueue &graphics_queue,
                        // Shape specific
                        const ShapeTypeEncoding shape_type_encoding,
                        const std::vector<Vertex> &vertices,
@@ -59,11 +58,10 @@ const std::vector<Vertex> circle_vertices = generate_circle_vertices(180);
 class Circle : public RenderableGeometry {
   public:
     Circle(std::shared_ptr<CoreGraphicsContext> &ctx,
-           SwapChainManager &swap_chain_manager, const VkQueue &graphics_queue,
-           DescriptorSet &&descriptor_set)
-        : RenderableGeometry(ctx, swap_chain_manager, graphics_queue,
-                             ShapeTypeEncoding::CircleShape, circle_vertices,
-                             circle_indices, std::move(descriptor_set)) {}
+           SwapChainManager &swap_chain_manager, DescriptorSet &&descriptor_set)
+        : RenderableGeometry(ctx, swap_chain_manager, ShapeTypeEncoding::CircleShape,
+                             circle_vertices, circle_indices, std::move(descriptor_set)) {
+    }
 };
 
 // TODO: Should we make this constexpr?
@@ -75,11 +73,10 @@ const std::vector<Vertex> triangle_vertices = {
 class Triangle : public RenderableGeometry {
   public:
     Triangle(std::shared_ptr<CoreGraphicsContext> &ctx,
-             SwapChainManager &swap_chain_manager, const VkQueue &graphics_queue,
-             DescriptorSet &&descriptor_set)
-        : RenderableGeometry(ctx, swap_chain_manager, graphics_queue,
-                             ShapeTypeEncoding::TriangleShape, triangle_vertices,
-                             triangle_indices, std::move(descriptor_set)) {}
+             SwapChainManager &swap_chain_manager, DescriptorSet &&descriptor_set)
+        : RenderableGeometry(ctx, swap_chain_manager, ShapeTypeEncoding::TriangleShape,
+                             triangle_vertices, triangle_indices,
+                             std::move(descriptor_set)) {}
 };
 
 // TODO: Should we make this constexpr?
@@ -90,11 +87,10 @@ const std::vector<Vertex> rectangle_vertices = {
 class Rectangle : public RenderableGeometry {
   public:
     Rectangle(std::shared_ptr<CoreGraphicsContext> &ctx,
-              SwapChainManager &swap_chain_manager, const VkQueue &graphics_queue,
-              DescriptorSet &&descriptor_set)
-        : RenderableGeometry(ctx, swap_chain_manager, graphics_queue,
-                             ShapeTypeEncoding::RectangleShape, rectangle_vertices,
-                             rectangle_indices, std::move(descriptor_set)) {}
+              SwapChainManager &swap_chain_manager, DescriptorSet &&descriptor_set)
+        : RenderableGeometry(ctx, swap_chain_manager, ShapeTypeEncoding::RectangleShape,
+                             rectangle_vertices, rectangle_indices,
+                             std::move(descriptor_set)) {}
 };
 
 // TODO: Should we make this constexpr?
@@ -107,11 +103,10 @@ const std::vector<Vertex> hexagon_vertices = {
 class Hexagon : public RenderableGeometry {
   public:
     Hexagon(std::shared_ptr<CoreGraphicsContext> &ctx,
-            SwapChainManager &swap_chain_manager, const VkQueue &graphics_queue,
-            DescriptorSet &&descriptor_set)
-        : RenderableGeometry(ctx, swap_chain_manager, graphics_queue,
-                             ShapeTypeEncoding::HexagonShape, hexagon_vertices,
-                             hexagon_indices, std::move(descriptor_set)) {}
+            SwapChainManager &swap_chain_manager, DescriptorSet &&descriptor_set)
+        : RenderableGeometry(ctx, swap_chain_manager, ShapeTypeEncoding::HexagonShape,
+                             hexagon_vertices, hexagon_indices,
+                             std::move(descriptor_set)) {}
 };
 
 }; // namespace Geometry

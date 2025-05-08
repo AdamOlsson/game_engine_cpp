@@ -5,33 +5,34 @@
 #include <ostream>
 
 StorageBuffer::StorageBuffer()
-    : ctx(nullptr), size(0), buffer(VK_NULL_HANDLE), bufferMemory(VK_NULL_HANDLE),
+    : m_ctx(nullptr), size(0), buffer(VK_NULL_HANDLE), bufferMemory(VK_NULL_HANDLE),
       bufferMapped(nullptr) {}
 
 StorageBuffer::StorageBuffer(std::shared_ptr<CoreGraphicsContext> ctx, size_t capacity)
-    : ctx(ctx), size(capacity * sizeof(StorageBufferObject)) {
+    : m_ctx(ctx), size(capacity * sizeof(StorageBufferObject)) {
 
-    createBuffer(
-        ctx->physicalDevice, ctx->device, size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        buffer, bufferMemory);
+    create_buffer(m_ctx.get(), size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                  buffer, bufferMemory);
 
-    vkMapMemory(ctx->device, bufferMemory, 0, size, 0, &bufferMapped);
+    vkMapMemory(m_ctx->device, bufferMemory, 0, size, 0, &bufferMapped);
 }
 
 StorageBuffer::~StorageBuffer() {
     if (buffer == VK_NULL_HANDLE) {
         return;
     }
-    vkUnmapMemory(ctx->device, bufferMemory);
-    vkFreeMemory(ctx->device, bufferMemory, nullptr);
-    vkDestroyBuffer(ctx->device, buffer, nullptr);
+    vkUnmapMemory(m_ctx->device, bufferMemory);
+    vkFreeMemory(m_ctx->device, bufferMemory, nullptr);
+    vkDestroyBuffer(m_ctx->device, buffer, nullptr);
 }
 
 // Move constructor
 StorageBuffer::StorageBuffer(StorageBuffer &&other) noexcept
-    : ctx(std::move(other.ctx)), buffer(other.buffer), bufferMemory(other.bufferMemory),
-      bufferMapped(other.bufferMapped), size(other.size) {
+    : m_ctx(std::move(other.m_ctx)), buffer(other.buffer),
+      bufferMemory(other.bufferMemory), bufferMapped(other.bufferMapped),
+      size(other.size) {
     other.buffer = VK_NULL_HANDLE;
     other.bufferMemory = VK_NULL_HANDLE;
     other.bufferMapped = nullptr;
@@ -41,7 +42,7 @@ StorageBuffer::StorageBuffer(StorageBuffer &&other) noexcept
 // Move assignement
 StorageBuffer &StorageBuffer::operator=(StorageBuffer &&other) noexcept {
     if (this != &other) {
-        ctx = std::move(other.ctx);
+        m_ctx = std::move(other.m_ctx);
         buffer = other.buffer;
         bufferMemory = other.bufferMemory;
         bufferMapped = other.bufferMapped;

@@ -32,11 +32,10 @@ void StagingBuffer::transfer_image_to_device_image(const ImageData &src,
 
 Buffer StagingBuffer::create_staging_buffer() {
     Buffer buf{};
-    createBuffer(m_ctx->physicalDevice, m_ctx->device, m_staging_buffer_size,
-                 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                 buf.buffer, buf.buffer_memory);
+    create_buffer(m_ctx.get(), m_staging_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                  buf.buffer, buf.buffer_memory);
     return buf;
 }
 

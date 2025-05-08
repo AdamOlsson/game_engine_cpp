@@ -38,16 +38,15 @@ TextureImage::TextureImage(std::shared_ptr<CoreGraphicsContext> ctx,
     VkMemoryAllocateInfo alloc_info{};
     alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     alloc_info.allocationSize = mem_requirements.size;
-    alloc_info.memoryTypeIndex =
-        findMemoryType(ctx->physicalDevice, mem_requirements.memoryTypeBits,
-                       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    alloc_info.memoryTypeIndex = find_memory_type(
+        ctx.get(), mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     if (vkAllocateMemory(ctx->device, &alloc_info, nullptr, &m_image_memory) !=
         VK_SUCCESS) {
         throw std::runtime_error("Failed to create texture image memory");
     }
 
     vkBindImageMemory(ctx->device, m_image, m_image_memory, 0);
-    m_image_view = create_image_view(ctx->device, m_image, VK_FORMAT_R8G8B8A8_SRGB);
+    m_image_view = create_image_view(ctx.get(), m_image, VK_FORMAT_R8G8B8A8_SRGB);
 }
 
 TextureImage::TextureImage(TextureImage &&other) noexcept

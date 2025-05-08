@@ -6,34 +6,35 @@ VertexBuffer::VertexBuffer() {}
 
 VertexBuffer::VertexBuffer(std::shared_ptr<CoreGraphicsContext> ctx,
                            const std::vector<Vertex> &vertices,
-                           SwapChainManager &swap_chain_manager,
-                           const VkQueue &graphicsQueue)
-    : ctx(ctx), size(sizeof(Vertex) * vertices.size()),
+                           SwapChainManager &swap_chain_manager)
+    : m_ctx(ctx), size(sizeof(Vertex) * vertices.size()),
       num_vertices(num_vertices = size / sizeof(Vertex)) {
 
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    createBuffer(ctx->physicalDevice, ctx->device, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                 stagingBuffer, stagingBufferMemory);
+    auto [graphics_queue, _] = m_ctx->get_device_queues();
+
+    VkBuffer staging_buffer;
+    VkDeviceMemory staging_buffer_memory;
+    create_buffer(m_ctx.get(), size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                  staging_buffer, staging_buffer_memory);
 
     void *data;
-    vkMapMemory(ctx->device, stagingBufferMemory, 0, size, 0, &data);
+    vkMapMemory(m_ctx->device, staging_buffer_memory, 0, size, 0, &data);
     memcpy(data, vertices.data(), size);
-    vkUnmapMemory(ctx->device, stagingBufferMemory);
+    vkUnmapMemory(m_ctx->device, staging_buffer_memory);
 
-    createBuffer(ctx->physicalDevice, ctx->device, size,
-                 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer, bufferMemory);
+    create_buffer(m_ctx.get(), size,
+                  VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer, bufferMemory);
 
-    copy_buffer(ctx->device, stagingBuffer, buffer, size, swap_chain_manager,
-                graphicsQueue);
-    vkDestroyBuffer(ctx->device, stagingBuffer, nullptr);
-    vkFreeMemory(ctx->device, stagingBufferMemory, nullptr);
+    copy_buffer(m_ctx.get(), staging_buffer, buffer, size, swap_chain_manager,
+                graphics_queue);
+    vkDestroyBuffer(m_ctx->device, staging_buffer, nullptr);
+    vkFreeMemory(m_ctx->device, staging_buffer_memory, nullptr);
 }
 
 VertexBuffer::~VertexBuffer() {
-    vkDestroyBuffer(ctx->device, buffer, nullptr);
-    vkFreeMemory(ctx->device, bufferMemory, nullptr);
+    vkDestroyBuffer(m_ctx->device, buffer, nullptr);
+    vkFreeMemory(m_ctx->device, bufferMemory, nullptr);
 }

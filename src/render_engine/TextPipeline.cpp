@@ -21,8 +21,6 @@ TextPipeline::TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> 
     : m_ctx(ctx), m_pipeline(create_pipeline(descriptor_set_layout, swap_chain_manager)),
       m_descriptor_pool(DescriptorPool(m_ctx, MAX_FRAMES_IN_FLIGHT)) {
 
-    auto [graphicsQueue, presentQueue] = ctx->get_device_queues();
-
     auto descriptor_set_builder = DescriptorSetBuilder()
                                       .set_descriptor_set_layout(descriptor_set_layout)
                                       .set_descriptor_pool(&m_descriptor_pool)
@@ -32,8 +30,8 @@ TextPipeline::TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> 
                                       .set_sampler(&sampler);
 
     auto descriptor_set = descriptor_set_builder.build(m_ctx);
-    geometry = std::make_unique<Geometry::Rectangle>(
-        ctx, swap_chain_manager, graphicsQueue, std::move(descriptor_set));
+    geometry = std::make_unique<Geometry::Rectangle>(ctx, swap_chain_manager,
+                                                     std::move(descriptor_set));
 }
 
 TextPipeline::~TextPipeline() {}

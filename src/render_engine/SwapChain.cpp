@@ -140,7 +140,7 @@ std::vector<VkImageView> SwapChain::create_image_views(VkFormat &image_format) {
     swapChainImageViews.resize(m_images.size());
     for (size_t i = 0; i < m_images.size(); i++) {
         swapChainImageViews[i] =
-            create_image_view(m_ctx->device, m_images[i], image_format);
+            create_image_view(m_ctx.get(), m_images[i], image_format);
     }
     return swapChainImageViews;
 }

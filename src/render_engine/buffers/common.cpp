@@ -1,4 +1,5 @@
 #include "common.h"
+#include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/SingleTimeCommandBuffer.h"
 #include "render_engine/SwapChainManager.h"
 #include "vulkan/vulkan_core.h"
@@ -6,42 +7,42 @@
 #include <cstdint>
 #include <stdexcept>
 
-void createBuffer(const VkPhysicalDevice &physicalDevice, VkDevice &device,
-                  const VkDeviceSize size, const VkBufferUsageFlags usage,
-                  const VkMemoryPropertyFlags properties, VkBuffer &buffer,
-                  VkDeviceMemory &bufferMemory) {
-    VkBufferCreateInfo bufferInfo{};
-    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferInfo.size = size;
-    bufferInfo.usage = usage;
-    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+void create_buffer(const CoreGraphicsContext *ctx, const VkDeviceSize size,
+                   const VkBufferUsageFlags usage, const VkMemoryPropertyFlags properties,
+                   VkBuffer &buffer, VkDeviceMemory &buffer_memory) {
+    VkBufferCreateInfo buffer_info{};
+    buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    buffer_info.size = size;
+    buffer_info.usage = usage;
+    buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    if (vkCreateBuffer(device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
+    if (vkCreateBuffer(ctx->device, &buffer_info, nullptr, &buffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to create buffer!");
     }
 
-    VkMemoryRequirements memRequirements;
-    vkGetBufferMemoryRequirements(device, buffer, &memRequirements);
+    VkMemoryRequirements mem_requirements;
+    vkGetBufferMemoryRequirements(ctx->device, buffer, &mem_requirements);
 
-    VkMemoryAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex =
-        findMemoryType(physicalDevice, memRequirements.memoryTypeBits, properties);
+    VkMemoryAllocateInfo alloc_info{};
+    alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    alloc_info.allocationSize = mem_requirements.size;
+    alloc_info.memoryTypeIndex =
+        find_memory_type(ctx, mem_requirements.memoryTypeBits, properties);
 
-    if (vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
+    if (vkAllocateMemory(ctx->device, &alloc_info, nullptr, &buffer_memory) !=
+        VK_SUCCESS) {
         throw std::runtime_error("failed to allocate buffer memory!");
     }
 
-    vkBindBufferMemory(device, buffer, bufferMemory, 0);
+    vkBindBufferMemory(ctx->device, buffer, buffer_memory, 0);
 }
 
-uint32_t findMemoryType(const VkPhysicalDevice &physicalDevice, const uint32_t typeFilter,
-                        const VkMemoryPropertyFlags properties) {
+uint32_t find_memory_type(const CoreGraphicsContext *ctx, const uint32_t type_filter,
+                          const VkMemoryPropertyFlags properties) {
     VkPhysicalDeviceMemoryProperties memProperties;
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+    vkGetPhysicalDeviceMemoryProperties(ctx->physicalDevice, &memProperties);
     for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
-        if ((typeFilter & (1 << i)) &&
+        if ((type_filter & (1 << i)) &&
             (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
             return i;
         }
@@ -49,7 +50,7 @@ uint32_t findMemoryType(const VkPhysicalDevice &physicalDevice, const uint32_t t
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
-void copy_buffer(const VkDevice &device, const VkBuffer src_buffer,
+void copy_buffer(const CoreGraphicsContext *ctx, const VkBuffer src_buffer,
                  const VkBuffer dst_buffer, const VkDeviceSize size,
                  SwapChainManager &swap_chain_manager, const VkQueue &graphics_queue) {
     SingleTimeCommandBuffer command_buffer =
@@ -67,7 +68,7 @@ void copy_buffer(const VkDevice &device, const VkBuffer src_buffer,
     command_buffer.submit(graphics_queue);
 }
 
-VkImageView create_image_view(const VkDevice &device, const VkImage &image,
+VkImageView create_image_view(const CoreGraphicsContext *ctx, const VkImage &image,
                               const VkFormat &format) {
     VkImageViewCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -84,7 +85,7 @@ VkImageView create_image_view(const VkDevice &device, const VkImage &image,
     createInfo.subresourceRange.baseArrayLayer = 0;
     createInfo.subresourceRange.layerCount = 1;
     VkImageView image_view;
-    if (vkCreateImageView(device, &createInfo, nullptr, &image_view) != VK_SUCCESS) {
+    if (vkCreateImageView(ctx->device, &createInfo, nullptr, &image_view) != VK_SUCCESS) {
         throw std::runtime_error("failed to create image views!");
     }
     return image_view;

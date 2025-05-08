@@ -9,23 +9,24 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 UniformBuffer::UniformBuffer()
-    : ctx(nullptr), buffer(VK_NULL_HANDLE), buffer_memory(VK_NULL_HANDLE),
+    : m_ctx(nullptr), buffer(VK_NULL_HANDLE), buffer_memory(VK_NULL_HANDLE),
       buffer_mapped(nullptr), size(0) {}
 
 UniformBuffer::UniformBuffer(std::shared_ptr<CoreGraphicsContext> ctx, const size_t size)
-    : ctx(ctx), size(size) {
+    : m_ctx(ctx), size(size) {
 
-    createBuffer(
-        ctx->physicalDevice, ctx->device, size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        buffer, buffer_memory);
+    create_buffer(m_ctx.get(), size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                  buffer, buffer_memory);
 
-    vkMapMemory(ctx->device, buffer_memory, 0, size, 0, &buffer_mapped);
+    vkMapMemory(m_ctx->device, buffer_memory, 0, size, 0, &buffer_mapped);
 }
 
 UniformBuffer::UniformBuffer(UniformBuffer &&other) noexcept
-    : ctx(std::move(other.ctx)), buffer(other.buffer), buffer_memory(other.buffer_memory),
-      buffer_mapped(other.buffer_memory), size(other.size) {
+    : m_ctx(std::move(other.m_ctx)), buffer(other.buffer),
+      buffer_memory(other.buffer_memory), buffer_mapped(other.buffer_memory),
+      size(other.size) {
     other.buffer = VK_NULL_HANDLE;
     other.buffer_memory = VK_NULL_HANDLE;
     other.buffer_mapped = nullptr;
@@ -34,7 +35,7 @@ UniformBuffer::UniformBuffer(UniformBuffer &&other) noexcept
 
 UniformBuffer &UniformBuffer::operator=(UniformBuffer &&other) noexcept {
     if (this != &other) {
-        ctx = std::move(other.ctx);
+        m_ctx = std::move(other.m_ctx);
         buffer = other.buffer;
         buffer_memory = other.buffer_memory;
         buffer_mapped = other.buffer_mapped;
@@ -52,9 +53,9 @@ UniformBuffer::~UniformBuffer() {
     if (buffer == VK_NULL_HANDLE) {
         return;
     }
-    vkUnmapMemory(ctx->device, buffer_memory);
-    vkFreeMemory(ctx->device, buffer_memory, nullptr);
-    vkDestroyBuffer(ctx->device, buffer, nullptr);
+    vkUnmapMemory(m_ctx->device, buffer_memory);
+    vkFreeMemory(m_ctx->device, buffer_memory, nullptr);
+    vkDestroyBuffer(m_ctx->device, buffer, nullptr);
 }
 
 void UniformBuffer::update_uniform_buffer(const UniformBufferObject &ssbo) {

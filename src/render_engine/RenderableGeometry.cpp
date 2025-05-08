@@ -12,14 +12,13 @@ Geometry::RenderableGeometry::RenderableGeometry()
 
 Geometry::RenderableGeometry::RenderableGeometry(
     std::shared_ptr<CoreGraphicsContext> ctx, SwapChainManager &swap_chain_manager,
-    const VkQueue &graphics_queue, const ShapeTypeEncoding shape_type_encoding,
-    const std::vector<Vertex> &vertices, const std::vector<uint16_t> &indices,
-    DescriptorSet &&descriptor_set)
+    const ShapeTypeEncoding shape_type_encoding, const std::vector<Vertex> &vertices,
+    const std::vector<uint16_t> &indices, DescriptorSet &&descriptor_set)
 
     : capacity(descriptor_set.instance_buffers.size()), buffer_idx(0),
       shape_type_encoding(shape_type_encoding),
-      vertex_buffer(VertexBuffer(ctx, vertices, swap_chain_manager, graphics_queue)),
-      index_buffer(IndexBuffer(ctx, indices, swap_chain_manager, graphics_queue)),
+      vertex_buffer(VertexBuffer(ctx, vertices, swap_chain_manager)),
+      index_buffer(IndexBuffer(ctx, indices, swap_chain_manager)),
       descriptor_set(std::move(descriptor_set)) {}
 
 Geometry::RenderableGeometry::~RenderableGeometry() {}

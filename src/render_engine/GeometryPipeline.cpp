@@ -25,8 +25,6 @@ GeometryPipeline::GeometryPipeline(Window &window,
     : m_ctx(ctx), m_pipeline(create_pipeline(descriptor_set_layout, swap_chain_manager)),
       m_descriptor_pool(DescriptorPool(m_ctx, MAX_FRAMES_IN_FLIGHT * 6)) {
 
-    auto [graphicsQueue, presentQueue] = ctx->get_device_queues();
-
     auto descriptor_set_builder = DescriptorSetBuilder()
                                       .set_descriptor_set_layout(descriptor_set_layout)
                                       .set_descriptor_pool(&m_descriptor_pool)
@@ -35,21 +33,23 @@ GeometryPipeline::GeometryPipeline(Window &window,
                                       .set_texture(&texture)
                                       .set_sampler(&sampler);
 
+    // TODO: Remove graphicsQueue from the API and call ctx->get_device_queues() where
+    // required
     DescriptorSet circle_descriptor_set = descriptor_set_builder.build(m_ctx);
     circle_geometry = std::make_unique<Geometry::Circle>(
-        ctx, swap_chain_manager, graphicsQueue, std::move(circle_descriptor_set));
+        ctx, swap_chain_manager, std::move(circle_descriptor_set));
 
     DescriptorSet triangle_descriptor_set = descriptor_set_builder.build(m_ctx);
     triangle_geometry = std::make_unique<Geometry::Triangle>(
-        ctx, swap_chain_manager, graphicsQueue, std::move(triangle_descriptor_set));
+        ctx, swap_chain_manager, std::move(triangle_descriptor_set));
 
     DescriptorSet rectangle_descriptor_set = descriptor_set_builder.build(m_ctx);
     rectangle_geometry = std::make_unique<Geometry::Rectangle>(
-        ctx, swap_chain_manager, graphicsQueue, std::move(rectangle_descriptor_set));
+        ctx, swap_chain_manager, std::move(rectangle_descriptor_set));
 
     DescriptorSet hexagon_descriptor_set = descriptor_set_builder.build(m_ctx);
     hexagon_geometry = std::make_unique<Geometry::Hexagon>(
-        ctx, swap_chain_manager, graphicsQueue, std::move(hexagon_descriptor_set));
+        ctx, swap_chain_manager, std::move(hexagon_descriptor_set));
 }
 
 GeometryPipeline::~GeometryPipeline() {}

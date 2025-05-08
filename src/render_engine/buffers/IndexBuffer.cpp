@@ -5,40 +5,41 @@
 #include <vector>
 
 IndexBuffer::IndexBuffer()
-    : ctx(nullptr), buffer(VK_NULL_HANDLE), bufferMemory(VK_NULL_HANDLE), size(0),
+    : m_ctx(nullptr), buffer(VK_NULL_HANDLE), bufferMemory(VK_NULL_HANDLE), size(0),
       num_indices(0) {}
 
 IndexBuffer::IndexBuffer(std::shared_ptr<CoreGraphicsContext> ctx,
                          const std::vector<uint16_t> &indices,
-                         SwapChainManager &swap_chain_manager,
-                         const VkQueue &graphicsQueue)
-    : ctx(ctx), size(sizeof(uint16_t) * indices.size()),
+                         SwapChainManager &swap_chain_manager)
+    : m_ctx(ctx), size(sizeof(uint16_t) * indices.size()),
       num_indices(size / sizeof(uint16_t)) {
 
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    createBuffer(ctx->physicalDevice, ctx->device, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                 stagingBuffer, stagingBufferMemory);
+    auto [graphics_queue, _] = m_ctx->get_device_queues();
+
+    VkBuffer staging_buffer;
+    VkDeviceMemory staging_buffer_memory;
+    create_buffer(m_ctx.get(), size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                  staging_buffer, staging_buffer_memory);
 
     void *data;
-    vkMapMemory(ctx->device, stagingBufferMemory, 0, size, 0, &data);
+    vkMapMemory(m_ctx->device, staging_buffer_memory, 0, size, 0, &data);
     memcpy(data, indices.data(), (size_t)size);
-    vkUnmapMemory(ctx->device, stagingBufferMemory);
+    vkUnmapMemory(m_ctx->device, staging_buffer_memory);
 
-    createBuffer(ctx->physicalDevice, ctx->device, size,
-                 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer, bufferMemory);
+    create_buffer(m_ctx.get(), size,
+                  VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer, bufferMemory);
 
-    copy_buffer(ctx->device, stagingBuffer, buffer, size, swap_chain_manager,
-                graphicsQueue);
+    copy_buffer(m_ctx.get(), staging_buffer, buffer, size, swap_chain_manager,
+                graphics_queue);
 
-    vkDestroyBuffer(ctx->device, stagingBuffer, nullptr);
-    vkFreeMemory(ctx->device, stagingBufferMemory, nullptr);
+    vkDestroyBuffer(m_ctx->device, staging_buffer, nullptr);
+    vkFreeMemory(m_ctx->device, staging_buffer_memory, nullptr);
 }
 
 IndexBuffer::~IndexBuffer() {
-    vkDestroyBuffer(ctx->device, buffer, nullptr);
-    vkFreeMemory(ctx->device, bufferMemory, nullptr);
+    vkDestroyBuffer(m_ctx->device, buffer, nullptr);
+    vkFreeMemory(m_ctx->device, bufferMemory, nullptr);
 }
