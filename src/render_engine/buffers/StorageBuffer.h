@@ -27,7 +27,7 @@ struct StorageBufferObject {
 
 class StorageBuffer {
   private:
-    std::shared_ptr<CoreGraphicsContext> ctx;
+    std::shared_ptr<CoreGraphicsContext> m_ctx;
 
   public:
     VkBuffer buffer;
@@ -38,38 +38,18 @@ class StorageBuffer {
     StorageBuffer();
     StorageBuffer(std::shared_ptr<CoreGraphicsContext> ctx, size_t capacity);
 
-    /* Example:
-     *  StorageBuffer a;
-     *  StorageBuffer b = std::move(a);
-     */
-    StorageBuffer(StorageBuffer &&other) noexcept; // Move constructor
-
-    /* Example:
-     *  StorageBuffer a;
-     *  StorageBuffer b;
-     *  b = std::move(a);
-     */
-    StorageBuffer &operator=(StorageBuffer &&other) noexcept; // Move assignment
-
-    /* Example:
-     *  StorageBuffer a;
-     *  StorageBuffer b = a;
-     */
+    StorageBuffer(StorageBuffer &&other) noexcept;      // Move constructor
     StorageBuffer(const StorageBuffer &other) = delete; // Copy constructor
 
-    /* Example:
-     *  StorageBuffer a;
-     *  StorageBuffer b;
-     *  b = a;
-     */
+    StorageBuffer &operator=(StorageBuffer &&other) noexcept;      // Move assignment
     StorageBuffer &operator=(const StorageBuffer &other) = delete; // Copy assignment
 
     ~StorageBuffer();
 
-    void updateStorageBuffer(const std::vector<StorageBufferObject> &ssbo);
+    void update_storage_buffer(const std::vector<StorageBufferObject> &ssbo);
 
     static VkDescriptorSetLayoutBinding
-    createDescriptorSetLayoutBinding(uint32_t binding_num);
+    create_descriptor_set_layout_binding(uint32_t binding_num);
 
-    void dumpData();
+    void dump_data();
 };

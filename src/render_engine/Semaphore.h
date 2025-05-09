@@ -13,8 +13,8 @@ class Semaphore {
     size_t next;
     std::vector<VkSemaphore> semaphores;
 
-    Semaphore(const Semaphore &);
-    Semaphore &operator=(const Semaphore &);
+    /*Semaphore(const Semaphore &);*/
+    /*Semaphore &operator=(const Semaphore &);*/
 
   public:
     Semaphore(std::shared_ptr<CoreGraphicsContext> ctx, const size_t size);

@@ -4,6 +4,11 @@
 #include "vulkan/vulkan_core.h"
 #include <vector>
 
+struct DeviceQueues {
+    VkQueue graphics_queue;
+    VkQueue present_queue;
+};
+
 const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 
 const std::vector<const char *> deviceExtensions = {
@@ -19,12 +24,12 @@ class CoreGraphicsContext {
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice device;
 
-    CoreGraphicsContext(bool enableValidationLayers, Window *window);
+    CoreGraphicsContext(const bool enableValidationLayers, const Window &window);
     ~CoreGraphicsContext();
 
     void wait_idle();
 
-    std::tuple<VkQueue, VkQueue> get_device_queues();
+    DeviceQueues get_device_queues();
 };
 
 void populateDebugMessengerCreateInfo__(VkDebugUtilsMessengerCreateInfoEXT &createInfo);

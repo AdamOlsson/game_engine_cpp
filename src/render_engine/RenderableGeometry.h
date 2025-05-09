@@ -30,7 +30,7 @@ class RenderableGeometry {
   public:
     RenderableGeometry();
     RenderableGeometry(std::shared_ptr<CoreGraphicsContext> ctx,
-                       const VkCommandPool &command_pool, const VkQueue &graphics_queue,
+                       SwapChainManager &swap_chain_manager,
                        // Shape specific
                        const ShapeTypeEncoding shape_type_encoding,
                        const std::vector<Vertex> &vertices,
@@ -57,11 +57,11 @@ const std::vector<uint16_t> circle_indices = generate_circle_indices(180);
 const std::vector<Vertex> circle_vertices = generate_circle_vertices(180);
 class Circle : public RenderableGeometry {
   public:
-    Circle(std::shared_ptr<CoreGraphicsContext> &ctx, const VkCommandPool &command_pool,
-           const VkQueue &graphics_queue, DescriptorSet &&descriptor_set)
-        : RenderableGeometry(ctx, command_pool, graphics_queue,
-                             ShapeTypeEncoding::CircleShape, circle_vertices,
-                             circle_indices, std::move(descriptor_set)) {}
+    Circle(std::shared_ptr<CoreGraphicsContext> &ctx,
+           SwapChainManager &swap_chain_manager, DescriptorSet &&descriptor_set)
+        : RenderableGeometry(ctx, swap_chain_manager, ShapeTypeEncoding::CircleShape,
+                             circle_vertices, circle_indices, std::move(descriptor_set)) {
+    }
 };
 
 // TODO: Should we make this constexpr?
@@ -72,11 +72,11 @@ const std::vector<Vertex> triangle_vertices = {
     {{0.0f, -0.577f, 0.0f}, {-0.5f, 0.289f, 0.0f}, {0.5f, 0.289f, 0.0f}}};
 class Triangle : public RenderableGeometry {
   public:
-    Triangle(std::shared_ptr<CoreGraphicsContext> &ctx, const VkCommandPool &command_pool,
-             const VkQueue &graphics_queue, DescriptorSet &&descriptor_set)
-        : RenderableGeometry(ctx, command_pool, graphics_queue,
-                             ShapeTypeEncoding::TriangleShape, triangle_vertices,
-                             triangle_indices, std::move(descriptor_set)) {}
+    Triangle(std::shared_ptr<CoreGraphicsContext> &ctx,
+             SwapChainManager &swap_chain_manager, DescriptorSet &&descriptor_set)
+        : RenderableGeometry(ctx, swap_chain_manager, ShapeTypeEncoding::TriangleShape,
+                             triangle_vertices, triangle_indices,
+                             std::move(descriptor_set)) {}
 };
 
 // TODO: Should we make this constexpr?
@@ -87,11 +87,10 @@ const std::vector<Vertex> rectangle_vertices = {
 class Rectangle : public RenderableGeometry {
   public:
     Rectangle(std::shared_ptr<CoreGraphicsContext> &ctx,
-              const VkCommandPool &command_pool, const VkQueue &graphics_queue,
-              DescriptorSet &&descriptor_set)
-        : RenderableGeometry(ctx, command_pool, graphics_queue,
-                             ShapeTypeEncoding::RectangleShape, rectangle_vertices,
-                             rectangle_indices, std::move(descriptor_set)) {}
+              SwapChainManager &swap_chain_manager, DescriptorSet &&descriptor_set)
+        : RenderableGeometry(ctx, swap_chain_manager, ShapeTypeEncoding::RectangleShape,
+                             rectangle_vertices, rectangle_indices,
+                             std::move(descriptor_set)) {}
 };
 
 // TODO: Should we make this constexpr?
@@ -103,11 +102,11 @@ const std::vector<Vertex> hexagon_vertices = {
 };
 class Hexagon : public RenderableGeometry {
   public:
-    Hexagon(std::shared_ptr<CoreGraphicsContext> &ctx, const VkCommandPool &command_pool,
-            const VkQueue &graphics_queue, DescriptorSet &&descriptor_set)
-        : RenderableGeometry(ctx, command_pool, graphics_queue,
-                             ShapeTypeEncoding::HexagonShape, hexagon_vertices,
-                             hexagon_indices, std::move(descriptor_set)) {}
+    Hexagon(std::shared_ptr<CoreGraphicsContext> &ctx,
+            SwapChainManager &swap_chain_manager, DescriptorSet &&descriptor_set)
+        : RenderableGeometry(ctx, swap_chain_manager, ShapeTypeEncoding::HexagonShape,
+                             hexagon_vertices, hexagon_indices,
+                             std::move(descriptor_set)) {}
 };
 
 }; // namespace Geometry

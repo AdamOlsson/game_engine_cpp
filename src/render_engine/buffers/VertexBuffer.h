@@ -1,18 +1,14 @@
 #pragma once
 
 #include "render_engine/CoreGraphicsContext.h"
+#include "render_engine/SwapChainManager.h"
 #include "render_engine/shapes/Vertex.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
 class VertexBuffer {
   private:
-    std::shared_ptr<CoreGraphicsContext> ctx;
-
-    VertexBuffer &operator=(const VertexBuffer &);     // Copy assignment
-    VertexBuffer &operator=(VertexBuffer &&) noexcept; // Move assignment
-    VertexBuffer(const VertexBuffer &);                // Copy
-    VertexBuffer(VertexBuffer &&) noexcept;            // Move
+    std::shared_ptr<CoreGraphicsContext> m_ctx;
 
   public:
     VkBuffer buffer;
@@ -22,8 +18,13 @@ class VertexBuffer {
 
     VertexBuffer();
     VertexBuffer(std::shared_ptr<CoreGraphicsContext> ctx,
-                 const std::vector<Vertex> &vertices, const VkCommandPool &commandPool,
-                 const VkQueue &graphicsQueue);
+                 const std::vector<Vertex> &vertices,
+                 SwapChainManager &swap_chain_manager);
+
+    VertexBuffer &operator=(const VertexBuffer &) = delete;
+    VertexBuffer &operator=(VertexBuffer &&) noexcept = delete;
+    VertexBuffer(const VertexBuffer &) = delete;
+    VertexBuffer(VertexBuffer &&) noexcept = delete;
 
     ~VertexBuffer();
 };

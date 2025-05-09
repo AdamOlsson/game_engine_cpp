@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Coordinates.h"
+#include "render_engine/WindowConfig.h"
 #include <cstdint>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -35,7 +36,7 @@ using KeyboardEventCallbackFn = std::function<void(KeyEvent &, KeyState &)>;
 class Window {
   public:
     GLFWwindow *window;
-    Window(const uint32_t width, const uint32_t height, char const *window_title);
+    Window(const WindowConfig &window_dims);
 
     ~Window();
     /**

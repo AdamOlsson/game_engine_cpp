@@ -1,36 +1,22 @@
 #pragma once
 
-#include "render_engine/CoreGraphicsContext.h"
-#include "render_engine/buffers/StorageBuffer.h"
+#include "render_engine/SwapChainManager.h"
 #include "vulkan/vulkan_core.h"
 
-void createBuffer(const VkPhysicalDevice &physicalDevice, VkDevice &device,
-                  const VkDeviceSize size, const VkBufferUsageFlags usage,
-                  const VkMemoryPropertyFlags properties, VkBuffer &buffer,
-                  VkDeviceMemory &bufferMemory);
+void create_buffer(const CoreGraphicsContext *ctx, const VkDeviceSize size,
+                   const VkBufferUsageFlags usage, const VkMemoryPropertyFlags properties,
+                   VkBuffer &buffer, VkDeviceMemory &buffer_memory);
 
-uint32_t findMemoryType(const VkPhysicalDevice &physicalDevice, const uint32_t typeFilter,
-                        const VkMemoryPropertyFlags properties);
+uint32_t find_memory_type(const CoreGraphicsContext *ctx, const uint32_t type_filter,
+                          const VkMemoryPropertyFlags properties);
 
-void copyBuffer(const VkDevice &device, const VkBuffer srcBuffer,
-                const VkBuffer dstBuffer, const VkDeviceSize size,
-                const VkCommandPool &commandPool, const VkQueue &graphicsQueue);
-
-void create_image(const CoreGraphicsContext *ctx, const uint32_t texture_width,
-                  const uint32_t texture_height, VkImage &texture_image,
-                  VkDeviceMemory &texture_image_memory);
-
-void transition_image_layout(const VkDevice &device, const VkCommandPool &command_pool,
-                             const VkQueue &graphics_queue, VkImage &image,
-                             VkFormat format, VkImageLayout old_layout,
-                             VkImageLayout new_layout);
+void copy_buffer(const CoreGraphicsContext *ctx, const VkBuffer src_buffer,
+                 const VkBuffer dst_buffer, const VkDeviceSize size,
+                 SwapChainManager &swap_chain_manager, const VkQueue &graphics_queue);
 
 void copy_buffer_to_image(const VkDevice &device, const VkCommandPool &command_pool,
                           const VkQueue &graphics_queue, VkBuffer &buffer, VkImage &image,
                           const uint32_t width, const uint32_t height);
 
-VkImageView create_image_view(const VkDevice &device, const VkImage &image,
+VkImageView create_image_view(const CoreGraphicsContext *ctx, const VkImage &image,
                               const VkFormat &format);
-
-std::vector<StorageBuffer>
-create_instance_buffers(std::shared_ptr<CoreGraphicsContext> &ctx, const size_t capacity);

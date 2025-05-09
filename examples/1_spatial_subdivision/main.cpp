@@ -197,10 +197,9 @@ class Example1SpatialSubdivision : public Game {
 };
 
 int main() {
-    GameEngineConfig config{};
-    config.window_width = 800;
-    config.window_height = 800;
-    config.window_title = "1_collision_detection";
+    GameEngineConfig config{.window_config =
+                                WindowConfig{.dims = WindowDimensions(800, 800),
+                                             .title = "1_collision_detection"}};
 
     auto game = std::make_unique<Example1SpatialSubdivision>();
     auto game_engine = std::make_unique<GameEngine>(std::move(game), config);

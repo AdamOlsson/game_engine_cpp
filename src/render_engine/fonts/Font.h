@@ -1,25 +1,13 @@
 #pragma once
 
+#include "render_engine/SwapChainManager.h"
 #include "render_engine/Texture.h"
 #include "render_engine/resources/fonts/FontResource.h"
 #include <cstddef>
-#include <iostream>
 
 enum class UseFont {
     None,
     Default,
-};
-
-struct FontDescription {
-    std::string path;
-    uint8_t char_width_px;
-    uint8_t char_height_px;
-    // These are technically already automatically read in texture loading, should we
-    // do this differently?
-    uint32_t atlas_width_px;
-    uint32_t atlas_height_px;
-    unsigned int atlas_bytes_len;
-    std::vector<unsigned char> atlas_bytes;
 };
 
 class Font {
@@ -38,43 +26,20 @@ class Font {
         : char_width_px(0), char_height_px(0), font_atlas(nullptr), atlas_width_px(0),
           atlas_height_px(0), atlas_width(0), atlas_height(0) {}
 
-    Font(std::shared_ptr<CoreGraphicsContext> &g_ctx, const VkCommandPool &command_pool,
-         const VkQueue &graphics_queue, const FontResource *resource)
+    Font(std::shared_ptr<CoreGraphicsContext> &g_ctx,
+         SwapChainManager &swap_chain_manager, const VkQueue &graphics_queue,
+         const FontResource *resource)
+
         : char_width_px(resource->char_width_px),
           char_height_px(resource->char_height_px),
           atlas_width_px(resource->atlas_width_px),
           atlas_height_px(resource->atlas_height_px),
           atlas_width(atlas_width_px / char_width_px),
           atlas_height(atlas_height_px / char_height_px),
-          font_atlas(std::make_unique<Texture>(g_ctx, command_pool, graphics_queue,
-                                               resource->bytes(), resource->length())) {}
-
-    Font(std::shared_ptr<CoreGraphicsContext> &g_ctx, const VkCommandPool &command_pool,
-         const VkQueue &graphics_queue, const FontDescription &description)
-        : char_width_px(description.char_width_px),
-          char_height_px(description.char_height_px),
-          atlas_width_px(description.atlas_width_px),
-          atlas_height_px(description.atlas_height_px),
-          atlas_width(atlas_width_px / char_width_px),
-          atlas_height(atlas_height_px / char_height_px),
-          font_atlas(std::make_unique<Texture>(g_ctx, command_pool, graphics_queue,
-                                               description.path.c_str())) {}
+          font_atlas(Texture::unique_from_bytes(g_ctx, swap_chain_manager, graphics_queue,
+                                                resource->bytes(), resource->length())) {}
 
     ~Font() = default;
-
-    Font(Font &&other) noexcept
-        : char_width_px(other.char_width_px), char_height_px(other.char_height_px),
-          font_atlas(std::move(other.font_atlas)), atlas_width_px(other.atlas_width_px),
-          atlas_height_px(other.atlas_height_px), atlas_width(other.atlas_width),
-          atlas_height(other.atlas_height) {
-        other.char_width_px = 0;
-        other.char_height_px = 0;
-        other.atlas_width_px = 0;
-        other.atlas_height_px = 0;
-        other.atlas_width = 0;
-        other.atlas_height = 0;
-        other.font_atlas = nullptr;
-    };
 
     Font &operator=(Font &&other) {
         if (this != &other) {

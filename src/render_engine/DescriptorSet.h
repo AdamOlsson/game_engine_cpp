@@ -1,17 +1,33 @@
 #pragma once
 
 #include "render_engine/CoreGraphicsContext.h"
+#include "render_engine/DescriptorPool.h"
 #include "render_engine/Sampler.h"
 #include "render_engine/Texture.h"
 #include "render_engine/buffers/StorageBuffer.h"
 #include "render_engine/buffers/UniformBuffer.h"
 #include <cstddef>
+
 class DescriptorSet {
+    friend class DescriptorSetBuilder;
+
   private:
-    std::shared_ptr<CoreGraphicsContext> ctx;
-    size_t size;
-    size_t next;
-    std::vector<VkDescriptorSet> descriptor_sets;
+    std::shared_ptr<CoreGraphicsContext> m_ctx;
+    size_t m_capacity;
+    size_t m_next;
+    std::vector<VkDescriptorSet> m_descriptor_sets;
+
+    DescriptorSet(std::shared_ptr<CoreGraphicsContext> ctx,
+                  VkDescriptorSetLayout &descriptor_set_layout,
+                  DescriptorPool *descriptor_pool, const int capacity,
+                  std::vector<UniformBuffer> *uniform_buffers, Texture *texture,
+                  Sampler *sampler);
+
+    std::vector<StorageBuffer> create_instance_buffers();
+    std::vector<VkDescriptorSet> create_descriptor_sets(
+        VkDescriptorSetLayout &descriptor_set_layout, DescriptorPool *descriptor_pool,
+        std::vector<StorageBuffer> &storage_buffers,
+        std::vector<UniformBuffer> *uniform_buffers, Texture *texture, Sampler *sampler);
 
   public:
     // TODO: Make this private, would require some proper handling of updating the
@@ -19,38 +35,36 @@ class DescriptorSet {
     // buffer related to the current frame (get()) and current one (current()).
     std::vector<StorageBuffer> instance_buffers;
 
-    DescriptorSet();
-    DescriptorSet(std::shared_ptr<CoreGraphicsContext> ctx,
-                  VkDescriptorSetLayout &descriptor_set_layout,
-                  VkDescriptorPool &descriptor_pool, const int capacity,
-                  std::vector<UniformBuffer> *uniform_buffers, Texture *texture,
-                  Sampler *sampler);
+    DescriptorSet() = default;
 
-    /* Example:
-     *  DescriptorSet a;
-     *  DescriptorSet b = std::move(a);
-     */
-    DescriptorSet(DescriptorSet &&other) noexcept; // Move constructor
+    DescriptorSet(DescriptorSet &&other) noexcept = default;
+    DescriptorSet(const DescriptorSet &other) = delete;
+    DescriptorSet &operator=(DescriptorSet &&other) noexcept = default;
+    DescriptorSet &operator=(const DescriptorSet &other) = delete;
 
-    /* Example:
-     *  DescriptorSet a, b;
-     *  b = std::move(a);
-     */
-    DescriptorSet &operator=(DescriptorSet &&other) noexcept; // Move assignment
-
-    /* Example:
-     *  DescriptorSet a;
-     *  DescriptorSet b = a;
-     */
-    DescriptorSet(const DescriptorSet &other) = delete; // Copy constructor
-
-    /* Example:
-     *  DescriptorSet a, b;
-     *  b = a;
-     */
-    DescriptorSet &operator=(const DescriptorSet &other) = delete; // Copy assignement
-
-    ~DescriptorSet();
+    ~DescriptorSet() = default;
 
     const VkDescriptorSet get();
+};
+
+class DescriptorSetBuilder {
+  private:
+    VkDescriptorSetLayout m_descriptor_set_layout{VK_NULL_HANDLE};
+    DescriptorPool *m_descriptor_pool;
+    std::vector<UniformBuffer> *m_uniform_buffers;
+    Texture *m_texture{nullptr};
+    Sampler *m_sampler{nullptr};
+    size_t m_capacity{1};
+
+  public:
+    DescriptorSetBuilder &
+    set_descriptor_set_layout(VkDescriptorSetLayout &descriptor_set_layout);
+    DescriptorSetBuilder &set_descriptor_pool(DescriptorPool *descriptor_pool);
+    DescriptorSetBuilder &set_capacity(size_t capacity);
+    DescriptorSetBuilder &
+    set_uniform_buffers(std::vector<UniformBuffer> *uniform_buffers);
+    DescriptorSetBuilder &set_texture(Texture *texture);
+    DescriptorSetBuilder &set_sampler(Sampler *sampler);
+
+    DescriptorSet build(std::shared_ptr<CoreGraphicsContext> &ctx);
 };
