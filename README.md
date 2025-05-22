@@ -1,6 +1,14 @@
 # Description
 This project is a physics engine and render engine to support for my personal game development.
 
+# TODO
+- Adding new resources should be simple
+    - create header file automatically
+    - improve finding shaders, can we do this automatically?
+    - add shaders to to fetch_all_shaders()
+- Can we simplify Pipelines even more?
+- Wrap VkDescriptorSetLayout in a class to handle descruction
+
 ## Examples
 - [Example 0](examples/0_collision_detection/): Narrowphase collision detection using SAT
 - [Example 1](examples/1_spatial_subdivision/): Broadphase collision detection using Spatial Subdivision 

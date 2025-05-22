@@ -2,6 +2,7 @@
 #include "render_engine/DescriptorSetLayoutBuilder.h"
 #include "render_engine/RenderBody.h"
 #include "render_engine/SwapChainManager.h"
+#include "render_engine/UIPipeline.h"
 #include "render_engine/Window.h"
 #include "render_engine/WindowConfig.h"
 #include "render_engine/buffers/StorageBuffer.h"
@@ -60,6 +61,8 @@ RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_
             m_window, m_ctx, m_swap_chain_manager, *m_window_dimension_buffers,
             m_text_descriptor_set_layout, m_sampler, *m_font->font_atlas);
     }
+
+    m_ui_pipeline = std::make_unique<UIPipeline>(m_ctx, m_swap_chain_manager);
 }
 
 RenderEngine::~RenderEngine() {
@@ -144,6 +147,10 @@ void RenderEngine::render_text(const std::string &text, const glm::vec2 &locatio
 
     m_text_pipeline->render_text(m_current_render_pass.command_buffer.m_command_buffer,
                                  std::move(instance_data));
+}
+
+void RenderEngine::render_ui() {
+    m_ui_pipeline->render(m_current_render_pass.command_buffer.m_command_buffer);
 }
 
 void RenderEngine::wait_idle() { m_ctx->wait_idle(); }

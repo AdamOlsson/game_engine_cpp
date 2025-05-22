@@ -4,6 +4,7 @@
 #include "render_engine/RenderBody.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/TextPipeline.h"
+#include "render_engine/UIPipeline.h"
 #include "render_engine/Window.h"
 #include "render_engine/WindowConfig.h"
 #include "render_engine/fonts/Font.h"
@@ -31,6 +32,8 @@ class RenderEngine {
     std::unique_ptr<Font> m_font;
     VkDescriptorSetLayout m_text_descriptor_set_layout;
     std::unique_ptr<TextPipeline> m_text_pipeline;
+
+    std::unique_ptr<UIPipeline> m_ui_pipeline;
 
     struct {
         CommandBuffer command_buffer;
@@ -60,6 +63,8 @@ class RenderEngine {
     void render(const std::vector<std::reference_wrapper<const RenderBody>> &bodies);
 
     void render_text(const std::string &text, const glm::vec2 &location, const uint size);
+
+    void render_ui();
 
     void wait_idle();
 

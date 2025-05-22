@@ -2,7 +2,7 @@
 #include "render_engine/shapes/Vertex.h"
 #include "vulkan/vulkan_core.h"
 
-Pipeline::Pipeline(std::shared_ptr<CoreGraphicsContext> &ctx,
+Pipeline::Pipeline(std::shared_ptr<CoreGraphicsContext> ctx,
                    VkDescriptorSetLayout &descriptor_set_layout,
                    const VkShaderModule vertex_shader_module,
                    const VkShaderModule fragment_shader_module,

@@ -5,7 +5,7 @@
 #include <vector>
 class DescriptorSetLayoutBuilder {
   private:
-    std::vector<VkDescriptorSetLayoutBinding> bindings_;
+    std::vector<VkDescriptorSetLayoutBinding> m_bindings;
 
   public:
     DescriptorSetLayoutBuilder() = default;

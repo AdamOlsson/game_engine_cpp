@@ -21,7 +21,7 @@ class Pipeline {
     VkPipeline m_pipeline;
 
     Pipeline() = default;
-    Pipeline(std::shared_ptr<CoreGraphicsContext> &ctx,
+    Pipeline(std::shared_ptr<CoreGraphicsContext> ctx,
              VkDescriptorSetLayout &descriptor_set_layout,
              const VkShaderModule vertex_shader_module,
              const VkShaderModule fragment_shader_module,

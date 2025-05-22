@@ -43,6 +43,16 @@ assets = [
           "src/render_engine/resources/images/dog/dog.cpp",
           IMAGE_RESOURCE,
           "DogImage"),
+    Asset("ui_vertex.spv",
+          "src/render_engine/shaders",
+          "src/render_engine/resources/shaders/ui_vertex/ui_vertex.cpp",
+          SHADER_RESOURCE,
+          "UIVertex"),
+    Asset("ui_fragment.spv",
+          "src/render_engine/shaders",
+          "src/render_engine/resources/shaders/ui_fragment/ui_fragment.cpp",
+          SHADER_RESOURCE,
+          "UIFragment"),
 ]
 
 def xxd_to_include(filename, target_directory):
@@ -116,6 +126,11 @@ def compile_asset(asset):
                                 asset.resource_type, base_var_name, base_var_name)
     complete_file = file_template.format(header_name, asset.resource_name, file_content, create_resource_fn)
     
+    try:
+        os.makedirs(os.path.dirname(asset.outputfile))
+    except:
+        pass
+
     with open(asset.outputfile, "w") as f:
         f.write(complete_file)
 
