@@ -2,12 +2,21 @@
 This project is a physics engine and render engine to support for my personal game development.
 
 # TODO
+- UI elements
+    - How to build a UI layout 
+    - UI elements should be hoverable
+    - UI elements should be clickable
+    - UI elements should have text
 - Adding new resources should be simple
     - create header file automatically
     - improve finding shaders, can we do this automatically?
     - add shaders to to fetch_all_shaders()
 - Can we simplify Pipelines even more?
+    - It should be easy to create a new pipeline
 - Wrap VkDescriptorSetLayout in a class to handle descruction
+- Wrap VkShaderModule in a class to handle descruction
+- build the render engine and physics engine separately as with software agent
+- Implement a CPU regexp short
 
 ## Examples
 - [Example 0](examples/0_collision_detection/): Narrowphase collision detection using SAT
