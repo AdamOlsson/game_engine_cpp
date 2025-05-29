@@ -16,6 +16,8 @@ This project is a physics engine and render engine to support for my personal ga
 - Wrap VkDescriptorSetLayout in a class to handle descruction
 - Wrap VkShaderModule in a class to handle descruction
 - build the render engine and physics engine separately as with software agent
+- Fetch Vulkan during CMake generation of build files
+- build project in docker container as software agent at work
 - Implement a CPU regexp short
 
 ## Examples

@@ -1,38 +1,99 @@
 #include "UIPipeline.h"
+#include "render_engine/DescriptorSet.h"
 #include "render_engine/DescriptorSetLayoutBuilder.h"
 #include "render_engine/GeometryPipeline.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "render_engine/resources/shaders/ShaderResource.h"
 #include "vulkan/vulkan_core.h"
 
+// TODO:
+// 11. Pass window dimensions through uniform buffer
+// 15. Rename shaders to .glsl
+// 2. Implement on-hover mechanism (make new example for this)
+// 3. Implement on-click mechanism (use above created example)
+// 4. Implement text in UI elements
+// 4. Imlpement a nice way of constructing UI layouts
+
+struct UIElement {
+    glm::vec2 center;
+    glm::vec2 dimension;
+    float border_thickness;
+    float border_radius;
+};
+
 UIPipeline::UIPipeline(std::shared_ptr<CoreGraphicsContext> ctx,
-                       SwapChainManager &swap_chain_manager)
-    : m_ctx(ctx), m_descriptor_set_layout(create_descriptor_set_layout()),
-      m_pipeline(create_pipeline(swap_chain_manager)) {}
+                       SwapChainManager &swap_chain_manager,
+                       std::vector<UniformBuffer> &uniform_buffers)
+    : m_ctx(ctx),
+      // TODO: Is it not better to merge all these to a single Descriptor class
+      m_descriptor_set_layout(create_descriptor_set_layout()),
+      m_descriptor_pool(DescriptorPool(m_ctx, MAX_FRAMES_IN_FLIGHT)),
+      /*m_descriptor_set(create_descriptor_set(uniform_buffers)),*/
+      m_pipeline(create_pipeline(swap_chain_manager)) {
+    /*std::cout << "Creating descriptor set layout..." << std::endl;*/
+    /*m_descriptor_set_layout = create_descriptor_set_layout();*/
+
+    /*std::cout << "Creating descriptor pool..." << std::endl;*/
+    /*m_descriptor_pool = DescriptorPool(m_ctx, MAX_FRAMES_IN_FLIGHT);*/
+
+    /*std::cout << "Creating descriptor set..." << std::endl;*/
+    /*m_descriptor_set = create_descriptor_set(uniform_buffers);*/
+
+    /*std::cout << "Creating pipeline..." << std::endl;*/
+    /*m_pipeline = create_pipeline(swap_chain_manager);*/
+}
 
 UIPipeline::~UIPipeline() {
     vkDestroyDescriptorSetLayout(m_ctx->device, m_descriptor_set_layout, nullptr);
 }
 
-void record_draw_commands(const VkCommandBuffer &command_buffer,
-                          const VkPipeline &graphics_pipeline,
-                          const VkPipelineLayout &pipeline_layout) {
+void UIPipeline::render(const VkCommandBuffer &command_buffer) {
     const VkDeviceSize vertex_buffers_offset = 0;
-    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline);
+    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                      m_pipeline.m_pipeline);
+
+    UIElement ui_element{};
+    ui_element.center = glm::vec2(0.0, 300.0);
+    ui_element.dimension = glm::vec2(800.0, 200.0);
+    ui_element.border_thickness = 20.0;
+    ui_element.border_radius = 30.0;
+
+    vkCmdPushConstants(command_buffer, m_pipeline.m_pipeline_layout,
+                       VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
+                       sizeof(UIElement), &ui_element);
+
+    // TODO: This should be not be needed.
+    /*auto descriptor = m_descriptor_set.get();*/
+    /*vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,*/
+    /*                        m_pipeline.m_pipeline_layout, 0, 1, &descriptor, 0,
+     * nullptr);*/
+
     vkCmdDraw(command_buffer, 6, 1, 0, 0);
 }
 
-void UIPipeline::render(const VkCommandBuffer &command_buffer) {
-    record_draw_commands(command_buffer, m_pipeline.m_pipeline,
-                         m_pipeline.m_pipeline_layout);
+VkDescriptorSetLayout UIPipeline::create_descriptor_set_layout() {
+    return DescriptorSetLayoutBuilder()
+        .add(UniformBuffer::create_descriptor_set_layout_binding(0))
+        .build(m_ctx.get());
 }
 
-VkDescriptorSetLayout UIPipeline::create_descriptor_set_layout() {
-    return DescriptorSetLayoutBuilder().build(m_ctx.get());
+DescriptorSet
+UIPipeline::create_descriptor_set(std::vector<UniformBuffer> &uniform_buffers) {
+    // TODO: Refactor the descriptorset builder and class. I need to be able to create
+    // a descriptor set with any subset of resources. In this specific case I only want to
+    // use a uniform buffer and don't want to specify storage buffers, textures or
+    // samplers
+    return DescriptorSetBuilder()
+        // TODO: As layout, pool and capacity are mandatory we should pass them
+        // in the constructor
+        .set_capacity(MAX_FRAMES_IN_FLIGHT)
+        .set_descriptor_set_layout(m_descriptor_set_layout)
+        .set_descriptor_pool(&m_descriptor_pool)
+        .set_uniform_buffers(&uniform_buffers)
+        .build(m_ctx);
 }
 
 Pipeline UIPipeline::create_pipeline(SwapChainManager &swap_chain_manager) {
-
     auto &resoure_manager = ResourceManager::get_instance();
     auto vert_shader_code = resoure_manager.get_resource<ShaderResource>("UIVertex");
     auto frag_shader_code = resoure_manager.get_resource<ShaderResource>("UIFragment");
@@ -43,8 +104,18 @@ Pipeline UIPipeline::create_pipeline(SwapChainManager &swap_chain_manager) {
     VkShaderModule frag_shader_module = createShaderModule(
         m_ctx->device, frag_shader_code->bytes(), frag_shader_code->length());
 
-    Pipeline pipeline = Pipeline(m_ctx, m_descriptor_set_layout, vert_shader_module,
-                                 frag_shader_module, swap_chain_manager);
+    VkPushConstantRange push_constants_ui_element{};
+    push_constants_ui_element.stageFlags =
+        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    push_constants_ui_element.offset = 0;
+    push_constants_ui_element.size = sizeof(UIElement);
+
+    const std::vector<VkPushConstantRange> push_constant_ranges = {
+        push_constants_ui_element};
+
+    Pipeline pipeline =
+        Pipeline(m_ctx, m_descriptor_set_layout, push_constant_ranges, vert_shader_module,
+                 frag_shader_module, swap_chain_manager);
 
     vkDestroyShaderModule(m_ctx->device, vert_shader_module, nullptr);
     vkDestroyShaderModule(m_ctx->device, frag_shader_module, nullptr);

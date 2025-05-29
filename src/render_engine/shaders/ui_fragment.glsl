@@ -1,13 +1,12 @@
 #version 450
 
 layout(location = 0) in vec2 in_fragment;
-
-// #### Only here for development, in the fragment shader these values will be read
-// #### from the cpu, like push-constants
-layout(location = 1) in float in_border_thickness;
-layout(location = 2) in float in_border_radius;
-layout(location = 3) in vec2 in_dimension;
-// ######################
+layout(push_constant) uniform UIElement {
+    vec2 center; // Not used here
+    vec2 dimension;
+    float border_thickness;
+    float border_radius;
+} push_ui_element;
 
 layout(location = 0) out vec4 out_color;
 
@@ -27,12 +26,12 @@ float determine_alpha_for_edge(
 // ############# Main #############
 // ################################
 void main() {
-    const vec2 origo_centered_vertex = in_fragment - (in_dimension / 2.0);
+    const vec2 origo_centered_vertex = in_fragment - (push_ui_element.dimension / 2.0);
     const vec2 abs_fragment_position = abs(origo_centered_vertex);
    
     // corner of a origo centered ui element
-    const vec2 ui_element_corner = in_dimension / 2.0;
-    const vec2 rounded_corner_center_position =  ui_element_corner - in_border_radius;
+    const vec2 ui_element_corner = push_ui_element.dimension / 2.0;
+    const vec2 rounded_corner_center_position =  ui_element_corner - push_ui_element.border_radius;
     bool is_corner = 
         abs_fragment_position.x > rounded_corner_center_position.x &&
         abs_fragment_position.y > rounded_corner_center_position.y;
@@ -40,10 +39,10 @@ void main() {
     float alpha = 0.0;
     if (is_corner) {
         alpha = determine_alpha_for_corner(
-            abs_fragment_position, rounded_corner_center_position, in_border_thickness, in_border_radius);
+            abs_fragment_position, rounded_corner_center_position, push_ui_element.border_thickness, push_ui_element.border_radius);
     } else {
         alpha = determine_alpha_for_edge(
-            abs_fragment_position, in_dimension, in_border_thickness);
+            abs_fragment_position, push_ui_element.dimension, push_ui_element.border_thickness);
     }
     out_color = vec4(0.0, 0.6, 0.0, alpha);
 }

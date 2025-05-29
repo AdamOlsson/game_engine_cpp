@@ -62,7 +62,8 @@ RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_
             m_text_descriptor_set_layout, m_sampler, *m_font->font_atlas);
     }
 
-    m_ui_pipeline = std::make_unique<UIPipeline>(m_ctx, m_swap_chain_manager);
+    m_ui_pipeline = std::make_unique<UIPipeline>(m_ctx, m_swap_chain_manager,
+                                                 *m_window_dimension_buffers);
 }
 
 RenderEngine::~RenderEngine() {

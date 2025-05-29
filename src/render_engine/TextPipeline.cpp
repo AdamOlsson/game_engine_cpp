@@ -48,8 +48,14 @@ Pipeline TextPipeline::create_pipeline(VkDescriptorSetLayout &descriptor_set_lay
     VkShaderModule frag_shader_module = createShaderModule(
         m_ctx->device, frag_shader_code->bytes(), frag_shader_code->length());
 
-    Pipeline pipeline = Pipeline(m_ctx, descriptor_set_layout, vert_shader_module,
-                                 frag_shader_module, swap_chain_manager);
+    VkPushConstantRange push_constant_range{};
+    push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    push_constant_range.offset = 0;
+    push_constant_range.size = sizeof(uint32_t);
+
+    Pipeline pipeline =
+        Pipeline(m_ctx, descriptor_set_layout, {push_constant_range}, vert_shader_module,
+                 frag_shader_module, swap_chain_manager);
 
     vkDestroyShaderModule(m_ctx->device, vert_shader_module, nullptr);
     vkDestroyShaderModule(m_ctx->device, frag_shader_module, nullptr);

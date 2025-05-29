@@ -86,24 +86,26 @@ std::vector<VkDescriptorSet> DescriptorSet::create_descriptor_sets(
         uniform_buffer_descriptor_write.descriptorCount = 1;
         uniform_buffer_descriptor_write.pBufferInfo = &uniform_buffer_info;
 
-        VkDescriptorImageInfo image_info{};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = texture->view();
-        image_info.sampler = sampler->sampler;
+        std::vector<VkWriteDescriptorSet> descriptor_writes = {
+            storage_buffer_descriptor_write, uniform_buffer_descriptor_write};
 
-        VkWriteDescriptorSet texture_descriptor_write{};
-        texture_descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        texture_descriptor_write.dstSet = descriptor_sets[i];
-        texture_descriptor_write.dstBinding = 2;
-        texture_descriptor_write.dstArrayElement = 0;
-        texture_descriptor_write.descriptorType =
-            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        texture_descriptor_write.descriptorCount = 1;
-        texture_descriptor_write.pImageInfo = &image_info;
+        if (texture != nullptr && sampler != nullptr) {
+            VkDescriptorImageInfo image_info{};
+            image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            image_info.imageView = texture->view();
+            image_info.sampler = sampler->sampler;
 
-        std::array<VkWriteDescriptorSet, 3> descriptor_writes = {
-            storage_buffer_descriptor_write, uniform_buffer_descriptor_write,
-            texture_descriptor_write};
+            VkWriteDescriptorSet texture_descriptor_write{};
+            texture_descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            texture_descriptor_write.dstSet = descriptor_sets[i];
+            texture_descriptor_write.dstBinding = 2;
+            texture_descriptor_write.dstArrayElement = 0;
+            texture_descriptor_write.descriptorType =
+                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            texture_descriptor_write.descriptorCount = 1;
+            texture_descriptor_write.pImageInfo = &image_info;
+            descriptor_writes.push_back(texture_descriptor_write);
+        }
 
         vkUpdateDescriptorSets(m_ctx->device, descriptor_writes.size(),
                                descriptor_writes.data(), 0, nullptr);
