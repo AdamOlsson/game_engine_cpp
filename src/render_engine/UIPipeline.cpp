@@ -28,20 +28,8 @@ UIPipeline::UIPipeline(std::shared_ptr<CoreGraphicsContext> ctx,
       // TODO: Is it not better to merge all these to a single Descriptor class
       m_descriptor_set_layout(create_descriptor_set_layout()),
       m_descriptor_pool(DescriptorPool(m_ctx, MAX_FRAMES_IN_FLIGHT)),
-      /*m_descriptor_set(create_descriptor_set(uniform_buffers)),*/
-      m_pipeline(create_pipeline(swap_chain_manager)) {
-    /*std::cout << "Creating descriptor set layout..." << std::endl;*/
-    /*m_descriptor_set_layout = create_descriptor_set_layout();*/
-
-    /*std::cout << "Creating descriptor pool..." << std::endl;*/
-    /*m_descriptor_pool = DescriptorPool(m_ctx, MAX_FRAMES_IN_FLIGHT);*/
-
-    /*std::cout << "Creating descriptor set..." << std::endl;*/
-    /*m_descriptor_set = create_descriptor_set(uniform_buffers);*/
-
-    /*std::cout << "Creating pipeline..." << std::endl;*/
-    /*m_pipeline = create_pipeline(swap_chain_manager);*/
-}
+      m_descriptor_set(create_descriptor_set(uniform_buffers)),
+      m_pipeline(create_pipeline(swap_chain_manager)) {}
 
 UIPipeline::~UIPipeline() {
     vkDestroyDescriptorSetLayout(m_ctx->device, m_descriptor_set_layout, nullptr);
@@ -53,8 +41,8 @@ void UIPipeline::render(const VkCommandBuffer &command_buffer) {
                       m_pipeline.m_pipeline);
 
     UIElement ui_element{};
-    ui_element.center = glm::vec2(0.0, 300.0);
-    ui_element.dimension = glm::vec2(800.0, 200.0);
+    ui_element.center = glm::vec2(0.0, 100.0);
+    ui_element.dimension = glm::vec2(600.0, 200.0);
     ui_element.border_thickness = 20.0;
     ui_element.border_radius = 30.0;
 
@@ -62,11 +50,9 @@ void UIPipeline::render(const VkCommandBuffer &command_buffer) {
                        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
                        sizeof(UIElement), &ui_element);
 
-    // TODO: This should be not be needed.
-    /*auto descriptor = m_descriptor_set.get();*/
-    /*vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,*/
-    /*                        m_pipeline.m_pipeline_layout, 0, 1, &descriptor, 0,
-     * nullptr);*/
+    auto descriptor = m_descriptor_set.get(); // TODO: This should be not be needed.
+    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            m_pipeline.m_pipeline_layout, 0, 1, &descriptor, 0, nullptr);
 
     vkCmdDraw(command_buffer, 6, 1, 0, 0);
 }
@@ -79,13 +65,9 @@ VkDescriptorSetLayout UIPipeline::create_descriptor_set_layout() {
 
 DescriptorSet
 UIPipeline::create_descriptor_set(std::vector<UniformBuffer> &uniform_buffers) {
-    // TODO: Refactor the descriptorset builder and class. I need to be able to create
-    // a descriptor set with any subset of resources. In this specific case I only want to
-    // use a uniform buffer and don't want to specify storage buffers, textures or
-    // samplers
     return DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                 MAX_FRAMES_IN_FLIGHT)
-        .set_uniform_buffers(uniform_buffers)
+        .set_uniform_buffers(0, uniform_buffers)
         .build(m_ctx);
 }
 

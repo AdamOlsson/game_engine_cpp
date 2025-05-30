@@ -23,22 +23,32 @@ DescriptorSetBuilder::DescriptorSetBuilder(VkDescriptorSetLayout &descriptor_set
                                            DescriptorPool &descriptor_pool,
                                            size_t capacity)
     : m_descriptor_set_layout(&descriptor_set_layout),
-      m_descriptor_pool(&descriptor_pool), m_capacity(capacity) {}
+      m_descriptor_pool(&descriptor_pool), m_capacity(capacity),
+
+      m_uniform_buffer_binding(0), m_uniform_buffers(nullptr),
+      m_instance_buffer_binding(0), m_instance_buffers(nullptr), m_texture_binding(0),
+      m_texture(nullptr), m_sampler(nullptr) {}
 
 DescriptorSetBuilder &
-DescriptorSetBuilder::set_uniform_buffers(std::vector<UniformBuffer> &uniform_buffers) {
+DescriptorSetBuilder::set_uniform_buffers(size_t binding,
+                                          std::vector<UniformBuffer> &uniform_buffers) {
+    m_uniform_buffer_binding = binding;
     m_uniform_buffers = &uniform_buffers;
     return *this;
 }
 
 DescriptorSetBuilder &
-DescriptorSetBuilder::set_instance_buffers(std::vector<StorageBuffer> &instance_buffers) {
+DescriptorSetBuilder::set_instance_buffers(size_t binding,
+                                           std::vector<StorageBuffer> &instance_buffers) {
+    m_instance_buffer_binding = binding;
     m_instance_buffers = &instance_buffers;
     return *this;
 }
 
-DescriptorSetBuilder &DescriptorSetBuilder::set_texture_and_sampler(Texture &texture,
+DescriptorSetBuilder &DescriptorSetBuilder::set_texture_and_sampler(size_t binding,
+                                                                    Texture &texture,
                                                                     Sampler &sampler) {
+    m_texture_binding = binding;
     m_texture = &texture;
     m_sampler = &sampler;
     return *this;
@@ -63,26 +73,13 @@ std::vector<VkDescriptorSet> DescriptorSetBuilder::allocate_descriptor_sets(
     return descriptor_sets;
 }
 
-VkWriteDescriptorSet DescriptorSetBuilder::create_texture_and_sampler_descriptor_write(
-    const VkDescriptorSet &dst_descriptor_set, VkDescriptorImageInfo &image_info) {
-    VkWriteDescriptorSet texture_descriptor_write{};
-    texture_descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    texture_descriptor_write.dstSet = dst_descriptor_set;
-    texture_descriptor_write.dstBinding = 2;
-    texture_descriptor_write.dstArrayElement = 0;
-    texture_descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    texture_descriptor_write.descriptorCount = 1;
-    texture_descriptor_write.pImageInfo = &image_info;
-    return texture_descriptor_write;
-}
-
 VkWriteDescriptorSet DescriptorSetBuilder::create_instance_buffer_descriptor_write(
     const VkDescriptorSet &dst_descriptor_set,
     const VkDescriptorBufferInfo &buffer_info) {
     VkWriteDescriptorSet instance_buffer_descriptor_write{};
     instance_buffer_descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     instance_buffer_descriptor_write.dstSet = dst_descriptor_set;
-    instance_buffer_descriptor_write.dstBinding = 0;
+    instance_buffer_descriptor_write.dstBinding = m_instance_buffer_binding;
     instance_buffer_descriptor_write.dstArrayElement = 0;
     instance_buffer_descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     instance_buffer_descriptor_write.descriptorCount = 1;
@@ -98,12 +95,25 @@ VkWriteDescriptorSet DescriptorSetBuilder::create_uniform_buffer_descriptor_writ
     VkWriteDescriptorSet uniform_buffer_descriptor_write{};
     uniform_buffer_descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     uniform_buffer_descriptor_write.dstSet = dst_descriptor_set;
-    uniform_buffer_descriptor_write.dstBinding = 1;
+    uniform_buffer_descriptor_write.dstBinding = m_uniform_buffer_binding;
     uniform_buffer_descriptor_write.dstArrayElement = 0;
     uniform_buffer_descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     uniform_buffer_descriptor_write.descriptorCount = 1;
     uniform_buffer_descriptor_write.pBufferInfo = &buffer_info;
     return uniform_buffer_descriptor_write;
+}
+
+VkWriteDescriptorSet DescriptorSetBuilder::create_texture_and_sampler_descriptor_write(
+    const VkDescriptorSet &dst_descriptor_set, VkDescriptorImageInfo &image_info) {
+    VkWriteDescriptorSet texture_descriptor_write{};
+    texture_descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    texture_descriptor_write.dstSet = dst_descriptor_set;
+    texture_descriptor_write.dstBinding = m_texture_binding;
+    texture_descriptor_write.dstArrayElement = 0;
+    texture_descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    texture_descriptor_write.descriptorCount = 1;
+    texture_descriptor_write.pImageInfo = &image_info;
+    return texture_descriptor_write;
 }
 
 DescriptorSet DescriptorSetBuilder::build(std::shared_ptr<CoreGraphicsContext> &ctx) {
@@ -121,7 +131,7 @@ DescriptorSet DescriptorSetBuilder::build(std::shared_ptr<CoreGraphicsContext> &
         std::vector<VkWriteDescriptorSet> descriptor_writes = {};
 
         VkDescriptorBufferInfo instance_buffer_info{};
-        if (m_instance_buffers->size() > 0) {
+        if (m_instance_buffers != nullptr && m_instance_buffers->size() >= m_capacity) {
             instance_buffer_info.buffer = m_instance_buffers->at(i).buffer;
             instance_buffer_info.offset = 0;
             instance_buffer_info.range = m_instance_buffers->at(i).size;
@@ -131,7 +141,7 @@ DescriptorSet DescriptorSetBuilder::build(std::shared_ptr<CoreGraphicsContext> &
         }
 
         VkDescriptorBufferInfo uniform_buffer_info{};
-        if (m_uniform_buffers != nullptr) {
+        if (m_uniform_buffers != nullptr && m_uniform_buffers->size() >= m_capacity) {
             uniform_buffer_info.buffer = m_uniform_buffers->at(i).buffer;
             uniform_buffer_info.offset = 0;
             uniform_buffer_info.range = m_uniform_buffers->at(i).size;

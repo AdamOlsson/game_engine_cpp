@@ -30,8 +30,8 @@ GeometryPipeline::GeometryPipeline(Window &window,
     auto descriptor_set_builder =
         DescriptorSetBuilder(descriptor_set_layout, m_descriptor_pool,
                              MAX_FRAMES_IN_FLIGHT)
-            .set_uniform_buffers(uniform_buffers)
-            .set_texture_and_sampler(texture, sampler);
+            .set_uniform_buffers(1, uniform_buffers)
+            .set_texture_and_sampler(2, texture, sampler);
 
     m_circle_instance_buffers.emplace_back(m_ctx, 1024);
     m_circle_instance_buffers.emplace_back(m_ctx, 1024);
@@ -45,22 +45,22 @@ GeometryPipeline::GeometryPipeline(Window &window,
     m_hexagon_instance_buffers.emplace_back(m_ctx, 1024);
     m_hexagon_instance_buffers.emplace_back(m_ctx, 1024);
 
-    descriptor_set_builder.set_instance_buffers(m_circle_instance_buffers);
+    descriptor_set_builder.set_instance_buffers(0, m_circle_instance_buffers);
     DescriptorSet circle_descriptor_set = descriptor_set_builder.build(m_ctx);
     circle_geometry = std::make_unique<Geometry::Circle>(
         ctx, swap_chain_manager, std::move(circle_descriptor_set));
 
-    descriptor_set_builder.set_instance_buffers(m_triangle_instance_buffers);
+    descriptor_set_builder.set_instance_buffers(0, m_triangle_instance_buffers);
     DescriptorSet triangle_descriptor_set = descriptor_set_builder.build(m_ctx);
     triangle_geometry = std::make_unique<Geometry::Triangle>(
         ctx, swap_chain_manager, std::move(triangle_descriptor_set));
 
-    descriptor_set_builder.set_instance_buffers(m_rectangle_instance_buffers);
+    descriptor_set_builder.set_instance_buffers(0, m_rectangle_instance_buffers);
     DescriptorSet rectangle_descriptor_set = descriptor_set_builder.build(m_ctx);
     rectangle_geometry = std::make_unique<Geometry::Rectangle>(
         ctx, swap_chain_manager, std::move(rectangle_descriptor_set));
 
-    descriptor_set_builder.set_instance_buffers(m_hexagon_instance_buffers);
+    descriptor_set_builder.set_instance_buffers(0, m_hexagon_instance_buffers);
     DescriptorSet hexagon_descriptor_set = descriptor_set_builder.build(m_ctx);
     hexagon_geometry = std::make_unique<Geometry::Hexagon>(
         ctx, swap_chain_manager, std::move(hexagon_descriptor_set));

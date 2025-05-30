@@ -1,10 +1,9 @@
 #version 450
 
-// ##### From the cpu #####
-#define window_dimension vec2(800.0, 800.0)
-// ########################
-
 layout(location = 0) in vec3 not_used;
+layout(binding = 0) readonly uniform WindowDimensions {
+        vec2 dims;
+} window;
 layout(push_constant) uniform UIElement {
     vec2 center;
     vec2 dimension;
@@ -25,7 +24,7 @@ void main() {
     );
     const vec2 in_vertex = rectangle_corners[gl_VertexIndex];
     
-    const vec2 half_window_dimension = window_dimension / 2.0;
+    const vec2 half_window_dimension = window.dims / 2.0;
     const vec2 vertex_position = (in_vertex * push_ui_element.dimension) + push_ui_element.center;
     const vec2 vertex_viewport_position = vertex_position / half_window_dimension;
    

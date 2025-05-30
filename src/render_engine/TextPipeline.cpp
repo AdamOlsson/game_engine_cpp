@@ -28,9 +28,9 @@ TextPipeline::TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> 
     DescriptorSet descriptor_set =
         DescriptorSetBuilder(descriptor_set_layout, m_descriptor_pool,
                              MAX_FRAMES_IN_FLIGHT)
-            .set_uniform_buffers(uniform_buffers)
-            .set_instance_buffers(m_instance_buffers)
-            .set_texture_and_sampler(texture, sampler)
+            .set_instance_buffers(0, m_instance_buffers)
+            .set_uniform_buffers(1, uniform_buffers)
+            .set_texture_and_sampler(2, texture, sampler)
             .build(m_ctx);
 
     geometry = std::make_unique<Geometry::Rectangle>(ctx, swap_chain_manager,
