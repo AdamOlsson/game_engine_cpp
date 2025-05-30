@@ -135,6 +135,23 @@ set_target_properties(3_collision_scenarios
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 
+file(GLOB_RECURSE DEV_SOURCES "examples/4_user_interface/*.cpp")
+add_executable(4_user_interface ${DEV_SOURCES})
+target_include_directories(4_user_interface
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(4_user_interface
+    PRIVATE
+        game_engine
+)
+# Output directory for binaries
+set_target_properties(4_user_interface
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+
 # Tests configuration
 enable_testing()
 file(GLOB_RECURSE TEST_SOURCES "tests/*.cpp")

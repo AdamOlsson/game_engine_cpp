@@ -27,14 +27,14 @@ UIPipeline::UIPipeline(std::shared_ptr<CoreGraphicsContext> ctx,
       m_descriptor_set_layout(create_descriptor_set_layout()),
       m_descriptor_pool(DescriptorPool(m_ctx, MAX_FRAMES_IN_FLIGHT)),
       m_descriptor_set(create_descriptor_set(uniform_buffers)),
-      m_pipeline(create_pipeline(swap_chain_manager)) {}
+      m_pipeline(create_pipeline(swap_chain_manager)),
+      m_vertex_buffer(m_ctx, {{0.0, 0.0, 0.0}}, swap_chain_manager) {}
 
 UIPipeline::~UIPipeline() {
     vkDestroyDescriptorSetLayout(m_ctx->device, m_descriptor_set_layout, nullptr);
 }
 
 void UIPipeline::render(const VkCommandBuffer &command_buffer) {
-    const VkDeviceSize vertex_buffers_offset = 0;
     vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                       m_pipeline.m_pipeline);
 
@@ -47,6 +47,10 @@ void UIPipeline::render(const VkCommandBuffer &command_buffer) {
     vkCmdPushConstants(command_buffer, m_pipeline.m_pipeline_layout,
                        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
                        sizeof(UIElement), &ui_element);
+
+    const VkDeviceSize vertex_buffers_offset = 0;
+    vkCmdBindVertexBuffers(command_buffer, 0, 1, &m_vertex_buffer.buffer,
+                           &vertex_buffers_offset);
 
     auto descriptor = m_descriptor_set.get(); // TODO: This should be not be needed.
     vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,

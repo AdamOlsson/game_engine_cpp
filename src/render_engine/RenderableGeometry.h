@@ -20,8 +20,6 @@ std::vector<uint16_t> generate_circle_indices(int num_points);
 /// at most as long as GraphicsPipeline.
 class RenderableGeometry {
   private:
-    /*size_t capacity;*/
-    /*size_t buffer_idx;*/
     ShapeTypeEncoding shape_type_encoding;
     VertexBuffer vertex_buffer;
     IndexBuffer index_buffer;
@@ -48,8 +46,6 @@ class RenderableGeometry {
                              const VkPipeline &graphics_pipeline,
                              const VkPipelineLayout &pipeline_layout,
                              const size_t num_instances);
-
-    /*void update_instance_buffer(std::vector<StorageBufferObject> &&instance_data);*/
 };
 
 // TODO: Should we make this constexpr?
