@@ -25,6 +25,9 @@ class TextPipeline {
     Pipeline m_pipeline;
     DescriptorPool m_descriptor_pool;
 
+    size_t m_buffer_idx;
+    std::vector<StorageBuffer> m_instance_buffers;
+
     std::unique_ptr<Geometry::Rectangle> geometry;
 
     const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};

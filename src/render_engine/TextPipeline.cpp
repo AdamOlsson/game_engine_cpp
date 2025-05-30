@@ -18,18 +18,21 @@ TextPipeline::TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> 
                            std::vector<UniformBuffer> &uniform_buffers,
                            VkDescriptorSetLayout &descriptor_set_layout, Sampler &sampler,
                            Texture &texture)
-    : m_ctx(ctx), m_pipeline(create_pipeline(descriptor_set_layout, swap_chain_manager)),
+    : m_ctx(ctx), m_buffer_idx(0),
+      m_pipeline(create_pipeline(descriptor_set_layout, swap_chain_manager)),
       m_descriptor_pool(DescriptorPool(m_ctx, MAX_FRAMES_IN_FLIGHT)) {
 
-    auto descriptor_set_builder = DescriptorSetBuilder()
-                                      .set_descriptor_set_layout(descriptor_set_layout)
-                                      .set_descriptor_pool(&m_descriptor_pool)
-                                      .set_capacity(MAX_FRAMES_IN_FLIGHT)
-                                      .set_uniform_buffers(&uniform_buffers)
-                                      .set_texture(&texture)
-                                      .set_sampler(&sampler);
+    m_instance_buffers.emplace_back(m_ctx, 1024);
+    m_instance_buffers.emplace_back(m_ctx, 1024);
 
-    auto descriptor_set = descriptor_set_builder.build(m_ctx);
+    DescriptorSet descriptor_set =
+        DescriptorSetBuilder(descriptor_set_layout, m_descriptor_pool,
+                             MAX_FRAMES_IN_FLIGHT)
+            .set_uniform_buffers(uniform_buffers)
+            .set_instance_buffers(m_instance_buffers)
+            .set_texture_and_sampler(texture, sampler)
+            .build(m_ctx);
+
     geometry = std::make_unique<Geometry::Rectangle>(ctx, swap_chain_manager,
                                                      std::move(descriptor_set));
 }
@@ -64,11 +67,13 @@ Pipeline TextPipeline::create_pipeline(VkDescriptorSetLayout &descriptor_set_lay
 
 void TextPipeline::render_text(const VkCommandBuffer &command_buffer,
                                std::vector<StorageBufferObject> &&instance_data) {
-    geometry->update_instance_buffer(
+    m_instance_buffers[m_buffer_idx].update_storage_buffer(
         std::forward<std::vector<StorageBufferObject>>(instance_data));
     const auto num_instances = instance_data.size();
     if (num_instances > 0) {
         geometry->record_draw_command(command_buffer, m_pipeline.m_pipeline,
                                       m_pipeline.m_pipeline_layout, num_instances);
     }
+
+    m_buffer_idx = (m_buffer_idx + 1) % MAX_FRAMES_IN_FLIGHT;
 }

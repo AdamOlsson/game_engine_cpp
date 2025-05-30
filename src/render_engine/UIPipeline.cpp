@@ -83,13 +83,9 @@ UIPipeline::create_descriptor_set(std::vector<UniformBuffer> &uniform_buffers) {
     // a descriptor set with any subset of resources. In this specific case I only want to
     // use a uniform buffer and don't want to specify storage buffers, textures or
     // samplers
-    return DescriptorSetBuilder()
-        // TODO: As layout, pool and capacity are mandatory we should pass them
-        // in the constructor
-        .set_capacity(MAX_FRAMES_IN_FLIGHT)
-        .set_descriptor_set_layout(m_descriptor_set_layout)
-        .set_descriptor_pool(&m_descriptor_pool)
-        .set_uniform_buffers(&uniform_buffers)
+    return DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
+                                MAX_FRAMES_IN_FLIGHT)
+        .set_uniform_buffers(uniform_buffers)
         .build(m_ctx);
 }
 

@@ -44,6 +44,16 @@ class GeometryPipeline {
     Pipeline m_pipeline;
     DescriptorPool m_descriptor_pool;
 
+    size_t m_circle_buffer_idx;
+    size_t m_triangle_buffer_idx;
+    size_t m_rectangle_buffer_idx;
+    size_t m_hexagon_buffer_idx;
+
+    std::vector<StorageBuffer> m_circle_instance_buffers;
+    std::vector<StorageBuffer> m_triangle_instance_buffers;
+    std::vector<StorageBuffer> m_rectangle_instance_buffers;
+    std::vector<StorageBuffer> m_hexagon_instance_buffers;
+
     std::unique_ptr<Geometry::Circle> circle_geometry;
     std::unique_ptr<Geometry::Triangle> triangle_geometry;
     std::unique_ptr<Geometry::Rectangle> rectangle_geometry;
