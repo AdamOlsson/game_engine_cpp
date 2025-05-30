@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# Compile vertex shader
-/Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc ./src/render_engine/shaders/shader.vert -o ./src/render_engine/shaders/vert.spv
-VERT_COMPILE_STATUS=$?
+# Compile geometry vertex shader
+/Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc -fshader-stage=vert ./src/render_engine/shaders/geometry_vertex.glsl -o ./src/render_engine/shaders/geometry_vertex.spv
+GEOMETRY_VERT_COMPILE_STATUS=$?
 
 # Compile geometry fragment shader
-/Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc ./src/render_engine/shaders/geometry.frag -o ./src/render_engine/shaders/geometry_fragment.spv
+/Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc -fshader-stage=frag ./src/render_engine/shaders/geometry_fragment.glsl -o ./src/render_engine/shaders/geometry_fragment.spv
 GEOMETRY_FRAG_COMPILE_STATUS=$?
 
 # Compile text fragment shader
-/Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc ./src/render_engine/shaders/text.frag -o ./src/render_engine/shaders/text_fragment.spv
+/Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc -fshader-stage=frag ./src/render_engine/shaders/text_fragment.glsl -o ./src/render_engine/shaders/text_fragment.spv
 TEXT_FRAG_COMPILE_STATUS=$?
 
 # Compile ui shaders
@@ -22,7 +22,7 @@ UI_FRAG_COMPILE_STATUS=$?
 
 
 # Check compilation status
-if [ $VERT_COMPILE_STATUS -ne 0 ] ||
+if [ $GEOMETRY_VERT_COMPILE_STATUS -ne 0 ] ||
    [ $GEOMETRY_FRAG_COMPILE_STATUS -ne 0 ] ||
    [ $UI_VERT_COMPILE_STATUS -ne 0 ] ||
    [ $UI_FRAG_COMPILE_STATUS -ne 0 ] ||

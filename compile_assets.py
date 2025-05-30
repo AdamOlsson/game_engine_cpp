@@ -27,11 +27,11 @@ assets = [
           "src/render_engine/resources/shaders/geometry_fragment/geometry_fragment.cpp",
           SHADER_RESOURCE,
           "GeometryFragment"),
-    Asset("vert.spv",
+    Asset("geometry_vertex.spv",
           "src/render_engine/shaders",
-          "src/render_engine/resources/shaders/vert/vert.cpp",
+          "src/render_engine/resources/shaders/geometry_vertex/geometry_vertex.cpp",
           SHADER_RESOURCE,
-          "Vert"),
+          "GeometryVertex"),
     Asset("default.png",
           "assets/fonts",
           "src/render_engine/resources/fonts/default/default.cpp",
@@ -63,8 +63,11 @@ def xxd_to_include(filename, target_directory):
     original_directory = os.getcwd()
         
     if target_directory:
-        os.chdir(target_directory)
-
+        try: 
+            os.chdir(target_directory)
+        except:
+            print(f"Directory {target_directory} does not exist")
+            exit(1)
     try:
         result = subprocess.run(['xxd', '-i', filename], 
                                 capture_output=True, 

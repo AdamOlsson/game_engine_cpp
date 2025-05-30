@@ -7,8 +7,6 @@
 #include "vulkan/vulkan_core.h"
 
 // TODO:
-// 11. Pass window dimensions through uniform buffer
-// 15. Rename shaders to .glsl
 // 2. Implement on-hover mechanism (make new example for this)
 // 3. Implement on-click mechanism (use above created example)
 // 4. Implement text in UI elements

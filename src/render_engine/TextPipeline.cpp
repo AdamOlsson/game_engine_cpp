@@ -42,7 +42,8 @@ TextPipeline::~TextPipeline() {}
 Pipeline TextPipeline::create_pipeline(VkDescriptorSetLayout &descriptor_set_layout,
                                        SwapChainManager &swap_chain_manager) {
     auto &resoure_manager = ResourceManager::get_instance();
-    auto vert_shader_code = resoure_manager.get_resource<ShaderResource>("Vert");
+    auto vert_shader_code =
+        resoure_manager.get_resource<ShaderResource>("GeometryVertex");
     auto frag_shader_code = resoure_manager.get_resource<ShaderResource>("TextFragment");
 
     VkShaderModule vert_shader_module = createShaderModule(
