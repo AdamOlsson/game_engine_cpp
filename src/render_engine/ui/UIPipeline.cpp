@@ -1,4 +1,4 @@
-#include "ui/UIPipeline.h"
+#include "UIPipeline.h"
 #include "render_engine/DescriptorSet.h"
 #include "render_engine/DescriptorSetLayoutBuilder.h"
 #include "render_engine/GeometryPipeline.h"
@@ -11,7 +11,6 @@
 // 3. Implement on-click mechanism (use above created example)
 // 4. Implement text in UI elements
 // 4. Imlpement a nice way of constructing UI layouts
-
 using namespace ui;
 
 UIPipeline::UIPipeline(std::shared_ptr<CoreGraphicsContext> ctx,

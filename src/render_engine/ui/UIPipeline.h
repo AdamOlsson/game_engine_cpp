@@ -9,6 +9,16 @@
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
+namespace ui {
+struct ElementProperties {
+    glm::vec2 center;
+    glm::vec2 dimension;
+    struct {
+        float radius;
+        float thickness;
+    } border;
+};
+
 class UIPipeline {
   private:
     std::shared_ptr<CoreGraphicsContext> m_ctx;
@@ -30,5 +40,7 @@ class UIPipeline {
                std::vector<UniformBuffer> &uniform_buffers);
     ~UIPipeline();
 
-    void render(const VkCommandBuffer &command_buffer);
+    void render(const VkCommandBuffer &command_buffer,
+                const ElementProperties &ui_element);
 };
+} // namespace ui

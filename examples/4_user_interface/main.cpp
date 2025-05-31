@@ -18,7 +18,13 @@ class UserInterfaceExample : public Game {
             return;
         }
 
-        render_engine.render_ui();
+        ui::ElementProperties ui_element{};
+        ui_element.center = glm::vec2(0.0, 100.0);
+        ui_element.dimension = glm::vec2(600.0, 200.0);
+        ui_element.border.thickness = 20.0;
+        ui_element.border.radius = 30.0;
+
+        render_engine.render_ui(ui_element);
 
         success = render_engine.end_render_pass();
         if (!success) {
