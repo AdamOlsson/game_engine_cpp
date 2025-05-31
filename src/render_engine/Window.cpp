@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <tuple>
 
-Window::Window(const WindowConfig &config) {
+Window::Window(const WindowConfig &config) : m_config(config) {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
@@ -55,7 +55,8 @@ std::tuple<uint32_t, uint32_t> Window::dimensions() {
 void Window::cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
     auto w = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
     if (w->mouse_event_cb.has_value()) {
-        auto p = ViewportPoint(xpos, ypos);
+        WindowDimensions dims = w->m_config.dims;
+        auto p = ViewportPoint(xpos - dims.width / 2.0f, ypos - dims.height / 2.0f);
         w->mouse_event_cb.value()(MouseEvent::CURSOR_MOVED, p);
     }
 }

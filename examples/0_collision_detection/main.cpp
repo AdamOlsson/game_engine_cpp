@@ -334,6 +334,16 @@ int main() {
     std::cout << "  T          - to toggle between shapes" << std::endl;
     std::cout << "  R          - hold to rotate selected shape (while holding Left Mouse)"
               << std::endl;
+
+    std::cout << std::endl << "=====================================" << std::endl;
+    std::cout << "============== WARNING ==============" << std::endl;
+    std::cout << "=====================================" << std::endl;
+    std::cout << "The click position calculations are wrong because I changed them to"
+              << std::endl;
+    std::cout << "align with the GPU coordinate system and I could not be bothered to"
+              << std::endl;
+    std::cout << "fix this example." << std::endl;
+    std::cout << "=====================================" << std::endl;
     std::cout << std::endl << std::endl;
 
     game_engine->run();

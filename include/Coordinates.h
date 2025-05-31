@@ -1,5 +1,6 @@
 #pragma once
 #include "glm/glm.hpp"
+#include <ostream>
 struct ViewportPoint;
 struct WorldPoint;
 
@@ -26,3 +27,8 @@ struct ViewportPoint : public glm::vec2 {
 
     WorldPoint to_world_point(const glm::vec2 &camera_center);
 };
+
+inline std::ostream &operator<<(std::ostream &os, const ViewportPoint &vp) {
+    os << "ViewportPoint(" << vp.x << ", " << vp.y << ")";
+    return os;
+}

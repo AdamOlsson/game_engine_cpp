@@ -1,12 +1,19 @@
+#include "Coordinates.h"
 #include "Game.h"
 #include "GameEngine.h"
 #include "render_engine/WindowConfig.h"
 #include "render_engine/fonts/Font.h"
+#include "render_engine/ui/UI.h"
 #include <memory>
 
 class UserInterfaceExample : public Game {
+  private:
+    ui::UI m_ui;
+    ViewportPoint m_cursor_position;
+
   public:
-    UserInterfaceExample() {};
+    UserInterfaceExample()
+        : m_ui(ui::Layout()), m_cursor_position(ViewportPoint(-10.0f, -10.0f)) {};
 
     ~UserInterfaceExample() {};
 
@@ -18,13 +25,9 @@ class UserInterfaceExample : public Game {
             return;
         }
 
-        ui::ElementProperties ui_element{};
-        ui_element.center = glm::vec2(0.0, 100.0);
-        ui_element.dimension = glm::vec2(600.0, 200.0);
-        ui_element.border.thickness = 20.0;
-        ui_element.border.radius = 30.0;
-
-        render_engine.render_ui(ui_element);
+        /*std::cout << m_cursor_position << std::endl;*/
+        auto ui_state = m_ui.update_state_using_cursor(m_cursor_position);
+        render_engine.render_ui(ui_state);
 
         success = render_engine.end_render_pass();
         if (!success) {
@@ -32,7 +35,10 @@ class UserInterfaceExample : public Game {
         }
     };
 
-    void setup(RenderEngine &render_engine) override {}
+    void setup(RenderEngine &render_engine) override {
+        render_engine.register_mouse_event_callback(
+            [this](MouseEvent e, ViewportPoint &p) { this->m_cursor_position = p; });
+    }
 };
 
 int main() {

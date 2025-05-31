@@ -7,6 +7,7 @@
 #include "render_engine/Window.h"
 #include "render_engine/WindowConfig.h"
 #include "render_engine/fonts/Font.h"
+#include "render_engine/ui/State.h"
 #include "render_engine/ui/UIPipeline.h"
 #include "vulkan/vulkan_core.h"
 #include <GLFW/glfw3.h>
@@ -64,7 +65,7 @@ class RenderEngine {
 
     void render_text(const std::string &text, const glm::vec2 &location, const uint size);
 
-    void render_ui(const ui::ElementProperties &ui_element);
+    void render_ui(const ui::State &state);
 
     void wait_idle();
 

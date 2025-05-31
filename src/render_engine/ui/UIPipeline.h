@@ -6,18 +6,11 @@
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/buffers/UniformBuffer.h"
 #include "render_engine/buffers/VertexBuffer.h"
+#include "render_engine/ui/ElementProperties.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
 namespace ui {
-struct ElementProperties {
-    glm::vec2 center;
-    glm::vec2 dimension;
-    struct {
-        float radius;
-        float thickness;
-    } border;
-};
 
 class UIPipeline {
   private:
@@ -41,6 +34,6 @@ class UIPipeline {
     ~UIPipeline();
 
     void render(const VkCommandBuffer &command_buffer,
-                const ElementProperties &ui_element);
+                const ui::ElementProperties &ui_element);
 };
 } // namespace ui

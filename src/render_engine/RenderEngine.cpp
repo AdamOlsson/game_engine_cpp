@@ -150,9 +150,9 @@ void RenderEngine::render_text(const std::string &text, const glm::vec2 &locatio
                                  std::move(instance_data));
 }
 
-void RenderEngine::render_ui(const ui::ElementProperties &ui_element) {
+void RenderEngine::render_ui(const ui::State &state) {
     m_ui_pipeline->render(m_current_render_pass.command_buffer.m_command_buffer,
-                          ui_element);
+                          state.properties);
 }
 
 void RenderEngine::wait_idle() { m_ctx->wait_idle(); }

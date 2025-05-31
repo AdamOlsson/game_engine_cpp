@@ -34,6 +34,9 @@ using KeyboardEventCallbackFn = std::function<void(KeyEvent &, KeyState &)>;
  * @brief Wrapper class for GLFW window api.
  */
 class Window {
+  private:
+    WindowConfig m_config;
+
   public:
     GLFWwindow *window;
     Window(const WindowConfig &window_dims);
