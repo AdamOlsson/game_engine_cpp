@@ -1,12 +1,10 @@
 #include "UI.h"
+#include "render_engine/colors.h"
 #include "render_engine/ui/ElementProperties.h"
 
 using namespace ui;
 
-constexpr glm::vec3 GREEN = glm::vec3(0.0, 0.8, 0.0);
-constexpr glm::vec3 RED = glm::vec3(8.0, 0.0, 0.0);
-
-UI::UI(Layout &&layout) {}
+UI::UI(ElementProperties &element) : m_element(std::move(element)) {}
 
 bool is_inside(const ViewportPoint &cursor_pos, const ElementProperties &element) {
     auto local_point = cursor_pos - (element.center - element.dimension / 2.0f);
@@ -16,18 +14,13 @@ bool is_inside(const ViewportPoint &cursor_pos, const ElementProperties &element
 }
 
 State UI::update_state_using_cursor(const ViewportPoint &cursor_pos) {
-    ui::ElementProperties ui_element{};
-    ui_element.center = glm::vec2(0.0, 100.0);
-    ui_element.dimension = glm::vec2(600.0, 200.0);
-    ui_element.border.color = GREEN;
-    ui_element.border.thickness = 10.0;
-    ui_element.border.radius = 30.0;
+    m_element.border.color = colors::GREEN;
 
-    if (is_inside(cursor_pos, ui_element)) {
-        ui_element.border.color = RED;
+    if (is_inside(cursor_pos, m_element)) {
+        m_element.border.color = colors::RED;
     }
 
-    return State{.properties = ui_element};
+    return State{.properties = m_element};
 }
 
 /*State UI::update_state_using_keypress() {}*/

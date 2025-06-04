@@ -35,7 +35,5 @@ void main() {
     // Let the GPU interpolate between (0,0) and (push_ui_element.dimension)
     out_ui_element_vertex = ui_element_corner + positive_quad_offset;
 
-
-
     gl_Position = vec4(vertex_viewport_position, 0.0, 1.0);
 }

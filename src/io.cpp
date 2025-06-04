@@ -9,6 +9,11 @@ std::string vec_to_string(const glm::vec3 &vec) {
     return oss.str();
 }
 
+std::ostream &operator<<(std::ostream &os, const glm::vec2 &vec) {
+    os << "glm::vec2(" << vec.x << ", " << vec.y << ")";
+    return os;
+}
+
 std::ostream &operator<<(std::ostream &os, const glm::vec3 &vec) {
     os << "glm::vec3(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
     return os;
