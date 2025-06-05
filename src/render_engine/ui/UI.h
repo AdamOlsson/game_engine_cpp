@@ -11,16 +11,17 @@ namespace ui {
 
 class UI {
   private:
-  public:
-    // TODO: This is wrong but only here for testing purposes
-    ui::ElementProperties m_element;
+    std::vector<std::unique_ptr<ui::ElementProperties>> m_elements;
 
+  public:
     UI() = default;
-    UI(ElementProperties &element);
+    UI(std::vector<std::unique_ptr<ui::ElementProperties>> elements);
     ~UI() = default;
 
+    // TODO: These can probably be merged to a single function and use event based args
     ui::State update_state_using_cursor(const ViewportPoint &cursor_pos);
     ui::State update_state_using_keypress();
+    ui::State click_event(const ViewportPoint &cursor_pos);
 };
 
 }; // namespace ui

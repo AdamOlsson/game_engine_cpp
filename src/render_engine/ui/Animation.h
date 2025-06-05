@@ -67,7 +67,7 @@ class AnimationBuilder {
         return *this;
     }
 
-    template <typename T> Animation<T> build(T *property, T &&target_value) {
+    template <typename T> Animation<T> build(T *property, const T &&target_value) {
         return Animation<T>(AnimateValue<T>(property, target_value), m_animation_curve,
                             m_duration_in_frames, m_on_animation_completed);
     }

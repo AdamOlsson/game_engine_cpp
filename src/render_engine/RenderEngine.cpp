@@ -151,8 +151,10 @@ void RenderEngine::render_text(const std::string &text, const glm::vec2 &locatio
 }
 
 void RenderEngine::render_ui(const ui::State &state) {
-    m_ui_pipeline->render(m_current_render_pass.command_buffer.m_command_buffer,
-                          state.properties);
+    for (auto property : state.properties) {
+        m_ui_pipeline->render(m_current_render_pass.command_buffer.m_command_buffer,
+                              *property);
+    }
 }
 
 void RenderEngine::wait_idle() { m_ctx->wait_idle(); }
