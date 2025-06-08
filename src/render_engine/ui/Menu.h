@@ -22,22 +22,30 @@ class Menu {
     };
 
     Button m_button;
-
-  public:
     std::vector<std::optional<Menu>> submenus;
     std::vector<std::optional<Button>> buttons;
+
+  public:
     size_t num_items;
 
+    /**
+     * @brief Creates a menu which serves as the top level menu
+     *
+     * @since C++20
+     */
     Menu() = default;
 
-    // TODO: How can we make sure there always is a return item on the submenu? Should we
-    // make sure there is a return item?
-    /*Menu(std::vector<std::optional<Menu>> submenus,*/
-    /*     std::vector<std::optional<Button>> buttons);*/
-
-    Menu(ElementProperties &&properties, std::vector<std::optional<Menu>> submenus,
-         std::vector<std::optional<Button>> buttons);
-
+    /**
+     * @brief Creates a menu which serves as a submenu
+     *
+     * The menu can contain buttons or additional menus. The menu items handle
+     * logic for transitioning up and down menus.
+     *
+     * @param button The button which, once pressed, will display the submenu
+     *
+     * @see Button
+     * @since C++20
+     */
     Menu(Button &button);
     Menu(Button &&button);
 

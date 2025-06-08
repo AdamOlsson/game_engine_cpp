@@ -1,5 +1,6 @@
 #pragma once
 
+#include "render_engine/ui/Animation.h"
 #include "render_engine/ui/ElementProperties.h"
 #include <functional>
 
@@ -58,5 +59,11 @@ class Button {
         this->on_leave = on_leave;
         return *this;
     }
+
+    template <typename T>
+    Button &add_animation(
+        std::function<ui::Animation<T>(ui::ElementProperties &)> animation_builder) {
+        // TODO: Some kind of animation storage like the ECS
+    };
 };
 } // namespace ui
