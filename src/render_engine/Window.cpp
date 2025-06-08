@@ -91,7 +91,9 @@ void Window::mouse_button_callback(GLFWwindow *window, int button, int action, i
     if (w->mouse_event_cb.has_value()) {
         double xpos, ypos;
         glfwGetCursorPos(window, &xpos, &ypos);
-        auto p = ViewportPoint(xpos, ypos);
+        WindowDimensions dims = w->m_config.dims;
+        auto p = ViewportPoint(xpos - dims.width / 2.0f, ypos - dims.height / 2.0f);
+
         w->mouse_event_cb.value()(m_event, p);
     }
 }

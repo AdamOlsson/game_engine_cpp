@@ -5,10 +5,13 @@
 #include "render_engine/colors.h"
 #include "render_engine/fonts/Font.h"
 #include "render_engine/ui/Animation.h"
-#include "render_engine/ui/AnimationCurve.h"
 #include "render_engine/ui/ElementProperties.h"
 #include "render_engine/ui/UI.h"
 #include <memory>
+
+void on_click_callback(ui::Button &self) { std::cout << "Click!" << std::endl; }
+void on_enter_callback(ui::Button &self) { self.properties.border.color = colors::RED; }
+void on_leave_callback(ui::Button &self) { self.properties.border.color = colors::GREEN; }
 
 class UserInterfaceExample : public Game {
   private:
@@ -18,34 +21,43 @@ class UserInterfaceExample : public Game {
     ui::Animation<glm::vec2> m_position_animation;
 
   public:
-    UserInterfaceExample() : m_cursor_position(ViewportPoint(-10.0f, -10.0f)) {
-        auto element1 = std::make_unique<ui::ElementProperties>();
-        element1->center = glm::vec2(0.0, -150.0);
-        element1->dimension = glm::vec2(600.0, 200.0);
-        element1->border.color = colors::GREEN;
-        element1->border.thickness = 10.0;
-        element1->border.radius = 30.0;
-
-        auto element2 = std::make_unique<ui::ElementProperties>();
-        element2->center = glm::vec2(0.0, 150.0);
-        element2->dimension = glm::vec2(600.0, 200.0);
-        element2->border.color = colors::GREEN;
-        element2->border.thickness = 10.0;
-        element2->border.radius = 30.0;
-
-        m_position_animation = ui::AnimationBuilder()
-                                   .set_on_completed(ui::OnAnimationCompleted::STOP)
-                                   .set_animation_curve(ui::AnimationCurve::cos)
-                                   .set_duration(300)
-                                   .build(&element2->center, glm::vec2(50.0f, 150.0f));
-
-        std::vector<std::unique_ptr<ui::ElementProperties>> elements;
-        elements.push_back(std::move(element1));
-        elements.push_back(std::move(element2));
+    UserInterfaceExample() : m_cursor_position(ViewportPoint(-10000.0f, -10000.0f)) {
+        ui::Menu menu =
+            ui::Menu()
+                .add_button(ui::Button(ui::ElementProperties{
+                                           .center = glm::vec2(0.0, -250.0),
+                                           .dimension = glm::vec2(400.0, 100.0),
+                                           .border.color = colors::GREEN,
+                                           .border.thickness = 5.0,
+                                           .border.radius = 15.0,
+                                       })
+                                .set_on_enter(on_enter_callback)
+                                .set_on_leave(on_leave_callback)
+                                .set_on_click(on_click_callback))
+                .add_button(ui::Button(ui::ElementProperties{
+                                           .center = glm::vec2(0.0, -140.0),
+                                           .dimension = glm::vec2(400.0, 100.0),
+                                           .border.color = colors::GREEN,
+                                           .border.thickness = 5.0,
+                                           .border.radius = 15.0,
+                                       })
+                                .set_on_enter(on_enter_callback)
+                                .set_on_leave(on_leave_callback)
+                                .set_on_click(on_click_callback))
+                .add_submenu(ui::Menu(ui::Button(ui::ElementProperties{
+                                                     .center = glm::vec2(0.0, -30.0),
+                                                     .dimension = glm::vec2(400.0, 100.0),
+                                                     .border.color = colors::GREEN,
+                                                     .border.thickness = 5.0,
+                                                     .border.radius = 15.0,
+                                                 })
+                                          .set_on_enter(on_enter_callback)
+                                          .set_on_leave(on_leave_callback)
+                                          .set_on_click(on_click_callback)));
 
         // TODO: I am not sure I like the UI have to be a unique pointer. However, lets
         // see how things develop once we know how to create the layout
-        m_ui = std::make_unique<ui::UI>(std::move(elements));
+        m_ui = std::make_unique<ui::UI>(menu);
     };
 
     ~UserInterfaceExample() {};
@@ -58,9 +70,10 @@ class UserInterfaceExample : public Game {
             return;
         }
 
-        auto ui_state = m_ui->update_state_using_cursor(m_cursor_position);
+        auto ui_state = m_ui->get_state();
 
-        m_position_animation.increment();
+        // Note: does not work for now
+        /*m_position_animation.increment();*/
 
         render_engine.render_ui(ui_state);
 
@@ -72,7 +85,9 @@ class UserInterfaceExample : public Game {
 
     void setup(RenderEngine &render_engine) override {
         render_engine.register_mouse_event_callback(
-            [this](MouseEvent e, ViewportPoint &p) { this->m_cursor_position = p; });
+            [this](MouseEvent e, ViewportPoint &p) {
+                this->m_ui->update_state_from_mouse_event(e, p);
+            });
     }
 };
 

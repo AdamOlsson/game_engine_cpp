@@ -20,5 +20,8 @@ struct ElementProperties {
         float thickness;
         float radius;
     } border;
+
+    /*ElementProperties() = default;*/
+    /*ElementProperties(const ElementProperties &other) = default;*/
 };
 } // namespace ui
