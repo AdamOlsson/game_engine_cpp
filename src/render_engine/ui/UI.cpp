@@ -1,6 +1,7 @@
 #include "UI.h"
 #include "render_engine/ui/Button.h"
 #include "render_engine/ui/ElementProperties.h"
+#include <iostream>
 #include <stdexcept>
 
 using namespace ui;

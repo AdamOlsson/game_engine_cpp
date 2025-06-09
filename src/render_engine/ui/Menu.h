@@ -31,11 +31,12 @@ class Menu {
     std::vector<std::optional<Button>> buttons;
 
     void setup_navigation_callback();
-    std::vector<Button *> create_button_vector();
-    std::vector<ElementProperties *> create_properties_vector();
     void update_vectors();
 
   public:
+    std::vector<ElementProperties *> create_properties_vector();
+    std::vector<Button *> create_button_vector();
+
     std::vector<Button *> button_vector;
     std::vector<ElementProperties *> properties_vector;
     /**
