@@ -21,10 +21,7 @@ class UserInterfaceExample : public Game {
 
   public:
     UserInterfaceExample() {
-
-        // TODO: I am not sure I like the UI have to be a unique pointer. However, lets
-        // see how things develop once we know how to create the layout
-        m_ui = std::make_unique<ui::UI>(
+        ui::Menu menu =
             ui::Menu()
                 .add_button(ui::Button(ui::ElementProperties{
                                            .center = glm::vec2(0.0, -250.0),
@@ -46,47 +43,20 @@ class UserInterfaceExample : public Game {
                                 .set_on_enter(on_enter_callback)
                                 .set_on_leave(on_leave_callback)
                                 .set_on_click(on_click_callback))
-                .add_submenu(
-                    ui::Menu(ui::Button(ui::ElementProperties{
-                                            .center = glm::vec2(0.0, -30.0),
-                                            .dimension = glm::vec2(400.0, 100.0),
-                                            .border.color = colors::BLUE,
-                                            .border.thickness = 5.0,
-                                            .border.radius = 15.0,
-                                        })
-                                 .set_on_enter(on_enter_callback)
-                                 .set_on_leave(on_leave_callback)
-                                 .set_on_click(on_click_callback),
-                             ui::Button(ui::ElementProperties{
-                                            .center = glm::vec2(0.0, -30.0),
-                                            .dimension = glm::vec2(400.0, 100.0),
-                                            .border.color = colors::BLUE,
-                                            .border.thickness = 5.0,
-                                            .border.radius = 0.0,
-                                        })
-                                 .set_on_enter(on_enter_callback)
-                                 .set_on_leave(on_leave_callback)
-                                 .set_on_click(on_click_callback))
-                        .add_button(ui::Button(ui::ElementProperties{
-                                                   .center = glm::vec2(0.0, -250.0),
-                                                   .dimension = glm::vec2(400.0, 100.0),
-                                                   .border.color = colors::GREEN,
-                                                   .border.thickness = 5.0,
-                                                   .border.radius = 0.0,
-                                               })
-                                        .set_on_enter(on_enter_callback)
-                                        .set_on_leave(on_leave_callback)
-                                        .set_on_click(on_click_callback))
-                        .add_button(ui::Button(ui::ElementProperties{
-                                                   .center = glm::vec2(0.0, -140.0),
-                                                   .dimension = glm::vec2(400.0, 100.0),
-                                                   .border.color = colors::GREEN,
-                                                   .border.thickness = 5.0,
-                                                   .border.radius = 0.0,
-                                               })
-                                        .set_on_enter(on_enter_callback)
-                                        .set_on_leave(on_leave_callback)
-                                        .set_on_click(on_click_callback))));
+                .add_submenu(ui::Menu(ui::Button(ui::ElementProperties{
+                                                     .center = glm::vec2(0.0, -30.0),
+                                                     .dimension = glm::vec2(400.0, 100.0),
+                                                     .border.color = colors::GREEN,
+                                                     .border.thickness = 5.0,
+                                                     .border.radius = 15.0,
+                                                 })
+                                          .set_on_enter(on_enter_callback)
+                                          .set_on_leave(on_leave_callback)
+                                          .set_on_click(on_click_callback)));
+
+        // TODO: I am not sure I like the UI have to be a unique pointer. However, lets
+        // see how things develop once we know how to create the layout
+        m_ui = std::make_unique<ui::UI>(menu);
     };
 
     ~UserInterfaceExample() {};

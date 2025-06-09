@@ -1,16 +1,46 @@
 #include "UI.h"
 #include "render_engine/ui/Button.h"
 #include "render_engine/ui/ElementProperties.h"
+#include <stdexcept>
 
 using namespace ui;
 
+// TODO:
+// - Animations (start and stop animations based on the event callbacks)
+//      - Idle animations
+//      - event animations
+// - Button text
+// - Output text fields
+// - Improve resolution of rounded corners
+// - Improve resolution of text
+// - Performance window
+
 UI::UI(Menu &menu)
-    : m_menu(menu), m_current_menu_state(ui::State()), m_menu_idx_trace({}),
-      m_current_menu(&m_menu) {
-    m_current_menu_state.properties = m_current_menu->properties_iterator();
+    : m_menu(std::move(menu)), m_current_menu_state(ui::State()),
+      m_menu_trace({&m_menu}) {
+    m_last_menu = get_last_menu();
+    m_current_menu_state.properties = m_last_menu->properties_vector;
+    m_menu.link(this);
 }
 
 [[nodiscard]] ui::State &UI::get_state() { return m_current_menu_state; }
+
+void UI::push_new_menu(Menu *new_menu) {
+    m_menu_trace.push_back(new_menu);
+    m_last_menu = get_last_menu();
+}
+
+void UI::pop_menu() {
+    m_menu_trace.pop_back();
+    m_last_menu = get_last_menu();
+}
+
+Menu *UI::get_last_menu() {
+    if (m_menu_trace.size() <= 0) {
+        std::runtime_error("UI: Invalid call to get_last_menu()");
+    }
+    return m_menu_trace[m_menu_trace.size() - 1];
+}
 
 ui::State &UI::update_state_from_mouse_event(const MouseEvent mouse_event,
                                              const ViewportPoint &cursor_pos) {
@@ -32,7 +62,8 @@ ui::State &UI::update_state_using_click_event(const MouseEvent mouse_event,
                                               const ViewportPoint &cursor_pos) {
     // Find the item the cursor is over
     Button *target_button = nullptr;
-    for (auto &button : m_current_menu->button_iterator()) {
+    Menu *current_menu = m_last_menu;
+    for (auto &button : current_menu->button_vector) {
         // TODO: We should also filter for z-axis here, eventually
         if (is_inside(cursor_pos, button->properties)) {
             target_button = button;
@@ -43,9 +74,6 @@ ui::State &UI::update_state_using_click_event(const MouseEvent mouse_event,
         return m_current_menu_state;
     }
 
-    // CONTINUE: During click we need to distinguish between a submenu button and a
-    // regular button as the submenu button should also update which items are visible.
-    // Once i've done that I need to figure out how to go back up the menu tree
     switch (mouse_event) {
     case MouseEvent::CURSOR_MOVED:
         break;
@@ -63,31 +91,13 @@ ui::State &UI::update_state_using_click_event(const MouseEvent mouse_event,
         break;
     };
 
-    /*for (auto i = 0; i < m_current_menu->num_items; i++) {*/
-    /*    if (m_current_menu->submenus[i].has_value()) {*/
-    /*        bool is_click_inside_submenu = false;*/
-    /*        // TODO: The main questions now is how should I keep track of what submenu*/
-    /*        // should be displayed on screen and also keeping track of the full layout*/
-    /*        if (is_click_inside_submenu) {*/
-    /*            m_menu_idx_trace.push_back(i);*/
-    /*            m_current_menu = &m_current_menu->submenus[i].value();*/
-    /*            // TODO: Return a state create from the submenu*/
-    /*        }*/
-    /*    } else if (m_current_menu->buttons[i].has_value()) {*/
-    /*        Button &button = m_current_menu->buttons[i].value();*/
-    /*        bool is_click_inside_button = false;*/
-    /*        if (is_inside(cursor_pos, button.properties)) {*/
-    /*            button.on_click(button);*/
-    /*        }*/
-    /*    }*/
-    /*}*/
-
-    m_current_menu_state.properties = m_current_menu->properties_iterator();
+    m_current_menu_state.properties = m_last_menu->properties_vector;
     return m_current_menu_state;
 }
 
 State &UI::update_state_using_cursor(const ViewportPoint &cursor_pos) {
-    for (auto &button : m_current_menu->button_iterator()) {
+    Menu *current_menu = m_last_menu;
+    for (auto &button : current_menu->button_vector) {
         bool cursor_is_inside = is_inside(cursor_pos, button->properties);
         if (cursor_is_inside) {
             switch (button->cursor_state) {
@@ -121,7 +131,7 @@ State &UI::update_state_using_cursor(const ViewportPoint &cursor_pos) {
         }
     }
 
-    m_current_menu_state.properties = m_current_menu->properties_iterator();
+    m_current_menu_state.properties = m_last_menu->properties_vector;
     return m_current_menu_state;
 }
 

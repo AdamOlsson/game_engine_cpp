@@ -5,6 +5,8 @@
 
 namespace ui {
 
+class UI;
+
 class Menu {
   private:
     class MenuButtonIterator {
@@ -21,19 +23,33 @@ class Menu {
                                std::vector<std::optional<Button>> &buttons);
     };
 
-    Button m_button;
+    ui::UI *m_ui;
+    ui::Button m_button;
+    std::optional<ui::Button> m_back_button;
+
     std::vector<std::optional<Menu>> submenus;
     std::vector<std::optional<Button>> buttons;
 
-  public:
-    size_t num_items;
+    void setup_navigation_callback();
+    std::vector<Button *> create_button_vector();
+    std::vector<ElementProperties *> create_properties_vector();
+    void update_vectors();
 
+  public:
+    std::vector<Button *> button_vector;
+    std::vector<ElementProperties *> properties_vector;
     /**
      * @brief Creates a menu which serves as the top level menu
      *
      * @since C++20
      */
     Menu() = default;
+
+    Menu(Menu &&other) = default;
+    Menu(const Menu &other) = default;
+
+    Menu &operator=(Menu &&other) = default;
+    Menu &operator=(const Menu &other) = default;
 
     /**
      * @brief Creates a menu which serves as a submenu
@@ -46,16 +62,24 @@ class Menu {
      * @see Button
      * @since C++20
      */
-    Menu(Button &button);
-    Menu(Button &&button);
+    Menu(Button &button, Button &back_button);
+    Menu(Button &&button, Button &&back_button);
 
     Menu &add_button(Button &&button);
     Menu &add_button(Button &button);
     Menu &add_submenu(Menu &&menu);
     Menu &add_submenu(Menu &menu);
 
-    std::vector<Button *> button_iterator();
-    std::vector<ElementProperties *> properties_iterator();
+    /**
+     * @brief Links submenus to which UI they belong to.
+     *
+     * In order to handle menu nagivation, the UI constructor needs to call this function.
+     *
+     * @param ui The UI for which the menu belong to
+     *
+     * @since C++20
+     */
+    void link(UI *ui);
 };
 
 } // namespace ui

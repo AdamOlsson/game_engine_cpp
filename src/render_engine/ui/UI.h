@@ -10,12 +10,14 @@ class UI {
   private:
     ui::Menu m_menu;
     ui::State m_current_menu_state;
-    ui::Menu *m_current_menu;
-
-    std::vector<size_t> m_menu_idx_trace;
+    std::vector<ui::Menu *> m_menu_trace;
+    Menu *m_last_menu;
 
     bool is_inside(const ViewportPoint &cursor_pos, const ElementProperties &element);
 
+    Menu *get_last_menu();
+
+    // TODO: These can probably be merged to a single function and use event based args
     ui::State &update_state_using_cursor(const ViewportPoint &cursor_pos);
     ui::State &update_state_using_keypress();
     ui::State &update_state_using_click_event(const MouseEvent mouse_event,
@@ -29,7 +31,9 @@ class UI {
     ui::State &get_state();
     ui::State &update_state_from_mouse_event(const MouseEvent mouse_event,
                                              const ViewportPoint &cursor_pos);
-    // TODO: These can probably be merged to a single function and use event based args
+
+    void push_new_menu(Menu *new_menu);
+    void pop_menu();
 };
 
 }; // namespace ui
