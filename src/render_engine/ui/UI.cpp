@@ -7,7 +7,7 @@
 using namespace ui;
 
 // TODO:
-// - Animations (start and stop animations based on the event callbacks)
+// - CONTINUE: Animations (start and stop animations based on the event callbacks)
 //      - Idle animations
 //      - event animations
 // - Button text
@@ -20,8 +20,8 @@ UI::UI(Menu &menu)
     : m_menu(std::move(menu)), m_current_menu_state(ui::State()),
       m_menu_trace({&m_menu}) {
     m_last_menu = get_last_menu();
-    m_current_menu_state.properties = m_last_menu->properties_vector;
     m_menu.link(this);
+    m_current_menu_state.properties = m_last_menu->properties_vector;
 }
 
 [[nodiscard]] ui::State &UI::get_state() { return m_current_menu_state; }
