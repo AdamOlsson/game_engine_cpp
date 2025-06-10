@@ -1,7 +1,6 @@
 #include "UI.h"
 #include "render_engine/ui/Button.h"
 #include "render_engine/ui/ElementProperties.h"
-#include <iostream>
 #include <stdexcept>
 
 using namespace ui;
@@ -14,6 +13,7 @@ using namespace ui;
 // - Output text fields
 // - Improve resolution of rounded corners
 // - Improve resolution of text
+// - UI showcase example
 // - Performance window
 
 UI::UI(Menu &menu)

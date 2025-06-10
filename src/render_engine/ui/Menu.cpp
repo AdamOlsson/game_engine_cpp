@@ -46,16 +46,16 @@ void Menu::setup_navigation_callback() {
 }
 
 Menu &Menu::add_button(Button &&button) {
-    submenus.push_back(std::nullopt);
-    buttons.push_back(std::move(button));
+    m_submenus.push_back(std::nullopt);
+    m_buttons.push_back(std::move(button));
     return *this;
 }
 
 Menu &Menu::add_button(Button &button) { return add_button(std::move(button)); }
 
 Menu &Menu::add_submenu(Menu &&submenu) {
-    submenus.push_back(std::move(submenu));
-    buttons.push_back(std::nullopt);
+    m_submenus.push_back(std::move(submenu));
+    m_buttons.push_back(std::nullopt);
     return *this;
 }
 
@@ -70,7 +70,7 @@ void Menu::link(UI *ui) {
     // for the end user
     m_ui = ui;
     setup_navigation_callback();
-    for (auto &menu : submenus) {
+    for (auto &menu : m_submenus) {
         if (menu.has_value()) {
             menu->link(ui);
         }
@@ -79,7 +79,7 @@ void Menu::link(UI *ui) {
 }
 
 std::vector<Button *> Menu::create_button_vector() {
-    auto button_vec = MenuButtonIterator(submenus, buttons).items;
+    auto button_vec = MenuButtonIterator(m_submenus, m_buttons).items;
     if (m_back_button.has_value()) {
         button_vec.push_back(&m_back_button.value());
     }
@@ -87,7 +87,7 @@ std::vector<Button *> Menu::create_button_vector() {
 }
 
 std::vector<ElementProperties *> Menu::create_properties_vector() {
-    auto prop_vec = MenuPropertiesIterator(submenus, buttons).items;
+    auto prop_vec = MenuPropertiesIterator(m_submenus, m_buttons).items;
     if (m_back_button.has_value()) {
         prop_vec.push_back(&m_back_button.value().properties);
     }
