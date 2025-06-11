@@ -35,7 +35,15 @@ class UserInterfaceExample : public Game {
                                        })
                                 .set_on_enter(on_enter_callback)
                                 .set_on_leave(on_leave_callback)
-                                .set_on_click(on_click_callback))
+                                .set_on_click(on_click_callback)
+                                .add_animation([](ui::Button &self) {
+                                    return ui::AnimationBuilder()
+                                        .set_duration(300)
+                                        .set_animation_curve(ui::AnimationCurve::cos)
+                                        .set_on_completed(ui::OnAnimationCompleted::LOOP)
+                                        .build(&self.properties.center,
+                                               glm::vec2(100.0f, -250.0f));
+                                }))
                 .add_button(ui::Button(ui::ElementProperties{
                                            .center = glm::vec2(0.0, -140.0),
                                            .dimension = glm::vec2(400.0, 100.0),

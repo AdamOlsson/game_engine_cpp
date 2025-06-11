@@ -42,6 +42,8 @@ template <typename T> class Animation {
     }
     /*void decrement() { *m_current_value -= m_delta; }*/
     void reset() { *m_current_value = m_original_value; }
+
+    void adjust_pointer(T *new_property) { m_current_value = new_property; }
 };
 
 class AnimationBuilder {
@@ -51,6 +53,9 @@ class AnimationBuilder {
     uint32_t m_duration_in_frames = 1;
 
   public:
+    AnimationBuilder() = default;
+    ~AnimationBuilder() = default;
+
     AnimationBuilder &set_on_completed(OnAnimationCompleted on_completed) {
         m_on_animation_completed = on_completed;
         return *this;

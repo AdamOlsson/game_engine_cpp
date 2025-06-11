@@ -9,6 +9,7 @@ using namespace ui;
 // - CONTINUE: Animations (start and stop animations based on the event callbacks)
 //      - Idle animations
 //      - event animations
+//      - finish Animation implementation
 // - Button text
 // - Output text fields
 // - Document UI, Menu and Button API. (Code examples in docs are wrong in Menu API)
@@ -25,7 +26,13 @@ UI::UI(Menu &menu)
     m_current_menu_state.properties = m_last_menu->properties_vector;
 }
 
-[[nodiscard]] ui::State &UI::get_state() { return m_current_menu_state; }
+[[nodiscard]] ui::State &UI::get_state() {
+    for (auto &button : m_last_menu->button_vector) {
+        button->increment_animations();
+    }
+
+    return m_current_menu_state;
+}
 
 void UI::push_new_menu(Menu *new_menu) {
     m_menu_trace.push_back(new_menu);
