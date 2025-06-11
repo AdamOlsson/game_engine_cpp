@@ -4,9 +4,9 @@
 #include "render_engine/WindowConfig.h"
 #include "render_engine/colors.h"
 #include "render_engine/fonts/Font.h"
-#include "render_engine/ui/Animation.h"
 #include "render_engine/ui/ElementProperties.h"
 #include "render_engine/ui/UI.h"
+#include "render_engine/ui/animations/Animation.h"
 #include <memory>
 
 void on_click_callback(ui::Button &self) { std::cout << "Click!" << std::endl; }
@@ -24,6 +24,16 @@ class UserInterfaceExample : public Game {
 
         // TODO: I am not sure I like the UI have to be a unique pointer. However, lets
         // see how things develop once we know how to create the layout
+        // CONTINUE:
+        //  - Create color animation
+        //  - Run the color animation on hover using step()
+        //  - Run the color animation on enter/leave using play()/stop() (auto play
+        //  animations)
+        //  - Run color animation and move animation of different properties at the same
+        //  time
+        //  - Finish animation implementation
+        //      - Implement step_backward()
+        //      - Implement propers actions based OnAnimationCompleted variable
         m_ui = std::make_unique<ui::UI>(
             ui::Menu()
                 .add_button(ui::Button(ui::ElementProperties{
@@ -36,14 +46,18 @@ class UserInterfaceExample : public Game {
                                 .set_on_enter(on_enter_callback)
                                 .set_on_leave(on_leave_callback)
                                 .set_on_click(on_click_callback)
-                                .add_animation([](ui::Button &self) {
-                                    return ui::AnimationBuilder()
-                                        .set_duration(300)
-                                        .set_animation_curve(ui::AnimationCurve::cos)
-                                        .set_on_completed(ui::OnAnimationCompleted::LOOP)
-                                        .build(&self.properties.center,
-                                               glm::vec2(100.0f, -250.0f));
-                                }))
+                                .set_on_hover([](ui::Button &self) {})
+                                .add_animation("animation1",
+                                               [](ui::ElementProperties &props) {
+                                                   return ui::AnimationBuilder()
+                                                       .set_duration(300)
+                                                       .set_animation_curve(
+                                                           ui::AnimationCurve::cos)
+                                                       .set_on_completed(
+                                                           ui::OnAnimationCompleted::LOOP)
+                                                       .build(&props.center,
+                                                              glm::vec2(100.0f, -250.0));
+                                               }))
                 .add_button(ui::Button(ui::ElementProperties{
                                            .center = glm::vec2(0.0, -140.0),
                                            .dimension = glm::vec2(400.0, 100.0),

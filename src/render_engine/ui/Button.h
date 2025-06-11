@@ -1,7 +1,8 @@
 #pragma once
 
-#include "render_engine/ui/Animation.h"
 #include "render_engine/ui/ElementProperties.h"
+#include "render_engine/ui/animations/Animation.h"
+#include "render_engine/ui/animations/AnimationStore.h"
 #include <functional>
 
 namespace ui {
@@ -9,28 +10,24 @@ namespace ui {
 enum class ButtonClickState { Pressed, Unpressed };
 enum class ButtonCursorState { Outside, Enter, Hover, Leave };
 
+template <typename> struct extract_animation_type;
+template <typename T> struct extract_animation_type<ui::Animation<T>> {
+    using type = T;
+};
+
 // Note that every time a Button instance is moved or copied, all animations on that
 // Button are rebuilt. This has to do with that the new button instances animations
-// contains pointers to the old button instances element properties. To properly handles
-// this we rebuild the animation so that the new button instances animations point to the
-// new buttons instances element properties. This behavior can lead to perfomance loss if
-// done in the main loop of the game.
+// contains pointers to the old button instances element properties. To properly
+// handles this we rebuild the animation so that the new button instances animations
+// point to the new buttons instances element properties. This behavior can lead to
+// perfomance loss if done in the main loop of the game.
 class Button {
-  private:
-    std::vector<std::function<ui::Animation<glm::vec2>(ui::Button &)>>
-        m_animation_builders;
-    void build_animations() {
-        for (auto &builder : m_animation_builders) {
-            animations.push_back(builder(*this));
-        }
-    }
-
   public:
     ElementProperties properties;
     ButtonClickState click_state;
     ButtonCursorState cursor_state;
 
-    std::vector<Animation<glm::vec2>> animations;
+    AnimationStore animations;
 
     std::function<void(ui::Button &)> on_click;
     std::function<void(ui::Button &)> on_unclick;
@@ -57,42 +54,36 @@ class Button {
           cursor_state(other.cursor_state), on_click(other.on_click),
           on_unclick(other.on_unclick), on_hover(other.on_hover),
           on_enter(other.on_enter), on_leave(other.on_leave),
-          m_animation_builders(other.m_animation_builders) {
-        build_animations();
-    }
+          animations(other.animations) {}
 
     Button &operator=(const Button &other) {
         if (this != &other) {
             properties = other.properties;
             click_state = other.click_state;
             cursor_state = other.cursor_state;
-            animations = {}; // Animations are rebuilt
+            animations = other.animations;
             on_click = other.on_click;
             on_unclick = other.on_unclick;
             on_hover = other.on_hover;
             on_enter = other.on_enter;
             on_leave = other.on_leave;
-
-            m_animation_builders = other.m_animation_builders;
-
-            build_animations();
+            animations.rebuild(properties);
         }
         return *this;
     }
 
     Button(Button &&other) noexcept
         : properties(other.properties), click_state(std::move(other.click_state)),
-          cursor_state(std::move(other.cursor_state)), animations({}),
-          on_click(std::move(other.on_click)), on_unclick(std::move(other.on_unclick)),
-          on_hover(std::move(other.on_hover)), on_enter(std::move(other.on_enter)),
-          on_leave(std::move(other.on_leave)),
-          m_animation_builders(std::move(other.m_animation_builders)) {
+          cursor_state(std::move(other.cursor_state)),
+          animations(std::move(other.animations)), on_click(std::move(other.on_click)),
+          on_unclick(std::move(other.on_unclick)), on_hover(std::move(other.on_hover)),
+          on_enter(std::move(other.on_enter)), on_leave(std::move(other.on_leave)) {
         other.on_click = [](ui::Button &b) {};
         other.on_unclick = [](ui::Button &b) {};
         other.on_hover = [](ui::Button &b) {};
         other.on_enter = [](ui::Button &b) {};
         other.on_leave = [](ui::Button &b) {};
-        build_animations();
+        animations.rebuild(properties);
     }
 
     Button &operator=(Button &&other) noexcept {
@@ -100,22 +91,19 @@ class Button {
             properties = std::move(other.properties);
             click_state = std::move(other.click_state);
             cursor_state = std::move(other.cursor_state);
-            animations = {}; // Animations are rebuilt
+            animations = std::move(other.animations);
             on_click = std::move(other.on_click);
             on_unclick = std::move(other.on_unclick);
             on_hover = std::move(other.on_hover);
             on_enter = std::move(other.on_enter);
             on_leave = std::move(other.on_leave);
-
-            m_animation_builders = std::move(other.m_animation_builders);
+            animations.rebuild(properties);
 
             other.on_click = [](ui::Button &b) {};
             other.on_unclick = [](ui::Button &b) {};
             other.on_hover = [](ui::Button &b) {};
             other.on_enter = [](ui::Button &b) {};
             other.on_leave = [](ui::Button &b) {};
-
-            build_animations();
         }
         return *this;
     }
@@ -145,17 +133,15 @@ class Button {
         return *this;
     }
 
-    Button &add_animation(
-        std::function<ui::Animation<glm::vec2>(ui::Button &)> animation_builder) {
-        animations.push_back(animation_builder(*this));
-        m_animation_builders.push_back(animation_builder);
-        return *this;
-    };
+    template <typename AnimationBuilderFn>
+    Button &add_animation(std::string &&id, AnimationBuilderFn animation_builder) {
+        using AnimationType =
+            std::invoke_result_t<AnimationBuilderFn, ui::ElementProperties &>;
+        using T = typename extract_animation_type<AnimationType>::type;
 
-    void increment_animations() {
-        for (auto &anim : animations) {
-            anim.increment();
-        }
+        animations.add<T>(std::move(id), std::move(animation_builder),
+                          animation_builder(properties));
+        return *this;
     }
 };
 } // namespace ui

@@ -27,8 +27,8 @@ UI::UI(Menu &menu)
 }
 
 [[nodiscard]] ui::State &UI::get_state() {
-    for (auto &button : m_last_menu->button_vector) {
-        button->increment_animations();
+    for (auto button : m_last_menu->button_vector) {
+        button->animations.step_animations();
     }
 
     return m_current_menu_state;

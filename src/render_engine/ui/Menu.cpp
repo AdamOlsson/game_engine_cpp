@@ -3,7 +3,6 @@
 #include "render_engine/ui/ElementProperties.h"
 #include "render_engine/ui/UI.h"
 #include <iostream>
-#include <ostream>
 #include <vector>
 
 using namespace ui;

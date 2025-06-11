@@ -1,6 +1,7 @@
 #pragma once
 
-#include "render_engine/ui/AnimationCurve.h"
+#include "render_engine/ui/ElementProperties.h"
+#include "render_engine/ui/animations/AnimationCurve.h"
 #include <cstdint>
 
 namespace ui {
@@ -15,6 +16,8 @@ template <typename T> struct AnimateValue {
 
 template <typename T> class Animation {
   private:
+    friend class AnimationBuilder;
+
     AnimationCurve::AnimationCurve m_animation_curve;
     OnAnimationCompleted m_on_completed;
     float m_current_x;
@@ -24,9 +27,6 @@ template <typename T> class Animation {
     T *m_current_value;
     T m_delta;
 
-  public:
-    Animation() = default;
-    ~Animation() = default;
     Animation(AnimateValue<T> &&value, AnimationCurve::AnimationCurve curve,
               uint32_t num_frames, OnAnimationCompleted on_completed)
         : m_animation_curve(curve), m_on_completed(on_completed), m_current_x(0.0f),
@@ -34,17 +34,42 @@ template <typename T> class Animation {
           m_current_value(value.value_to_animate), m_target_value(value.target_value),
           m_delta(m_target_value - m_original_value) {}
 
-    void increment() {
+  public:
+    Animation() = default;
+    ~Animation() = default;
+    Animation(Animation &&other) noexcept = default;
+    Animation(const Animation &other) = default;
+    Animation &operator=(Animation &&other) = default;
+    Animation &operator=(const Animation &other) = default;
+
+    void reset() { *m_current_value = m_original_value; }
+
+    // Manually increment the animation
+    void step(size_t n_steps) {
         // TODO: Take m_on_completed into consideration and act accordingly
         m_current_x += m_delta_x;
         float intepolated = m_animation_curve(m_current_x);
         *m_current_value = m_original_value + m_delta * intepolated;
     }
-    /*void decrement() { *m_current_value -= m_delta; }*/
-    void reset() { *m_current_value = m_original_value; }
 
-    void adjust_pointer(T *new_property) { m_current_value = new_property; }
+    void step() { step(1); }
+
+    // Manually decrement the animation
+    void step_backward(size_t n) {}
+    void step_backward() { step_backward(1); }
+
+    // Automatically play the animation until stop is called
+    Animation &play() { return *this; }
+
+    // Automatically play the animation in reverse until stop is called
+    void play_reverse() {}
+
+    // Stop playing the animation automatically
+    void stop() {}
 };
+
+template <typename T>
+using AnimationBuildFn = std::function<ui::Animation<T>(ui::ElementProperties &)>;
 
 class AnimationBuilder {
   private:
@@ -73,6 +98,11 @@ class AnimationBuilder {
     }
 
     template <typename T> Animation<T> build(T *property, const T &&target_value) {
+        return Animation<T>(AnimateValue<T>(property, target_value), m_animation_curve,
+                            m_duration_in_frames, m_on_animation_completed);
+    }
+
+    template <typename T> Animation<T> build(T *property, const T &target_value) {
         return Animation<T>(AnimateValue<T>(property, target_value), m_animation_curve,
                             m_duration_in_frames, m_on_animation_completed);
     }
