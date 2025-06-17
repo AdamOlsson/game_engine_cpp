@@ -1,15 +1,21 @@
 #include "UI.h"
 #include "render_engine/ui/Button.h"
 #include "render_engine/ui/ElementProperties.h"
+#include <iostream>
 #include <stdexcept>
 
 using namespace ui;
 
 // TODO:
-// - CONTINUE: Animations (start and stop animations based on the event callbacks)
-//      - Idle animations
-//      - event animations
-//      - finish Animation implementation
+// CONTINUE:
+//      - Run the color animation on hover using step()
+//      - Run the color animation on enter/leave using play()/stop() (auto play
+//      animations)
+//      - Run color animation and move animation of different properties at the same
+//      time
+//      - Finish animation implementation
+//          - Implement step_backward()
+//          - Implement propers actions based OnAnimationCompleted variable
 // - Button text
 // - Output text fields
 // - Document UI, Menu and Button API. (Code examples in docs are wrong in Menu API)
@@ -147,8 +153,11 @@ State &UI::update_state_using_cursor(const ViewportPoint &cursor_pos) {
 /*State UI::update_state_using_keypress() {}*/
 
 bool UI::is_inside(const ViewportPoint &cursor_pos, const ElementProperties &element) {
-    auto local_point = cursor_pos - (element.center - element.dimension / 2.0f);
-    bool inside_x_axis = local_point.x > 0 && local_point.x < element.dimension.x;
-    bool inside_y_axis = local_point.y > 0 && local_point.y < element.dimension.y;
-    return inside_x_axis && inside_y_axis;
+    float half_width = element.dimension.x / 2.0f;
+    float half_height = element.dimension.y / 2.0f;
+
+    return (cursor_pos.x >= element.center.x - half_width) &&
+           (cursor_pos.x <= element.center.x + half_width) &&
+           (cursor_pos.y >= element.center.y - half_height) &&
+           (cursor_pos.y <= element.center.y + half_height);
 }

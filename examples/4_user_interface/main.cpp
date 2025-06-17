@@ -24,16 +24,6 @@ class UserInterfaceExample : public Game {
 
         // TODO: I am not sure I like the UI have to be a unique pointer. However, lets
         // see how things develop once we know how to create the layout
-        // CONTINUE:
-        //  - Create color animation
-        //  - Run the color animation on hover using step()
-        //  - Run the color animation on enter/leave using play()/stop() (auto play
-        //  animations)
-        //  - Run color animation and move animation of different properties at the same
-        //  time
-        //  - Finish animation implementation
-        //      - Implement step_backward()
-        //      - Implement propers actions based OnAnimationCompleted variable
         m_ui = std::make_unique<ui::UI>(
             ui::Menu()
                 .add_button(ui::Button(ui::ElementProperties{
@@ -67,7 +57,19 @@ class UserInterfaceExample : public Game {
                                        })
                                 .set_on_enter(on_enter_callback)
                                 .set_on_leave(on_leave_callback)
-                                .set_on_click(on_click_callback))
+                                .set_on_click(on_click_callback)
+                                .add_animation("color_animation1",
+                                               [](ui::ElementProperties &props) {
+                                                   return ui::AnimationBuilder()
+                                                       .set_duration(600)
+                                                       .set_on_completed(
+                                                           ui::OnAnimationCompleted::STOP)
+                                                       .set_animation_curve(
+                                                           ui::AnimationCurve::linear)
+                                                       .build(
+                                                           &props.border.color,
+                                                           glm::vec3(0.0f, 0.0f, 1.0f));
+                                               }))
                 .add_submenu(
                     ui::Menu(ui::Button(ui::ElementProperties{
                                             .center = glm::vec2(0.0, -30.0),

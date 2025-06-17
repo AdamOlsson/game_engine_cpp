@@ -3,6 +3,7 @@
 #include "render_engine/ui/ElementProperties.h"
 #include "render_engine/ui/UI.h"
 #include <iostream>
+#include <optional>
 #include <vector>
 
 using namespace ui;
@@ -30,9 +31,10 @@ void Menu::setup_navigation_callback() {
     });
 
     // Setup navigation to parent menu
-    auto user_on_click_back = m_back_button->on_click;
-    m_back_button =
-        m_back_button->set_on_click([this, user_on_click_back](ui::Button &self) {
+    if (m_back_button.has_value()) {
+        auto user_on_click_back = m_back_button->on_click;
+        m_back_button = m_back_button->set_on_click([this, user_on_click_back](
+                                                        ui::Button &self) {
             user_on_click_back(self);
             if (this->m_ui != nullptr) {
                 this->m_ui->pop_menu();
@@ -42,6 +44,7 @@ void Menu::setup_navigation_callback() {
                           << std::endl;
             }
         });
+    }
 }
 
 Menu &Menu::add_button(Button &&button) {
