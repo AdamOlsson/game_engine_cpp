@@ -7,6 +7,7 @@
 #include "render_engine/ui/ElementProperties.h"
 #include "render_engine/ui/UI.h"
 #include "render_engine/ui/animations/Animation.h"
+#include "render_engine/ui/animations/AnimationCurve.h"
 #include <memory>
 
 void on_click_callback(ui::Button &self) { std::cout << "Click!" << std::endl; }
@@ -35,18 +36,21 @@ class UserInterfaceExample : public Game {
                                        })
                                 .set_on_enter(on_enter_callback)
                                 .set_on_leave(on_leave_callback)
-                                .set_on_click(on_click_callback)
+                                .set_on_click([](ui::Button &self) {
+                                    self.animations.get<glm::vec2>("animation1").toggle();
+                                })
                                 .set_on_hover([](ui::Button &self) {})
                                 .add_animation("animation1",
                                                [](ui::ElementProperties &props) {
                                                    return ui::AnimationBuilder()
                                                        .set_duration(300)
                                                        .set_animation_curve(
-                                                           ui::AnimationCurve::cos)
+                                                           ui::AnimationCurve::smoothstep)
                                                        .set_on_completed(
                                                            ui::OnAnimationCompleted::LOOP)
                                                        .build(&props.center,
-                                                              glm::vec2(100.0f, -250.0));
+                                                              glm::vec2(100.0f, -250.0))
+                                                       .play();
                                                }))
                 .add_button(ui::Button(ui::ElementProperties{
                                            .center = glm::vec2(0.0, -140.0),
@@ -66,31 +70,44 @@ class UserInterfaceExample : public Game {
                                                            ui::OnAnimationCompleted::STOP)
                                                        .set_animation_curve(
                                                            ui::AnimationCurve::linear)
-                                                       .build(
-                                                           &props.border.color,
-                                                           glm::vec3(0.0f, 0.0f, 1.0f));
+                                                       .build(&props.border.color,
+                                                              colors::BLUE)
+                                                       .play();
                                                }))
                 .add_submenu(
-                    ui::Menu(ui::Button(ui::ElementProperties{
-                                            .center = glm::vec2(0.0, -30.0),
-                                            .dimension = glm::vec2(400.0, 100.0),
-                                            .border.color = colors::BLUE,
-                                            .border.thickness = 5.0,
-                                            .border.radius = 15.0,
-                                        })
-                                 .set_on_enter(on_enter_callback)
-                                 .set_on_leave(on_leave_callback)
-                                 .set_on_click(on_click_callback),
-                             ui::Button(ui::ElementProperties{
-                                            .center = glm::vec2(0.0, -30.0),
-                                            .dimension = glm::vec2(400.0, 100.0),
-                                            .border.color = colors::BLUE,
-                                            .border.thickness = 5.0,
-                                            .border.radius = 0.0,
-                                        })
-                                 .set_on_enter(on_enter_callback)
-                                 .set_on_leave(on_leave_callback)
-                                 .set_on_click(on_click_callback))
+                    ui::Menu(
+                        ui::Button(ui::ElementProperties{
+                                       .center = glm::vec2(0.0, -30.0),
+                                       .dimension = glm::vec2(400.0, 100.0),
+                                       .border.color = colors::BLUE,
+                                       .border.thickness = 5.0,
+                                       .border.radius = 15.0,
+                                   })
+                            .set_on_enter(on_enter_callback)
+                            .set_on_leave(on_leave_callback)
+                            .set_on_click(on_click_callback)
+                            .add_animation("animation1",
+                                           [](ui::ElementProperties &props) {
+                                               return ui::AnimationBuilder()
+                                                   .set_duration(300)
+                                                   .set_animation_curve(
+                                                       ui::AnimationCurve::smoothstep)
+                                                   .set_on_completed(
+                                                       ui::OnAnimationCompleted::REVERSE)
+                                                   .build(&props.center,
+                                                          glm::vec2(100.0f, -30.0f))
+                                                   .play();
+                                           }),
+                        ui::Button(ui::ElementProperties{
+                                       .center = glm::vec2(0.0, -30.0),
+                                       .dimension = glm::vec2(400.0, 100.0),
+                                       .border.color = colors::BLUE,
+                                       .border.thickness = 5.0,
+                                       .border.radius = 0.0,
+                                   })
+                            .set_on_enter(on_enter_callback)
+                            .set_on_leave(on_leave_callback)
+                            .set_on_click(on_click_callback))
                         .add_button(ui::Button(ui::ElementProperties{
                                                    .center = glm::vec2(0.0, -250.0),
                                                    .dimension = glm::vec2(400.0, 100.0),

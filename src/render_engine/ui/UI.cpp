@@ -8,14 +8,6 @@ using namespace ui;
 
 // TODO:
 // CONTINUE:
-//      - Run the color animation on hover using step()
-//      - Run the color animation on enter/leave using play()/stop() (auto play
-//      animations)
-//      - Run color animation and move animation of different properties at the same
-//      time
-//      - Finish animation implementation
-//          - Implement step_backward()
-//          - Implement propers actions based OnAnimationCompleted variable
 // - Button text
 // - Output text fields
 // - Document UI, Menu and Button API. (Code examples in docs are wrong in Menu API)
@@ -27,13 +19,13 @@ using namespace ui;
 UI::UI(Menu &menu)
     : m_menu(std::move(menu)), m_current_menu_state(ui::State()),
       m_menu_trace({&m_menu}) {
-    m_last_menu = get_last_menu();
+    m_last_menu_in_trace = get_last_menu();
     m_menu.link(this);
-    m_current_menu_state.properties = m_last_menu->properties_vector;
+    m_current_menu_state.properties = m_last_menu_in_trace->properties_vector;
 }
 
 [[nodiscard]] ui::State &UI::get_state() {
-    for (auto button : m_last_menu->button_vector) {
+    for (auto button : m_last_menu_in_trace->button_vector) {
         button->animations.step_animations();
     }
 
@@ -42,12 +34,12 @@ UI::UI(Menu &menu)
 
 void UI::push_new_menu(Menu *new_menu) {
     m_menu_trace.push_back(new_menu);
-    m_last_menu = get_last_menu();
+    m_last_menu_in_trace = get_last_menu();
 }
 
 void UI::pop_menu() {
     m_menu_trace.pop_back();
-    m_last_menu = get_last_menu();
+    m_last_menu_in_trace = get_last_menu();
 }
 
 Menu *UI::get_last_menu() {
@@ -77,7 +69,7 @@ ui::State &UI::update_state_using_click_event(const MouseEvent mouse_event,
                                               const ViewportPoint &cursor_pos) {
     // Find the item the cursor is over
     Button *target_button = nullptr;
-    Menu *current_menu = m_last_menu;
+    Menu *current_menu = m_last_menu_in_trace;
     for (auto &button : current_menu->button_vector) {
         // TODO: We should also filter for z-axis here, eventually
         if (is_inside(cursor_pos, button->properties)) {
@@ -106,12 +98,12 @@ ui::State &UI::update_state_using_click_event(const MouseEvent mouse_event,
         break;
     };
 
-    m_current_menu_state.properties = m_last_menu->properties_vector;
+    m_current_menu_state.properties = m_last_menu_in_trace->properties_vector;
     return m_current_menu_state;
 }
 
 State &UI::update_state_using_cursor(const ViewportPoint &cursor_pos) {
-    Menu *current_menu = m_last_menu;
+    Menu *current_menu = m_last_menu_in_trace;
     for (auto &button : current_menu->button_vector) {
         bool cursor_is_inside = is_inside(cursor_pos, button->properties);
         if (cursor_is_inside) {
@@ -146,7 +138,7 @@ State &UI::update_state_using_cursor(const ViewportPoint &cursor_pos) {
         }
     }
 
-    m_current_menu_state.properties = m_last_menu->properties_vector;
+    m_current_menu_state.properties = m_last_menu_in_trace->properties_vector;
     return m_current_menu_state;
 }
 

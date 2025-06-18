@@ -5,6 +5,10 @@
 
 namespace ui {
 
+template <typename T>
+concept SupportedAnimationType = std::same_as<T, float> || std::same_as<T, glm::vec2> ||
+                                 std::same_as<T, glm::vec3> || std::same_as<T, glm::vec4>;
+
 class AnimationStore {
   private:
     template <typename T>
@@ -30,7 +34,7 @@ class AnimationStore {
         } else if constexpr (std::is_same_v<T, glm::vec4>) {
             return m_vec4_animations;
         } else {
-            stat_ass<T>();
+            static_assert(false, "AnimationStore: Unsupported animation type");
             return m_float_animations;
         }
     }
@@ -45,7 +49,7 @@ class AnimationStore {
         } else if constexpr (std::is_same_v<T, glm::vec4>) {
             return m_vec4_animation_builders;
         } else {
-            stat_ass<T>();
+            static_assert(false, "AnimationStore: Unsupported animation type");
             return m_float_animation_builders;
         }
     }
@@ -64,12 +68,6 @@ class AnimationStore {
         for (auto &[key, builder] : builder_store) {
             store.insert({key, builder(props)});
         }
-    }
-
-    template <typename T> void stat_ass() {
-        static_assert(std::is_same_v<T, float> || std::is_same_v<T, glm::vec2> ||
-                          std::is_same_v<T, glm::vec3> || std::is_same_v<T, glm::vec4>,
-                      "AnimationStore: Unsupported animation type");
     }
 
   public:
@@ -127,19 +125,22 @@ class AnimationStore {
             m_vec2_animations.clear();
             m_vec3_animations.clear();
             m_vec4_animations.clear();
-
-            // Other's animation stores will be left in their moved-from state
         }
         return *this;
     }
-    template <typename T>
+
+    template <SupportedAnimationType T>
     void add(std::string &&key, AnimationBuildFn<T> &&builder, Animation<T> &&animation) {
         get_animation_builder_store<T>().insert({std::move(key), std::move(builder)});
         get_animation_store<T>().insert({std::move(key), std::move(animation)});
     }
 
-    template <typename T> Animation<T> &operator[](std::string &key) const {
-        return get_animations_store<T>()[key];
+    template <SupportedAnimationType T> Animation<T> &get(std::string &key) {
+        return get_animation_store<T>()[key];
+    }
+
+    template <SupportedAnimationType T> Animation<T> &get(std::string &&key) {
+        return get_animation_store<T>()[std::move(key)];
     }
 
     void rebuild(ui::ElementProperties &props) {

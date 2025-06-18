@@ -11,7 +11,7 @@ class UI {
     ui::Menu m_menu;
     ui::State m_current_menu_state;
     std::vector<ui::Menu *> m_menu_trace;
-    Menu *m_last_menu;
+    Menu *m_last_menu_in_trace;
 
     bool is_inside(const ViewportPoint &cursor_pos, const ElementProperties &element);
 
