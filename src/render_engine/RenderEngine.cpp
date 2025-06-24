@@ -152,8 +152,13 @@ void RenderEngine::render_text(const std::string &text, const glm::vec2 &locatio
 
 void RenderEngine::render_ui(const ui::State &state) {
     for (auto property : state.properties) {
+        /*m_ui_pipeline->render(m_current_render_pass.command_buffer.m_command_buffer,*/
+        /*                      *property.container);*/
+
         m_ui_pipeline->render(m_current_render_pass.command_buffer.m_command_buffer,
                               *property);
+
+        // render_text(property.text.text, property.text.center, property.text.font_size);
     }
 }
 

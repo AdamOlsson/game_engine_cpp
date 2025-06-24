@@ -1,5 +1,6 @@
 #pragma once
 #include "glm/glm.hpp"
+#include <string>
 
 namespace ui {
 // NOTE: Order need to match shaders definition of this struct

@@ -1,35 +1,34 @@
 #!/bin/bash
 
-# Compile geometry vertex shader
-/Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc -fshader-stage=vert ./src/render_engine/shaders/geometry_vertex.glsl -o ./src/render_engine/shaders/geometry_vertex.spv
-GEOMETRY_VERT_COMPILE_STATUS=$?
+# Compile all vertex shaders
+echo "Compiling vertex shaders..."
+for shader in ./src/render_engine/shaders/vertex/*.glsl; do
+    if [ -f "$shader" ]; then
+        output="${shader%.glsl}.spv"
+        echo "Compiling: $shader -> $output"
+        /Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc -fshader-stage=vert "$shader" -o "$output"
+        if [ $? -ne 0 ]; then
+            echo "Shader compilation failed for: $shader"
+            exit 1
+        fi
+    fi
+done
 
-# Compile geometry fragment shader
-/Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc -fshader-stage=frag ./src/render_engine/shaders/geometry_fragment.glsl -o ./src/render_engine/shaders/geometry_fragment.spv
-GEOMETRY_FRAG_COMPILE_STATUS=$?
+# Compile all fragment shaders
+echo "Compiling fragment shaders..."
+for shader in ./src/render_engine/shaders/fragment/*.glsl; do
+    if [ -f "$shader" ]; then
+        output="${shader%.glsl}.spv"
+        echo "Compiling: $shader -> $output"
+        /Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc -fshader-stage=frag "$shader" -o "$output"
+        if [ $? -ne 0 ]; then
+            echo "Shader compilation failed for: $shader"
+            exit 1
+        fi
+    fi
+done
 
-# Compile text fragment shader
-/Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc -fshader-stage=frag ./src/render_engine/shaders/text_fragment.glsl -o ./src/render_engine/shaders/text_fragment.spv
-TEXT_FRAG_COMPILE_STATUS=$?
-
-# Compile ui shaders
-/Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc -fshader-stage=vert ./src/render_engine/shaders/ui_vertex.glsl -o ./src/render_engine/shaders/ui_vertex.spv
-UI_VERT_COMPILE_STATUS=$?
-
-/Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc -fshader-stage=frag ./src/render_engine/shaders/ui_fragment.glsl -o ./src/render_engine/shaders/ui_fragment.spv
-UI_FRAG_COMPILE_STATUS=$?
-
-
-
-# Check compilation status
-if [ $GEOMETRY_VERT_COMPILE_STATUS -ne 0 ] ||
-   [ $GEOMETRY_FRAG_COMPILE_STATUS -ne 0 ] ||
-   [ $UI_VERT_COMPILE_STATUS -ne 0 ] ||
-   [ $UI_FRAG_COMPILE_STATUS -ne 0 ] ||
-   [ $TEXT_FRAG_COMPILE_STATUS -ne 0 ]; then
-    echo "Shader compilation failed"
-    exit 1
-fi
+echo "All shaders compiled successfully!"
 
 python3 compile_assets.py
 ASSETS_COMPILE_STATUS=$?

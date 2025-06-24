@@ -1,7 +1,6 @@
 #include "UI.h"
 #include "render_engine/ui/Button.h"
 #include "render_engine/ui/ElementProperties.h"
-#include <iostream>
 #include <stdexcept>
 
 using namespace ui;
@@ -13,6 +12,7 @@ using namespace ui;
 // - Document UI, Menu and Button API. (Code examples in docs are wrong in Menu API)
 // - Improve resolution of rounded corners
 // - Improve resolution of text
+// - Menu navigation using keys
 // - UI showcase example
 // - Performance window
 

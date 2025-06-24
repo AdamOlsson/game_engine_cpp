@@ -142,9 +142,6 @@ class UserInterfaceExample : public Game {
 
         auto ui_state = m_ui->get_state();
 
-        // Note: does not work for now
-        /*m_position_animation.increment();*/
-
         render_engine.render_ui(ui_state);
 
         success = render_engine.end_render_pass();

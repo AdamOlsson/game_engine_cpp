@@ -7,10 +7,7 @@
 #include "vulkan/vulkan_core.h"
 
 // TODO:
-// 2. Implement on-hover mechanism (make new example for this)
-// 3. Implement on-click mechanism (use above created example)
 // 4. Implement text in UI elements
-// 4. Imlpement a nice way of constructing UI layouts
 
 using namespace ui;
 
@@ -65,8 +62,8 @@ UIPipeline::create_descriptor_set(std::vector<UniformBuffer> &uniform_buffers) {
 
 Pipeline UIPipeline::create_pipeline(SwapChainManager &swap_chain_manager) {
     auto &resoure_manager = ResourceManager::get_instance();
-    auto vert_shader_code = resoure_manager.get_resource<ShaderResource>("UIVertex");
-    auto frag_shader_code = resoure_manager.get_resource<ShaderResource>("UIFragment");
+    auto vert_shader_code = resoure_manager.get_resource<ShaderResource>("UiVertex");
+    auto frag_shader_code = resoure_manager.get_resource<ShaderResource>("UiFragment");
 
     VkShaderModule vert_shader_module = createShaderModule(
         m_ctx->device, vert_shader_code->bytes(), vert_shader_code->length());
