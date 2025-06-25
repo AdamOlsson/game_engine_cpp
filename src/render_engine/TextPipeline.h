@@ -21,18 +21,20 @@
 class TextPipeline {
   private:
     std::shared_ptr<CoreGraphicsContext> m_ctx;
-
-    Pipeline m_pipeline;
+    VkDescriptorSetLayout m_descriptor_set_layout;
     DescriptorPool m_descriptor_pool;
+    Pipeline m_pipeline;
 
     size_t m_buffer_idx;
     std::vector<StorageBuffer> m_instance_buffers;
 
     std::unique_ptr<Geometry::Rectangle> geometry;
 
-    const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
-
     bool framebufferResized = false;
+
+    VkDescriptorSetLayout create_descriptor_set_layout();
+    DescriptorSet create_descriptor_set(std::vector<UniformBuffer> &uniform_buffers,
+                                        Sampler &sampler, Texture &texture);
     Pipeline create_pipeline(VkDescriptorSetLayout &descriptor_set_layout,
                              SwapChainManager &swap_chain_manager);
 
@@ -43,8 +45,7 @@ class TextPipeline {
   public:
     TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
                  SwapChainManager &swap_chain,
-                 std::vector<UniformBuffer> &uniform_buffers,
-                 VkDescriptorSetLayout &descriptor_set_layout, Sampler &sampler,
+                 std::vector<UniformBuffer> &uniform_buffers, Sampler &sampler,
                  Texture &texture);
     ~TextPipeline();
 

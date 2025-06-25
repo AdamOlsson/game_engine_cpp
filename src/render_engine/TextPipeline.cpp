@@ -1,6 +1,7 @@
 #include "render_engine/TextPipeline.h"
 #include "CoreGraphicsContext.h"
 #include "render_engine/DescriptorSet.h"
+#include "render_engine/DescriptorSetLayoutBuilder.h"
 #include "render_engine/GeometryPipeline.h"
 #include "render_engine/RenderableGeometry.h"
 #include "render_engine/Sampler.h"
@@ -15,29 +16,47 @@
 
 TextPipeline::TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
                            SwapChainManager &swap_chain_manager,
-                           std::vector<UniformBuffer> &uniform_buffers,
-                           VkDescriptorSetLayout &descriptor_set_layout, Sampler &sampler,
+                           std::vector<UniformBuffer> &uniform_buffers, Sampler &sampler,
                            Texture &texture)
-    : m_ctx(ctx), m_buffer_idx(0),
-      m_pipeline(create_pipeline(descriptor_set_layout, swap_chain_manager)),
-      m_descriptor_pool(DescriptorPool(m_ctx, MAX_FRAMES_IN_FLIGHT)) {
+    : m_ctx(ctx), m_descriptor_set_layout(create_descriptor_set_layout()),
+      m_descriptor_pool(DescriptorPool(m_ctx, MAX_FRAMES_IN_FLIGHT)),
+      m_pipeline(create_pipeline(m_descriptor_set_layout, swap_chain_manager)),
+      m_buffer_idx(0) {
 
     m_instance_buffers.emplace_back(m_ctx, 1024);
     m_instance_buffers.emplace_back(m_ctx, 1024);
 
+    // TODO: Once the geometry class no longer manages the descriptor set we make this an
+    // member of the TextPipeline class
     DescriptorSet descriptor_set =
-        DescriptorSetBuilder(descriptor_set_layout, m_descriptor_pool,
-                             MAX_FRAMES_IN_FLIGHT)
-            .set_instance_buffers(0, m_instance_buffers)
-            .set_uniform_buffers(1, uniform_buffers)
-            .set_texture_and_sampler(2, texture, sampler)
-            .build(m_ctx);
+        create_descriptor_set(uniform_buffers, sampler, texture);
 
     geometry = std::make_unique<Geometry::Rectangle>(ctx, swap_chain_manager,
                                                      std::move(descriptor_set));
 }
 
-TextPipeline::~TextPipeline() {}
+TextPipeline::~TextPipeline() {
+    vkDestroyDescriptorSetLayout(m_ctx->device, m_descriptor_set_layout, nullptr);
+}
+
+VkDescriptorSetLayout TextPipeline::create_descriptor_set_layout() {
+    return DescriptorSetLayoutBuilder()
+        .add(StorageBuffer::create_descriptor_set_layout_binding(0))
+        .add(UniformBuffer::create_descriptor_set_layout_binding(1))
+        .add(Sampler::create_descriptor_set_layout_binding(2))
+        .build(m_ctx.get());
+}
+
+DescriptorSet
+TextPipeline::create_descriptor_set(std::vector<UniformBuffer> &uniform_buffers,
+                                    Sampler &sampler, Texture &texture) {
+    return DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
+                                MAX_FRAMES_IN_FLIGHT)
+        .set_instance_buffers(0, m_instance_buffers)
+        .set_uniform_buffers(1, uniform_buffers)
+        .set_texture_and_sampler(2, texture, sampler)
+        .build(m_ctx);
+}
 
 Pipeline TextPipeline::create_pipeline(VkDescriptorSetLayout &descriptor_set_layout,
                                        SwapChainManager &swap_chain_manager) {
