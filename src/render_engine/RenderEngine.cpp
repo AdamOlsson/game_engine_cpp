@@ -56,7 +56,6 @@ RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_
     }
 
     if (m_font != nullptr) {
-        m_text_descriptor_set_layout = descriptor_set_layout_builder.build(m_ctx.get());
         m_text_pipeline = std::make_unique<TextPipeline>(
             m_window, m_ctx, m_swap_chain_manager, *m_window_dimension_buffers, m_sampler,
             *m_font->font_atlas);
@@ -69,7 +68,6 @@ RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_
 RenderEngine::~RenderEngine() {
     vkDestroyDescriptorSetLayout(m_ctx->device, m_geometry_descriptor_set_layout,
                                  nullptr);
-    vkDestroyDescriptorSetLayout(m_ctx->device, m_text_descriptor_set_layout, nullptr);
 }
 
 void RenderEngine::render(

@@ -2,13 +2,15 @@
 
 #include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/DescriptorPool.h"
+#include "render_engine/DescriptorSet.h"
 #include "render_engine/Pipeline.h"
-#include "render_engine/RenderableGeometry.h"
 #include "render_engine/Sampler.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/Texture.h"
 #include "render_engine/Window.h"
+#include "render_engine/buffers/IndexBuffer.h"
 #include "render_engine/buffers/UniformBuffer.h"
+#include "render_engine/buffers/VertexBuffer.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 #include <vector>
@@ -21,26 +23,23 @@
 class TextPipeline {
   private:
     std::shared_ptr<CoreGraphicsContext> m_ctx;
-    VkDescriptorSetLayout m_descriptor_set_layout;
-    DescriptorPool m_descriptor_pool;
-    Pipeline m_pipeline;
 
     size_t m_buffer_idx;
     std::vector<StorageBuffer> m_instance_buffers;
+    VertexBuffer m_vertex_buffer;
+    IndexBuffer m_index_buffer;
 
-    std::unique_ptr<Geometry::Rectangle> geometry;
-
-    bool framebufferResized = false;
+    VkDescriptorSetLayout m_descriptor_set_layout;
+    DescriptorPool m_descriptor_pool;
+    DescriptorSet m_descriptor_set;
+    Pipeline m_pipeline;
 
     VkDescriptorSetLayout create_descriptor_set_layout();
     DescriptorSet create_descriptor_set(std::vector<UniformBuffer> &uniform_buffers,
                                         Sampler &sampler, Texture &texture);
     Pipeline create_pipeline(VkDescriptorSetLayout &descriptor_set_layout,
                              SwapChainManager &swap_chain_manager);
-
-    bool checkDeviceExtensionSupport(const VkPhysicalDevice &physicalDevice);
-
-    void updateUniformBuffer(uint32_t currentImage);
+    std::vector<StorageBuffer> create_instance_buffers();
 
   public:
     TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx,

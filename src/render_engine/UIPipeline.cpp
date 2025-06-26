@@ -39,7 +39,7 @@ void UIPipeline::render(const VkCommandBuffer &command_buffer,
     vkCmdBindVertexBuffers(command_buffer, 0, 1, &m_vertex_buffer.buffer,
                            &vertex_buffers_offset);
 
-    auto descriptor = m_descriptor_set.get(); // TODO: This should be not be needed.
+    auto descriptor = m_descriptor_set.get();
     vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             m_pipeline.m_pipeline_layout, 0, 1, &descriptor, 0, nullptr);
 

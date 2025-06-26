@@ -24,14 +24,9 @@ UniformBuffer::UniformBuffer(std::shared_ptr<CoreGraphicsContext> ctx, const siz
 }
 
 UniformBuffer::UniformBuffer(UniformBuffer &&other) noexcept
-    : m_ctx(std::move(other.m_ctx)), buffer(other.buffer),
-      buffer_memory(other.buffer_memory), buffer_mapped(other.buffer_memory),
-      size(other.size) {
-    other.buffer = VK_NULL_HANDLE;
-    other.buffer_memory = VK_NULL_HANDLE;
-    other.buffer_mapped = nullptr;
-    other.size = 0;
-}
+    : m_ctx(std::move(other.m_ctx)), buffer(std::move(other.buffer)),
+      buffer_memory(std::move(other.buffer_memory)),
+      buffer_mapped(std::move(other.buffer_memory)), size(std::move(other.size)) {}
 
 UniformBuffer &UniformBuffer::operator=(UniformBuffer &&other) noexcept {
     if (this != &other) {

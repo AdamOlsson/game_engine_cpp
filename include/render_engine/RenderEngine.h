@@ -31,7 +31,6 @@ class RenderEngine {
     std::unique_ptr<GeometryPipeline> m_geometry_pipeline;
 
     std::unique_ptr<Font> m_font;
-    VkDescriptorSetLayout m_text_descriptor_set_layout;
     std::unique_ptr<TextPipeline> m_text_pipeline;
 
     std::unique_ptr<ui::UIPipeline> m_ui_pipeline;

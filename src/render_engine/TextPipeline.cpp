@@ -18,25 +18,24 @@ TextPipeline::TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> 
                            SwapChainManager &swap_chain_manager,
                            std::vector<UniformBuffer> &uniform_buffers, Sampler &sampler,
                            Texture &texture)
-    : m_ctx(ctx), m_descriptor_set_layout(create_descriptor_set_layout()),
+    : m_ctx(ctx), m_buffer_idx(0), m_instance_buffers(create_instance_buffers()),
+      m_vertex_buffer(
+          VertexBuffer(ctx, Geometry::rectangle_vertices, swap_chain_manager)),
+      m_index_buffer(IndexBuffer(ctx, Geometry::rectangle_indices, swap_chain_manager)),
+      m_descriptor_set_layout(create_descriptor_set_layout()),
       m_descriptor_pool(DescriptorPool(m_ctx, MAX_FRAMES_IN_FLIGHT)),
-      m_pipeline(create_pipeline(m_descriptor_set_layout, swap_chain_manager)),
-      m_buffer_idx(0) {
-
-    m_instance_buffers.emplace_back(m_ctx, 1024);
-    m_instance_buffers.emplace_back(m_ctx, 1024);
-
-    // TODO: Once the geometry class no longer manages the descriptor set we make this an
-    // member of the TextPipeline class
-    DescriptorSet descriptor_set =
-        create_descriptor_set(uniform_buffers, sampler, texture);
-
-    geometry = std::make_unique<Geometry::Rectangle>(ctx, swap_chain_manager,
-                                                     std::move(descriptor_set));
-}
+      m_descriptor_set(create_descriptor_set(uniform_buffers, sampler, texture)),
+      m_pipeline(create_pipeline(m_descriptor_set_layout, swap_chain_manager)) {}
 
 TextPipeline::~TextPipeline() {
     vkDestroyDescriptorSetLayout(m_ctx->device, m_descriptor_set_layout, nullptr);
+}
+
+std::vector<StorageBuffer> TextPipeline::create_instance_buffers() {
+    std::vector<StorageBuffer> vec{};
+    vec.emplace_back(m_ctx, 1024);
+    vec.emplace_back(m_ctx, 1024);
+    return vec;
 }
 
 VkDescriptorSetLayout TextPipeline::create_descriptor_set_layout() {
@@ -89,11 +88,28 @@ void TextPipeline::render_text(const VkCommandBuffer &command_buffer,
                                std::vector<StorageBufferObject> &&instance_data) {
     m_instance_buffers[m_buffer_idx].update_storage_buffer(
         std::forward<std::vector<StorageBufferObject>>(instance_data));
+
     const auto num_instances = instance_data.size();
-    if (num_instances > 0) {
-        geometry->record_draw_command(command_buffer, m_pipeline.m_pipeline,
-                                      m_pipeline.m_pipeline_layout, num_instances);
+
+    if (num_instances <= 0) {
+        return;
     }
 
+    const VkDeviceSize vertex_buffers_offset = 0;
+    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                      m_pipeline.m_pipeline);
+
+    auto descriptor = m_descriptor_set.get();
+    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            m_pipeline.m_pipeline_layout, 0, 1, &descriptor, 0, nullptr);
+
+    const auto shape = ShapeTypeEncoding::RectangleShape;
+    vkCmdPushConstants(command_buffer, m_pipeline.m_pipeline_layout,
+                       VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(uint32_t), &shape);
+
+    vkCmdBindVertexBuffers(command_buffer, 0, 1, &m_vertex_buffer.buffer,
+                           &vertex_buffers_offset);
+    vkCmdBindIndexBuffer(command_buffer, m_index_buffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+    vkCmdDrawIndexed(command_buffer, m_index_buffer.num_indices, num_instances, 0, 0, 0);
     m_buffer_idx = (m_buffer_idx + 1) % MAX_FRAMES_IN_FLIGHT;
 }
