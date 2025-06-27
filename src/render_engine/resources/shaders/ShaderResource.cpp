@@ -3,6 +3,7 @@
 #include "render_engine/resources/shaders/fragment/text/text.h"
 #include "render_engine/resources/shaders/fragment/ui/ui.h"
 #include "render_engine/resources/shaders/vertex/geometry/geometry.h"
+#include "render_engine/resources/shaders/vertex/text/text.h"
 #include "render_engine/resources/shaders/vertex/ui/ui.h"
 #include <memory>
 
@@ -18,9 +19,13 @@ const unsigned int ShaderResource::length() const { return length_; }
 
 std::vector<std::unique_ptr<ShaderResource>> fetch_all_shaders() {
     std::vector<std ::unique_ptr<ShaderResource>> shaders{};
+
     shaders.push_back(GeometryFragment::create_resource());
     shaders.push_back(GeometryVertex::create_resource());
+
     shaders.push_back(TextFragment::create_resource());
+    shaders.push_back(TextVertex::create_resource());
+
     shaders.push_back(UiFragment::create_resource());
     shaders.push_back(UiVertex::create_resource());
     return shaders;

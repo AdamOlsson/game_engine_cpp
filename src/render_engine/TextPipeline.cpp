@@ -60,8 +60,7 @@ TextPipeline::create_descriptor_set(std::vector<UniformBuffer> &uniform_buffers,
 Pipeline TextPipeline::create_pipeline(VkDescriptorSetLayout &descriptor_set_layout,
                                        SwapChainManager &swap_chain_manager) {
     auto &resoure_manager = ResourceManager::get_instance();
-    auto vert_shader_code =
-        resoure_manager.get_resource<ShaderResource>("GeometryVertex");
+    auto vert_shader_code = resoure_manager.get_resource<ShaderResource>("TextVertex");
     auto frag_shader_code = resoure_manager.get_resource<ShaderResource>("TextFragment");
 
     VkShaderModule vert_shader_module = createShaderModule(
@@ -102,10 +101,6 @@ void TextPipeline::render_text(const VkCommandBuffer &command_buffer,
     auto descriptor = m_descriptor_set.get();
     vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             m_pipeline.m_pipeline_layout, 0, 1, &descriptor, 0, nullptr);
-
-    const auto shape = ShapeTypeEncoding::RectangleShape;
-    vkCmdPushConstants(command_buffer, m_pipeline.m_pipeline_layout,
-                       VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(uint32_t), &shape);
 
     vkCmdBindVertexBuffers(command_buffer, 0, 1, &m_vertex_buffer.buffer,
                            &vertex_buffers_offset);
