@@ -28,30 +28,26 @@ StorageBuffer::~StorageBuffer() {
     vkDestroyBuffer(m_ctx->device, buffer, nullptr);
 }
 
-// Move constructor
 StorageBuffer::StorageBuffer(StorageBuffer &&other) noexcept
-    : m_ctx(std::move(other.m_ctx)), buffer(other.buffer),
-      bufferMemory(other.bufferMemory), bufferMapped(other.bufferMapped),
-      size(other.size) {
+    : m_ctx(std::move(other.m_ctx)), buffer(std::move(other.buffer)),
+      bufferMemory(std::move(other.bufferMemory)),
+      bufferMapped(std::move(other.bufferMapped)), size(std::move(other.size)) {
     other.buffer = VK_NULL_HANDLE;
     other.bufferMemory = VK_NULL_HANDLE;
-    other.bufferMapped = nullptr;
-    other.size = 0;
+    other.bufferMapped = VK_NULL_HANDLE;
 }
 
-// Move assignement
 StorageBuffer &StorageBuffer::operator=(StorageBuffer &&other) noexcept {
     if (this != &other) {
         m_ctx = std::move(other.m_ctx);
-        buffer = other.buffer;
-        bufferMemory = other.bufferMemory;
-        bufferMapped = other.bufferMapped;
-        size = other.size;
+        buffer = std::move(other.buffer);
+        bufferMemory = std::move(other.bufferMemory);
+        bufferMapped = std::move(other.bufferMapped);
+        size = std::move(other.size);
 
         other.buffer = VK_NULL_HANDLE;
         other.bufferMemory = VK_NULL_HANDLE;
         other.bufferMapped = nullptr;
-        other.size = 0;
     }
 
     return *this;
@@ -70,7 +66,6 @@ StorageBuffer::create_descriptor_set_layout_binding(uint32_t binding_num) {
 
 void StorageBuffer::update_storage_buffer(const std::vector<StorageBufferObject> &ssbo) {
     const size_t write_size = sizeof(ssbo[0]) * ssbo.size();
-    const size_t diff = size - write_size;
     memcpy(bufferMapped, &ssbo[0], write_size);
 }
 

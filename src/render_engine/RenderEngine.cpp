@@ -78,6 +78,17 @@ void RenderEngine::render(
     std::vector<StorageBufferObject> hexagon_instance_data = {};
     std::vector<StorageBufferObject> arrow_instance_data = {};
     std::vector<StorageBufferObject> line_instance_data = {};
+
+    // Open questions:
+    // - Where should the StorageBuffer be stored?
+    // - Where should the struct T be located?
+
+    // StorageBuffer<T> circle_instance_data;
+    // StorageBuffer<GeometryStorageBufferObject> circle_instance_data;
+    // circle_instance_data.clear();
+    // circle_instance_data.emplace_back(...);
+    // circle_instance_data.transfer(); // copy from cpu memory to gpu memory
+
     for (auto b : bodies) {
         auto deref_b = b.get();
         switch (deref_b.shape.encode_shape_type()) {
