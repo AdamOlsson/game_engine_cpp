@@ -2,6 +2,7 @@
 
 #include "glm/fwd.hpp"
 #include "render_engine/CoreGraphicsContext.h"
+#include "render_engine/buffers/common.h"
 #include "shape.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
@@ -46,39 +47,15 @@ struct StorageBufferObject {
     }
 };
 
-class StorageBuffer {
-  private:
-    std::shared_ptr<CoreGraphicsContext> m_ctx;
-
-    VkDeviceMemory bufferMemory;
-    void *bufferMapped;
-
-  public:
-    VkBuffer buffer;
+struct StorageBufferRef {
     VkDeviceSize size;
-
-    StorageBuffer();
-    StorageBuffer(std::shared_ptr<CoreGraphicsContext> ctx, size_t capacity);
-    ~StorageBuffer();
-
-    StorageBuffer(StorageBuffer &&other) noexcept;
-    StorageBuffer(const StorageBuffer &other) = delete;
-
-    StorageBuffer &operator=(StorageBuffer &&other) noexcept;
-    StorageBuffer &operator=(const StorageBuffer &other) = delete;
-
-    void update_storage_buffer(const std::vector<StorageBufferObject> &ssbo);
-
-    static VkDescriptorSetLayoutBinding
-    create_descriptor_set_layout_binding(uint32_t binding_num);
-
-    void dump_data();
+    VkBuffer buffer;
 };
 
 template <typename T>
 concept Printable = requires(T t) { std::cout << t; };
 
-template <Printable T> class StorageBuffer2 {
+template <Printable T> class StorageBuffer {
   private:
     std::shared_ptr<CoreGraphicsContext> m_ctx;
 
@@ -90,9 +67,9 @@ template <Printable T> class StorageBuffer2 {
     void *m_buffer_mapped;
 
   public:
-    StorageBuffer2() = default;
+    StorageBuffer() = default;
 
-    StorageBuffer2(std::shared_ptr<CoreGraphicsContext> ctx, size_t capacity)
+    StorageBuffer(std::shared_ptr<CoreGraphicsContext> ctx, size_t capacity)
         : m_ctx(ctx), m_size(capacity * sizeof(T)) {
 
         m_staging_buffer.reserve(capacity);
@@ -105,7 +82,7 @@ template <Printable T> class StorageBuffer2 {
         vkMapMemory(m_ctx->device, m_buffer_memory, 0, m_size, 0, &m_buffer_mapped);
     }
 
-    ~StorageBuffer2() {
+    ~StorageBuffer() {
         if (m_buffer == VK_NULL_HANDLE) {
             return;
         }
@@ -114,10 +91,10 @@ template <Printable T> class StorageBuffer2 {
         vkDestroyBuffer(m_ctx->device, m_buffer, nullptr);
     }
 
-    StorageBuffer2(const StorageBuffer2 &other) = delete;
-    StorageBuffer2 &operator=(const StorageBuffer2 &other) = delete;
+    StorageBuffer(const StorageBuffer &other) = delete;
+    StorageBuffer &operator=(const StorageBuffer &other) = delete;
 
-    StorageBuffer2(StorageBuffer2 &&other) noexcept
+    StorageBuffer(StorageBuffer &&other) noexcept
         : m_ctx(std::move(other.m_ctx)), m_size(std::move(other.m_size)),
           m_staging_buffer(std::move(other.m_staging_buffer)),
           m_buffer(std::move(other.m_buffer)),
@@ -128,7 +105,7 @@ template <Printable T> class StorageBuffer2 {
         other.m_buffer_mapped = VK_NULL_HANDLE;
     }
 
-    StorageBuffer2 &operator=(StorageBuffer2 &&other) noexcept {
+    StorageBuffer &operator=(StorageBuffer &&other) noexcept {
         if (this != &other) {
             m_ctx = std::move(other.m_ctx);
             m_size = std::move(other.m_size);
@@ -144,6 +121,7 @@ template <Printable T> class StorageBuffer2 {
         return *this;
     }
 
+    StorageBufferRef get_reference() { return {.buffer = m_buffer, .size = m_size}; }
     size_t size() const { return m_size; }
     size_t capacity() const { return m_staging_buffer.size(); }
     void clear() { m_staging_buffer.clear(); }
@@ -174,7 +152,7 @@ template <Printable T> class StorageBuffer2 {
     }
 
     void dump_data() {
-        std::cout << "=== StorageBuffer2 Data Dump ===" << std::endl;
+        std::cout << "=== StorageBuffer Data Dump ===" << std::endl;
         std::cout << "Buffer size: " << m_size << " bytes" << std::endl;
         std::cout << "Staging buffer capacity: " << m_staging_buffer.capacity()
                   << std::endl;
@@ -213,4 +191,33 @@ template <Printable T> class StorageBuffer2 {
 
         std::cout << "=== End Data Dump ===" << std::endl;
     }
+};
+
+template <typename T> class SwapStorageBuffer {
+  private:
+    size_t m_idx;
+    std::vector<StorageBuffer<T>> m_buffers;
+    std::vector<StorageBufferRef> m_refs;
+
+  public:
+    SwapStorageBuffer(std::shared_ptr<CoreGraphicsContext> &ctx, size_t num_bufs,
+                      size_t capacity)
+        : m_idx(0) {
+        // Initiate buffers
+        for (auto i = 0; i < num_bufs; i++) {
+            m_buffers.emplace_back(ctx, capacity);
+        }
+
+        // Create buffer references
+        m_refs.reserve(capacity);
+        for (auto i = 0; i < m_buffers.size(); i++) {
+            m_refs.push_back(m_buffers[i].get_reference());
+        }
+    }
+
+    StorageBuffer<T> &get_buffer() { return m_buffers[m_idx]; }
+
+    void rotate() { m_idx = ++m_idx % m_buffers.size(); }
+
+    std::vector<StorageBufferRef> get_buffer_references() { return m_refs; }
 };

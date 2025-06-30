@@ -6,7 +6,6 @@
 using namespace ui;
 
 // TODO:
-// CONTINUE:
 // - Button text
 // - Output text fields
 // - Document UI, Menu and Button API. (Code examples in docs are wrong in Menu API)

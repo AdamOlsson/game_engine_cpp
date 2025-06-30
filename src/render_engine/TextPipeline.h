@@ -24,8 +24,7 @@ class TextPipeline {
   private:
     std::shared_ptr<CoreGraphicsContext> m_ctx;
 
-    size_t m_buffer_idx;
-    std::vector<StorageBuffer> m_instance_buffers;
+    SwapStorageBuffer<StorageBufferObject> m_instance_buffers;
     VertexBuffer m_vertex_buffer;
     IndexBuffer m_index_buffer;
 
@@ -39,7 +38,6 @@ class TextPipeline {
                                         Sampler &sampler, Texture &texture);
     Pipeline create_pipeline(VkDescriptorSetLayout &descriptor_set_layout,
                              SwapChainManager &swap_chain_manager);
-    std::vector<StorageBuffer> create_instance_buffers();
 
   public:
     TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
@@ -48,6 +46,7 @@ class TextPipeline {
                  Texture &texture);
     ~TextPipeline();
 
-    void render_text(const VkCommandBuffer &command_buffer,
-                     std::vector<StorageBufferObject> &&instance_data);
+    StorageBuffer<StorageBufferObject> &get_instance_buffer();
+
+    void render_text(const VkCommandBuffer &command_buffer);
 };

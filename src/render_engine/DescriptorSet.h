@@ -43,7 +43,7 @@ class DescriptorSetBuilder {
     std::vector<UniformBuffer> *m_uniform_buffers;
 
     size_t m_instance_buffer_binding;
-    std::vector<StorageBuffer> *m_instance_buffers;
+    std::vector<StorageBufferRef> m_instance_buffers;
 
     size_t m_texture_binding;
     Texture *m_texture;
@@ -54,7 +54,8 @@ class DescriptorSetBuilder {
                          DescriptorPool &descriptor_pool, size_t capacity);
 
     DescriptorSetBuilder &
-    set_instance_buffers(size_t binding, std::vector<StorageBuffer> &instance_buffers);
+    set_instance_buffers(size_t binding,
+                         std::vector<StorageBufferRef> &&instance_buffers);
 
     DescriptorSetBuilder &set_texture_and_sampler(size_t binding, Texture &texture,
                                                   Sampler &sampler);

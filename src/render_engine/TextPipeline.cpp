@@ -18,7 +18,8 @@ TextPipeline::TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> 
                            SwapChainManager &swap_chain_manager,
                            std::vector<UniformBuffer> &uniform_buffers, Sampler &sampler,
                            Texture &texture)
-    : m_ctx(ctx), m_buffer_idx(0), m_instance_buffers(create_instance_buffers()),
+    : m_ctx(ctx), m_instance_buffers(SwapStorageBuffer<StorageBufferObject>(
+                      ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
       m_vertex_buffer(
           VertexBuffer(ctx, Geometry::rectangle_vertices, swap_chain_manager)),
       m_index_buffer(IndexBuffer(ctx, Geometry::rectangle_indices, swap_chain_manager)),
@@ -31,16 +32,9 @@ TextPipeline::~TextPipeline() {
     vkDestroyDescriptorSetLayout(m_ctx->device, m_descriptor_set_layout, nullptr);
 }
 
-std::vector<StorageBuffer> TextPipeline::create_instance_buffers() {
-    std::vector<StorageBuffer> vec{};
-    vec.emplace_back(m_ctx, 1024);
-    vec.emplace_back(m_ctx, 1024);
-    return vec;
-}
-
 VkDescriptorSetLayout TextPipeline::create_descriptor_set_layout() {
     return DescriptorSetLayoutBuilder()
-        .add(StorageBuffer::create_descriptor_set_layout_binding(0))
+        .add(StorageBuffer<StorageBufferObject>::create_descriptor_set_layout_binding(0))
         .add(UniformBuffer::create_descriptor_set_layout_binding(1))
         .add(Sampler::create_descriptor_set_layout_binding(2))
         .build(m_ctx.get());
@@ -51,7 +45,7 @@ TextPipeline::create_descriptor_set(std::vector<UniformBuffer> &uniform_buffers,
                                     Sampler &sampler, Texture &texture) {
     return DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                 MAX_FRAMES_IN_FLIGHT)
-        .set_instance_buffers(0, m_instance_buffers)
+        .set_instance_buffers(0, m_instance_buffers.get_buffer_references())
         .set_uniform_buffers(1, uniform_buffers)
         .set_texture_and_sampler(2, texture, sampler)
         .build(m_ctx);
@@ -83,13 +77,14 @@ Pipeline TextPipeline::create_pipeline(VkDescriptorSetLayout &descriptor_set_lay
     return pipeline;
 }
 
-void TextPipeline::render_text(const VkCommandBuffer &command_buffer,
-                               std::vector<StorageBufferObject> &&instance_data) {
-    m_instance_buffers[m_buffer_idx].update_storage_buffer(
-        std::forward<std::vector<StorageBufferObject>>(instance_data));
+StorageBuffer<StorageBufferObject> &TextPipeline::get_instance_buffer() {
+    return m_instance_buffers.get_buffer();
+}
 
-    const auto num_instances = instance_data.size();
+void TextPipeline::render_text(const VkCommandBuffer &command_buffer) {
 
+    const auto &instance_buffer = m_instance_buffers.get_buffer();
+    const auto num_instances = instance_buffer.capacity();
     if (num_instances <= 0) {
         return;
     }
@@ -106,5 +101,6 @@ void TextPipeline::render_text(const VkCommandBuffer &command_buffer,
                            &vertex_buffers_offset);
     vkCmdBindIndexBuffer(command_buffer, m_index_buffer.buffer, 0, VK_INDEX_TYPE_UINT16);
     vkCmdDrawIndexed(command_buffer, m_index_buffer.num_indices, num_instances, 0, 0, 0);
-    m_buffer_idx = (m_buffer_idx + 1) % MAX_FRAMES_IN_FLIGHT;
+
+    m_instance_buffers.rotate();
 }

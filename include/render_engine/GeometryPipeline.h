@@ -44,15 +44,10 @@ class GeometryPipeline {
     Pipeline m_pipeline;
     DescriptorPool m_descriptor_pool;
 
-    size_t m_circle_buffer_idx;
-    size_t m_triangle_buffer_idx;
-    size_t m_rectangle_buffer_idx;
-    size_t m_hexagon_buffer_idx;
-
-    std::vector<StorageBuffer> m_circle_instance_buffers;
-    std::vector<StorageBuffer> m_triangle_instance_buffers;
-    std::vector<StorageBuffer> m_rectangle_instance_buffers;
-    std::vector<StorageBuffer> m_hexagon_instance_buffers;
+    SwapStorageBuffer<StorageBufferObject> m_circle_instance_buffers;
+    SwapStorageBuffer<StorageBufferObject> m_triangle_instance_buffers;
+    SwapStorageBuffer<StorageBufferObject> m_rectangle_instance_buffers;
+    SwapStorageBuffer<StorageBufferObject> m_hexagon_instance_buffers;
 
     std::unique_ptr<Geometry::Circle> circle_geometry;
     std::unique_ptr<Geometry::Triangle> triangle_geometry;
@@ -77,13 +72,14 @@ class GeometryPipeline {
                      Texture &texture);
     ~GeometryPipeline();
 
+    StorageBuffer<StorageBufferObject> &get_circle_instance_buffer();
+    StorageBuffer<StorageBufferObject> &get_triangle_instance_buffer();
+    StorageBuffer<StorageBufferObject> &get_rectangle_instance_buffer();
+    StorageBuffer<StorageBufferObject> &get_hexagon_instance_buffer();
+
     // TODO: These render function should merge into one generic call
-    void render_circles(const VkCommandBuffer &command_buffer,
-                        std::vector<StorageBufferObject> &&circle_instance_data);
-    void render_triangles(const VkCommandBuffer &command_buffer,
-                          std::vector<StorageBufferObject> &&triangle_instance_data);
-    void render_rectangles(const VkCommandBuffer &command_buffer,
-                           std::vector<StorageBufferObject> &&rectangle_instance_data);
-    void render_hexagons(const VkCommandBuffer &command_buffer,
-                         std::vector<StorageBufferObject> &&hexagon_instance_data);
+    void render_circles(const VkCommandBuffer &command_buffer);
+    void render_triangles(const VkCommandBuffer &command_buffer);
+    void render_rectangles(const VkCommandBuffer &command_buffer);
+    void render_hexagons(const VkCommandBuffer &command_buffer);
 };

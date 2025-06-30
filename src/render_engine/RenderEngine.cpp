@@ -29,7 +29,8 @@ RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_
 
     auto descriptor_set_layout_builder =
         DescriptorSetLayoutBuilder()
-            .add(StorageBuffer::create_descriptor_set_layout_binding(0))
+            .add(StorageBuffer<StorageBufferObject>::create_descriptor_set_layout_binding(
+                0))
             .add(UniformBuffer::create_descriptor_set_layout_binding(1))
             .add(Sampler::create_descriptor_set_layout_binding(2));
 
@@ -72,91 +73,75 @@ RenderEngine::~RenderEngine() {
 
 void RenderEngine::render(
     const std::vector<std::reference_wrapper<const RenderBody>> &bodies) {
-    std::vector<StorageBufferObject> circle_instance_data = {};
-    std::vector<StorageBufferObject> triangle_instance_data = {};
-    std::vector<StorageBufferObject> rectangle_instance_data = {};
-    std::vector<StorageBufferObject> hexagon_instance_data = {};
-    std::vector<StorageBufferObject> arrow_instance_data = {};
-    std::vector<StorageBufferObject> line_instance_data = {};
 
-    // Open questions:
-    // - Where should the StorageBuffer be stored?
-    // - Where should the struct T be located?
+    auto &circle_instance_buffer = m_geometry_pipeline->get_circle_instance_buffer();
+    auto &triangle_instance_buffer = m_geometry_pipeline->get_triangle_instance_buffer();
+    auto &rectangle_instance_buffer =
+        m_geometry_pipeline->get_rectangle_instance_buffer();
+    auto &hexagon_instance_buffer = m_geometry_pipeline->get_hexagon_instance_buffer();
 
-    // StorageBuffer<T> circle_instance_data;
-    // StorageBuffer<GeometryStorageBufferObject> circle_instance_data;
-    // circle_instance_data.clear();
-    // circle_instance_data.emplace_back(...);
-    // circle_instance_data.transfer(); // copy from cpu memory to gpu memory
+    circle_instance_buffer.clear();
+    triangle_instance_buffer.clear();
+    rectangle_instance_buffer.clear();
+    hexagon_instance_buffer.clear();
 
     for (auto b : bodies) {
         auto deref_b = b.get();
         switch (deref_b.shape.encode_shape_type()) {
         case ShapeTypeEncoding::CircleShape:
-            circle_instance_data.push_back(
-                StorageBufferObject(deref_b.position, deref_b.color, deref_b.rotation,
-                                    deref_b.shape, deref_b.uvwt));
+            circle_instance_buffer.emplace_back(deref_b.position, deref_b.color,
+                                                deref_b.rotation, deref_b.shape,
+                                                deref_b.uvwt);
             break;
         case ShapeTypeEncoding::TriangleShape:
-            triangle_instance_data.push_back(
-                StorageBufferObject(deref_b.position, deref_b.color, deref_b.rotation,
-                                    deref_b.shape, deref_b.uvwt));
+            triangle_instance_buffer.emplace_back(deref_b.position, deref_b.color,
+                                                  deref_b.rotation, deref_b.shape,
+                                                  deref_b.uvwt);
             break;
         case ShapeTypeEncoding::RectangleShape:
-            rectangle_instance_data.push_back(
-                StorageBufferObject(deref_b.position, deref_b.color, deref_b.rotation,
-                                    deref_b.shape, deref_b.uvwt));
+            rectangle_instance_buffer.emplace_back(deref_b.position, deref_b.color,
+                                                   deref_b.rotation, deref_b.shape,
+                                                   deref_b.uvwt);
             break;
         case ShapeTypeEncoding::HexagonShape:
-            hexagon_instance_data.push_back(
-                StorageBufferObject(deref_b.position, deref_b.color, deref_b.rotation,
-                                    deref_b.shape, deref_b.uvwt));
-            break;
-        case ShapeTypeEncoding::ArrowShape:
-            arrow_instance_data.push_back(
-                StorageBufferObject(deref_b.position, deref_b.color, deref_b.rotation,
-                                    deref_b.shape, deref_b.uvwt));
-            break;
-        case ShapeTypeEncoding::LineShape:
-            line_instance_data.push_back(
-                StorageBufferObject(deref_b.position, deref_b.color, deref_b.rotation,
-                                    deref_b.shape, deref_b.uvwt));
-            break;
-        default:
+            hexagon_instance_buffer.emplace_back(deref_b.position, deref_b.color,
+                                                 deref_b.rotation, deref_b.shape,
+                                                 deref_b.uvwt);
             break;
         };
     }
 
+    circle_instance_buffer.transfer();
+    triangle_instance_buffer.transfer();
+    rectangle_instance_buffer.transfer();
+    hexagon_instance_buffer.transfer();
+
     auto &command_buffer = m_current_render_pass.command_buffer.m_command_buffer;
-    m_geometry_pipeline->render_circles(command_buffer, std::move(circle_instance_data));
-    m_geometry_pipeline->render_triangles(command_buffer,
-                                          std::move(triangle_instance_data));
-    m_geometry_pipeline->render_rectangles(command_buffer,
-                                           std::move(rectangle_instance_data));
-    m_geometry_pipeline->render_hexagons(command_buffer,
-                                         std::move(hexagon_instance_data));
+
+    m_geometry_pipeline->render_circles(command_buffer);
+    m_geometry_pipeline->render_triangles(command_buffer);
+    m_geometry_pipeline->render_rectangles(command_buffer);
+    m_geometry_pipeline->render_hexagons(command_buffer);
 }
 
 void RenderEngine::render_text(const std::string &text, const glm::vec2 &location,
                                const uint size) {
 
-    // TODO: At somepoint we use a separate struct for text instance data
-    // TODO: We can probably move all this computations to the shaders
-    std::vector<StorageBufferObject> instance_data = {};
+    auto &instance_buffer = m_text_pipeline->get_instance_buffer();
+    instance_buffer.clear();
+
     const glm::vec3 offset(size / 2.5, 0.0f, 0.0f);
     const glm::vec3 loc(location.x, location.y, 0.0f);
     float count = 0;
     for (const char &c : text) {
-
-        instance_data.push_back(
-            StorageBufferObject(loc + offset * count, glm::vec3(0.0f, 0.0f, 0.0f), 0.0f,
-                                Shape::create_rectangle_data(size, size),
-                                m_font->encode_ascii_char(std::toupper(c))));
+        instance_buffer.emplace_back(loc + offset * count, glm::vec3(0.0f, 0.0f, 0.0f),
+                                     0.0f, Shape::create_rectangle_data(size, size),
+                                     m_font->encode_ascii_char(std::toupper(c)));
         count += 1.0f;
     }
 
-    m_text_pipeline->render_text(m_current_render_pass.command_buffer.m_command_buffer,
-                                 std::move(instance_data));
+    instance_buffer.transfer();
+    m_text_pipeline->render_text(m_current_render_pass.command_buffer.m_command_buffer);
 }
 
 void RenderEngine::render_ui(const ui::State &state) {

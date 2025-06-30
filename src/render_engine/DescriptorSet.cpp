@@ -26,8 +26,8 @@ DescriptorSetBuilder::DescriptorSetBuilder(VkDescriptorSetLayout &descriptor_set
       m_descriptor_pool(&descriptor_pool), m_capacity(capacity),
 
       m_uniform_buffer_binding(0), m_uniform_buffers(nullptr),
-      m_instance_buffer_binding(0), m_instance_buffers(nullptr), m_texture_binding(0),
-      m_texture(nullptr), m_sampler(nullptr) {}
+      m_instance_buffer_binding(0), m_texture_binding(0), m_texture(nullptr),
+      m_sampler(nullptr) {}
 
 DescriptorSetBuilder &
 DescriptorSetBuilder::set_uniform_buffers(size_t binding,
@@ -37,11 +37,10 @@ DescriptorSetBuilder::set_uniform_buffers(size_t binding,
     return *this;
 }
 
-DescriptorSetBuilder &
-DescriptorSetBuilder::set_instance_buffers(size_t binding,
-                                           std::vector<StorageBuffer> &instance_buffers) {
+DescriptorSetBuilder &DescriptorSetBuilder::set_instance_buffers(
+    size_t binding, std::vector<StorageBufferRef> &&instance_buffers) {
     m_instance_buffer_binding = binding;
-    m_instance_buffers = &instance_buffers;
+    m_instance_buffers = std::move(instance_buffers);
     return *this;
 }
 
@@ -131,10 +130,10 @@ DescriptorSet DescriptorSetBuilder::build(std::shared_ptr<CoreGraphicsContext> &
         std::vector<VkWriteDescriptorSet> descriptor_writes = {};
 
         VkDescriptorBufferInfo instance_buffer_info{};
-        if (m_instance_buffers != nullptr && m_instance_buffers->size() >= m_capacity) {
-            instance_buffer_info.buffer = m_instance_buffers->at(i).buffer;
+        if (m_instance_buffers.size() != 0 && m_instance_buffers.size() >= m_capacity) {
+            instance_buffer_info.buffer = m_instance_buffers.at(i).buffer;
             instance_buffer_info.offset = 0;
-            instance_buffer_info.range = m_instance_buffers->at(i).size;
+            instance_buffer_info.range = m_instance_buffers.at(i).size;
 
             descriptor_writes.push_back(create_instance_buffer_descriptor_write(
                 descriptor_sets[i], instance_buffer_info));
