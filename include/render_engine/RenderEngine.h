@@ -3,11 +3,11 @@
 #include "render_engine/GeometryPipeline.h"
 #include "render_engine/RenderBody.h"
 #include "render_engine/SwapChainManager.h"
-#include "render_engine/TextPipeline.h"
 #include "render_engine/Window.h"
 #include "render_engine/WindowConfig.h"
 #include "render_engine/fonts/Font.h"
 #include "render_engine/ui/State.h"
+#include "render_engine/ui/TextPipeline.h"
 #include "render_engine/ui/UIPipeline.h"
 #include "vulkan/vulkan_core.h"
 #include <GLFW/glfw3.h>
@@ -31,8 +31,8 @@ class RenderEngine {
     std::unique_ptr<GeometryPipeline> m_geometry_pipeline;
 
     std::unique_ptr<Font> m_font;
-    std::unique_ptr<TextPipeline> m_text_pipeline;
 
+    std::unique_ptr<ui::TextPipeline> m_text_pipeline;
     std::unique_ptr<ui::UIPipeline> m_ui_pipeline;
 
     struct {

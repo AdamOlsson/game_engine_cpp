@@ -8,17 +8,8 @@
 #define ARROW 5 
 #define LINE 6 
 
-struct Shape {
-    float param1;
-    float param2;
-};
-
 struct InstanceData {
     vec3 position;
-    vec3 color;
-    float rotation;
-    uint shape_type;
-    Shape shape;
     vec4 uvwt; // bbox for texture
 };
 
@@ -29,6 +20,11 @@ layout(std140, binding = 0) readonly buffer InstanceDataBlock {
 layout(binding = 1) readonly uniform WindowDimensions {
         vec2 dims;
 } window;
+layout(push_constant) uniform TextProperties{
+    vec3 color;
+    float rotation;
+    uint font_size;
+} push_text_props;
 
 layout(location = 0) in vec3 inPosition;
 
@@ -85,8 +81,8 @@ vec2 compute_uv(vec2 vertex, vec4 bbox) {
 void main() {
     InstanceData instance = instance_data_block.instances[gl_InstanceIndex];
 
-    vec3 scaled_vertex_pos = scale_vertex(inPosition, instance.shape.param1, instance.shape.param2);
-    mat3 rotation_matrix = rotationMatrixZ(-instance.rotation);
+    vec3 scaled_vertex_pos = scale_vertex(inPosition, push_text_props.font_size, push_text_props.font_size);
+    mat3 rotation_matrix = rotationMatrixZ(-push_text_props.rotation);
     vec3 rotated_vertex_pos = rotation_matrix * scaled_vertex_pos;
 
     vec2 viewport_position = positions_to_viewport(instance.position.xy, window.dims);
@@ -94,6 +90,6 @@ void main() {
     vec4 position = vec4(viewport_position + vertex_in_viewport, instance.position.z, 1.0);
     
     gl_Position = position;
-    fragColor = instance.color;
+    fragColor = push_text_props.color;
     uv = compute_uv(inPosition.xy, instance.uvwt);
 }

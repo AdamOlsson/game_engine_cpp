@@ -26,7 +26,7 @@ UIPipeline::~UIPipeline() {
 }
 
 void UIPipeline::render(const VkCommandBuffer &command_buffer,
-                        const ElementProperties &ui_element) {
+                        const ElementProperties::ContainerProperties &ui_element) {
     vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                       m_pipeline.m_pipeline);
 

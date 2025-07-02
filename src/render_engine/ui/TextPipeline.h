@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ElementProperties.h"
+#include "glm/fwd.hpp"
 #include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/DescriptorPool.h"
 #include "render_engine/DescriptorSet.h"
@@ -20,11 +22,32 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+namespace ui {
+
+struct TextInstanceBufferObject {
+    alignas(16) glm::vec3 position;
+    alignas(16) glm::vec4 uvwt;
+
+    std::string to_string() const {
+        return std::format("TextInstanceBufferObject {{\n"
+                           "  position:   ({:.3f}, {:.3f}, {:.3f})\n"
+                           "  uvwt:       ({:.3f}, {:.3f}, {:.3f}, {:.3f})\n"
+                           "}}",
+                           position.x, position.y, position.z, uvwt.x, uvwt.y, uvwt.z,
+                           uvwt.w);
+    }
+
+    friend std::ostream &operator<<(std::ostream &os,
+                                    const TextInstanceBufferObject &obj) {
+        return os << obj.to_string();
+    }
+};
+
 class TextPipeline {
   private:
     std::shared_ptr<CoreGraphicsContext> m_ctx;
 
-    SwapStorageBuffer<StorageBufferObject> m_instance_buffers;
+    SwapStorageBuffer<TextInstanceBufferObject> m_instance_buffers;
     VertexBuffer m_vertex_buffer;
     IndexBuffer m_index_buffer;
 
@@ -46,7 +69,9 @@ class TextPipeline {
                  Texture &texture);
     ~TextPipeline();
 
-    StorageBuffer<StorageBufferObject> &get_instance_buffer();
+    StorageBuffer<TextInstanceBufferObject> &get_instance_buffer();
 
-    void render_text(const VkCommandBuffer &command_buffer);
+    void render_text(const VkCommandBuffer &command_buffer,
+                     ui::ElementProperties::FontProperties &text_props);
 };
+} // namespace ui

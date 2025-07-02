@@ -144,11 +144,11 @@ State &UI::update_state_using_cursor(const ViewportPoint &cursor_pos) {
 /*State UI::update_state_using_keypress() {}*/
 
 bool UI::is_inside(const ViewportPoint &cursor_pos, const ElementProperties &element) {
-    float half_width = element.dimension.x / 2.0f;
-    float half_height = element.dimension.y / 2.0f;
+    float half_width = element.container.dimension.x / 2.0f;
+    float half_height = element.container.dimension.y / 2.0f;
 
-    return (cursor_pos.x >= element.center.x - half_width) &&
-           (cursor_pos.x <= element.center.x + half_width) &&
-           (cursor_pos.y >= element.center.y - half_height) &&
-           (cursor_pos.y <= element.center.y + half_height);
+    return (cursor_pos.x >= element.container.center.x - half_width) &&
+           (cursor_pos.x <= element.container.center.x + half_width) &&
+           (cursor_pos.y >= element.container.center.y - half_height) &&
+           (cursor_pos.y <= element.container.center.y + half_height);
 }

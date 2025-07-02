@@ -1,5 +1,4 @@
-#include "render_engine/TextPipeline.h"
-#include "CoreGraphicsContext.h"
+#include "render_engine/ui/TextPipeline.h"
 #include "render_engine/DescriptorSet.h"
 #include "render_engine/DescriptorSetLayoutBuilder.h"
 #include "render_engine/GeometryPipeline.h"
@@ -14,11 +13,13 @@
 #include <memory>
 #include <vector>
 
+using namespace ui;
+
 TextPipeline::TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
                            SwapChainManager &swap_chain_manager,
                            std::vector<UniformBuffer> &uniform_buffers, Sampler &sampler,
                            Texture &texture)
-    : m_ctx(ctx), m_instance_buffers(SwapStorageBuffer<StorageBufferObject>(
+    : m_ctx(ctx), m_instance_buffers(SwapStorageBuffer<TextInstanceBufferObject>(
                       ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
       m_vertex_buffer(
           VertexBuffer(ctx, Geometry::rectangle_vertices, swap_chain_manager)),
@@ -34,7 +35,9 @@ TextPipeline::~TextPipeline() {
 
 VkDescriptorSetLayout TextPipeline::create_descriptor_set_layout() {
     return DescriptorSetLayoutBuilder()
-        .add(StorageBuffer<StorageBufferObject>::create_descriptor_set_layout_binding(0))
+        .add(
+            StorageBuffer<TextInstanceBufferObject>::create_descriptor_set_layout_binding(
+                0))
         .add(UniformBuffer::create_descriptor_set_layout_binding(1))
         .add(Sampler::create_descriptor_set_layout_binding(2))
         .build(m_ctx.get());
@@ -66,7 +69,7 @@ Pipeline TextPipeline::create_pipeline(VkDescriptorSetLayout &descriptor_set_lay
     VkPushConstantRange push_constant_range{};
     push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     push_constant_range.offset = 0;
-    push_constant_range.size = sizeof(uint32_t);
+    push_constant_range.size = sizeof(ElementProperties::FontProperties);
 
     Pipeline pipeline =
         Pipeline(m_ctx, descriptor_set_layout, {push_constant_range}, vert_shader_module,
@@ -77,11 +80,12 @@ Pipeline TextPipeline::create_pipeline(VkDescriptorSetLayout &descriptor_set_lay
     return pipeline;
 }
 
-StorageBuffer<StorageBufferObject> &TextPipeline::get_instance_buffer() {
+StorageBuffer<TextInstanceBufferObject> &TextPipeline::get_instance_buffer() {
     return m_instance_buffers.get_buffer();
 }
 
-void TextPipeline::render_text(const VkCommandBuffer &command_buffer) {
+void TextPipeline::render_text(const VkCommandBuffer &command_buffer,
+                               ElementProperties::FontProperties &text_props) {
 
     const auto &instance_buffer = m_instance_buffers.get_buffer();
     const auto num_instances = instance_buffer.capacity();
@@ -92,6 +96,10 @@ void TextPipeline::render_text(const VkCommandBuffer &command_buffer) {
     const VkDeviceSize vertex_buffers_offset = 0;
     vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                       m_pipeline.m_pipeline);
+
+    vkCmdPushConstants(command_buffer, m_pipeline.m_pipeline_layout,
+                       VK_SHADER_STAGE_VERTEX_BIT, 0,
+                       sizeof(ElementProperties::FontProperties), &text_props);
 
     auto descriptor = m_descriptor_set.get();
     vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,

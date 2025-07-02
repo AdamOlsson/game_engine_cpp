@@ -8,6 +8,7 @@
 #include "render_engine/fonts/Font.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "render_engine/resources/images/ImageResource.h"
+#include "render_engine/ui/TextPipeline.h"
 #include "render_engine/ui/UIPipeline.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
@@ -57,7 +58,7 @@ RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_
     }
 
     if (m_font != nullptr) {
-        m_text_pipeline = std::make_unique<TextPipeline>(
+        m_text_pipeline = std::make_unique<ui::TextPipeline>(
             m_window, m_ctx, m_swap_chain_manager, *m_window_dimension_buffers, m_sampler,
             *m_font->font_atlas);
     }
@@ -126,6 +127,11 @@ void RenderEngine::render(
 
 void RenderEngine::render_text(const std::string &text, const glm::vec2 &location,
                                const uint size) {
+    // CONTINUE:
+    // - Based on text center, calculate start of text
+    //
+    auto text_props = ui::ElementProperties::FontProperties{
+        .color = glm::vec3(0.0f, 0.0f, 0.0f), .rotation = 0.0f, .font_size = size};
 
     auto &instance_buffer = m_text_pipeline->get_instance_buffer();
     instance_buffer.clear();
@@ -134,23 +140,23 @@ void RenderEngine::render_text(const std::string &text, const glm::vec2 &locatio
     const glm::vec3 loc(location.x, location.y, 0.0f);
     float count = 0;
     for (const char &c : text) {
-        instance_buffer.emplace_back(loc + offset * count, glm::vec3(0.0f, 0.0f, 0.0f),
-                                     0.0f, Shape::create_rectangle_data(size, size),
+        instance_buffer.emplace_back(loc + offset * count,
                                      m_font->encode_ascii_char(std::toupper(c)));
         count += 1.0f;
     }
 
     instance_buffer.transfer();
-    m_text_pipeline->render_text(m_current_render_pass.command_buffer.m_command_buffer);
+    m_text_pipeline->render_text(m_current_render_pass.command_buffer.m_command_buffer,
+                                 text_props);
 }
 
 void RenderEngine::render_ui(const ui::State &state) {
     for (auto property : state.properties) {
-        /*m_ui_pipeline->render(m_current_render_pass.command_buffer.m_command_buffer,*/
-        /*                      *property.container);*/
+        const auto text_center = property->container.center;
+        // TODO: const auto text_start = ...
 
         m_ui_pipeline->render(m_current_render_pass.command_buffer.m_command_buffer,
-                              *property);
+                              property->container);
 
         // render_text(property.text.text, property.text.center, property.text.font_size);
     }

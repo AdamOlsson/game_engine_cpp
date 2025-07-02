@@ -6,40 +6,40 @@
 TEST(UITest, TestOnEnterAndOnLeaveWithSingleButton) {
     const auto cursor_pos_on_button = ViewportPoint(0.0f, 0.0f);
     const auto cursor_pos_off_button = ViewportPoint(200.1f, 0.0f);
-    std::unique_ptr<ui::UI> m_ui = std::make_unique<ui::UI>(
-        ui::Menu().add_button(ui::Button(ui::ElementProperties{
-                                             .center = glm::vec2(0.0f, 0.0f),
-                                             .dimension = glm::vec2(400.0f, 100.0f),
-                                             .border.color = colors::GREEN,
-                                             .border.thickness = 5.0f,
-                                             .border.radius = 15.0f,
-                                         })
-                                  .set_on_enter([](ui::Button &self) {
-                                      self.properties.border.color = colors::BLUE;
-                                  })
-                                  .set_on_leave([](ui::Button &self) {
-                                      self.properties.border.color = colors::RED;
-                                  })));
+    std::unique_ptr<ui::UI> m_ui = std::make_unique<ui::UI>(ui::Menu().add_button(
+        ui::Button(ui::ElementProperties{
+                       .container.center = glm::vec2(0.0f, 0.0f),
+                       .container.dimension = glm::vec2(400.0f, 100.0f),
+                       .container.border.color = colors::GREEN,
+                       .container.border.thickness = 5.0f,
+                       .container.border.radius = 15.0f,
+                   })
+            .set_on_enter([](ui::Button &self) {
+                self.properties.container.border.color = colors::BLUE;
+            })
+            .set_on_leave([](ui::Button &self) {
+                self.properties.container.border.color = colors::RED;
+            })));
 
     const ui::State initial_state = m_ui->get_state();
 
     // Validate initial state
     ASSERT_EQ(initial_state.properties.size(), 1);
-    ASSERT_EQ(initial_state.properties[0]->border.color, colors::GREEN);
+    ASSERT_EQ(initial_state.properties[0]->container.border.color, colors::GREEN);
 
     m_ui->update_state_from_mouse_event(MouseEvent::CURSOR_MOVED, cursor_pos_on_button);
     const ui::State state_1 = m_ui->get_state();
 
     // Validate state 1
     ASSERT_EQ(state_1.properties.size(), 1);
-    ASSERT_EQ(state_1.properties[0]->border.color, colors::BLUE);
+    ASSERT_EQ(state_1.properties[0]->container.border.color, colors::BLUE);
 
     m_ui->update_state_from_mouse_event(MouseEvent::CURSOR_MOVED, cursor_pos_off_button);
     const ui::State state_2 = m_ui->get_state();
 
     // Validate state 2
     ASSERT_EQ(state_2.properties.size(), 1);
-    ASSERT_EQ(state_2.properties[0]->border.color, colors::RED);
+    ASSERT_EQ(state_2.properties[0]->container.border.color, colors::RED);
 }
 
 TEST(UITest, TestOnEnterAndOnLeaveWithThreeeButtons) {
@@ -48,43 +48,46 @@ TEST(UITest, TestOnEnterAndOnLeaveWithThreeeButtons) {
     std::unique_ptr<ui::UI> m_ui = std::make_unique<ui::UI>(
         ui::Menu()
             .add_button(ui::Button(ui::ElementProperties{
-                                       .center = glm::vec2(0.0f, 200.0f),
-                                       .dimension = glm::vec2(400.0f, 100.0f),
-                                       .border.color = colors::DARK_GREEN,
-                                       .border.thickness = 5.0f,
-                                       .border.radius = 15.0f,
+                                       .container.center = glm::vec2(0.0f, 200.0f),
+                                       .container.dimension = glm::vec2(400.0f, 100.0f),
+                                       .container.border.color = colors::DARK_GREEN,
+                                       .container.border.thickness = 5.0f,
+                                       .container.border.radius = 15.0f,
                                    })
                             .set_on_enter([](ui::Button &self) {
-                                self.properties.border.color = colors::DARK_BLUE;
+                                self.properties.container.border.color =
+                                    colors::DARK_BLUE;
                             })
                             .set_on_leave([](ui::Button &self) {
-                                self.properties.border.color = colors::DARK_RED;
+                                self.properties.container.border.color = colors::DARK_RED;
                             }))
             .add_button(ui::Button(ui::ElementProperties{
-                                       .center = glm::vec2(0.0f, 0.0f),
-                                       .dimension = glm::vec2(400.0f, 100.0f),
-                                       .border.color = colors::GREEN,
-                                       .border.thickness = 5.0f,
-                                       .border.radius = 15.0f,
+                                       .container.center = glm::vec2(0.0f, 0.0f),
+                                       .container.dimension = glm::vec2(400.0f, 100.0f),
+                                       .container.border.color = colors::GREEN,
+                                       .container.border.thickness = 5.0f,
+                                       .container.border.radius = 15.0f,
                                    })
                             .set_on_enter([](ui::Button &self) {
-                                self.properties.border.color = colors::BLUE;
+                                self.properties.container.border.color = colors::BLUE;
                             })
                             .set_on_leave([](ui::Button &self) {
-                                self.properties.border.color = colors::RED;
+                                self.properties.container.border.color = colors::RED;
                             }))
             .add_button(ui::Button(ui::ElementProperties{
-                                       .center = glm::vec2(0.0f, -200.0f),
-                                       .dimension = glm::vec2(400.0f, 100.0f),
-                                       .border.color = colors::LIGHT_GREEN,
-                                       .border.thickness = 5.0f,
-                                       .border.radius = 15.0f,
+                                       .container.center = glm::vec2(0.0f, -200.0f),
+                                       .container.dimension = glm::vec2(400.0f, 100.0f),
+                                       .container.border.color = colors::LIGHT_GREEN,
+                                       .container.border.thickness = 5.0f,
+                                       .container.border.radius = 15.0f,
                                    })
                             .set_on_enter([](ui::Button &self) {
-                                self.properties.border.color = colors::LIGHT_BLUE;
+                                self.properties.container.border.color =
+                                    colors::LIGHT_BLUE;
                             })
                             .set_on_leave([](ui::Button &self) {
-                                self.properties.border.color = colors::LIGHT_RED;
+                                self.properties.container.border.color =
+                                    colors::LIGHT_RED;
                             }))
 
     );
@@ -93,25 +96,25 @@ TEST(UITest, TestOnEnterAndOnLeaveWithThreeeButtons) {
 
     // Validate initial state
     ASSERT_EQ(initial_state.properties.size(), 3);
-    ASSERT_EQ(initial_state.properties[0]->border.color, colors::DARK_GREEN);
-    ASSERT_EQ(initial_state.properties[1]->border.color, colors::GREEN);
-    ASSERT_EQ(initial_state.properties[2]->border.color, colors::LIGHT_GREEN);
+    ASSERT_EQ(initial_state.properties[0]->container.border.color, colors::DARK_GREEN);
+    ASSERT_EQ(initial_state.properties[1]->container.border.color, colors::GREEN);
+    ASSERT_EQ(initial_state.properties[2]->container.border.color, colors::LIGHT_GREEN);
 
     m_ui->update_state_from_mouse_event(MouseEvent::CURSOR_MOVED, cursor_pos_on_button);
     const ui::State state_1 = m_ui->get_state();
 
     // Validate state 1
     ASSERT_EQ(state_1.properties.size(), 3);
-    ASSERT_EQ(initial_state.properties[0]->border.color, colors::DARK_GREEN);
-    ASSERT_EQ(initial_state.properties[1]->border.color, colors::BLUE);
-    ASSERT_EQ(initial_state.properties[2]->border.color, colors::LIGHT_GREEN);
+    ASSERT_EQ(initial_state.properties[0]->container.border.color, colors::DARK_GREEN);
+    ASSERT_EQ(initial_state.properties[1]->container.border.color, colors::BLUE);
+    ASSERT_EQ(initial_state.properties[2]->container.border.color, colors::LIGHT_GREEN);
 
     m_ui->update_state_from_mouse_event(MouseEvent::CURSOR_MOVED, cursor_pos_off_button);
     const ui::State state_2 = m_ui->get_state();
 
     // Validate state 2
     ASSERT_EQ(state_2.properties.size(), 3);
-    ASSERT_EQ(initial_state.properties[0]->border.color, colors::DARK_GREEN);
-    ASSERT_EQ(initial_state.properties[1]->border.color, colors::RED);
-    ASSERT_EQ(initial_state.properties[2]->border.color, colors::LIGHT_GREEN);
+    ASSERT_EQ(initial_state.properties[0]->container.border.color, colors::DARK_GREEN);
+    ASSERT_EQ(initial_state.properties[1]->container.border.color, colors::RED);
+    ASSERT_EQ(initial_state.properties[2]->container.border.color, colors::LIGHT_GREEN);
 }

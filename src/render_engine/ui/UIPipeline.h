@@ -34,6 +34,6 @@ class UIPipeline {
     ~UIPipeline();
 
     void render(const VkCommandBuffer &command_buffer,
-                const ui::ElementProperties &ui_element);
+                const ui::ElementProperties::ContainerProperties &ui_element);
 };
 } // namespace ui
