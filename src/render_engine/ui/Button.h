@@ -23,6 +23,7 @@ template <typename T> struct extract_animation_type<ui::Animation<T>> {
 // perfomance loss if done in the main loop of the game.
 class Button {
   public:
+    std::string text;
     ElementProperties properties;
     ButtonClickState click_state;
     ButtonCursorState cursor_state;
@@ -37,20 +38,21 @@ class Button {
 
     Button() = default;
 
-    Button(ElementProperties &&properties)
-        : properties(properties), click_state(ButtonClickState::Unpressed),
+    Button(std::string &&text, ElementProperties &&properties)
+        : text(std::move(text)), properties(properties),
+          click_state(ButtonClickState::Unpressed),
           cursor_state(ButtonCursorState::Outside), on_click([](ui::Button &b) {}),
           on_unclick([](ui::Button &b) {}), on_hover([](ui::Button &b) {}),
           on_enter([](ui::Button &b) {}), on_leave([](ui::Button &b) {}) {}
 
-    Button(ElementProperties &properties)
-        : properties(properties), click_state(ButtonClickState::Unpressed),
+    Button(std::string &text, ElementProperties &properties)
+        : text(text), properties(properties), click_state(ButtonClickState::Unpressed),
           cursor_state(ButtonCursorState::Outside), on_click([](ui::Button &b) {}),
           on_unclick([](ui::Button &b) {}), on_hover([](ui::Button &b) {}),
           on_enter([](ui::Button &b) {}), on_leave([](ui::Button &b) {}) {}
 
     Button(const Button &other)
-        : properties(other.properties), click_state(other.click_state),
+        : text(other.text), properties(other.properties), click_state(other.click_state),
           cursor_state(other.cursor_state), on_click(other.on_click),
           on_unclick(other.on_unclick), on_hover(other.on_hover),
           on_enter(other.on_enter), on_leave(other.on_leave),
@@ -58,6 +60,7 @@ class Button {
 
     Button &operator=(const Button &other) {
         if (this != &other) {
+            text = other.text;
             properties = other.properties;
             click_state = other.click_state;
             cursor_state = other.cursor_state;
@@ -73,7 +76,8 @@ class Button {
     }
 
     Button(Button &&other) noexcept
-        : properties(other.properties), click_state(std::move(other.click_state)),
+        : text(std::move(other.text)), properties(std::move(other.properties)),
+          click_state(std::move(other.click_state)),
           cursor_state(std::move(other.cursor_state)),
           animations(std::move(other.animations)), on_click(std::move(other.on_click)),
           on_unclick(std::move(other.on_unclick)), on_hover(std::move(other.on_hover)),
@@ -88,6 +92,7 @@ class Button {
 
     Button &operator=(Button &&other) noexcept {
         if (this != &other) {
+            text = std::move(other.text);
             properties = std::move(other.properties);
             click_state = std::move(other.click_state);
             cursor_state = std::move(other.cursor_state);

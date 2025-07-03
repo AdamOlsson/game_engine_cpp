@@ -31,13 +31,16 @@ class UserInterfaceExample : public Game {
         // see how things develop once we know how to create the layout
         m_ui = std::make_unique<ui::UI>(
             ui::Menu()
-                .add_button(ui::Button(ui::ElementProperties{
+                .add_button(ui::Button("A",
+                                       ui::ElementProperties{
                                            .container.center = glm::vec2(0.0, -250.0),
                                            .container.dimension = glm::vec2(400.0, 100.0),
                                            .container.border.color = colors::GREEN,
                                            .container.border.thickness = 5.0,
                                            .container.border.radius = 15.0,
-                                       })
+                                           .font.color = colors::WHITE,
+                                           .font.rotation = 0.0f,
+                                           .font.font_size = 128})
                                 .set_on_enter(on_enter_callback)
                                 .set_on_leave(on_leave_callback)
                                 .set_on_click([](ui::Button &self) {
@@ -56,7 +59,9 @@ class UserInterfaceExample : public Game {
                                                               glm::vec2(100.0f, -250.0))
                                                        .play();
                                                }))
-                .add_button(ui::Button(ui::ElementProperties{
+
+                .add_button(ui::Button("B",
+                                       ui::ElementProperties{
                                            .container.center = glm::vec2(0.0, -140.0),
                                            .container.dimension = glm::vec2(400.0, 100.0),
                                            .container.border.color = colors::GREEN,
@@ -79,11 +84,14 @@ class UserInterfaceExample : public Game {
                                                            colors::BLUE)
                                                        .play();
                                                }))
+
                 .add_submenu(
                     ui::Menu(
-                        ui::Button(ui::ElementProperties{
+                        ui::Button("C",
+                                   ui::ElementProperties{
                                        .container.center = glm::vec2(0.0, -30.0),
-                                       .container.dimension = glm::vec2(400.0, 100.0),
+                                       .container.dimension =
+                                           glm::vec2(400.0, 100.0),
                                        .container.border.color = colors::BLUE,
                                        .container.border.thickness = 5.0,
                                        .container.border.radius = 15.0,
@@ -103,7 +111,8 @@ class UserInterfaceExample : public Game {
                                                           glm::vec2(100.0f, -30.0f))
                                                    .play();
                                            }),
-                        ui::Button(ui::ElementProperties{
+                        ui::Button("",
+                                   ui::ElementProperties{
                                        .container.center = glm::vec2(0.0, -30.0),
                                        .container.dimension = glm::vec2(400.0, 100.0),
                                        .container.border.color = colors::BLUE,
@@ -114,7 +123,8 @@ class UserInterfaceExample : public Game {
                             .set_on_leave(on_leave_callback)
                             .set_on_click(on_click_callback))
                         .add_button(
-                            ui::Button(ui::ElementProperties{
+                            ui::Button("",
+                                       ui::ElementProperties{
                                            .container.center = glm::vec2(0.0, -250.0),
                                            .container.dimension = glm::vec2(400.0, 100.0),
                                            .container.border.color = colors::GREEN,
@@ -124,8 +134,10 @@ class UserInterfaceExample : public Game {
                                 .set_on_enter(on_enter_callback)
                                 .set_on_leave(on_leave_callback)
                                 .set_on_click(on_click_callback))
+
                         .add_button(
-                            ui::Button(ui::ElementProperties{
+                            ui::Button("",
+                                       ui::ElementProperties{
                                            .container.center = glm::vec2(0.0, -140.0),
                                            .container.dimension = glm::vec2(400.0, 100.0),
                                            .container.border.color = colors::GREEN,
@@ -150,6 +162,7 @@ class UserInterfaceExample : public Game {
         auto ui_state = m_ui->get_state();
 
         render_engine.render_ui(ui_state);
+        /*render_engine.render_text("EXIT", glm::vec2(0.0f, 0.0f), 128);*/
 
         success = render_engine.end_render_pass();
         if (!success) {

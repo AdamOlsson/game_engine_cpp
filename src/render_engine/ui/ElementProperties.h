@@ -1,5 +1,6 @@
 #pragma once
 #include "glm/glm.hpp"
+#include "render_engine/colors.h"
 #include <string>
 
 namespace ui {
@@ -16,9 +17,9 @@ struct ElementProperties {
     } container;
 
     struct FontProperties {
-        alignas(16) glm::vec3 color;
-        alignas(4) glm::float32_t rotation;
-        alignas(4) glm::uint32_t font_size;
+        alignas(16) glm::vec3 color = colors::WHITE;
+        alignas(4) glm::float32_t rotation = 0.0f;
+        alignas(4) glm::uint32_t font_size = 128;
     } font;
 };
 } // namespace ui

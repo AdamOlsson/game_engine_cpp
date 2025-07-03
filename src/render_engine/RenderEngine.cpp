@@ -1,4 +1,5 @@
 #include "render_engine/RenderEngine.h"
+#include "io.h"
 #include "render_engine/DescriptorSetLayoutBuilder.h"
 #include "render_engine/RenderBody.h"
 #include "render_engine/SwapChainManager.h"
@@ -125,19 +126,18 @@ void RenderEngine::render(
     m_geometry_pipeline->render_hexagons(command_buffer);
 }
 
-void RenderEngine::render_text(const std::string &text, const glm::vec2 &location,
+// TODO: This function should not exist, text should be rendered through render_ui()
+void RenderEngine::render_text(const std::string &text, const glm::vec2 &center,
                                const uint size) {
-    // CONTINUE:
-    // - Based on text center, calculate start of text
-    //
-    auto text_props = ui::ElementProperties::FontProperties{
-        .color = glm::vec3(0.0f, 0.0f, 0.0f), .rotation = 0.0f, .font_size = size};
 
     auto &instance_buffer = m_text_pipeline->get_instance_buffer();
     instance_buffer.clear();
 
+    // TODO: Implement text kerning
     const glm::vec3 offset(size / 2.5, 0.0f, 0.0f);
-    const glm::vec3 loc(location.x, location.y, 0.0f);
+    const auto text_start_x =
+        center.x - (static_cast<float>((text.size() - 1)) * offset.x / 2);
+    const glm::vec3 loc(text_start_x, center.y, 0.0f);
     float count = 0;
     for (const char &c : text) {
         instance_buffer.emplace_back(loc + offset * count,
@@ -146,20 +146,51 @@ void RenderEngine::render_text(const std::string &text, const glm::vec2 &locatio
     }
 
     instance_buffer.transfer();
+
+    auto text_props = ui::ElementProperties::FontProperties{
+        .color = glm::vec3(0.0f, 0.0f, 0.0f), .rotation = 0.0f, .font_size = size};
+
     m_text_pipeline->render_text(m_current_render_pass.command_buffer.m_command_buffer,
                                  text_props);
 }
 
 void RenderEngine::render_ui(const ui::State &state) {
-    for (auto property : state.properties) {
-        const auto text_center = property->container.center;
-        // TODO: const auto text_start = ...
+    auto &text_instance_buffer = m_text_pipeline->get_instance_buffer();
+    text_instance_buffer.clear();
+
+    for (const auto button : state.buttons) {
 
         m_ui_pipeline->render(m_current_render_pass.command_buffer.m_command_buffer,
-                              property->container);
+                              button->properties.container);
 
-        // render_text(property.text.text, property.text.center, property.text.font_size);
+        // CONTINUE:
+        // - Implement such that different texts can have different (basically
+        // move push constants to a new buffer): sizes, sdf, color, rotation
+        // - NEXT: Refactor DescriptorSet such that we can add more than 1 StorageBuffer
+        //      - Rename set_instance_buffer() to add_storage_buffer()
+        // TODO: Implement text kerning
+        const auto center = button->properties.container.center;
+        const auto size = button->properties.font.font_size;
+        const auto text = button->text;
+        const glm::vec3 offset(size / 2.5, 0.0f, 0.0f);
+        const auto text_start_x =
+            center.x - (static_cast<float>((text.size() - 1)) * offset.x / 2);
+        const glm::vec3 loc(text_start_x, center.y, 0.0f);
+        float count = 0;
+        for (const char &c : text) {
+            text_instance_buffer.emplace_back(loc + offset * count,
+                                              m_font->encode_ascii_char(std::toupper(c)));
+            count += 1.0f;
+        }
     }
+
+    text_instance_buffer.transfer();
+
+    auto text_props = ui::ElementProperties::FontProperties{
+        .color = glm::vec3(0.0f, 0.0f, 0.0f), .rotation = 0.0f, .font_size = 128};
+
+    m_text_pipeline->render_text(m_current_render_pass.command_buffer.m_command_buffer,
+                                 text_props);
 }
 
 void RenderEngine::wait_idle() { m_ctx->wait_idle(); }

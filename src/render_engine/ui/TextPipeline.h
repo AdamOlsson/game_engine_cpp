@@ -24,12 +24,32 @@
 
 namespace ui {
 
-struct TextInstanceBufferObject {
+struct TextSegmentBufferObject {
+    alignas(16) glm::vec3 color = colors::WHITE;
+    alignas(4) glm::float32_t rotation = 0.0f;
+    alignas(4) glm::uint32_t font_size = 128;
+
+    std::string to_string() const {
+        return std::format("TextSegmentBufferObject {{\n"
+                           "  color:     ({:.3f}, {:.3f}, {:.3f})\n"
+                           "  rotation:  {:.3f}\n"
+                           "  font_size: {:d}\n"
+                           "}}",
+                           color.x, color.y, color.z, rotation, font_size);
+    }
+
+    friend std::ostream &operator<<(std::ostream &os,
+                                    const TextSegmentBufferObject &obj) {
+        return os << obj.to_string();
+    }
+};
+
+struct CharacterInstanceBufferObject {
     alignas(16) glm::vec3 position;
     alignas(16) glm::vec4 uvwt;
 
     std::string to_string() const {
-        return std::format("TextInstanceBufferObject {{\n"
+        return std::format("CharacterInstanceBufferObject {{\n"
                            "  position:   ({:.3f}, {:.3f}, {:.3f})\n"
                            "  uvwt:       ({:.3f}, {:.3f}, {:.3f}, {:.3f})\n"
                            "}}",
@@ -38,7 +58,7 @@ struct TextInstanceBufferObject {
     }
 
     friend std::ostream &operator<<(std::ostream &os,
-                                    const TextInstanceBufferObject &obj) {
+                                    const CharacterInstanceBufferObject &obj) {
         return os << obj.to_string();
     }
 };
@@ -47,7 +67,8 @@ class TextPipeline {
   private:
     std::shared_ptr<CoreGraphicsContext> m_ctx;
 
-    SwapStorageBuffer<TextInstanceBufferObject> m_instance_buffers;
+    SwapStorageBuffer<CharacterInstanceBufferObject> m_character_buffers;
+    SwapStorageBuffer<TextSegmentBufferObject> m_text_segment_buffers;
     VertexBuffer m_vertex_buffer;
     IndexBuffer m_index_buffer;
 
@@ -69,7 +90,7 @@ class TextPipeline {
                  Texture &texture);
     ~TextPipeline();
 
-    StorageBuffer<TextInstanceBufferObject> &get_instance_buffer();
+    StorageBuffer<CharacterInstanceBufferObject> &get_instance_buffer();
 
     void render_text(const VkCommandBuffer &command_buffer,
                      ui::ElementProperties::FontProperties &text_props);

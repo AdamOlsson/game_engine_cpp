@@ -20,7 +20,7 @@ UI::UI(Menu &menu)
       m_menu_trace({&m_menu}) {
     m_last_menu_in_trace = get_last_menu();
     m_menu.link(this);
-    m_current_menu_state.properties = m_last_menu_in_trace->properties_vector;
+    m_current_menu_state.buttons = m_last_menu_in_trace->button_vector;
 }
 
 [[nodiscard]] ui::State &UI::get_state() {
@@ -97,7 +97,7 @@ ui::State &UI::update_state_using_click_event(const MouseEvent mouse_event,
         break;
     };
 
-    m_current_menu_state.properties = m_last_menu_in_trace->properties_vector;
+    m_current_menu_state.buttons = m_last_menu_in_trace->button_vector;
     return m_current_menu_state;
 }
 
@@ -137,7 +137,7 @@ State &UI::update_state_using_cursor(const ViewportPoint &cursor_pos) {
         }
     }
 
-    m_current_menu_state.properties = m_last_menu_in_trace->properties_vector;
+    m_current_menu_state.buttons = m_last_menu_in_trace->button_vector;
     return m_current_menu_state;
 }
 
