@@ -22,12 +22,13 @@ TextPipeline::TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> 
     : m_ctx(ctx), m_character_buffers(SwapStorageBuffer<CharacterInstanceBufferObject>(
                       ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
       m_text_segment_buffers(
-          SwapStorageBuffer<TextSegmentBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 32)),
+          SwapStorageBuffer<TextSegmentBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 1)),
+
       m_vertex_buffer(
           VertexBuffer(ctx, Geometry::rectangle_vertices, swap_chain_manager)),
       m_index_buffer(IndexBuffer(ctx, Geometry::rectangle_indices, swap_chain_manager)),
       m_descriptor_set_layout(create_descriptor_set_layout()),
-      m_descriptor_pool(DescriptorPool(m_ctx, MAX_FRAMES_IN_FLIGHT)),
+      m_descriptor_pool(DescriptorPool(m_ctx, MAX_FRAMES_IN_FLIGHT * 2)),
       m_descriptor_set(create_descriptor_set(uniform_buffers, sampler, texture)),
       m_pipeline(create_pipeline(m_descriptor_set_layout, swap_chain_manager)) {}
 
@@ -39,10 +40,10 @@ VkDescriptorSetLayout TextPipeline::create_descriptor_set_layout() {
     return DescriptorSetLayoutBuilder()
         .add(StorageBuffer<
              CharacterInstanceBufferObject>::create_descriptor_set_layout_binding(0))
+        .add(UniformBuffer::create_descriptor_set_layout_binding(1))
+        .add(Sampler::create_descriptor_set_layout_binding(2))
         .add(StorageBuffer<TextSegmentBufferObject>::create_descriptor_set_layout_binding(
-            1))
-        .add(UniformBuffer::create_descriptor_set_layout_binding(2))
-        .add(Sampler::create_descriptor_set_layout_binding(3))
+            3))
         .build(m_ctx.get());
 }
 
@@ -51,10 +52,10 @@ TextPipeline::create_descriptor_set(std::vector<UniformBuffer> &uniform_buffers,
                                     Sampler &sampler, Texture &texture) {
     return DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                 MAX_FRAMES_IN_FLIGHT)
-        .set_instance_buffers(0, m_character_buffers.get_buffer_references())
-        .set_instance_buffers(1, m_text_segment_buffers.get_buffer_references())
-        .set_uniform_buffers(2, uniform_buffers)
-        .set_texture_and_sampler(3, texture, sampler)
+        .add_storage_buffers(0, m_character_buffers.get_buffer_references())
+        .set_uniform_buffers(1, uniform_buffers)
+        .set_texture_and_sampler(2, texture, sampler)
+        .add_storage_buffers(3, m_text_segment_buffers.get_buffer_references())
         .build(m_ctx);
 }
 
@@ -84,8 +85,12 @@ Pipeline TextPipeline::create_pipeline(VkDescriptorSetLayout &descriptor_set_lay
     return pipeline;
 }
 
-StorageBuffer<CharacterInstanceBufferObject> &TextPipeline::get_instance_buffer() {
+StorageBuffer<CharacterInstanceBufferObject> &TextPipeline::get_character_buffer() {
     return m_character_buffers.get_buffer();
+}
+
+StorageBuffer<TextSegmentBufferObject> &TextPipeline::get_text_segment_buffer() {
+    return m_text_segment_buffers.get_buffer();
 }
 
 void TextPipeline::render_text(const VkCommandBuffer &command_buffer,
@@ -96,6 +101,10 @@ void TextPipeline::render_text(const VkCommandBuffer &command_buffer,
     if (num_instances <= 0) {
         return;
     }
+
+    const auto &text_segment_buffer = m_text_segment_buffers.get_buffer();
+    /*text_segment_buffer.dump_data();*/
+    /*instance_buffer.dump_data();*/
 
     const VkDeviceSize vertex_buffers_offset = 0;
     vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -115,4 +124,39 @@ void TextPipeline::render_text(const VkCommandBuffer &command_buffer,
     vkCmdDrawIndexed(command_buffer, m_index_buffer.num_indices, num_instances, 0, 0, 0);
 
     m_character_buffers.rotate();
+    m_text_segment_buffers.rotate();
+}
+
+// Separate utility functions
+/*std::string to_string(const TextSegmentBufferObject &obj) {*/
+/*    return std::format("TextSegmentBufferObject {{\n"*/
+/*                       "  color:     ({:.3f}, {:.3f}, {:.3f})\n"*/
+/*                       "  rotation:  {:.3f}\n"*/
+/*                       "  font_size: {:d}\n"*/
+/*                       "}}",*/
+/*                       obj.color.x, obj.color.y, obj.color.z, obj.rotation,*/
+/*                       obj.font_size);*/
+/*}*/
+
+std::string to_string(const TextSegmentBufferObject &obj) {
+    return std::format("TextSegmentBufferObject {{\n"
+                       "  color:     ({:.3f}, {:.3f}, {:.3f} )\n"
+                       "}}",
+                       obj.color.x, obj.color.y, obj.color.z);
+}
+std::ostream &operator<<(std::ostream &os, const TextSegmentBufferObject &obj) {
+    return os << to_string(obj);
+}
+
+std::string to_string(const CharacterInstanceBufferObject &obj) {
+    return std::format("CharacterInstanceBufferObject {{\n"
+                       "  position:   ({:.3f}, {:.3f}, {:.3f})\n"
+                       "  uvwt:       ({:.3f}, {:.3f}, {:.3f}, {:.3f})\n"
+                       "}}",
+                       obj.position.x, obj.position.y, obj.position.z, obj.uvwt.x,
+                       obj.uvwt.y, obj.uvwt.z, obj.uvwt.w);
+}
+
+std::ostream &operator<<(std::ostream &os, const CharacterInstanceBufferObject &obj) {
+    return os << to_string(obj);
 }

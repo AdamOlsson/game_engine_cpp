@@ -80,6 +80,7 @@ template <Printable T> class StorageBuffer {
                       m_buffer, m_buffer_memory);
 
         vkMapMemory(m_ctx->device, m_buffer_memory, 0, m_size, 0, &m_buffer_mapped);
+        memset(m_buffer_mapped, 0, m_size);
     }
 
     ~StorageBuffer() {
@@ -151,7 +152,7 @@ template <Printable T> class StorageBuffer {
         return layout_binding;
     }
 
-    void dump_data() {
+    void dump_data() const {
         std::cout << "=== StorageBuffer Data Dump ===" << std::endl;
         std::cout << "Buffer size: " << m_size << " bytes" << std::endl;
         std::cout << "Staging buffer capacity: " << m_staging_buffer.capacity()
@@ -169,7 +170,8 @@ template <Printable T> class StorageBuffer {
         if (m_buffer_mapped != nullptr) {
             std::cout << "\nGPU buffer contents:" << std::endl;
             auto *mapped_data = static_cast<T *>(m_buffer_mapped);
-            size_t element_count = m_size / sizeof(T);
+            /*size_t element_count = m_size / sizeof(T);*/
+            size_t element_count = m_staging_buffer.size();
 
             for (size_t i = 0; i < element_count; ++i) {
                 std::cout << "[" << i << "]: " << mapped_data[i] << std::endl;
@@ -185,8 +187,9 @@ template <Printable T> class StorageBuffer {
                 if ((i + 1) % 16 == 0)
                     printf("\n");
             }
-            if (m_size % 16 != 0)
+            if (m_size % 16 != 0) {
                 printf("\n");
+            }
         }
 
         std::cout << "=== End Data Dump ===" << std::endl;
@@ -209,7 +212,7 @@ template <typename T> class SwapStorageBuffer {
         }
 
         // Create buffer references
-        m_refs.reserve(capacity);
+        m_refs.reserve(num_bufs);
         for (auto i = 0; i < m_buffers.size(); i++) {
             m_refs.push_back(m_buffers[i].get_reference());
         }

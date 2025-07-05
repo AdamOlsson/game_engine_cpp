@@ -8,16 +8,28 @@
 #define ARROW 5 
 #define LINE 6 
 
-struct InstanceData {
+struct CharacterData {
     vec3 position;
+    float _padding;
     vec4 uvwt; // bbox for texture
 };
 
-layout(std140, binding = 0) readonly buffer InstanceDataBlock {
-    InstanceData instances[1024];
-} instance_data_block;
+struct TextSegmentData {
+    vec4 color;
+    // float rotation;
+    // float font_size;
+    // float _padding;
+};
 
-layout(binding = 2) readonly uniform WindowDimensions {
+layout(std140, binding = 0) readonly buffer CharacterDataBlock {
+    CharacterData instances[1024];
+} character_data_block;
+
+layout(std140, binding = 3) readonly buffer TextSegmentDataBlock {
+    TextSegmentData instances[1];
+} text_segment_data_block;
+
+layout(binding = 1) readonly uniform WindowDimensions {
         vec2 dims;
 } window;
 layout(push_constant) uniform TextProperties{
@@ -79,7 +91,9 @@ vec2 compute_uv(vec2 vertex, vec4 bbox) {
 }
 
 void main() {
-    InstanceData instance = instance_data_block.instances[gl_InstanceIndex];
+    CharacterData instance = character_data_block.instances[gl_InstanceIndex];
+
+    vec4 text_color = text_segment_data_block.instances[0].color;
 
     vec3 scaled_vertex_pos = scale_vertex(inPosition, push_text_props.font_size, push_text_props.font_size);
     mat3 rotation_matrix = rotationMatrixZ(-push_text_props.rotation);

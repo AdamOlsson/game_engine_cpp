@@ -42,20 +42,24 @@ class DescriptorSetBuilder {
     size_t m_uniform_buffer_binding;
     std::vector<UniformBuffer> *m_uniform_buffers;
 
-    size_t m_instance_buffer_binding;
+    std::vector<size_t> m_instance_buffer_binding;
     std::vector<StorageBufferRef> m_instance_buffers;
 
     size_t m_texture_binding;
     Texture *m_texture;
     Sampler *m_sampler;
 
+    VkWriteDescriptorSet
+    create_instance_buffer_descriptor_write(const VkDescriptorSet &dst_descriptor_set,
+                                            const VkDescriptorBufferInfo &buffer_info,
+                                            const size_t binding_num);
+
   public:
     DescriptorSetBuilder(VkDescriptorSetLayout &descriptor_set_layout,
                          DescriptorPool &descriptor_pool, size_t capacity);
 
     DescriptorSetBuilder &
-    set_instance_buffers(size_t binding,
-                         std::vector<StorageBufferRef> &&instance_buffers);
+    add_storage_buffers(size_t binding, std::vector<StorageBufferRef> &&instance_buffers);
 
     DescriptorSetBuilder &set_texture_and_sampler(size_t binding, Texture &texture,
                                                   Sampler &sampler);
@@ -72,9 +76,6 @@ class DescriptorSetBuilder {
     create_uniform_buffer_descriptor_write(const VkDescriptorSet &dst_descriptor_set,
                                            const VkDescriptorBufferInfo &buffer_info);
 
-    VkWriteDescriptorSet
-    create_instance_buffer_descriptor_write(const VkDescriptorSet &dst_descriptor_set,
-                                            const VkDescriptorBufferInfo &buffer_info);
     VkWriteDescriptorSet
     create_texture_and_sampler_descriptor_write(const VkDescriptorSet &dst_descriptor_set,
                                                 VkDescriptorImageInfo &image_info);

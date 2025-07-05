@@ -33,35 +33,41 @@ GeometryPipeline::GeometryPipeline(Window &window,
       m_pipeline(create_pipeline(descriptor_set_layout, swap_chain_manager)),
       m_descriptor_pool(DescriptorPool(m_ctx, MAX_FRAMES_IN_FLIGHT * 6)) {
 
-    auto descriptor_set_builder =
+    circle_geometry = std::make_unique<Geometry::Circle>(
+        ctx, swap_chain_manager,
         DescriptorSetBuilder(descriptor_set_layout, m_descriptor_pool,
                              MAX_FRAMES_IN_FLIGHT)
+            .add_storage_buffers(0, m_circle_instance_buffers.get_buffer_references())
             .set_uniform_buffers(1, uniform_buffers)
-            .set_texture_and_sampler(2, texture, sampler);
+            .set_texture_and_sampler(2, texture, sampler)
+            .build(m_ctx));
 
-    descriptor_set_builder.set_instance_buffers(
-        0, m_circle_instance_buffers.get_buffer_references());
-    DescriptorSet circle_descriptor_set = descriptor_set_builder.build(m_ctx);
-    circle_geometry = std::make_unique<Geometry::Circle>(
-        ctx, swap_chain_manager, std::move(circle_descriptor_set));
-
-    descriptor_set_builder.set_instance_buffers(
-        0, m_triangle_instance_buffers.get_buffer_references());
-    DescriptorSet triangle_descriptor_set = descriptor_set_builder.build(m_ctx);
     triangle_geometry = std::make_unique<Geometry::Triangle>(
-        ctx, swap_chain_manager, std::move(triangle_descriptor_set));
+        ctx, swap_chain_manager,
+        DescriptorSetBuilder(descriptor_set_layout, m_descriptor_pool,
+                             MAX_FRAMES_IN_FLIGHT)
+            .add_storage_buffers(0, m_triangle_instance_buffers.get_buffer_references())
+            .set_uniform_buffers(1, uniform_buffers)
+            .set_texture_and_sampler(2, texture, sampler)
+            .build(m_ctx));
 
-    descriptor_set_builder.set_instance_buffers(
-        0, m_rectangle_instance_buffers.get_buffer_references());
-    DescriptorSet rectangle_descriptor_set = descriptor_set_builder.build(m_ctx);
     rectangle_geometry = std::make_unique<Geometry::Rectangle>(
-        ctx, swap_chain_manager, std::move(rectangle_descriptor_set));
+        ctx, swap_chain_manager,
+        DescriptorSetBuilder(descriptor_set_layout, m_descriptor_pool,
+                             MAX_FRAMES_IN_FLIGHT)
+            .add_storage_buffers(0, m_rectangle_instance_buffers.get_buffer_references())
+            .set_uniform_buffers(1, uniform_buffers)
+            .set_texture_and_sampler(2, texture, sampler)
+            .build(m_ctx));
 
-    descriptor_set_builder.set_instance_buffers(
-        0, m_hexagon_instance_buffers.get_buffer_references());
-    DescriptorSet hexagon_descriptor_set = descriptor_set_builder.build(m_ctx);
     hexagon_geometry = std::make_unique<Geometry::Hexagon>(
-        ctx, swap_chain_manager, std::move(hexagon_descriptor_set));
+        ctx, swap_chain_manager,
+        DescriptorSetBuilder(descriptor_set_layout, m_descriptor_pool,
+                             MAX_FRAMES_IN_FLIGHT)
+            .add_storage_buffers(0, m_hexagon_instance_buffers.get_buffer_references())
+            .set_uniform_buffers(1, uniform_buffers)
+            .set_texture_and_sampler(2, texture, sampler)
+            .build(m_ctx));
 }
 
 GeometryPipeline::~GeometryPipeline() {}

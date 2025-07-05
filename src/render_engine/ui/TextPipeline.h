@@ -25,43 +25,24 @@
 namespace ui {
 
 struct TextSegmentBufferObject {
-    alignas(16) glm::vec3 color = colors::WHITE;
-    alignas(4) glm::float32_t rotation = 0.0f;
-    alignas(4) glm::uint32_t font_size = 128;
-
-    std::string to_string() const {
-        return std::format("TextSegmentBufferObject {{\n"
-                           "  color:     ({:.3f}, {:.3f}, {:.3f})\n"
-                           "  rotation:  {:.3f}\n"
-                           "  font_size: {:d}\n"
-                           "}}",
-                           color.x, color.y, color.z, rotation, font_size);
-    }
-
-    friend std::ostream &operator<<(std::ostream &os,
-                                    const TextSegmentBufferObject &obj) {
-        return os << obj.to_string();
-    }
+    alignas(16) glm::vec4 color = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+    /*alignas(4) glm::float32_t rotation = 0.0f;*/
+    /*alignas(4) glm::uint32_t font_size = 128;*/
+    /*alignas(4) float padding = 0.0f;*/
 };
 
 struct CharacterInstanceBufferObject {
     alignas(16) glm::vec3 position;
     alignas(16) glm::vec4 uvwt;
-
-    std::string to_string() const {
-        return std::format("CharacterInstanceBufferObject {{\n"
-                           "  position:   ({:.3f}, {:.3f}, {:.3f})\n"
-                           "  uvwt:       ({:.3f}, {:.3f}, {:.3f}, {:.3f})\n"
-                           "}}",
-                           position.x, position.y, position.z, uvwt.x, uvwt.y, uvwt.z,
-                           uvwt.w);
-    }
-
-    friend std::ostream &operator<<(std::ostream &os,
-                                    const CharacterInstanceBufferObject &obj) {
-        return os << obj.to_string();
-    }
 };
+
+static_assert(sizeof(TextSegmentBufferObject) % 16 == 0,
+              "Struct must be 16-byte aligned");
+static_assert(sizeof(CharacterInstanceBufferObject) % 16 == 0,
+              "Struct must be 16-byte aligned");
+
+std::ostream &operator<<(std::ostream &os, const TextSegmentBufferObject &obj);
+std::ostream &operator<<(std::ostream &os, const CharacterInstanceBufferObject &obj);
 
 class TextPipeline {
   private:
@@ -90,7 +71,8 @@ class TextPipeline {
                  Texture &texture);
     ~TextPipeline();
 
-    StorageBuffer<CharacterInstanceBufferObject> &get_instance_buffer();
+    StorageBuffer<CharacterInstanceBufferObject> &get_character_buffer();
+    StorageBuffer<TextSegmentBufferObject> &get_text_segment_buffer();
 
     void render_text(const VkCommandBuffer &command_buffer,
                      ui::ElementProperties::FontProperties &text_props);

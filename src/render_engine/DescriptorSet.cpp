@@ -7,6 +7,7 @@
 #include "render_engine/buffers/UniformBuffer.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
+#include <stdexcept>
 
 DescriptorSet::DescriptorSet(std::shared_ptr<CoreGraphicsContext> ctx,
                              std::vector<VkDescriptorSet> &descriptor_sets)
@@ -37,10 +38,19 @@ DescriptorSetBuilder::set_uniform_buffers(size_t binding,
     return *this;
 }
 
-DescriptorSetBuilder &DescriptorSetBuilder::set_instance_buffers(
+DescriptorSetBuilder &DescriptorSetBuilder::add_storage_buffers(
     size_t binding, std::vector<StorageBufferRef> &&instance_buffers) {
-    m_instance_buffer_binding = binding;
-    m_instance_buffers = std::move(instance_buffers);
+    if (instance_buffers.size() != m_capacity) {
+        throw std::runtime_error(
+            "size of storage buffer reference needs to be equal to capacity");
+    }
+
+    m_instance_buffer_binding.insert(m_instance_buffer_binding.end(),
+                                     instance_buffers.size(), binding);
+    m_instance_buffers.insert(m_instance_buffers.end(),
+                              std::make_move_iterator(instance_buffers.begin()),
+                              std::make_move_iterator(instance_buffers.end()));
+
     return *this;
 }
 
@@ -73,12 +83,12 @@ std::vector<VkDescriptorSet> DescriptorSetBuilder::allocate_descriptor_sets(
 }
 
 VkWriteDescriptorSet DescriptorSetBuilder::create_instance_buffer_descriptor_write(
-    const VkDescriptorSet &dst_descriptor_set,
-    const VkDescriptorBufferInfo &buffer_info) {
+    const VkDescriptorSet &dst_descriptor_set, const VkDescriptorBufferInfo &buffer_info,
+    const size_t binding_num) {
     VkWriteDescriptorSet instance_buffer_descriptor_write{};
     instance_buffer_descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     instance_buffer_descriptor_write.dstSet = dst_descriptor_set;
-    instance_buffer_descriptor_write.dstBinding = m_instance_buffer_binding;
+    instance_buffer_descriptor_write.dstBinding = binding_num;
     instance_buffer_descriptor_write.dstArrayElement = 0;
     instance_buffer_descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     instance_buffer_descriptor_write.descriptorCount = 1;
@@ -124,19 +134,35 @@ DescriptorSet DescriptorSetBuilder::build(std::shared_ptr<CoreGraphicsContext> &
         throw std::runtime_error("Descriptor pool not set");
     }
 
+    if (m_instance_buffers.size() % m_capacity != 0) {
+        throw std::runtime_error(
+            "Number of storage buffers needs to be a multiple of capacity");
+    }
+
     std::vector<VkDescriptorSet> descriptor_sets = allocate_descriptor_sets(ctx);
+
+    const size_t num_buffers_per_set = m_instance_buffers.size() / m_capacity;
 
     for (auto i = 0; i < m_capacity; i++) {
         std::vector<VkWriteDescriptorSet> descriptor_writes = {};
 
-        VkDescriptorBufferInfo instance_buffer_info{};
-        if (m_instance_buffers.size() != 0 && m_instance_buffers.size() >= m_capacity) {
-            instance_buffer_info.buffer = m_instance_buffers.at(i).buffer;
-            instance_buffer_info.offset = 0;
-            instance_buffer_info.range = m_instance_buffers.at(i).size;
+        std::vector<VkDescriptorBufferInfo> storage_buffer_infos = {};
+        storage_buffer_infos.reserve(num_buffers_per_set);
+        if (m_instance_buffers.size() != 0) {
+            for (auto j = 0; j < num_buffers_per_set; j++) {
 
-            descriptor_writes.push_back(create_instance_buffer_descriptor_write(
-                descriptor_sets[i], instance_buffer_info));
+                VkDescriptorBufferInfo storage_buffer_info{};
+                const auto idx = j * m_capacity + i;
+
+                storage_buffer_info.buffer = m_instance_buffers.at(idx).buffer;
+                storage_buffer_info.offset = 0;
+                storage_buffer_info.range = m_instance_buffers.at(idx).size;
+                storage_buffer_infos.push_back(storage_buffer_info);
+
+                descriptor_writes.push_back(create_instance_buffer_descriptor_write(
+                    descriptor_sets[i], storage_buffer_infos.back(),
+                    m_instance_buffer_binding[idx]));
+            }
         }
 
         VkDescriptorBufferInfo uniform_buffer_info{};

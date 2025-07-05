@@ -130,22 +130,26 @@ void RenderEngine::render(
 void RenderEngine::render_text(const std::string &text, const glm::vec2 &center,
                                const uint size) {
 
-    auto &instance_buffer = m_text_pipeline->get_instance_buffer();
-    instance_buffer.clear();
+    auto &character_instance_buffer = m_text_pipeline->get_character_buffer();
+    auto &text_segment_buffer = m_text_pipeline->get_text_segment_buffer();
+    character_instance_buffer.clear();
+    text_segment_buffer.clear();
 
-    // TODO: Implement text kerning
+    text_segment_buffer.emplace_back(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+    text_segment_buffer.transfer();
+
     const glm::vec3 offset(size / 2.5, 0.0f, 0.0f);
     const auto text_start_x =
         center.x - (static_cast<float>((text.size() - 1)) * offset.x / 2);
     const glm::vec3 loc(text_start_x, center.y, 0.0f);
     float count = 0;
     for (const char &c : text) {
-        instance_buffer.emplace_back(loc + offset * count,
-                                     m_font->encode_ascii_char(std::toupper(c)));
+        character_instance_buffer.emplace_back(
+            loc + offset * count, m_font->encode_ascii_char(std::toupper(c)));
         count += 1.0f;
     }
 
-    instance_buffer.transfer();
+    character_instance_buffer.transfer();
 
     auto text_props = ui::ElementProperties::FontProperties{
         .color = glm::vec3(0.0f, 0.0f, 0.0f), .rotation = 0.0f, .font_size = size};
@@ -155,8 +159,13 @@ void RenderEngine::render_text(const std::string &text, const glm::vec2 &center,
 }
 
 void RenderEngine::render_ui(const ui::State &state) {
-    auto &text_instance_buffer = m_text_pipeline->get_instance_buffer();
-    text_instance_buffer.clear();
+    auto &character_instance_buffer = m_text_pipeline->get_character_buffer();
+    auto &text_segment_buffer = m_text_pipeline->get_text_segment_buffer();
+    character_instance_buffer.clear();
+    text_segment_buffer.clear();
+
+    /*text_segment_buffer.emplace_back(colors::WHITE, 0.0f, 128);*/
+    text_segment_buffer.transfer();
 
     for (const auto button : state.buttons) {
 
@@ -166,9 +175,9 @@ void RenderEngine::render_ui(const ui::State &state) {
         // CONTINUE:
         // - Implement such that different texts can have different (basically
         // move push constants to a new buffer): sizes, sdf, color, rotation
-        // - NEXT: Refactor DescriptorSet such that we can add more than 1 StorageBuffer
-        //      - Rename set_instance_buffer() to add_storage_buffer()
-        // TODO: Implement text kerning
+        // - NEXT: Populate TextSegmentBuffer and use it in shader, also remove
+        // push_constants from text pipeline
+        // // TODO: Implement text kerning
         const auto center = button->properties.container.center;
         const auto size = button->properties.font.font_size;
         const auto text = button->text;
@@ -178,13 +187,13 @@ void RenderEngine::render_ui(const ui::State &state) {
         const glm::vec3 loc(text_start_x, center.y, 0.0f);
         float count = 0;
         for (const char &c : text) {
-            text_instance_buffer.emplace_back(loc + offset * count,
-                                              m_font->encode_ascii_char(std::toupper(c)));
+            character_instance_buffer.emplace_back(
+                loc + offset * count, m_font->encode_ascii_char(std::toupper(c)));
             count += 1.0f;
         }
     }
 
-    text_instance_buffer.transfer();
+    character_instance_buffer.transfer();
 
     auto text_props = ui::ElementProperties::FontProperties{
         .color = glm::vec3(0.0f, 0.0f, 0.0f), .rotation = 0.0f, .font_size = 128};
