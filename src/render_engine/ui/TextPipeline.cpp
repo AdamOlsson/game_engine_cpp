@@ -22,8 +22,7 @@ TextPipeline::TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> 
     : m_ctx(ctx), m_character_buffers(SwapStorageBuffer<CharacterInstanceBufferObject>(
                       ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
       m_text_segment_buffers(
-          SwapStorageBuffer<TextSegmentBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 1)),
-
+          SwapStorageBuffer<TextSegmentBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 16)),
       m_vertex_buffer(
           VertexBuffer(ctx, Geometry::rectangle_vertices, swap_chain_manager)),
       m_index_buffer(IndexBuffer(ctx, Geometry::rectangle_indices, swap_chain_manager)),
@@ -71,14 +70,8 @@ Pipeline TextPipeline::create_pipeline(VkDescriptorSetLayout &descriptor_set_lay
     VkShaderModule frag_shader_module = createShaderModule(
         m_ctx->device, frag_shader_code->bytes(), frag_shader_code->length());
 
-    VkPushConstantRange push_constant_range{};
-    push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    push_constant_range.offset = 0;
-    push_constant_range.size = sizeof(ElementProperties::FontProperties);
-
-    Pipeline pipeline =
-        Pipeline(m_ctx, descriptor_set_layout, {push_constant_range}, vert_shader_module,
-                 frag_shader_module, swap_chain_manager);
+    Pipeline pipeline = Pipeline(m_ctx, descriptor_set_layout, {}, vert_shader_module,
+                                 frag_shader_module, swap_chain_manager);
 
     vkDestroyShaderModule(m_ctx->device, vert_shader_module, nullptr);
     vkDestroyShaderModule(m_ctx->device, frag_shader_module, nullptr);
@@ -93,26 +86,19 @@ StorageBuffer<TextSegmentBufferObject> &TextPipeline::get_text_segment_buffer() 
     return m_text_segment_buffers.get_buffer();
 }
 
-void TextPipeline::render_text(const VkCommandBuffer &command_buffer,
-                               ElementProperties::FontProperties &text_props) {
+void TextPipeline::render_text(const VkCommandBuffer &command_buffer) {
 
     const auto &instance_buffer = m_character_buffers.get_buffer();
-    const auto num_instances = instance_buffer.capacity();
+    const auto num_instances = instance_buffer.num_elements();
     if (num_instances <= 0) {
         return;
     }
 
     const auto &text_segment_buffer = m_text_segment_buffers.get_buffer();
-    /*text_segment_buffer.dump_data();*/
-    /*instance_buffer.dump_data();*/
 
     const VkDeviceSize vertex_buffers_offset = 0;
     vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                       m_pipeline.m_pipeline);
-
-    vkCmdPushConstants(command_buffer, m_pipeline.m_pipeline_layout,
-                       VK_SHADER_STAGE_VERTEX_BIT, 0,
-                       sizeof(ElementProperties::FontProperties), &text_props);
 
     auto descriptor = m_descriptor_set.get();
     vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -127,23 +113,16 @@ void TextPipeline::render_text(const VkCommandBuffer &command_buffer,
     m_text_segment_buffers.rotate();
 }
 
-// Separate utility functions
-/*std::string to_string(const TextSegmentBufferObject &obj) {*/
-/*    return std::format("TextSegmentBufferObject {{\n"*/
-/*                       "  color:     ({:.3f}, {:.3f}, {:.3f})\n"*/
-/*                       "  rotation:  {:.3f}\n"*/
-/*                       "  font_size: {:d}\n"*/
-/*                       "}}",*/
-/*                       obj.color.x, obj.color.y, obj.color.z, obj.rotation,*/
-/*                       obj.font_size);*/
-/*}*/
-
 std::string to_string(const TextSegmentBufferObject &obj) {
     return std::format("TextSegmentBufferObject {{\n"
-                       "  color:     ({:.3f}, {:.3f}, {:.3f} )\n"
+                       "  color:     ({:.3f}, {:.3f}, {:.3f})\n"
+                       "  rotation:  {:.3f}\n"
+                       "  font_size: {:d}\n"
                        "}}",
-                       obj.color.x, obj.color.y, obj.color.z);
+                       obj.font_color.x, obj.font_color.y, obj.font_color.z, obj.rotation,
+                       obj.font_size);
 }
+
 std::ostream &operator<<(std::ostream &os, const TextSegmentBufferObject &obj) {
     return os << to_string(obj);
 }

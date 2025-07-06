@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ElementProperties.h"
 #include "glm/fwd.hpp"
 #include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/DescriptorPool.h"
@@ -25,15 +24,16 @@
 namespace ui {
 
 struct TextSegmentBufferObject {
-    alignas(16) glm::vec4 color = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
-    /*alignas(4) glm::float32_t rotation = 0.0f;*/
-    /*alignas(4) glm::uint32_t font_size = 128;*/
-    /*alignas(4) float padding = 0.0f;*/
+    alignas(16) glm::vec3 font_color = glm::vec3(0.0f, 0.0f, 0.0f);
+    alignas(4) glm::uint32_t font_size = 128;
+    alignas(4) glm::float32_t rotation = 0.0f;
+    alignas(4) float padding = 0.0f;
 };
 
 struct CharacterInstanceBufferObject {
     alignas(16) glm::vec3 position;
     alignas(16) glm::vec4 uvwt;
+    alignas(4) uint32_t text_segment_idx = 0;
 };
 
 static_assert(sizeof(TextSegmentBufferObject) % 16 == 0,
@@ -74,7 +74,6 @@ class TextPipeline {
     StorageBuffer<CharacterInstanceBufferObject> &get_character_buffer();
     StorageBuffer<TextSegmentBufferObject> &get_text_segment_buffer();
 
-    void render_text(const VkCommandBuffer &command_buffer,
-                     ui::ElementProperties::FontProperties &text_props);
+    void render_text(const VkCommandBuffer &command_buffer);
 };
 } // namespace ui

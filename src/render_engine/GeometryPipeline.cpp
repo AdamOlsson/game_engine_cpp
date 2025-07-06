@@ -119,7 +119,7 @@ StorageBuffer<StorageBufferObject> &GeometryPipeline::get_hexagon_instance_buffe
 void GeometryPipeline::render_circles(const VkCommandBuffer &command_buffer) {
 
     const auto &instance_buffer = m_circle_instance_buffers.get_buffer();
-    const auto num_instances = instance_buffer.capacity();
+    const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
         circle_geometry->record_draw_command(command_buffer, m_pipeline.m_pipeline,
                                              m_pipeline.m_pipeline_layout, num_instances);
@@ -130,7 +130,7 @@ void GeometryPipeline::render_circles(const VkCommandBuffer &command_buffer) {
 void GeometryPipeline::render_triangles(const VkCommandBuffer &command_buffer) {
 
     const auto &instance_buffer = m_triangle_instance_buffers.get_buffer();
-    const auto num_instances = instance_buffer.capacity();
+    const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
         triangle_geometry->record_draw_command(command_buffer, m_pipeline.m_pipeline,
                                                m_pipeline.m_pipeline_layout,
@@ -142,7 +142,7 @@ void GeometryPipeline::render_triangles(const VkCommandBuffer &command_buffer) {
 void GeometryPipeline::render_rectangles(const VkCommandBuffer &command_buffer) {
 
     const auto &instance_buffer = m_rectangle_instance_buffers.get_buffer();
-    const auto num_instances = instance_buffer.capacity();
+    const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
         rectangle_geometry->record_draw_command(command_buffer, m_pipeline.m_pipeline,
                                                 m_pipeline.m_pipeline_layout,
@@ -154,7 +154,7 @@ void GeometryPipeline::render_rectangles(const VkCommandBuffer &command_buffer) 
 void GeometryPipeline::render_hexagons(const VkCommandBuffer &command_buffer) {
 
     const auto &instance_buffer = m_hexagon_instance_buffers.get_buffer();
-    const auto num_instances = instance_buffer.capacity();
+    const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
         hexagon_geometry->record_draw_command(command_buffer, m_pipeline.m_pipeline,
                                               m_pipeline.m_pipeline_layout,

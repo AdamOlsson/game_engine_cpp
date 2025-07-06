@@ -124,7 +124,7 @@ template <Printable T> class StorageBuffer {
 
     StorageBufferRef get_reference() { return {.buffer = m_buffer, .size = m_size}; }
     size_t size() const { return m_size; }
-    size_t capacity() const { return m_staging_buffer.size(); }
+    size_t num_elements() const { return m_staging_buffer.size(); }
     void clear() { m_staging_buffer.clear(); }
     void transfer() { memcpy(m_buffer_mapped, m_staging_buffer.data(), m_size); }
 

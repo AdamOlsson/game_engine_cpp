@@ -40,7 +40,7 @@ class UserInterfaceExample : public Game {
                                            .container.border.radius = 15.0,
                                            .font.color = colors::WHITE,
                                            .font.rotation = 0.0f,
-                                           .font.font_size = 128})
+                                           .font.size = 128})
                                 .set_on_enter(on_enter_callback)
                                 .set_on_leave(on_leave_callback)
                                 .set_on_click([](ui::Button &self) {
@@ -67,7 +67,9 @@ class UserInterfaceExample : public Game {
                                            .container.border.color = colors::GREEN,
                                            .container.border.thickness = 5.0,
                                            .container.border.radius = 15.0,
-                                       })
+                                           .font.color = colors::RED,
+                                           .font.rotation = 0.0f,
+                                           .font.size = 128})
                                 .set_on_enter(on_enter_callback)
                                 .set_on_leave(on_leave_callback)
                                 .set_on_click(on_click_callback)
@@ -111,7 +113,7 @@ class UserInterfaceExample : public Game {
                                                           glm::vec2(100.0f, -30.0f))
                                                    .play();
                                            }),
-                        ui::Button("",
+                        ui::Button("G",
                                    ui::ElementProperties{
                                        .container.center = glm::vec2(0.0, -30.0),
                                        .container.dimension = glm::vec2(400.0, 100.0),
@@ -123,7 +125,7 @@ class UserInterfaceExample : public Game {
                             .set_on_leave(on_leave_callback)
                             .set_on_click(on_click_callback))
                         .add_button(
-                            ui::Button("",
+                            ui::Button("E",
                                        ui::ElementProperties{
                                            .container.center = glm::vec2(0.0, -250.0),
                                            .container.dimension = glm::vec2(400.0, 100.0),
@@ -136,7 +138,7 @@ class UserInterfaceExample : public Game {
                                 .set_on_click(on_click_callback))
 
                         .add_button(
-                            ui::Button("",
+                            ui::Button("F",
                                        ui::ElementProperties{
                                            .container.center = glm::vec2(0.0, -140.0),
                                            .container.dimension = glm::vec2(400.0, 100.0),
@@ -162,7 +164,6 @@ class UserInterfaceExample : public Game {
         auto ui_state = m_ui->get_state();
 
         render_engine.render_ui(ui_state);
-        /*render_engine.render_text("EXIT", glm::vec2(0.0f, 0.0f), 128);*/
 
         success = render_engine.end_render_pass();
         if (!success) {

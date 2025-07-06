@@ -13,7 +13,7 @@ void main() {
         if (pixel_color.x < 0.5f) {
             outColor = vec4(0.0,0.0,0.0,0.0);
         } else {
-            outColor = vec4(1.0,1.0,1.0,1.0);
+            outColor = vec4(fragColor,1.0);
         }
     } else {
         outColor = vec4(fragColor, 1.0);

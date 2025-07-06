@@ -12,13 +12,14 @@ struct CharacterData {
     vec3 position;
     float _padding;
     vec4 uvwt; // bbox for texture
+    uint text_segment_idx;
 };
 
 struct TextSegmentData {
-    vec4 color;
-    // float rotation;
-    // float font_size;
-    // float _padding;
+    vec3 font_color;
+    uint font_size;
+    float rotation;
+    float _padding;
 };
 
 layout(std140, binding = 0) readonly buffer CharacterDataBlock {
@@ -26,17 +27,12 @@ layout(std140, binding = 0) readonly buffer CharacterDataBlock {
 } character_data_block;
 
 layout(std140, binding = 3) readonly buffer TextSegmentDataBlock {
-    TextSegmentData instances[1];
+    TextSegmentData instances[16];
 } text_segment_data_block;
 
 layout(binding = 1) readonly uniform WindowDimensions {
         vec2 dims;
 } window;
-layout(push_constant) uniform TextProperties{
-    vec3 color;
-    float rotation;
-    uint font_size;
-} push_text_props;
 
 layout(location = 0) in vec3 inPosition;
 
@@ -82,7 +78,6 @@ vec2 compute_uv(vec2 vertex, vec4 bbox) {
     if(bbox.x < 0 || bbox.y < 0 || bbox.z < 0 || bbox.w < 0) {
         return vec2(-1.0f, -1.0f);
     }
-
     vec2 bbox_dimension = bbox.zw - bbox.xy;
     vec2 bbox_offset = bbox.xy;
     // Offset the vertex to span between 0.0f and 1.0f
@@ -91,19 +86,22 @@ vec2 compute_uv(vec2 vertex, vec4 bbox) {
 }
 
 void main() {
-    CharacterData instance = character_data_block.instances[gl_InstanceIndex];
+    CharacterData character_data = character_data_block.instances[gl_InstanceIndex];
+    TextSegmentData text_data = text_segment_data_block.instances[character_data.text_segment_idx];
+    vec3 font_color = text_data.font_color;
+    uint font_size = text_data.font_size;
+    float rotation = text_data.rotation;
 
-    vec4 text_color = text_segment_data_block.instances[0].color;
 
-    vec3 scaled_vertex_pos = scale_vertex(inPosition, push_text_props.font_size, push_text_props.font_size);
-    mat3 rotation_matrix = rotationMatrixZ(-push_text_props.rotation);
+    vec3 scaled_vertex_pos = scale_vertex(inPosition, font_size, font_size);
+    mat3 rotation_matrix = rotationMatrixZ(-rotation);
     vec3 rotated_vertex_pos = rotation_matrix * scaled_vertex_pos;
 
-    vec2 viewport_position = positions_to_viewport(instance.position.xy, window.dims);
+    vec2 viewport_position = positions_to_viewport(character_data.position.xy, window.dims);
     vec2 vertex_in_viewport = rotated_vertex_pos.xy / vec2(window.dims.x, window.dims.y) * 2.0;
-    vec4 position = vec4(viewport_position + vertex_in_viewport, instance.position.z, 1.0);
+    vec4 position = vec4(viewport_position + vertex_in_viewport, character_data.position.z, 1.0);
     
     gl_Position = position;
-    fragColor = push_text_props.color;
-    uv = compute_uv(inPosition.xy, instance.uvwt);
+    fragColor = font_color;
+    uv = compute_uv(inPosition.xy, character_data.uvwt);
 }

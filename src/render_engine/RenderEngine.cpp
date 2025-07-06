@@ -135,27 +135,25 @@ void RenderEngine::render_text(const std::string &text, const glm::vec2 &center,
     character_instance_buffer.clear();
     text_segment_buffer.clear();
 
-    text_segment_buffer.emplace_back(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+    text_segment_buffer.emplace_back(colors::WHITE, size, 0.0f);
     text_segment_buffer.transfer();
 
     const glm::vec3 offset(size / 2.5, 0.0f, 0.0f);
+    const uint32_t text_segment_idx = 0;
     const auto text_start_x =
         center.x - (static_cast<float>((text.size() - 1)) * offset.x / 2);
     const glm::vec3 loc(text_start_x, center.y, 0.0f);
     float count = 0;
     for (const char &c : text) {
-        character_instance_buffer.emplace_back(
-            loc + offset * count, m_font->encode_ascii_char(std::toupper(c)));
+        character_instance_buffer.emplace_back(loc + offset * count,
+                                               m_font->encode_ascii_char(std::toupper(c)),
+                                               text_segment_idx);
         count += 1.0f;
     }
 
     character_instance_buffer.transfer();
 
-    auto text_props = ui::ElementProperties::FontProperties{
-        .color = glm::vec3(0.0f, 0.0f, 0.0f), .rotation = 0.0f, .font_size = size};
-
-    m_text_pipeline->render_text(m_current_render_pass.command_buffer.m_command_buffer,
-                                 text_props);
+    m_text_pipeline->render_text(m_current_render_pass.command_buffer.m_command_buffer);
 }
 
 void RenderEngine::render_ui(const ui::State &state) {
@@ -164,42 +162,37 @@ void RenderEngine::render_ui(const ui::State &state) {
     character_instance_buffer.clear();
     text_segment_buffer.clear();
 
-    /*text_segment_buffer.emplace_back(colors::WHITE, 0.0f, 128);*/
-    text_segment_buffer.transfer();
-
     for (const auto button : state.buttons) {
 
         m_ui_pipeline->render(m_current_render_pass.command_buffer.m_command_buffer,
                               button->properties.container);
 
-        // CONTINUE:
-        // - Implement such that different texts can have different (basically
-        // move push constants to a new buffer): sizes, sdf, color, rotation
-        // - NEXT: Populate TextSegmentBuffer and use it in shader, also remove
-        // push_constants from text pipeline
-        // // TODO: Implement text kerning
+        const auto font_color = button->properties.font.color;
+        const auto font_size = button->properties.font.size;
+        const auto font_rotation = button->properties.font.rotation;
+        text_segment_buffer.emplace_back(font_color, font_size, font_rotation);
+        const uint32_t text_segment_idx = text_segment_buffer.num_elements() - 1;
+
+        // TODO: Implement text kerning
         const auto center = button->properties.container.center;
-        const auto size = button->properties.font.font_size;
         const auto text = button->text;
-        const glm::vec3 offset(size / 2.5, 0.0f, 0.0f);
+        const glm::vec3 offset(font_size / 2.5, 0.0f, 0.0f);
         const auto text_start_x =
             center.x - (static_cast<float>((text.size() - 1)) * offset.x / 2);
         const glm::vec3 loc(text_start_x, center.y, 0.0f);
         float count = 0;
         for (const char &c : text) {
             character_instance_buffer.emplace_back(
-                loc + offset * count, m_font->encode_ascii_char(std::toupper(c)));
+                loc + offset * count, m_font->encode_ascii_char(std::toupper(c)),
+                text_segment_idx);
             count += 1.0f;
         }
     }
 
     character_instance_buffer.transfer();
+    text_segment_buffer.transfer();
 
-    auto text_props = ui::ElementProperties::FontProperties{
-        .color = glm::vec3(0.0f, 0.0f, 0.0f), .rotation = 0.0f, .font_size = 128};
-
-    m_text_pipeline->render_text(m_current_render_pass.command_buffer.m_command_buffer,
-                                 text_props);
+    m_text_pipeline->render_text(m_current_render_pass.command_buffer.m_command_buffer);
 }
 
 void RenderEngine::wait_idle() { m_ctx->wait_idle(); }
