@@ -31,7 +31,7 @@ class UserInterfaceExample : public Game {
         // see how things develop once we know how to create the layout
         m_ui = std::make_unique<ui::UI>(
             ui::Menu()
-                .add_button(ui::Button("A",
+                .add_button(ui::Button("NEW GAME",
                                        ui::ElementProperties{
                                            .container.center = glm::vec2(0.0, -250.0),
                                            .container.dimension = glm::vec2(400.0, 100.0),
@@ -40,7 +40,7 @@ class UserInterfaceExample : public Game {
                                            .container.border.radius = 15.0,
                                            .font.color = colors::WHITE,
                                            .font.rotation = 0.0f,
-                                           .font.size = 128})
+                                           .font.size = 96})
                                 .set_on_enter(on_enter_callback)
                                 .set_on_leave(on_leave_callback)
                                 .set_on_click([](ui::Button &self) {
@@ -60,7 +60,7 @@ class UserInterfaceExample : public Game {
                                                        .play();
                                                }))
 
-                .add_button(ui::Button("B",
+                .add_button(ui::Button("CONTINUE",
                                        ui::ElementProperties{
                                            .container.center = glm::vec2(0.0, -140.0),
                                            .container.dimension = glm::vec2(400.0, 100.0),
@@ -69,7 +69,7 @@ class UserInterfaceExample : public Game {
                                            .container.border.radius = 15.0,
                                            .font.color = colors::RED,
                                            .font.rotation = 0.0f,
-                                           .font.size = 128})
+                                           .font.size = 96})
                                 .set_on_enter(on_enter_callback)
                                 .set_on_leave(on_leave_callback)
                                 .set_on_click(on_click_callback)
@@ -89,15 +89,14 @@ class UserInterfaceExample : public Game {
 
                 .add_submenu(
                     ui::Menu(
-                        ui::Button("C",
+                        ui::Button("SETTINGS",
                                    ui::ElementProperties{
                                        .container.center = glm::vec2(0.0, -30.0),
-                                       .container.dimension =
-                                           glm::vec2(400.0, 100.0),
+                                       .container.dimension = glm::vec2(400.0, 100.0),
                                        .container.border.color = colors::BLUE,
                                        .container.border.thickness = 5.0,
                                        .container.border.radius = 15.0,
-                                   })
+                                       .font.size = 96})
                             .set_on_enter(on_enter_callback)
                             .set_on_leave(on_leave_callback)
                             .set_on_click(on_click_callback)
@@ -113,39 +112,41 @@ class UserInterfaceExample : public Game {
                                                           glm::vec2(100.0f, -30.0f))
                                                    .play();
                                            }),
-                        ui::Button("G",
+
+                        ui::Button("BACK",
                                    ui::ElementProperties{
                                        .container.center = glm::vec2(0.0, -30.0),
                                        .container.dimension = glm::vec2(400.0, 100.0),
                                        .container.border.color = colors::BLUE,
                                        .container.border.thickness = 5.0,
                                        .container.border.radius = 0.0,
-                                   })
+                                       .font.size = 96})
                             .set_on_enter(on_enter_callback)
                             .set_on_leave(on_leave_callback)
                             .set_on_click(on_click_callback))
+
                         .add_button(
-                            ui::Button("E",
+                            ui::Button("SETTINGS1",
                                        ui::ElementProperties{
                                            .container.center = glm::vec2(0.0, -250.0),
                                            .container.dimension = glm::vec2(400.0, 100.0),
                                            .container.border.color = colors::GREEN,
                                            .container.border.thickness = 5.0,
                                            .container.border.radius = 0.0,
-                                       })
+                                           .font.size = 96})
                                 .set_on_enter(on_enter_callback)
                                 .set_on_leave(on_leave_callback)
                                 .set_on_click(on_click_callback))
 
                         .add_button(
-                            ui::Button("F",
+                            ui::Button("SETTINGS2",
                                        ui::ElementProperties{
                                            .container.center = glm::vec2(0.0, -140.0),
                                            .container.dimension = glm::vec2(400.0, 100.0),
                                            .container.border.color = colors::GREEN,
                                            .container.border.thickness = 5.0,
                                            .container.border.radius = 0.0,
-                                       })
+                                           .font.size = 96})
                                 .set_on_enter(on_enter_callback)
                                 .set_on_leave(on_leave_callback)
                                 .set_on_click(on_click_callback))));

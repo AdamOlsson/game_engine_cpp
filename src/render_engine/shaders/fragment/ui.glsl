@@ -52,17 +52,17 @@ float determine_alpha_for_corner(
     const vec2 abs_fragment_position, const vec2 ui_element_rounded_corner_center, 
     const float ui_element_border_thickness, const float ui_element_border_radius
 ) {
-    const float rounded_corner_center_distance = 
-        distance(abs_fragment_position, ui_element_rounded_corner_center);
-
-    const float inner_threshold =
-        ui_element_border_radius - ui_element_border_thickness;
-    const bool larger_than_inner_border_radius =
-        rounded_corner_center_distance > inner_threshold;
-    const bool less_than_outer_border_radious =
-        rounded_corner_center_distance < ui_element_border_radius;
-
-    return float(larger_than_inner_border_radius && less_than_outer_border_radious);
+    const float distance_to_center = distance(abs_fragment_position, ui_element_rounded_corner_center);
+    
+    const float outer_sdf = distance_to_center - ui_element_border_radius;
+    
+    const float inner_radius = ui_element_border_radius - ui_element_border_thickness;
+    const float inner_sdf = distance_to_center - inner_radius;
+    
+    const float ring_sdf = max(outer_sdf, -inner_sdf);
+    
+    const float edge_softness = fwidth(ring_sdf) * 0.5;
+    return 1.0 - smoothstep(-edge_softness, edge_softness, ring_sdf);
 }
 
 float determine_alpha_for_edge(
