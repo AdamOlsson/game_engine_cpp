@@ -170,7 +170,10 @@ void RenderEngine::render_ui(const ui::State &state) {
         const auto font_color = button->properties.font.color;
         const auto font_size = button->properties.font.size;
         const auto font_rotation = button->properties.font.rotation;
-        text_segment_buffer.emplace_back(font_color, font_size, font_rotation);
+        const auto font_weight = button->properties.font.weight;
+        const auto font_sharpness = button->properties.font.sharpness;
+        text_segment_buffer.emplace_back(font_color, font_size, font_rotation,
+                                         font_weight, font_sharpness);
         const uint32_t text_segment_idx = text_segment_buffer.num_elements() - 1;
 
         // TODO: Implement text kerning

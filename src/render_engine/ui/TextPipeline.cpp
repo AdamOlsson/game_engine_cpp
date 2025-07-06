@@ -115,12 +115,15 @@ void TextPipeline::render_text(const VkCommandBuffer &command_buffer) {
 
 std::string to_string(const TextSegmentBufferObject &obj) {
     return std::format("TextSegmentBufferObject {{\n"
-                       "  color:     ({:.3f}, {:.3f}, {:.3f})\n"
-                       "  rotation:  {:.3f}\n"
+                       "  font_color:     ({:.3f}, {:.3f}, {:.3f})\n"
+                       "  font_rotation:  {:.3f}\n"
                        "  font_size: {:d}\n"
+                       "  font_weight: {:.3f}\n"
+                       "  font_sharpness: {:.3f}\n"
                        "}}",
-                       obj.font_color.x, obj.font_color.y, obj.font_color.z, obj.rotation,
-                       obj.font_size);
+                       obj.font_color.x, obj.font_color.y, obj.font_color.z,
+                       obj.font_rotation, obj.font_size, obj.font_weight,
+                       obj.font_sharpness);
 }
 
 std::ostream &operator<<(std::ostream &os, const TextSegmentBufferObject &obj) {
@@ -129,11 +132,12 @@ std::ostream &operator<<(std::ostream &os, const TextSegmentBufferObject &obj) {
 
 std::string to_string(const CharacterInstanceBufferObject &obj) {
     return std::format("CharacterInstanceBufferObject {{\n"
-                       "  position:   ({:.3f}, {:.3f}, {:.3f})\n"
-                       "  uvwt:       ({:.3f}, {:.3f}, {:.3f}, {:.3f})\n"
+                       "  position:            ({:.3f}, {:.3f}, {:.3f})\n"
+                       "  uvwt:                ({:.3f}, {:.3f}, {:.3f}, {:.3f})\n"
+                       "  text_segment_idx:    {:d}\n"
                        "}}",
                        obj.position.x, obj.position.y, obj.position.z, obj.uvwt.x,
-                       obj.uvwt.y, obj.uvwt.z, obj.uvwt.w);
+                       obj.uvwt.y, obj.uvwt.z, obj.uvwt.w, obj.text_segment_idx);
 }
 
 std::ostream &operator<<(std::ostream &os, const CharacterInstanceBufferObject &obj) {

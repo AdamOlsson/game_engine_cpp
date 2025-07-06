@@ -18,8 +18,9 @@ struct CharacterData {
 struct TextSegmentData {
     vec3 font_color;
     uint font_size;
-    float rotation;
-    float _padding;
+    float font_rotation;
+    float font_weight;
+    float font_sharpness;
 };
 
 layout(std140, binding = 0) readonly buffer CharacterDataBlock {
@@ -34,10 +35,12 @@ layout(binding = 1) readonly uniform WindowDimensions {
         vec2 dims;
 } window;
 
-layout(location = 0) in vec3 inPosition;
+layout(location = 0) in vec3 in_position;
 
-layout(location = 0) out vec3 fragColor;
-layout(location = 1) out vec2 uv;
+layout(location = 0) out vec3 out_frag_color;
+layout(location = 1) out vec2 out_uv;
+layout(location = 2) out float out_font_weight;
+layout(location = 3) out float out_font_sharpness;
 
 mat3 rotationMatrixZ(float theta) {
     float c = cos(theta);
@@ -90,10 +93,12 @@ void main() {
     TextSegmentData text_data = text_segment_data_block.instances[character_data.text_segment_idx];
     vec3 font_color = text_data.font_color;
     uint font_size = text_data.font_size;
-    float rotation = text_data.rotation;
+    float font_weight = text_data.font_weight;
+    float font_sharpness = text_data.font_sharpness;
+    float rotation = text_data.font_rotation;
 
 
-    vec3 scaled_vertex_pos = scale_vertex(inPosition, font_size, font_size);
+    vec3 scaled_vertex_pos = scale_vertex(in_position, font_size, font_size);
     mat3 rotation_matrix = rotationMatrixZ(-rotation);
     vec3 rotated_vertex_pos = rotation_matrix * scaled_vertex_pos;
 
@@ -102,6 +107,9 @@ void main() {
     vec4 position = vec4(viewport_position + vertex_in_viewport, character_data.position.z, 1.0);
     
     gl_Position = position;
-    fragColor = font_color;
-    uv = compute_uv(inPosition.xy, character_data.uvwt);
+    out_frag_color = font_color;
+    out_uv = compute_uv(in_position.xy, character_data.uvwt);
+    out_font_weight = font_weight;
+    out_font_sharpness = font_sharpness;
+
 }

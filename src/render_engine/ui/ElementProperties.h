@@ -14,9 +14,11 @@ struct ElementProperties {
     } container;
 
     struct FontProperties {
-        alignas(16) glm::vec3 color = colors::WHITE;
-        alignas(4) glm::float32_t rotation = 0.0f;
-        alignas(4) glm::uint32_t size = 128;
+        alignas(16) glm::vec3 color = colors::WHITE; // 16
+        alignas(4) glm::uint32_t size = 128;         // 24
+        alignas(4) glm::float32_t rotation = 0.0f;   // 20
+        alignas(4) glm::float32_t weight = 0.4f;     // 28
+        alignas(4) glm::float32_t sharpness = 2.5f;  // 32
     } font;
 };
 } // namespace ui
