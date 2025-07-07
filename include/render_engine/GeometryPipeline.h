@@ -39,6 +39,11 @@ VkDescriptorPool createDescriptorPool(VkDevice &device, const int capacity);
 
 class GeometryPipeline {
   private:
+    const uint32_t m_num_storage_buffers = MAX_FRAMES_IN_FLIGHT * 4;
+    const uint32_t m_num_uniform_buffers = MAX_FRAMES_IN_FLIGHT * 4;
+    const uint32_t m_num_samplers = MAX_FRAMES_IN_FLIGHT * 4;
+    const uint32_t m_descriptor_pool_capacity = MAX_FRAMES_IN_FLIGHT * 4;
+
     std::shared_ptr<CoreGraphicsContext> m_ctx;
 
     Pipeline m_pipeline;

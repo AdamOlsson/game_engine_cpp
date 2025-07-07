@@ -31,7 +31,9 @@ GeometryPipeline::GeometryPipeline(Window &window,
       m_hexagon_instance_buffers(
           SwapStorageBuffer<StorageBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
       m_pipeline(create_pipeline(descriptor_set_layout, swap_chain_manager)),
-      m_descriptor_pool(DescriptorPool(m_ctx, MAX_FRAMES_IN_FLIGHT * 6)) {
+      m_descriptor_pool(DescriptorPool(m_ctx, m_descriptor_pool_capacity,
+                                       m_num_storage_buffers, m_num_uniform_buffers,
+                                       m_num_samplers)) {
 
     circle_geometry = std::make_unique<Geometry::Circle>(
         ctx, swap_chain_manager,

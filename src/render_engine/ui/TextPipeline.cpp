@@ -27,7 +27,9 @@ TextPipeline::TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> 
           VertexBuffer(ctx, Geometry::rectangle_vertices, swap_chain_manager)),
       m_index_buffer(IndexBuffer(ctx, Geometry::rectangle_indices, swap_chain_manager)),
       m_descriptor_set_layout(create_descriptor_set_layout()),
-      m_descriptor_pool(DescriptorPool(m_ctx, MAX_FRAMES_IN_FLIGHT * 2)),
+      m_descriptor_pool(DescriptorPool(m_ctx, m_descriptor_pool_capacity,
+                                       m_num_storage_buffers, m_num_uniform_buffers,
+                                       m_num_samplers)),
       m_descriptor_set(create_descriptor_set(uniform_buffers, sampler, texture)),
       m_pipeline(create_pipeline(m_descriptor_set_layout, swap_chain_manager)) {}
 

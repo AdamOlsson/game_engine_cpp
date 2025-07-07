@@ -47,6 +47,12 @@ std::ostream &operator<<(std::ostream &os, const CharacterInstanceBufferObject &
 
 class TextPipeline {
   private:
+    // 2 x num resources per frame
+    const uint32_t m_num_storage_buffers = 2 * 2;
+    const uint32_t m_num_uniform_buffers = 2 * 1;
+    const uint32_t m_num_samplers = 2 * 1;
+    const uint32_t m_descriptor_pool_capacity = 2;
+
     std::shared_ptr<CoreGraphicsContext> m_ctx;
 
     SwapStorageBuffer<CharacterInstanceBufferObject> m_character_buffers;

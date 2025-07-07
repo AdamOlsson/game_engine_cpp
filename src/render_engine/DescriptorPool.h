@@ -6,13 +6,18 @@ class DescriptorPool {
   private:
     std::shared_ptr<CoreGraphicsContext> m_ctx;
 
-    VkDescriptorPool create_descriptor_pool(const int capacity);
+    VkDescriptorPool create_descriptor_pool(const uint32_t capacity,
+                                            const uint32_t num_storage_bufs,
+                                            const uint32_t num_uniform_bufs,
+                                            const uint32_t num_samplers);
 
   public:
     VkDescriptorPool m_descriptor_pool;
 
     DescriptorPool() = default;
-    DescriptorPool(std::shared_ptr<CoreGraphicsContext> &ctx, const int capacity);
+    DescriptorPool(std::shared_ptr<CoreGraphicsContext> &ctx, const uint32_t capacity,
+                   const uint32_t num_storage_bufs, const uint32_t num_uniform_bufs,
+                   const uint32_t num_samplers);
 
     ~DescriptorPool();
     DescriptorPool(const DescriptorPool &other) = delete;

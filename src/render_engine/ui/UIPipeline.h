@@ -14,7 +14,13 @@ namespace ui {
 
 class UIPipeline {
   private:
+    const uint32_t m_num_storage_buffers = 2 * 1;
+    const uint32_t m_num_uniform_buffers = 2 * 1;
+    const uint32_t m_num_samplers = 2 * 1;
+    const uint32_t m_descriptor_pool_capacity = 2;
+
     std::shared_ptr<CoreGraphicsContext> m_ctx;
+
     VkDescriptorSetLayout m_descriptor_set_layout;
     DescriptorPool m_descriptor_pool;
     DescriptorSet m_descriptor_set;

@@ -16,7 +16,9 @@ UIPipeline::UIPipeline(std::shared_ptr<CoreGraphicsContext> ctx,
     : m_ctx(ctx),
       // TODO: Is it not better to merge all these to a single Descriptor class
       m_descriptor_set_layout(create_descriptor_set_layout()),
-      m_descriptor_pool(DescriptorPool(m_ctx, MAX_FRAMES_IN_FLIGHT)),
+      m_descriptor_pool(DescriptorPool(m_ctx, m_descriptor_pool_capacity,
+                                       m_num_storage_buffers, m_num_uniform_buffers,
+                                       m_num_samplers)),
       m_descriptor_set(create_descriptor_set(uniform_buffers)),
       m_pipeline(create_pipeline(swap_chain_manager)),
       m_vertex_buffer(m_ctx, {{0.0, 0.0, 0.0}}, swap_chain_manager) {}
