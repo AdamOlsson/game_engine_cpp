@@ -4,10 +4,12 @@
 #include "render_engine/Window.h"
 #include "render_engine/ui/Menu.h"
 #include "render_engine/ui/State.h"
+#include <unordered_map>
 namespace ui {
 
 class UI {
   private:
+    /*std::unordered_map<std::string, TextBox> m_text_boxes;*/
     ui::Menu m_menu;
     ui::State m_current_menu_state;
     std::vector<ui::Menu *> m_menu_trace;
@@ -27,6 +29,9 @@ class UI {
     UI() = default;
     UI(Menu &menu);
     ~UI() = default;
+
+    // set_menu(Menu && menu);
+    // add_text(TextBox && text_box);
 
     ui::State &get_state();
     ui::State &update_state_from_mouse_event(const MouseEvent mouse_event,

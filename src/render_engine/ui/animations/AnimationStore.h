@@ -1,5 +1,4 @@
 #pragma once
-#include "glm/glm.hpp"
 #include "render_engine/ui/ElementProperties.h"
 #include "render_engine/ui/animations/Animation.h"
 

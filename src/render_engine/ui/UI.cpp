@@ -1,19 +1,9 @@
-#include "UI.h"
+#include "render_engine/ui/UI.h"
 #include "render_engine/ui/Button.h"
 #include "render_engine/ui/ElementProperties.h"
 #include <stdexcept>
 
 using namespace ui;
-
-// TODO:
-// - Button text
-// - Output text fields
-// - Document UI, Menu and Button API. (Code examples in docs are wrong in Menu API)
-// - Improve resolution of rounded corners
-// - Improve resolution of text
-// - Menu navigation using keys
-// - UI showcase example
-// - Performance window
 
 UI::UI(Menu &menu)
     : m_menu(std::move(menu)), m_current_menu_state(ui::State()),
