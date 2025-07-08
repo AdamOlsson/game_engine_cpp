@@ -4,17 +4,18 @@
 namespace ui {
 struct ElementProperties {
     struct ContainerProperties {
-        glm::vec2 center = glm::vec2(0.0f, 0.0f);
-        glm::vec2 dimension = glm::vec2(0.0f, 0.0f);
+        alignas(8) glm::vec2 center = glm::vec2(0.0f, 0.0f);
+        alignas(8) glm::vec2 dimension = glm::vec2(0.0f, 0.0f);
+        alignas(16) glm::vec4 background_color = colors::TRANSPARENT;
         struct {
-            glm::vec3 color = colors::WHITE;
-            float thickness = 0.0f;
-            float radius = 0.0f;
+            alignas(16) glm::vec4 color = colors::WHITE;
+            alignas(4) float thickness = 0.0f;
+            alignas(4) float radius = 0.0f;
         } border;
     } container;
 
     struct FontProperties {
-        alignas(16) glm::vec3 color = colors::WHITE; // 16
+        alignas(16) glm::vec4 color = colors::WHITE; // 16
         alignas(4) glm::uint32_t size = 128;         // 24
         alignas(4) glm::float32_t rotation = 0.0f;   // 20
         alignas(4) glm::float32_t weight = 0.4f;     // 28

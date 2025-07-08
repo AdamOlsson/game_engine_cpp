@@ -16,7 +16,7 @@ struct CharacterData {
 };
 
 struct TextSegmentData {
-    vec3 font_color;
+    vec4 font_color;
     uint font_size;
     float font_rotation;
     float font_weight;
@@ -37,7 +37,7 @@ layout(binding = 1) readonly uniform WindowDimensions {
 
 layout(location = 0) in vec3 in_position;
 
-layout(location = 0) out vec3 out_frag_color;
+layout(location = 0) out vec4 out_frag_color;
 layout(location = 1) out vec2 out_uv;
 layout(location = 2) out float out_font_weight;
 layout(location = 3) out float out_font_sharpness;
@@ -91,7 +91,7 @@ vec2 compute_uv(vec2 vertex, vec4 bbox) {
 void main() {
     CharacterData character_data = character_data_block.instances[gl_InstanceIndex];
     TextSegmentData text_data = text_segment_data_block.instances[character_data.text_segment_idx];
-    vec3 font_color = text_data.font_color;
+    vec4 font_color = text_data.font_color;
     uint font_size = text_data.font_size;
     float font_weight = text_data.font_weight;
     float font_sharpness = text_data.font_sharpness;

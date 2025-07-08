@@ -34,7 +34,7 @@ void UIPipeline::render(const VkCommandBuffer &command_buffer,
 
     vkCmdPushConstants(command_buffer, m_pipeline.m_pipeline_layout,
                        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
-                       sizeof(ElementProperties), &ui_element);
+                       sizeof(ElementProperties::ContainerProperties), &ui_element);
 
     const VkDeviceSize vertex_buffers_offset = 0;
     vkCmdBindVertexBuffers(command_buffer, 0, 1, &m_vertex_buffer.buffer,

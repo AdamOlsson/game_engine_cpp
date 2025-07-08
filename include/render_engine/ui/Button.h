@@ -20,7 +20,12 @@ template <typename T> struct extract_animation_type<ui::Animation<T>> {
 // contains pointers to the old button instances element properties. To properly
 // handles this we rebuild the animation so that the new button instances animations
 // point to the new buttons instances element properties. This behavior can lead to
-// perfomance loss if done in the main loop of the game.
+// perfomance loss if done in the main loop of the game. To resolve this issue, I need to
+// refactor the Animations. The problem is that the animations use a pointer to an
+// ElementProperties struct member, which becomes invalid after moving. I should use a
+// lambda function based system that receives the entire button (or the buttons
+// ElementProperties). This also requires some thinking about how to do this nice from the
+// users perspective.
 class Button {
   public:
     std::string text;

@@ -12,6 +12,7 @@
 #include "render_engine/buffers/IndexBuffer.h"
 #include "render_engine/buffers/UniformBuffer.h"
 #include "render_engine/buffers/VertexBuffer.h"
+#include "render_engine/colors.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 #include <vector>
@@ -24,7 +25,7 @@
 namespace ui {
 
 struct TextSegmentBufferObject {
-    alignas(16) glm::vec3 font_color = glm::vec3(0.0f, 0.0f, 0.0f);
+    alignas(16) glm::vec4 font_color = colors::WHITE;
     alignas(4) uint32_t font_size = 128;
     alignas(4) float font_rotation = 0.0f;
     alignas(4) float font_weight = 0.4f;

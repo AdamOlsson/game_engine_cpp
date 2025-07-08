@@ -65,11 +65,9 @@ Menu &Menu::add_submenu(Menu &menu) { return add_submenu(std::move(menu)); }
 
 void Menu::link(UI *ui) {
     // This functions is required because of the design decision to not use unique
-    // pointers. Because we do a lot of moving anc copying of memory address during
+    // pointers. Because we do a lot of moving and copying of memory address during
     // creation of a menu, we can't create a reliable pointer until everything has
-    // settled. This would be solved by using unique pointers. However, I want a nice way
-    // to abstract the unique pointers behind some class to prevent std::unique spamming
-    // for the end user
+    // settled.
     m_ui = ui;
     setup_navigation_callback();
     for (auto &menu : m_submenus) {

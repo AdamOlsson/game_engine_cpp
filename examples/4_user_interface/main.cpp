@@ -11,12 +11,9 @@
 #include <memory>
 
 void on_click_callback(ui::Button &self) { std::cout << "Click!" << std::endl; }
-void on_enter_callback(ui::Button &self) {
-    self.properties.container.border.color = colors::RED;
-}
-void on_leave_callback(ui::Button &self) {
-    self.properties.container.border.color = colors::GREEN;
-}
+
+void on_enter_callback(ui::Button &self) { self.properties.font.color = colors::BLACK; }
+void on_leave_callback(ui::Button &self) { self.properties.font.color = colors::WHITE; }
 
 class UserInterfaceExample : public Game {
   private:
@@ -25,14 +22,13 @@ class UserInterfaceExample : public Game {
 
   public:
     UserInterfaceExample() {
-
         m_ui = ui::UI(
             ui::Menu()
-                .add_button(ui::Button("NEW GAME",
+                .add_button(ui::Button("INCREMENT",
                                        ui::ElementProperties{
                                            .container.center = glm::vec2(0.0, -250.0),
                                            .container.dimension = glm::vec2(400.0, 100.0),
-                                           .container.border.color = colors::GREEN,
+                                           .container.border.color = colors::WHITE,
                                            .container.border.thickness = 5.0,
                                            .container.border.radius = 15.0,
                                            .font.color = colors::WHITE,
@@ -40,24 +36,22 @@ class UserInterfaceExample : public Game {
                                            .font.size = 96})
                                 .set_on_enter(on_enter_callback)
                                 .set_on_leave(on_leave_callback)
-                                .set_on_click([](ui::Button &self) {
-                                    self.animations.get<glm::vec2>("animation1").toggle();
-                                })
-                                .set_on_hover([](ui::Button &self) {})
-                                .add_animation("animation1",
-                                               [](ui::ElementProperties &props) {
-                                                   return ui::AnimationBuilder()
-                                                       .set_duration(300)
-                                                       .set_animation_curve(
-                                                           ui::AnimationCurve::smoothstep)
-                                                       .set_on_completed(
-                                                           ui::OnAnimationCompleted::LOOP)
-                                                       .build(&props.container.center,
-                                                              glm::vec2(100.0f, -250.0))
-                                                       .play();
-                                               }))
+                                .set_on_click([](ui::Button &self) {})
+                            /*.add_animation("animation1",*/
+                            /*               [](ui::ElementProperties &props) {*/
+                            /*                   return ui::AnimationBuilder()*/
+                            /*                       .set_duration(300)*/
+                            /*                       .set_animation_curve(*/
+                            /*                           ui::AnimationCurve::smoothstep)*/
+                            /*                       .set_on_completed(*/
+                            /*                           ui::OnAnimationCompleted::LOOP)*/
+                            /*                       .build(&props.container.center,*/
+                            /*                              glm::vec2(100.0f, -250.0))*/
+                            /*                       .play();*/
+                            /*               })*/
+                            )
 
-                .add_button(ui::Button("CONTINUE",
+                .add_button(ui::Button("DECREMENT",
                                        ui::ElementProperties{
                                            .container.center = glm::vec2(0.0, -140.0),
                                            .container.dimension = glm::vec2(400.0, 100.0),
@@ -69,20 +63,7 @@ class UserInterfaceExample : public Game {
                                            .font.size = 96})
                                 .set_on_enter(on_enter_callback)
                                 .set_on_leave(on_leave_callback)
-                                .set_on_click(on_click_callback)
-                                .add_animation("color_animation1",
-                                               [](ui::ElementProperties &props) {
-                                                   return ui::AnimationBuilder()
-                                                       .set_duration(600)
-                                                       .set_on_completed(
-                                                           ui::OnAnimationCompleted::STOP)
-                                                       .set_animation_curve(
-                                                           ui::AnimationCurve::linear)
-                                                       .build(
-                                                           &props.container.border.color,
-                                                           colors::BLUE)
-                                                       .play();
-                                               }))
+                                .set_on_click([](ui::Button &self) {}))
 
                 .add_submenu(
                     ui::Menu(
@@ -96,19 +77,7 @@ class UserInterfaceExample : public Game {
                                        .font.size = 96})
                             .set_on_enter(on_enter_callback)
                             .set_on_leave(on_leave_callback)
-                            .set_on_click(on_click_callback)
-                            .add_animation("animation1",
-                                           [](ui::ElementProperties &props) {
-                                               return ui::AnimationBuilder()
-                                                   .set_duration(300)
-                                                   .set_animation_curve(
-                                                       ui::AnimationCurve::smoothstep)
-                                                   .set_on_completed(
-                                                       ui::OnAnimationCompleted::REVERSE)
-                                                   .build(&props.container.center,
-                                                          glm::vec2(100.0f, -30.0f))
-                                                   .play();
-                                           }),
+                            .set_on_click(on_click_callback),
 
                         ui::Button("BACK",
                                    ui::ElementProperties{

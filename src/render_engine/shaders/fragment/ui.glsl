@@ -4,7 +4,8 @@ layout(location = 0) in vec2 in_fragment;
 layout(push_constant) uniform UIElement {
     vec2 center; // Not used here
     vec2 dimension;
-    vec3 border_color;
+    vec4 background_color;
+    vec4 border_color;
     float border_thickness;
     float border_radius;
 } push_ui_element;
@@ -45,7 +46,7 @@ void main() {
         alpha = determine_alpha_for_edge(
             abs_fragment_position, push_ui_element.dimension, push_ui_element.border_thickness);
     }
-    out_color = vec4(push_ui_element.border_color, alpha);
+    out_color = vec4(push_ui_element.border_color.rgb, alpha);
 }
 
 float determine_alpha_for_corner(
