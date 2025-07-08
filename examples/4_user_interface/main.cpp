@@ -7,13 +7,19 @@
 #include "render_engine/ui/ElementProperties.h"
 #include "render_engine/ui/UI.h"
 #include "render_engine/ui/animations/Animation.h"
-#include "render_engine/ui/animations/AnimationCurve.h"
 #include <memory>
 
 void on_click_callback(ui::Button &self) { std::cout << "Click!" << std::endl; }
 
-void on_enter_callback(ui::Button &self) { self.properties.font.color = colors::BLACK; }
-void on_leave_callback(ui::Button &self) { self.properties.font.color = colors::WHITE; }
+void on_enter_callback(ui::Button &self) {
+    self.properties.container.background_color = colors::WHITE;
+    self.properties.font.color = colors::BLACK;
+}
+
+void on_leave_callback(ui::Button &self) {
+    self.properties.container.background_color = colors::BLACK;
+    self.properties.font.color = colors::WHITE;
+}
 
 class UserInterfaceExample : public Game {
   private:
@@ -28,6 +34,7 @@ class UserInterfaceExample : public Game {
                                        ui::ElementProperties{
                                            .container.center = glm::vec2(0.0, -250.0),
                                            .container.dimension = glm::vec2(400.0, 100.0),
+                                           .container.background_color = colors::BLACK,
                                            .container.border.color = colors::WHITE,
                                            .container.border.thickness = 5.0,
                                            .container.border.radius = 15.0,
@@ -55,10 +62,11 @@ class UserInterfaceExample : public Game {
                                        ui::ElementProperties{
                                            .container.center = glm::vec2(0.0, -140.0),
                                            .container.dimension = glm::vec2(400.0, 100.0),
-                                           .container.border.color = colors::GREEN,
+                                           .container.background_color = colors::BLACK,
+                                           .container.border.color = colors::WHITE,
                                            .container.border.thickness = 5.0,
                                            .container.border.radius = 15.0,
-                                           .font.color = colors::RED,
+                                           .font.color = colors::WHITE,
                                            .font.rotation = 0.0f,
                                            .font.size = 96})
                                 .set_on_enter(on_enter_callback)
@@ -71,7 +79,9 @@ class UserInterfaceExample : public Game {
                                    ui::ElementProperties{
                                        .container.center = glm::vec2(0.0, -30.0),
                                        .container.dimension = glm::vec2(400.0, 100.0),
-                                       .container.border.color = colors::BLUE,
+                                       .container.background_color = colors::BLACK,
+                                       .container.border.color = colors::WHITE,
+
                                        .container.border.thickness = 5.0,
                                        .container.border.radius = 15.0,
                                        .font.size = 96})
@@ -83,7 +93,8 @@ class UserInterfaceExample : public Game {
                                    ui::ElementProperties{
                                        .container.center = glm::vec2(0.0, -30.0),
                                        .container.dimension = glm::vec2(400.0, 100.0),
-                                       .container.border.color = colors::BLUE,
+                                       .container.background_color = colors::BLACK,
+                                       .container.border.color = colors::WHITE,
                                        .container.border.thickness = 5.0,
                                        .container.border.radius = 0.0,
                                        .font.size = 96})
@@ -96,7 +107,8 @@ class UserInterfaceExample : public Game {
                                        ui::ElementProperties{
                                            .container.center = glm::vec2(0.0, -250.0),
                                            .container.dimension = glm::vec2(400.0, 100.0),
-                                           .container.border.color = colors::GREEN,
+                                           .container.background_color = colors::BLACK,
+                                           .container.border.color = colors::WHITE,
                                            .container.border.thickness = 5.0,
                                            .container.border.radius = 0.0,
                                            .font.size = 96})
@@ -109,7 +121,8 @@ class UserInterfaceExample : public Game {
                                        ui::ElementProperties{
                                            .container.center = glm::vec2(0.0, -140.0),
                                            .container.dimension = glm::vec2(400.0, 100.0),
-                                           .container.border.color = colors::GREEN,
+                                           .container.background_color = colors::BLACK,
+                                           .container.border.color = colors::WHITE,
                                            .container.border.thickness = 5.0,
                                            .container.border.radius = 0.0,
                                            .font.size = 96})

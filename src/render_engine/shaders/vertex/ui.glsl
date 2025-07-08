@@ -7,7 +7,7 @@ layout(binding = 0) readonly uniform WindowDimensions {
 layout(push_constant) uniform UIElement {
     vec2 center;
     vec2 dimension;
-    vec4 background_color;
+    vec4 background_color; // Not used here
     vec4 border_color; // Not used here
     float border_thickness; // Not used here
     float border_radius; // Not used here

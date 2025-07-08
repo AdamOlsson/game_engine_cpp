@@ -19,10 +19,10 @@ float determine_alpha_for_corner(
     const vec2 abs_fragment_position, const vec2 ui_element_rounded_corner_center, 
     const float ui_element_border_thickness, const float ui_element_border_radius
 );
-
-float determine_alpha_for_edge(
+bool is_on_border(
     const vec2 abs_fragment_position, const vec2 ui_element_dimension, const float ui_element_border_thickness
 );
+
 
 // ################################
 // ############# Main #############
@@ -38,15 +38,20 @@ void main() {
         abs_fragment_position.x > rounded_corner_center_position.x &&
         abs_fragment_position.y > rounded_corner_center_position.y;
 
-    float alpha = 0.0;
     if (is_corner) {
-        alpha = determine_alpha_for_corner(
+        // CONTINUE: If were are not on the border and inside the inner ring, we should set 
+        // the color to the background color
+        float alpha = determine_alpha_for_corner(
             abs_fragment_position, rounded_corner_center_position, push_ui_element.border_thickness, push_ui_element.border_radius);
+        out_color = vec4(push_ui_element.border_color.rgb, alpha);
+    } else if(is_on_border(
+            abs_fragment_position, push_ui_element.dimension, push_ui_element.border_thickness)) {
+        float alpha = 1.0;
+        out_color = vec4(push_ui_element.border_color.rgb, alpha);
     } else {
-        alpha = determine_alpha_for_edge(
-            abs_fragment_position, push_ui_element.dimension, push_ui_element.border_thickness);
+        // background
+        out_color = push_ui_element.background_color;
     }
-    out_color = vec4(push_ui_element.border_color.rgb, alpha);
 }
 
 float determine_alpha_for_corner(
@@ -66,12 +71,13 @@ float determine_alpha_for_corner(
     return 1.0 - smoothstep(-edge_softness, edge_softness, ring_sdf);
 }
 
-float determine_alpha_for_edge(
+bool is_on_border(
     const vec2 abs_fragment_position, const vec2 ui_element_dimension, const float ui_element_border_thickness
 ){
     // Half ui_element_dimension because the abs_fragment_position is centered to origo
     const vec2 border_threshold = (ui_element_dimension / 2.0) - ui_element_border_thickness;
     const bool x_larger_than_border_thresh = abs_fragment_position.x > border_threshold.x;
     const bool y_larger_than_border_thresh = abs_fragment_position.y > border_threshold.y;
-    return float(x_larger_than_border_thresh || y_larger_than_border_thresh);
+    return x_larger_than_border_thresh || y_larger_than_border_thresh;
 }
+
