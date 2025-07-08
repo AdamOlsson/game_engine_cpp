@@ -27,8 +27,7 @@ class UserInterfaceExample : public Game {
   public:
     UserInterfaceExample() {
 
-        // TODO: I am not sure I like the UI have to be a unique pointer. However, lets
-        // see how things develop once we know how to create the layout
+        // TODO: Understand why this needs to be unique to avoid segfault
         m_ui = std::make_unique<ui::UI>(
             ui::Menu()
                 .add_button(ui::Button("NEW GAME",
@@ -150,6 +149,11 @@ class UserInterfaceExample : public Game {
                                 .set_on_enter(on_enter_callback)
                                 .set_on_leave(on_leave_callback)
                                 .set_on_click(on_click_callback))));
+
+        m_ui->add_text_box("VERSION", ui::TextBox("10", ui::ElementProperties{
+                                                            .container.center =
+                                                                glm::vec2(300.0f, 300.0f),
+                                                        }));
     };
 
     ~UserInterfaceExample() {};

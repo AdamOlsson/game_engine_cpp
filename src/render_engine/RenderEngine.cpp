@@ -8,6 +8,7 @@
 #include "render_engine/fonts/Font.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "render_engine/resources/images/ImageResource.h"
+#include "render_engine/ui/TextBox.h"
 #include "render_engine/ui/TextPipeline.h"
 #include "render_engine/ui/UIPipeline.h"
 #include "vulkan/vulkan_core.h"
@@ -125,25 +126,30 @@ void RenderEngine::render(
     m_geometry_pipeline->render_hexagons(command_buffer);
 }
 
-// TODO: This function should not exist, text should be rendered through render_ui()
-void RenderEngine::render_text(const std::string &text, const glm::vec2 &center,
-                               const uint size) {
+// TODO: This function is not compatible with render_ui. It is not possible to run them in
+// the same loop iteration as they overwrite their buffers
+void RenderEngine::render_text(const ui::TextBox &text_box) {
 
     auto &character_instance_buffer = m_text_pipeline->get_character_buffer();
     auto &text_segment_buffer = m_text_pipeline->get_text_segment_buffer();
     character_instance_buffer.clear();
     text_segment_buffer.clear();
 
-    text_segment_buffer.emplace_back(colors::WHITE, size, 0.0f);
+    const auto font_color = text_box.properties.font.color;
+    const auto font_size = text_box.properties.font.size;
+    const float font_rotation = text_box.properties.font.rotation;
+    const auto center = text_box.properties.container.center;
+    const glm::vec3 offset(text_box.properties.font.size / 2.5, 0.0f, 0.0f);
+
+    text_segment_buffer.emplace_back(font_color, font_size, font_rotation);
     text_segment_buffer.transfer();
 
-    const glm::vec3 offset(size / 2.5, 0.0f, 0.0f);
     const uint32_t text_segment_idx = 0;
     const auto text_start_x =
-        center.x - (static_cast<float>((text.size() - 1)) * offset.x / 2);
+        center.x - (static_cast<float>((text_box.text.size() - 1)) * offset.x / 2);
     const glm::vec3 loc(text_start_x, center.y, 0.0f);
     float count = 0;
-    for (const char &c : text) {
+    for (const char &c : text_box.text) {
         character_instance_buffer.emplace_back(loc + offset * count,
                                                m_font->encode_ascii_char(std::toupper(c)),
                                                text_segment_idx);
@@ -184,6 +190,32 @@ void RenderEngine::render_ui(const ui::State &state) {
         const glm::vec3 loc(text_start_x, center.y, 0.0f);
         float count = 0;
         for (const char &c : text) {
+            character_instance_buffer.emplace_back(
+                loc + offset * count, m_font->encode_ascii_char(std::toupper(c)),
+                text_segment_idx);
+            count += 1.0f;
+        }
+    }
+
+    for (const auto text_box : state.text_boxes) {
+        const auto font_color = text_box->properties.font.color;
+        const auto font_size = text_box->properties.font.size;
+        const float font_rotation = text_box->properties.font.rotation;
+        const auto font_weight = text_box->properties.font.weight;
+        const auto font_sharpness = text_box->properties.font.sharpness;
+
+        text_segment_buffer.emplace_back(font_color, font_size, font_rotation,
+                                         font_weight, font_sharpness);
+        const uint32_t text_segment_idx = text_segment_buffer.num_elements() - 1;
+
+        // TODO: Implement text kerning
+        const auto center = text_box->properties.container.center;
+        const glm::vec3 offset(text_box->properties.font.size / 2.5, 0.0f, 0.0f);
+        const auto text_start_x =
+            center.x - (static_cast<float>((text_box->text.size() - 1)) * offset.x / 2);
+        const glm::vec3 loc(text_start_x, center.y, 0.0f);
+        float count = 0;
+        for (const char &c : text_box->text) {
             character_instance_buffer.emplace_back(
                 loc + offset * count, m_font->encode_ascii_char(std::toupper(c)),
                 text_segment_idx);

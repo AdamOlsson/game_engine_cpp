@@ -25,10 +25,10 @@ namespace ui {
 
 struct TextSegmentBufferObject {
     alignas(16) glm::vec3 font_color = glm::vec3(0.0f, 0.0f, 0.0f);
-    alignas(4) glm::uint32_t font_size = 128;
-    alignas(4) glm::float32_t font_rotation = 0.0f;
-    alignas(4) glm::float32_t font_weight = 0.4f;
-    alignas(4) glm::float32_t font_sharpness = 2.5f;
+    alignas(4) uint32_t font_size = 128;
+    alignas(4) float font_rotation = 0.0f;
+    alignas(4) float font_weight = 0.4f;
+    alignas(4) float font_sharpness = 2.5f;
 };
 
 struct CharacterInstanceBufferObject {

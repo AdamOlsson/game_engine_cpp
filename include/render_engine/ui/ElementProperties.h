@@ -4,12 +4,12 @@
 namespace ui {
 struct ElementProperties {
     struct ContainerProperties {
-        glm::vec2 center;
-        glm::vec2 dimension;
+        glm::vec2 center = glm::vec2(0.0f, 0.0f);
+        glm::vec2 dimension = glm::vec2(0.0f, 0.0f);
         struct {
-            glm::vec3 color;
-            float thickness;
-            float radius;
+            glm::vec3 color = colors::WHITE;
+            float thickness = 0.0f;
+            float radius = 0.0f;
         } border;
     } container;
 

@@ -62,7 +62,7 @@ class RenderEngine {
 
     void render(const std::vector<std::reference_wrapper<const RenderBody>> &bodies);
 
-    void render_text(const std::string &text, const glm::vec2 &location, const uint size);
+    void render_text(const ui::TextBox &text_box);
 
     void render_ui(const ui::State &state);
 
