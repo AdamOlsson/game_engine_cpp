@@ -13,6 +13,29 @@ UI::UI(Menu &menu)
     m_current_menu_state.buttons = m_last_menu_in_trace->button_vector;
 }
 
+UI &UI::operator=(UI &&other) noexcept {
+    if (this != &other) {
+        m_text_boxes = std::move(m_text_boxes);
+        m_text_boxes_state.reserve(other.m_text_boxes_state.size());
+        for (auto &pair : m_text_boxes) {
+            m_text_boxes_state.push_back(&pair.second);
+        }
+
+        m_menu = std::move(other.m_menu);
+        m_current_menu_state = ui::State();
+        m_menu_trace = {&m_menu};
+        m_last_menu_in_trace = get_last_menu();
+        m_menu.link(this);
+        m_current_menu_state.buttons = m_last_menu_in_trace->button_vector;
+
+        other.m_text_boxes_state.clear();
+        other.m_current_menu_state = ui::State();
+        other.m_menu_trace.clear();
+        other.m_last_menu_in_trace = nullptr;
+    }
+    return *this;
+}
+
 void UI::add_text_box(const std::string &id, TextBox &&text_box) {
     m_text_boxes.insert({id, std::move(text_box)});
     m_text_boxes_state.push_back(&m_text_boxes[id]);

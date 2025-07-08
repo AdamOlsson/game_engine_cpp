@@ -33,6 +33,11 @@ class UI {
     UI(Menu &menu);
     ~UI() = default;
 
+    UI(UI &&other) noexcept = delete;
+    UI(const UI &other) = delete;
+    UI &operator=(UI &&other) noexcept;
+    UI &operator=(const UI &other) = delete;
+
     void set_menu(Menu &&menu);
     void add_text_box(const std::string &&id, TextBox &&text_box);
     void add_text_box(const std::string &id, TextBox &&text_box);

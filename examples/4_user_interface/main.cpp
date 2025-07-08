@@ -20,15 +20,13 @@ void on_leave_callback(ui::Button &self) {
 
 class UserInterfaceExample : public Game {
   private:
-    std::unique_ptr<ui::UI> m_ui;
-
+    ui::UI m_ui;
     ui::Animation<glm::vec2> m_position_animation;
 
   public:
     UserInterfaceExample() {
 
-        // TODO: Understand why this needs to be unique to avoid segfault
-        m_ui = std::make_unique<ui::UI>(
+        m_ui = ui::UI(
             ui::Menu()
                 .add_button(ui::Button("NEW GAME",
                                        ui::ElementProperties{
@@ -150,10 +148,10 @@ class UserInterfaceExample : public Game {
                                 .set_on_leave(on_leave_callback)
                                 .set_on_click(on_click_callback))));
 
-        m_ui->add_text_box("VERSION", ui::TextBox("10", ui::ElementProperties{
-                                                            .container.center =
-                                                                glm::vec2(300.0f, 300.0f),
-                                                        }));
+        m_ui.add_text_box("VERSION", ui::TextBox("10", ui::ElementProperties{
+                                                           .container.center =
+                                                               glm::vec2(300.0f, 300.0f),
+                                                       }));
     };
 
     ~UserInterfaceExample() {};
@@ -166,7 +164,7 @@ class UserInterfaceExample : public Game {
             return;
         }
 
-        auto ui_state = m_ui->get_state();
+        auto ui_state = m_ui.get_state();
 
         render_engine.render_ui(ui_state);
 
@@ -179,7 +177,7 @@ class UserInterfaceExample : public Game {
     void setup(RenderEngine &render_engine) override {
         render_engine.register_mouse_event_callback(
             [this](MouseEvent e, ViewportPoint &p) {
-                this->m_ui->update_state_from_mouse_event(e, p);
+                this->m_ui.update_state_from_mouse_event(e, p);
             });
     }
 };
