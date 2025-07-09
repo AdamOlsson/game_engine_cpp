@@ -46,7 +46,7 @@ void UI::add_text_box(const std::string &&id, TextBox &&text_box) {
     m_text_boxes_state.push_back(&m_text_boxes[id]);
 }
 
-TextBox &UI::get_text_box(std::string &id) { return m_text_boxes[id]; }
+TextBox &UI::get_text_box(const std::string &id) { return m_text_boxes[id]; }
 
 [[nodiscard]] ui::State &UI::get_state() {
     for (auto button : m_last_menu_in_trace->button_vector) {

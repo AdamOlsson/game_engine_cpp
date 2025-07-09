@@ -41,7 +41,7 @@ class UI {
     void set_menu(Menu &&menu);
     void add_text_box(const std::string &&id, TextBox &&text_box);
     void add_text_box(const std::string &id, TextBox &&text_box);
-    TextBox &get_text_box(std::string &id);
+    TextBox &get_text_box(const std::string &id);
 
     ui::State &get_state();
     ui::State &update_state_from_mouse_event(const MouseEvent mouse_event,

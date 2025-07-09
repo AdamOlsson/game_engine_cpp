@@ -27,7 +27,7 @@ class UserInterfaceExample : public Game {
 
     const std::string VERSION_ID = "VERSION";
     const std::string NUMBER_ID = "NUMBER";
-    size_t m_number;
+    int m_number;
 
     const glm::vec2 top_button_pos = glm::vec2(0.0f, -50.0f);
     const glm::vec2 button_dimension = glm::vec2(400.0f, 100.0f);
@@ -60,7 +60,7 @@ class UserInterfaceExample : public Game {
                             .font.size = button_font_size})
                         .set_on_enter(on_enter_callback)
                         .set_on_leave(on_leave_callback)
-                        .set_on_click([](ui::Button &self) {})
+                        .set_on_click([this](ui::Button &self) { this->m_number++; })
                     /*.add_animation("animation1",*/
                     /*               [](ui::ElementProperties &props) {*/
                     /*                   return ui::AnimationBuilder()*/
@@ -89,7 +89,9 @@ class UserInterfaceExample : public Game {
                                    .font.size = button_font_size})
                         .set_on_enter(on_enter_callback)
                         .set_on_leave(on_leave_callback)
-                        .set_on_click([](ui::Button &self) {}))
+                        .set_on_click([this](ui::Button &self) {
+                            this->m_number = std::max(0, this->m_number - 1);
+                        }))
 
                 .add_submenu(
                     ui::Menu(
@@ -173,7 +175,7 @@ class UserInterfaceExample : public Game {
                                    .font.size = button_font_size})
                         .set_on_enter(on_enter_callback)
                         .set_on_leave(on_leave_callback)
-                        .set_on_click(on_click_callback)));
+                        .set_on_click([](ui::Button &self) { exit(0); })));
 
         m_ui.add_text_box(
             NUMBER_ID,
@@ -197,6 +199,8 @@ class UserInterfaceExample : public Game {
         if (!success) {
             return;
         }
+
+        m_ui.get_text_box(NUMBER_ID).text = std::to_string(m_number);
 
         auto ui_state = m_ui.get_state();
 
