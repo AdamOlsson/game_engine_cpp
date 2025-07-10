@@ -15,14 +15,12 @@ layout(location = 0) out vec4 out_color;
 // ################################
 // ##### Supporting functions #####
 // ################################
-float determine_alpha_for_corner(
-    const vec2 abs_fragment_position, const vec2 ui_element_rounded_corner_center, 
-    const float ui_element_border_thickness, const float ui_element_border_radius
-);
+vec4 calculate_inner_border_color(
+    vec2 fragment_position, vec2 corner_center, float border_radius,
+    float border_thickness, vec4 border_color, vec4 background_color);
 bool is_on_border(
-    const vec2 abs_fragment_position, const vec2 ui_element_dimension, const float ui_element_border_thickness
-);
-
+    const vec2 abs_fragment_position, const vec2 ui_element_dimension,
+    const float ui_element_border_thickness);
 
 // ################################
 // ############# Main #############
@@ -39,13 +37,16 @@ void main() {
         abs_fragment_position.y > rounded_corner_center_position.y;
 
     if (is_corner) {
-        // CONTINUE: If were are not on the border and inside the inner ring, we should set 
-        // the color to the background color
-        float alpha = determine_alpha_for_corner(
-            abs_fragment_position, rounded_corner_center_position, push_ui_element.border_thickness, push_ui_element.border_radius);
-        out_color = vec4(push_ui_element.border_color.rgb, alpha);
-    } else if(is_on_border(
-            abs_fragment_position, push_ui_element.dimension, push_ui_element.border_thickness)) {
+      out_color = calculate_inner_border_color(
+                    abs_fragment_position,
+                    rounded_corner_center_position,
+                    push_ui_element.border_radius,
+                    push_ui_element.border_thickness,
+                    push_ui_element.border_color,
+                    push_ui_element.background_color);
+    } else if(is_on_border(abs_fragment_position, 
+                            push_ui_element.dimension,
+                            push_ui_element.border_thickness)) {
         float alpha = 1.0;
         out_color = vec4(push_ui_element.border_color.rgb, alpha);
     } else {
@@ -54,22 +55,30 @@ void main() {
     }
 }
 
-float determine_alpha_for_corner(
-    const vec2 abs_fragment_position, const vec2 ui_element_rounded_corner_center, 
-    const float ui_element_border_thickness, const float ui_element_border_radius
+vec4 calculate_inner_border_color(
+    vec2 fragment_position,
+    vec2 corner_center,
+    float border_radius,
+    float border_thickness,
+    vec4 border_color,
+    vec4 background_color
 ) {
-    const float distance_to_center = distance(abs_fragment_position, ui_element_rounded_corner_center);
+    float distance_to_center = distance(fragment_position, corner_center);
+    float outer_radius = border_radius;
+    float inner_radius = border_radius - border_thickness;
     
-    const float outer_sdf = distance_to_center - ui_element_border_radius;
+    // Calculate how much this fragment is covered by the shape
+    float outer_coverage = 1.0 - smoothstep(outer_radius - 0.5, outer_radius + 0.5, distance_to_center);
+    float inner_coverage = 1.0 - smoothstep(inner_radius - 0.5, inner_radius + 0.5, distance_to_center);
+    float border_coverage = outer_coverage - inner_coverage;
     
-    const float inner_radius = ui_element_border_radius - ui_element_border_thickness;
-    const float inner_sdf = distance_to_center - inner_radius;
+    vec3 final_color = mix(background_color.rgb, border_color.rgb, border_coverage);
+    float final_alpha = max(outer_coverage * border_color.a, inner_coverage * background_color.a);
     
-    const float ring_sdf = max(outer_sdf, -inner_sdf);
-    
-    const float edge_softness = fwidth(ring_sdf) * 0.5;
-    return 1.0 - smoothstep(-edge_softness, edge_softness, ring_sdf);
+    return vec4(final_color, final_alpha);
 }
+
+
 
 bool is_on_border(
     const vec2 abs_fragment_position, const vec2 ui_element_dimension, const float ui_element_border_thickness
@@ -80,4 +89,5 @@ bool is_on_border(
     const bool y_larger_than_border_thresh = abs_fragment_position.y > border_threshold.y;
     return x_larger_than_border_thresh || y_larger_than_border_thresh;
 }
+
 
