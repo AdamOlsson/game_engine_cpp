@@ -139,12 +139,13 @@ void RenderEngine::render_text(const ui::TextBox &text_box) {
     const auto font_size = text_box.properties.font.size;
     const float font_rotation = text_box.properties.font.rotation;
     const auto center = text_box.properties.container.center;
-    const glm::vec3 offset(text_box.properties.font.size / 2.5, 0.0f, 0.0f);
 
     text_segment_buffer.emplace_back(font_color, font_size, font_rotation);
     text_segment_buffer.transfer();
 
+    // TODO: Implement text kerning
     const uint32_t text_segment_idx = 0;
+    const glm::vec3 offset(text_box.properties.font.size / 2.5, 0.0f, 0.0f);
     const auto text_start_x =
         center.x - (static_cast<float>((text_box.text.size() - 1)) * offset.x / 2);
     const glm::vec3 loc(text_start_x, center.y, 0.0f);
@@ -161,12 +162,14 @@ void RenderEngine::render_text(const ui::TextBox &text_box) {
     m_text_pipeline->render_text(m_current_render_pass.command_buffer.m_command_buffer);
 }
 
+// TODO: Should we instead simply pass the UI class instead of its state?
 void RenderEngine::render_ui(const ui::State &state) {
     auto &character_instance_buffer = m_text_pipeline->get_character_buffer();
     auto &text_segment_buffer = m_text_pipeline->get_text_segment_buffer();
     character_instance_buffer.clear();
     text_segment_buffer.clear();
 
+    const auto kerning_map = m_font->kerning_map;
     for (const auto button : state.buttons) {
 
         m_ui_pipeline->render(m_current_render_pass.command_buffer.m_command_buffer,
