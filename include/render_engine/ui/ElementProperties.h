@@ -19,7 +19,7 @@ struct ElementProperties {
         alignas(4) glm::uint32_t size = 128;         // 24
         alignas(4) glm::float32_t rotation = 0.0f;   // 20
         alignas(4) glm::float32_t weight = 0.4f;     // 28
-        alignas(4) glm::float32_t sharpness = 2.5f;  // 32
+        alignas(4) glm::float32_t sharpness = 2.3f;  // 32
     } font;
 };
 } // namespace ui
