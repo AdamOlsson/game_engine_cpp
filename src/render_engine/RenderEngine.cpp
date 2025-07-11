@@ -126,6 +126,54 @@ void RenderEngine::render(
     m_geometry_pipeline->render_hexagons(command_buffer);
 }
 
+void RenderEngine::text_kerning(const font::KerningMap &kerning_map,
+                                const std::string_view text,
+                                const ui::ElementProperties properties) {
+
+    if (text.size() == 0) {
+        return;
+    }
+
+    const auto font_color = properties.font.color;
+    const auto font_size = properties.font.size;
+    const float font_rotation = properties.font.rotation;
+
+    auto &glyph_instance_buffer = m_text_pipeline->get_character_buffer();
+    auto &text_segment_buffer = m_text_pipeline->get_text_segment_buffer();
+    const size_t start_length = glyph_instance_buffer.num_elements();
+
+    const size_t num_char = text.size();
+    const auto text_center = properties.container.center;
+
+    text_segment_buffer.emplace_back(font_color, font_size, font_rotation);
+    const uint32_t text_segment_idx = text_segment_buffer.num_elements() - 1;
+
+    // First character has no offset
+    glyph_instance_buffer.emplace_back(
+        text_center, m_font->encode_ascii_char(std::toupper(text[0])), text_segment_idx);
+
+    float combined_offset = 0.0f;
+    for (auto i = 1; i < num_char; i++) {
+        const auto pair = text.substr(i, 2);
+        float offset = (font_size / 2.0) - kerning_map.base_offset;
+        if (kerning_map.map.contains(pair)) {
+            offset -= kerning_map.map.find(pair)->second;
+        }
+        combined_offset += offset;
+        const glm::vec2 glyph_position = text_center + glm::vec2(combined_offset, 0.0f);
+        glyph_instance_buffer.emplace_back(
+            glyph_position, m_font->encode_ascii_char(std::toupper(text[i])),
+            text_segment_idx);
+    }
+
+    const size_t end_length = glyph_instance_buffer.num_elements();
+    const auto center_offset = glm::vec2(combined_offset / 2.0f, 0.0f);
+    for (auto i = start_length; i < end_length; i++) {
+        auto &glyph = glyph_instance_buffer[i];
+        glyph.position -= center_offset;
+    }
+}
+
 // TODO: This function is not compatible with render_ui. It is not possible to run them in
 // the same loop iteration as they overwrite their buffers
 void RenderEngine::render_text(const ui::TextBox &text_box) {
@@ -175,29 +223,30 @@ void RenderEngine::render_ui(const ui::State &state) {
         m_ui_pipeline->render(m_current_render_pass.command_buffer.m_command_buffer,
                               button->properties.container);
 
-        const auto font_color = button->properties.font.color;
-        const auto font_size = button->properties.font.size;
-        const auto font_rotation = button->properties.font.rotation;
-        const auto font_weight = button->properties.font.weight;
-        const auto font_sharpness = button->properties.font.sharpness;
-        text_segment_buffer.emplace_back(font_color, font_size, font_rotation,
-                                         font_weight, font_sharpness);
-        const uint32_t text_segment_idx = text_segment_buffer.num_elements() - 1;
+        text_kerning(font::get_default_kerning_map(), button->text, button->properties);
+        /*const auto font_color = button->properties.font.color;*/
+        /*const auto font_size = button->properties.font.size;*/
+        /*const auto font_rotation = button->properties.font.rotation;*/
+        /*const auto font_weight = button->properties.font.weight;*/
+        /*const auto font_sharpness = button->properties.font.sharpness;*/
+        /*text_segment_buffer.emplace_back(font_color, font_size, font_rotation,*/
+        /*                                 font_weight, font_sharpness);*/
+        /*const uint32_t text_segment_idx = text_segment_buffer.num_elements() - 1;*/
 
         // TODO: Implement text kerning
-        const auto center = button->properties.container.center;
-        const auto text = button->text;
-        const glm::vec3 offset(font_size / 2.5, 0.0f, 0.0f);
-        const auto text_start_x =
-            center.x - (static_cast<float>((text.size() - 1)) * offset.x / 2);
-        const glm::vec3 loc(text_start_x, center.y, 0.0f);
-        float count = 0;
-        for (const char &c : text) {
-            character_instance_buffer.emplace_back(
-                loc + offset * count, m_font->encode_ascii_char(std::toupper(c)),
-                text_segment_idx);
-            count += 1.0f;
-        }
+        /*const auto center = button->properties.container.center;*/
+        /*const auto text = button->text;*/
+        /*const glm::vec3 offset(font_size / 2.5, 0.0f, 0.0f);*/
+        /*const auto text_start_x =*/
+        /*    center.x - (static_cast<float>((text.size() - 1)) * offset.x / 2);*/
+        /*const glm::vec3 loc(text_start_x, center.y, 0.0f);*/
+        /*float count = 0;*/
+        /*for (const char &c : text) {*/
+        /*    character_instance_buffer.emplace_back(*/
+        /*        loc + offset * count, m_font->encode_ascii_char(std::toupper(c)),*/
+        /*        text_segment_idx);*/
+        /*    count += 1.0f;*/
+        /*}*/
     }
 
     for (const auto text_box : state.text_boxes) {
@@ -213,10 +262,10 @@ void RenderEngine::render_ui(const ui::State &state) {
 
         // TODO: Implement text kerning
         const auto center = text_box->properties.container.center;
-        const glm::vec3 offset(text_box->properties.font.size / 2.5, 0.0f, 0.0f);
+        const glm::vec2 offset(text_box->properties.font.size / 2.5, 0.0f);
         const auto text_start_x =
             center.x - (static_cast<float>((text_box->text.size() - 1)) * offset.x / 2);
-        const glm::vec3 loc(text_start_x, center.y, 0.0f);
+        const glm::vec2 loc(text_start_x, center.y);
         float count = 0;
         for (const char &c : text_box->text) {
             character_instance_buffer.emplace_back(

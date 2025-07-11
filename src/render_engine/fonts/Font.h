@@ -5,7 +5,6 @@
 #include "render_engine/fonts/KerningMap.h"
 #include "render_engine/resources/fonts/FontResource.h"
 #include <cstddef>
-#include <map>
 
 enum class UseFont {
     None,
@@ -23,7 +22,7 @@ class Font {
 
   public:
     std::unique_ptr<Texture> font_atlas;
-    const std::map<std::string, float> kerning_map = font::get_default_kerning_map();
+    const font::KerningMap kerning_map = font::get_default_kerning_map();
 
     Font()
         : char_width_px(0), char_height_px(0), font_atlas(nullptr), atlas_width_px(0),

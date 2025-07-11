@@ -6,6 +6,7 @@
 #include "render_engine/Window.h"
 #include "render_engine/WindowConfig.h"
 #include "render_engine/fonts/Font.h"
+#include "render_engine/ui/ElementProperties.h"
 #include "render_engine/ui/State.h"
 #include "render_engine/ui/TextPipeline.h"
 #include "render_engine/ui/UIPipeline.h"
@@ -38,6 +39,9 @@ class RenderEngine {
     struct {
         CommandBuffer command_buffer;
     } m_current_render_pass;
+
+    void text_kerning(const font::KerningMap &kerning_map, const std::string_view text,
+                      const ui::ElementProperties properties);
 
   public:
     RenderEngine(const WindowConfig &window_config, const UseFont use_font);

@@ -1,6 +1,10 @@
 #include "KerningMap.h"
 
-const std::map<std::string, float> &font::get_default_kerning_map() {
-    static const std::map<std::string, float> map = {{"EX", 0.0f}};
+const font::KerningMap &font::get_default_kerning_map() {
+    static const KerningMap map = {.base_offset = 12.0f,
+                                   .map = {
+                                       {"IE", 0.0f},
+                                       {"IN", 6.0f},
+                                   }};
     return map;
 }

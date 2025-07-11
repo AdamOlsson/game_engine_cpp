@@ -1,16 +1,7 @@
 #version 450
 
-#define PI 3.14159265
-#define CIRCLE 1
-#define TRIANGLE 2
-#define RECTANGLE 3
-#define HEXAGON 4
-#define ARROW 5 
-#define LINE 6 
-
 struct CharacterData {
-    vec3 position;
-    float _padding;
+    vec2 position;
     vec4 uvwt; // bbox for texture
     uint text_segment_idx;
 };
@@ -104,7 +95,7 @@ void main() {
 
     vec2 viewport_position = positions_to_viewport(character_data.position.xy, window.dims);
     vec2 vertex_in_viewport = rotated_vertex_pos.xy / vec2(window.dims.x, window.dims.y) * 2.0;
-    vec4 position = vec4(viewport_position + vertex_in_viewport, character_data.position.z, 1.0);
+    vec4 position = vec4(viewport_position + vertex_in_viewport, 0.0, 1.0);
     
     gl_Position = position;
     out_frag_color = font_color;

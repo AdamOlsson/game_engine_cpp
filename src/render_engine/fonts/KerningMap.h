@@ -2,7 +2,11 @@
 
 #include <map>
 namespace font {
-
-const std::map<std::string, float> &get_default_kerning_map();
-
+struct KerningMap {
+    float base_offset;
+    std::map<std::string, float, std::less<>> map;
 };
+
+const KerningMap &get_default_kerning_map();
+
+}; // namespace font

@@ -134,12 +134,12 @@ std::ostream &operator<<(std::ostream &os, const TextSegmentBufferObject &obj) {
 
 std::string to_string(const CharacterInstanceBufferObject &obj) {
     return std::format("CharacterInstanceBufferObject {{\n"
-                       "  position:            ({:.3f}, {:.3f}, {:.3f})\n"
+                       "  position:            ({:.3f}, {:.3f})\n"
                        "  uvwt:                ({:.3f}, {:.3f}, {:.3f}, {:.3f})\n"
                        "  text_segment_idx:    {:d}\n"
                        "}}",
-                       obj.position.x, obj.position.y, obj.position.z, obj.uvwt.x,
-                       obj.uvwt.y, obj.uvwt.z, obj.uvwt.w, obj.text_segment_idx);
+                       obj.position.x, obj.position.y, obj.uvwt.x, obj.uvwt.y, obj.uvwt.z,
+                       obj.uvwt.w, obj.text_segment_idx);
 }
 
 std::ostream &operator<<(std::ostream &os, const CharacterInstanceBufferObject &obj) {

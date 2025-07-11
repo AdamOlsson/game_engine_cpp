@@ -33,7 +33,7 @@ struct TextSegmentBufferObject {
 };
 
 struct CharacterInstanceBufferObject {
-    alignas(16) glm::vec3 position;
+    alignas(8) glm::vec2 position;
     alignas(16) glm::vec4 uvwt;
     alignas(4) uint32_t text_segment_idx = 0;
 };
