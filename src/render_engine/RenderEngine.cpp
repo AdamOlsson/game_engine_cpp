@@ -154,7 +154,7 @@ void RenderEngine::text_kerning(const font::KerningMap &kerning_map,
 
     float combined_offset = 0.0f;
     for (auto i = 1; i < num_char; i++) {
-        const auto pair = text.substr(i, 2);
+        const auto pair = text.substr(i - 1, 2);
         float offset = (font_size / 2.0) - kerning_map.base_offset;
         if (kerning_map.map.contains(pair)) {
             offset -= kerning_map.map.find(pair)->second;
