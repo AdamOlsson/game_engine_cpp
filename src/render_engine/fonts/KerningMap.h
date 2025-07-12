@@ -3,7 +3,6 @@
 #include <map>
 namespace font {
 struct KerningMap {
-    float base_offset;
     std::map<std::string, float, std::less<>> map;
 };
 
