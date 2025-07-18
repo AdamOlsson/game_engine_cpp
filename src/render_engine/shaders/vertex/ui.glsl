@@ -1,6 +1,6 @@
 #version 450
 
-layout(location = 0) in vec3 not_used;
+layout(location = 0) in vec3 in_vertex_;
 layout(binding = 0) readonly uniform WindowDimensions {
         vec2 dims;
 } window;
@@ -15,26 +15,24 @@ layout(push_constant) uniform UIElement {
 
 layout(location = 0) out vec2 out_ui_element_vertex;
 
-void main() {
-    const vec2 rectangle_corners[6] = vec2[](
-        vec2(-0.5f, -0.5f), // Top left
-        vec2(-0.5f,  0.5f), // Bottom left
-        vec2( 0.5f,  0.5f), // Bottom right
-        vec2( 0.5f,  0.5f), // Bottom right
-        vec2( 0.5f, -0.5f), // Top right
-        vec2(-0.5f, -0.5f)  // Top left
+vec2 position_to_viewport(vec2 vertex_pos, vec2 window_dims) {
+    return vec2(
+        (2.0 * vertex_pos.x) / window_dims.x,
+        -(2.0 * vertex_pos.y) / window_dims.y
     );
-    const vec2 in_vertex = rectangle_corners[gl_VertexIndex];
+}
+
+void main() {
+    const vec2 in_vertex = in_vertex_.xy;
     
-    const vec2 half_window_dimension = window.dims / 2.0;
-    const vec2 vertex_position = (in_vertex * push_ui_element.dimension) + push_ui_element.center;
-    const vec2 vertex_viewport_position = vertex_position / half_window_dimension;
-   
+    const vec2 viewport_position = position_to_viewport(push_ui_element.center, window.dims);
+
     const vec2 ui_element_corner = in_vertex * push_ui_element.dimension;
-    const vec2 positive_quad_offset = push_ui_element.dimension / 2.0;
+    const vec2 vertex_offset_viewport = (ui_element_corner * 2.0) / window.dims;
 
     // Let the GPU interpolate between (0,0) and (push_ui_element.dimension)
+    const vec2 positive_quad_offset = push_ui_element.dimension / 2.0;
     out_ui_element_vertex = ui_element_corner + positive_quad_offset;
 
-    gl_Position = vec4(vertex_viewport_position, 0.0, 1.0);
+    gl_Position = vec4(viewport_position + vertex_offset_viewport, 0.0, 1.0);
 }

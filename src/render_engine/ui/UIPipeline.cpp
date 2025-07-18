@@ -6,8 +6,6 @@
 #include "render_engine/resources/shaders/ShaderResource.h"
 #include "vulkan/vulkan_core.h"
 
-// TODO:
-// 4. Implement text in UI elements
 using namespace ui;
 
 UIPipeline::UIPipeline(std::shared_ptr<CoreGraphicsContext> ctx,
@@ -21,7 +19,8 @@ UIPipeline::UIPipeline(std::shared_ptr<CoreGraphicsContext> ctx,
                                        m_num_samplers)),
       m_descriptor_set(create_descriptor_set(uniform_buffers)),
       m_pipeline(create_pipeline(swap_chain_manager)),
-      m_vertex_buffer(m_ctx, {{0.0, 0.0, 0.0}}, swap_chain_manager) {}
+      m_vertex_buffer(m_ctx, Geometry::rectangle_vertices, swap_chain_manager),
+      m_index_buffer(IndexBuffer(ctx, Geometry::rectangle_indices, swap_chain_manager)) {}
 
 UIPipeline::~UIPipeline() {
     vkDestroyDescriptorSetLayout(m_ctx->device, m_descriptor_set_layout, nullptr);
@@ -39,12 +38,13 @@ void UIPipeline::render(const VkCommandBuffer &command_buffer,
     const VkDeviceSize vertex_buffers_offset = 0;
     vkCmdBindVertexBuffers(command_buffer, 0, 1, &m_vertex_buffer.buffer,
                            &vertex_buffers_offset);
+    vkCmdBindIndexBuffer(command_buffer, m_index_buffer.buffer, 0, VK_INDEX_TYPE_UINT16);
 
     auto descriptor = m_descriptor_set.get(); // TODO: This should be not be needed.
     vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             m_pipeline.m_pipeline_layout, 0, 1, &descriptor, 0, nullptr);
 
-    vkCmdDraw(command_buffer, 6, 1, 0, 0);
+    vkCmdDrawIndexed(command_buffer, m_index_buffer.num_indices, 1, 0, 0, 0);
 }
 
 VkDescriptorSetLayout UIPipeline::create_descriptor_set_layout() {

@@ -265,6 +265,7 @@ bool RenderEngine::begin_render_pass() {
 }
 
 bool RenderEngine::end_render_pass() {
+
     auto &command_buffer = m_current_render_pass.command_buffer;
 
     command_buffer.end_render_pass();

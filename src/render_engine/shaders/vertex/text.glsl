@@ -52,7 +52,7 @@ vec3 scale_vertex(vec3 vertex, float width, float height) {
 vec2 positions_to_viewport(vec2 pixel_pos, vec2 window_dims) {
     return vec2(
         (2.0 * pixel_pos.x) / window_dims.x,
-        (2.0 * pixel_pos.y) / window_dims.y
+        -(2.0 * pixel_pos.y) / window_dims.y
     );
 }
 

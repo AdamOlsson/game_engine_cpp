@@ -1,6 +1,7 @@
 #include "Coordinates.h"
 #include "Game.h"
 #include "GameEngine.h"
+#include "render_engine/PerformanceWindow.h"
 #include "render_engine/WindowConfig.h"
 #include "render_engine/colors.h"
 #include "render_engine/fonts/Font.h"
@@ -42,7 +43,7 @@ class UserInterfaceExample : public Game {
     bool m_in_settings;
 
     const float base_width = 400.0f;
-    const glm::vec2 top_button_pos = glm::vec2(0.0f, -50.0f);
+    const glm::vec2 top_button_pos = glm::vec2(0.0f, 50.0f);
     const glm::vec2 button_dimension = glm::vec2(base_width, 100.0f);
     const glm::vec2 square_button_dimension = glm::vec2(190.0f, 100.0f);
     const glm::vec2 square_button_offset =
@@ -104,7 +105,7 @@ class UserInterfaceExample : public Game {
                     ui::Menu(
                         ui::Button("SETTINGS",
                                    ui::ElementProperties{
-                                       .container.center = top_button_pos +
+                                       .container.center = top_button_pos -
                                                            next_button_offset * 1.0f,
                                        .container.dimension = button_dimension,
                                        .container.background_color =
@@ -124,7 +125,7 @@ class UserInterfaceExample : public Game {
                             "BACK",
                             ui::ElementProperties{
                                 .container.center =
-                                    top_button_pos + next_button_offset * 1.0f,
+                                    top_button_pos - next_button_offset * 1.0f,
                                 .container.dimension = button_dimension,
                                 .container.background_color = button_background_color,
                                 .container.border.color = button_border_color,
@@ -180,7 +181,7 @@ class UserInterfaceExample : public Game {
                     ui::Button("EXIT",
                                ui::ElementProperties{
                                    .container.center =
-                                       top_button_pos + next_button_offset * 2.0f,
+                                       top_button_pos - next_button_offset * 2.0f,
                                    .container.dimension = button_dimension,
                                    .container.background_color = button_background_color,
                                    .container.border.color = button_border_color,
@@ -195,20 +196,18 @@ class UserInterfaceExample : public Game {
         m_ui.add_text_box(
             NUMBER_ID,
             ui::TextBox(std::to_string(m_number),
-                        ui::ElementProperties{.container.center = glm::vec2(0.0f, -250),
+                        ui::ElementProperties{.container.center = glm::vec2(0.0f, 250.0f),
                                               .font.size = 158}));
         m_ui.add_text_box(
             INCREMENT_ID,
-            ui::TextBox(
-                std::to_string(m_increment),
-                ui::ElementProperties{.container.center =
-                                          top_button_pos, //+ glm::vec2(0.0f, -100.0f),
-                                      .font.size = 48}));
+            ui::TextBox(std::to_string(m_increment),
+                        ui::ElementProperties{.container.center = top_button_pos,
+                                              .font.size = 48}));
 
         m_ui.add_text_box(VERSION_ID,
                           ui::TextBox("VERSION 1.234",
                                       ui::ElementProperties{
-                                          .container.center = glm::vec2(-330.0f, 388.0f),
+                                          .container.center = glm::vec2(-330.0f, -388.0f),
                                           .font.size = 24}));
     };
 
@@ -233,6 +232,8 @@ class UserInterfaceExample : public Game {
         auto ui_state = m_ui.get_state();
 
         render_engine.render_ui(ui_state);
+
+        PerformanceWindow::get_instance().render(render_engine);
 
         success = render_engine.end_render_pass();
         if (!success) {
