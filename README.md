@@ -9,7 +9,7 @@ This project is a physics engine and render engine to support for my personal ga
 - Wrap VkShaderModule in a class to handle descruction
 - build the render engine and physics engine separately as with software agent
 - Fetch Vulkan during CMake generation of build files
-- Implement a CPU regexp short
+- Implement a CPU radix sort
 
 ## Examples
 - [Example 0](examples/0_collision_detection/): Narrowphase collision detection using SAT
