@@ -2,14 +2,16 @@
 
 #include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/DescriptorPool.h"
+#include "render_engine/DescriptorSet.h"
 #include "render_engine/Pipeline.h"
-#include "render_engine/RenderableGeometry.h"
 #include "render_engine/Sampler.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/Texture.h"
 #include "render_engine/Window.h"
+#include "render_engine/buffers/IndexBuffer.h"
 #include "render_engine/buffers/StorageBuffer.h"
 #include "render_engine/buffers/UniformBuffer.h"
+#include "render_engine/buffers/VertexBuffer.h"
 #include "vulkan/vulkan_core.h"
 #include <iostream>
 #include <memory>
@@ -48,14 +50,24 @@ class GeometryPipeline {
     DescriptorPool m_descriptor_pool;
 
     SwapStorageBuffer<StorageBufferObject> m_circle_instance_buffers;
-    SwapStorageBuffer<StorageBufferObject> m_triangle_instance_buffers;
-    SwapStorageBuffer<StorageBufferObject> m_rectangle_instance_buffers;
-    SwapStorageBuffer<StorageBufferObject> m_hexagon_instance_buffers;
+    DescriptorSet m_circle_descriptor_set;
+    VertexBuffer m_circle_vertex_buffer;
+    IndexBuffer m_circle_index_buffer;
 
-    std::unique_ptr<Geometry::Circle> circle_geometry;
-    std::unique_ptr<Geometry::Triangle> triangle_geometry;
-    std::unique_ptr<Geometry::Rectangle> rectangle_geometry;
-    std::unique_ptr<Geometry::Hexagon> hexagon_geometry;
+    SwapStorageBuffer<StorageBufferObject> m_triangle_instance_buffers;
+    DescriptorSet m_triangle_descriptor_set;
+    VertexBuffer m_triangle_vertex_buffer;
+    IndexBuffer m_triangle_index_buffer;
+
+    SwapStorageBuffer<StorageBufferObject> m_rectangle_instance_buffers;
+    DescriptorSet m_rectangle_descriptor_set;
+    VertexBuffer m_rectangle_vertex_buffer;
+    IndexBuffer m_rectangle_index_buffer;
+
+    SwapStorageBuffer<StorageBufferObject> m_hexagon_instance_buffers;
+    DescriptorSet m_hexagon_descriptor_set;
+    VertexBuffer m_hexagon_vertex_buffer;
+    IndexBuffer m_hexagon_index_buffer;
 
     const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 
@@ -66,6 +78,12 @@ class GeometryPipeline {
     bool checkDeviceExtensionSupport(const VkPhysicalDevice &physicalDevice);
 
     void updateUniformBuffer(uint32_t currentImage);
+
+    void record_draw_command(const VkCommandBuffer &command_buffer,
+                             DescriptorSet &descriptor_set,
+                             const ShapeTypeEncoding shape_type_encoding,
+                             const VertexBuffer &vertex_buffer,
+                             const IndexBuffer &index_buffer, const size_t num_instances);
 
   public:
     GeometryPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx,

@@ -1,6 +1,7 @@
 #include "UIPipeline.h"
 #include "render_engine/DescriptorSet.h"
 #include "render_engine/DescriptorSetLayoutBuilder.h"
+#include "render_engine/Geometry.h"
 #include "render_engine/GeometryPipeline.h"
 #include "render_engine/ShaderModule.h"
 #include "render_engine/resources/ResourceManager.h"
