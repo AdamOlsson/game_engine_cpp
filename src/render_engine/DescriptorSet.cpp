@@ -38,8 +38,9 @@ DescriptorSetBuilder::set_uniform_buffers(size_t binding,
     return *this;
 }
 
-DescriptorSetBuilder &DescriptorSetBuilder::add_storage_buffers(
-    size_t binding, std::vector<StorageBufferRef> &&instance_buffers) {
+DescriptorSetBuilder &
+DescriptorSetBuilder::add_storage_buffers(size_t binding,
+                                          std::vector<GpuBufferRef> &&instance_buffers) {
     if (instance_buffers.size() != m_capacity) {
         throw std::runtime_error(
             "size of storage buffer reference needs to be equal to capacity");

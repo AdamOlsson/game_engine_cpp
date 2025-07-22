@@ -24,14 +24,14 @@ GeometryPipeline::GeometryPipeline(Window &window,
                                    SwapChainManager &swap_chain_manager,
                                    std::vector<UniformBuffer> &uniform_buffers,
                                    Sampler &sampler, Texture &texture)
-    : m_ctx(ctx), m_circle_instance_buffers(SwapStorageBuffer<StorageBufferObject>(
+    : m_ctx(ctx), m_circle_instance_buffers(SwapGpuBuffer<GeometryInstanceBufferObject>(
                       ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
       m_triangle_instance_buffers(
-          SwapStorageBuffer<StorageBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
+          SwapGpuBuffer<GeometryInstanceBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
       m_rectangle_instance_buffers(
-          SwapStorageBuffer<StorageBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
+          SwapGpuBuffer<GeometryInstanceBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
       m_hexagon_instance_buffers(
-          SwapStorageBuffer<StorageBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
+          SwapGpuBuffer<GeometryInstanceBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
 
       m_descriptor_set_layout(create_descriptor_set_layout()),
       m_pipeline(create_pipeline(m_descriptor_set_layout, swap_chain_manager)),
@@ -94,7 +94,9 @@ GeometryPipeline::~GeometryPipeline() {}
 
 VkDescriptorSetLayout GeometryPipeline::create_descriptor_set_layout() {
     return DescriptorSetLayoutBuilder()
-        .add(StorageBuffer<StorageBufferObject>::create_descriptor_set_layout_binding(0))
+        .add(
+            GpuBuffer<GeometryInstanceBufferObject>::create_descriptor_set_layout_binding(
+                0))
         .add(UniformBuffer::create_descriptor_set_layout_binding(1))
         .add(Sampler::create_descriptor_set_layout_binding(2))
         .build(m_ctx.get());
@@ -219,19 +221,21 @@ Pipeline GeometryPipeline::create_pipeline(VkDescriptorSetLayout &descriptor_set
     return pipeline;
 }
 
-StorageBuffer<StorageBufferObject> &GeometryPipeline::get_circle_instance_buffer() {
+GpuBuffer<GeometryInstanceBufferObject> &GeometryPipeline::get_circle_instance_buffer() {
     return m_circle_instance_buffers.get_buffer();
 }
 
-StorageBuffer<StorageBufferObject> &GeometryPipeline::get_triangle_instance_buffer() {
+GpuBuffer<GeometryInstanceBufferObject> &
+GeometryPipeline::get_triangle_instance_buffer() {
     return m_triangle_instance_buffers.get_buffer();
 }
 
-StorageBuffer<StorageBufferObject> &GeometryPipeline::get_rectangle_instance_buffer() {
+GpuBuffer<GeometryInstanceBufferObject> &
+GeometryPipeline::get_rectangle_instance_buffer() {
     return m_rectangle_instance_buffers.get_buffer();
 }
 
-StorageBuffer<StorageBufferObject> &GeometryPipeline::get_hexagon_instance_buffer() {
+GpuBuffer<GeometryInstanceBufferObject> &GeometryPipeline::get_hexagon_instance_buffer() {
     return m_hexagon_instance_buffers.get_buffer();
 }
 

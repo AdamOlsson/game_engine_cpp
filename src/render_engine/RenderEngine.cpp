@@ -18,7 +18,7 @@ UniformBufferCollection create_uniform_buffers(std::shared_ptr<CoreGraphicsConte
 
 RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_font)
     : m_window(Window(window_config)),
-      m_ctx(std::make_shared<CoreGraphicsContext>(true, m_window)),
+      m_ctx(std::make_shared<CoreGraphicsContext>(m_window)),
       m_window_dimension_buffers(std::move(create_uniform_buffers(m_ctx, m_window))),
       m_swap_chain_manager(SwapChainManager(m_ctx, m_window)), m_sampler(Sampler(m_ctx)) {
 

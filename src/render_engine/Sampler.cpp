@@ -46,7 +46,7 @@ Sampler::create_descriptor_set_layout_binding(const size_t binding_num) {
 
 VkSampler create_sampler(const CoreGraphicsContext *ctx) {
     VkPhysicalDeviceProperties properties{};
-    vkGetPhysicalDeviceProperties(ctx->physicalDevice, &properties);
+    vkGetPhysicalDeviceProperties(ctx->physical_device, &properties);
 
     VkSamplerCreateInfo sampler_info{};
     sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;

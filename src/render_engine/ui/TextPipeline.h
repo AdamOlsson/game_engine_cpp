@@ -56,8 +56,8 @@ class TextPipeline {
 
     std::shared_ptr<CoreGraphicsContext> m_ctx;
 
-    SwapStorageBuffer<CharacterInstanceBufferObject> m_character_buffers;
-    SwapStorageBuffer<TextSegmentBufferObject> m_text_segment_buffers;
+    SwapGpuBuffer<CharacterInstanceBufferObject> m_character_buffers;
+    SwapGpuBuffer<TextSegmentBufferObject> m_text_segment_buffers;
     VertexBuffer m_vertex_buffer;
     IndexBuffer m_index_buffer;
 
@@ -79,8 +79,8 @@ class TextPipeline {
                  Texture &texture);
     ~TextPipeline();
 
-    StorageBuffer<CharacterInstanceBufferObject> &get_character_buffer();
-    StorageBuffer<TextSegmentBufferObject> &get_text_segment_buffer();
+    GpuBuffer<CharacterInstanceBufferObject> &get_character_buffer();
+    GpuBuffer<TextSegmentBufferObject> &get_text_segment_buffer();
 
     void render_text(const VkCommandBuffer &command_buffer);
 };

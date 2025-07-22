@@ -40,7 +40,7 @@ void create_buffer(const CoreGraphicsContext *ctx, const VkDeviceSize size,
 uint32_t find_memory_type(const CoreGraphicsContext *ctx, const uint32_t type_filter,
                           const VkMemoryPropertyFlags properties) {
     VkPhysicalDeviceMemoryProperties memProperties;
-    vkGetPhysicalDeviceMemoryProperties(ctx->physicalDevice, &memProperties);
+    vkGetPhysicalDeviceMemoryProperties(ctx->physical_device, &memProperties);
     for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
         if ((type_filter & (1 << i)) &&
             (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {

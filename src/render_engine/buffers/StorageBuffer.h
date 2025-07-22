@@ -1,9 +1,7 @@
 #pragma once
 
-#include "glm/fwd.hpp"
 #include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/buffers/common.h"
-#include "shape.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
 #include <iostream>
@@ -14,48 +12,18 @@
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #include <glm/glm.hpp>
 
-struct StorageBufferObject {
-    alignas(16) glm::vec3 position;
-    alignas(16) glm::vec4 color;
-    alignas(4) glm::float32_t rotation;
-    alignas(4) glm::uint32 shape_type;
-    alignas(16) Shape shape;
-    alignas(16) glm::vec4 uvwt;
-
-    StorageBufferObject(glm::vec3 position, glm::vec4 color, glm::float32_t rotation,
-                        Shape shape, glm::vec4 uvwt)
-        : position(position), color(color), rotation(rotation),
-          shape_type(shape.encode_shape_type()), shape(shape), uvwt(uvwt) {}
-
-    std::string to_string() const {
-        return std::format("StorageBufferObject {{\n"
-                           "  position:   ({:.3f}, {:.3f}, {:.3f})\n"
-                           "  color:      ({:.3f}, {:.3f}, {:.3f}, {:.3f})\n"
-                           "  rotation:   {:.3f}°\n"
-                           "  shape_type: {}\n"
-                           "  shape:      {}\n"
-                           "  uvwt:       ({:.3f}, {:.3f}, {:.3f}, {:.3f})\n"
-                           "}}",
-                           position.x, position.y, position.z, color.r, color.g, color.b,
-                           color.a, rotation, shape_type,
-                           shape.to_string(), // Assuming Shape has a to_string() method
-                           uvwt.x, uvwt.y, uvwt.z, uvwt.w);
-    }
-
-    friend std::ostream &operator<<(std::ostream &os, const StorageBufferObject &obj) {
-        return os << obj.to_string();
-    }
-};
-
-struct StorageBufferRef {
+struct GpuBufferRef {
     VkDeviceSize size;
     VkBuffer buffer;
 };
 
+enum class GpuBufferType { Uniform, Storage };
+
 template <typename T>
 concept Printable = requires(T t) { std::cout << t; };
 
-template <Printable T> class StorageBuffer {
+template <Printable T, GpuBufferType BufferType = GpuBufferType::Storage>
+class GpuBuffer {
   private:
     std::shared_ptr<CoreGraphicsContext> m_ctx;
 
@@ -67,9 +35,9 @@ template <Printable T> class StorageBuffer {
     void *m_buffer_mapped;
 
   public:
-    StorageBuffer() = default;
+    GpuBuffer() = default;
 
-    StorageBuffer(std::shared_ptr<CoreGraphicsContext> ctx, size_t capacity)
+    GpuBuffer(std::shared_ptr<CoreGraphicsContext> ctx, size_t capacity)
         : m_ctx(ctx), m_size(capacity * sizeof(T)) {
 
         m_staging_buffer.reserve(capacity);
@@ -83,7 +51,7 @@ template <Printable T> class StorageBuffer {
         memset(m_buffer_mapped, 0, m_size);
     }
 
-    ~StorageBuffer() {
+    ~GpuBuffer() {
         if (m_buffer == VK_NULL_HANDLE) {
             return;
         }
@@ -92,10 +60,10 @@ template <Printable T> class StorageBuffer {
         vkDestroyBuffer(m_ctx->device, m_buffer, nullptr);
     }
 
-    StorageBuffer(const StorageBuffer &other) = delete;
-    StorageBuffer &operator=(const StorageBuffer &other) = delete;
+    GpuBuffer(const GpuBuffer &other) = delete;
+    GpuBuffer &operator=(const GpuBuffer &other) = delete;
 
-    StorageBuffer(StorageBuffer &&other) noexcept
+    GpuBuffer(GpuBuffer &&other) noexcept
         : m_ctx(std::move(other.m_ctx)), m_size(std::move(other.m_size)),
           m_staging_buffer(std::move(other.m_staging_buffer)),
           m_buffer(std::move(other.m_buffer)),
@@ -106,7 +74,7 @@ template <Printable T> class StorageBuffer {
         other.m_buffer_mapped = VK_NULL_HANDLE;
     }
 
-    StorageBuffer &operator=(StorageBuffer &&other) noexcept {
+    GpuBuffer &operator=(GpuBuffer &&other) noexcept {
         if (this != &other) {
             m_ctx = std::move(other.m_ctx);
             m_size = std::move(other.m_size);
@@ -122,7 +90,7 @@ template <Printable T> class StorageBuffer {
         return *this;
     }
 
-    StorageBufferRef get_reference() { return {.buffer = m_buffer, .size = m_size}; }
+    GpuBufferRef get_reference() { return {.buffer = m_buffer, .size = m_size}; }
     size_t size() const { return m_size; }
     size_t num_elements() const { return m_staging_buffer.size(); }
     void clear() { m_staging_buffer.clear(); }
@@ -153,7 +121,7 @@ template <Printable T> class StorageBuffer {
     }
 
     void dump_data() const {
-        std::cout << "=== StorageBuffer Data Dump ===" << std::endl;
+        std::cout << "=== GpuBuffer Data Dump ===" << std::endl;
         std::cout << "Buffer size: " << m_size << " bytes" << std::endl;
         std::cout << "Staging buffer capacity: " << m_staging_buffer.capacity()
                   << std::endl;
@@ -196,15 +164,15 @@ template <Printable T> class StorageBuffer {
     }
 };
 
-template <typename T> class SwapStorageBuffer {
+template <typename T> class SwapGpuBuffer {
   private:
     size_t m_idx;
-    std::vector<StorageBuffer<T>> m_buffers;
-    std::vector<StorageBufferRef> m_refs;
+    std::vector<GpuBuffer<T>> m_buffers;
+    std::vector<GpuBufferRef> m_refs;
 
   public:
-    SwapStorageBuffer(std::shared_ptr<CoreGraphicsContext> &ctx, size_t num_bufs,
-                      size_t capacity)
+    SwapGpuBuffer(std::shared_ptr<CoreGraphicsContext> &ctx, size_t num_bufs,
+                  size_t capacity)
         : m_idx(0) {
         // Initiate buffers
         for (auto i = 0; i < num_bufs; i++) {
@@ -218,9 +186,9 @@ template <typename T> class SwapStorageBuffer {
         }
     }
 
-    StorageBuffer<T> &get_buffer() { return m_buffers[m_idx]; }
+    GpuBuffer<T> &get_buffer() { return m_buffers[m_idx]; }
 
     void rotate() { m_idx = ++m_idx % m_buffers.size(); }
 
-    std::vector<StorageBufferRef> get_buffer_references() { return m_refs; }
+    std::vector<GpuBufferRef> get_buffer_references() { return m_refs; }
 };

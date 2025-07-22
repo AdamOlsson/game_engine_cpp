@@ -10,7 +10,6 @@
 #include "render_engine/ui/State.h"
 #include "render_engine/ui/TextPipeline.h"
 #include "render_engine/ui/UIPipeline.h"
-#include "vulkan/vulkan_core.h"
 #include <GLFW/glfw3.h>
 
 using UniformBufferCollection = std::unique_ptr<std::vector<UniformBuffer>>;

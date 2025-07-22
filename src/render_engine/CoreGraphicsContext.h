@@ -9,47 +9,42 @@ struct DeviceQueues {
     VkQueue present_queue;
 };
 
-const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
-
-const std::vector<const char *> deviceExtensions = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-};
-
 class CoreGraphicsContext {
+
+    bool m_enable_validation_layers;
+    VkInstance m_instance;
+    std::optional<VkDebugUtilsMessengerEXT> m_debug_messenger;
+
+    VkInstance create_instance();
+    VkSurfaceKHR create_surface(GLFWwindow &window);
+    VkPhysicalDevice pick_physical_device(VkInstance &instance, VkSurfaceKHR &surface);
+    VkDevice create_logical_device(const std::vector<const char *> &deviceExtensions);
+    void print_enabled_extensions();
+    std::optional<VkDebugUtilsMessengerEXT> setup_debug_messenger();
+    bool check_validation_layer_support();
+
+    bool check_device_extension_support(const VkPhysicalDevice &physicalDevice);
+    std::vector<const char *> get_required_extensions();
+
+    void
+    populate_debug_messenger_create_info(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
+    VkResult create_debug_utils_messenger_ext(
+        const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
+        VkDebugUtilsMessengerEXT *pDebugMessenger);
+
+    void destroy_debug_messenger_ext();
+
+    bool is_device_suitable(const VkPhysicalDevice &physicalDevice);
+
   public:
-    bool enableValidationLayers;
-    VkInstance instance;
-    std::optional<VkDebugUtilsMessengerEXT> debugMessenger;
     VkSurfaceKHR surface;
-    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+    VkPhysicalDevice physical_device;
     VkDevice device;
 
-    CoreGraphicsContext(const bool enableValidationLayers, const Window &window);
+    CoreGraphicsContext(const Window &window);
     ~CoreGraphicsContext();
 
     void wait_idle();
 
     DeviceQueues get_device_queues();
 };
-
-void populateDebugMessengerCreateInfo__(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
-bool checkValidationLayerSupport();
-std::vector<const char *> getRequiredExtensions(bool enableValidationLayers);
-VkInstance createInstance(bool enableValidationLayers);
-void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
-VkResult CreateDebugUtilsMessengerEXT(
-    VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
-    const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pDebugMessenger);
-std::optional<VkDebugUtilsMessengerEXT> setupDebugMessenger(VkInstance &instance,
-                                                            bool enableValidationLayers);
-void DestroyDebugUtilsMessengerEXT(VkInstance instance,
-                                   VkDebugUtilsMessengerEXT debugMessenger,
-                                   const VkAllocationCallbacks *pAllocator);
-VkSurfaceKHR createSurface(VkInstance instance, GLFWwindow &window);
-VkPhysicalDevice pickPhysicalDevice(VkInstance &instance, VkSurfaceKHR &surface);
-bool isDeviceSuitable(const VkPhysicalDevice &physicalDevice, VkSurfaceKHR &surface);
-bool checkDeviceExtensionSupport(const VkPhysicalDevice &physicalDevice);
-VkDevice createLogicalDevice(VkPhysicalDevice &physicalDevice, VkSurfaceKHR &surface,
-                             const std::vector<const char *> &deviceExtensions,
-                             bool enableValidationLayers);
-void print_enabled_extensions(VkInstance &instance);

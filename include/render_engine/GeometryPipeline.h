@@ -12,6 +12,7 @@
 #include "render_engine/buffers/StorageBuffer.h"
 #include "render_engine/buffers/UniformBuffer.h"
 #include "render_engine/buffers/VertexBuffer.h"
+#include "shape.h"
 #include "vulkan/vulkan_core.h"
 #include <iostream>
 #include <memory>
@@ -37,6 +38,40 @@ VKAPI_ATTR inline VkBool32 VKAPI_CALL debugCallback(
 std::vector<char> readFile(const std::string filename);
 VkDescriptorPool createDescriptorPool(VkDevice &device, const int capacity);
 
+struct GeometryInstanceBufferObject {
+    alignas(16) glm::vec3 position;
+    alignas(16) glm::vec4 color;
+    alignas(4) glm::float32_t rotation;
+    alignas(4) glm::uint32 shape_type;
+    alignas(16) Shape shape;
+    alignas(16) glm::vec4 uvwt;
+
+    GeometryInstanceBufferObject(glm::vec3 position, glm::vec4 color,
+                                 glm::float32_t rotation, Shape shape, glm::vec4 uvwt)
+        : position(position), color(color), rotation(rotation),
+          shape_type(shape.encode_shape_type()), shape(shape), uvwt(uvwt) {}
+
+    std::string to_string() const {
+        return std::format("GeometryInstanceBufferObject {{\n"
+                           "  position:   ({:.3f}, {:.3f}, {:.3f})\n"
+                           "  color:      ({:.3f}, {:.3f}, {:.3f}, {:.3f})\n"
+                           "  rotation:   {:.3f}°\n"
+                           "  shape_type: {}\n"
+                           "  shape:      {}\n"
+                           "  uvwt:       ({:.3f}, {:.3f}, {:.3f}, {:.3f})\n"
+                           "}}",
+                           position.x, position.y, position.z, color.r, color.g, color.b,
+                           color.a, rotation, shape_type,
+                           shape.to_string(), // Assuming Shape has a to_string() method
+                           uvwt.x, uvwt.y, uvwt.z, uvwt.w);
+    }
+
+    friend std::ostream &operator<<(std::ostream &os,
+                                    const GeometryInstanceBufferObject &obj) {
+        return os << obj.to_string();
+    }
+};
+
 class GeometryPipeline {
   private:
     const uint32_t m_num_storage_buffers = MAX_FRAMES_IN_FLIGHT * 4;
@@ -50,22 +85,22 @@ class GeometryPipeline {
     Pipeline m_pipeline;
     DescriptorPool m_descriptor_pool;
 
-    SwapStorageBuffer<StorageBufferObject> m_circle_instance_buffers;
+    SwapGpuBuffer<GeometryInstanceBufferObject> m_circle_instance_buffers;
     DescriptorSet m_circle_descriptor_set;
     VertexBuffer m_circle_vertex_buffer;
     IndexBuffer m_circle_index_buffer;
 
-    SwapStorageBuffer<StorageBufferObject> m_triangle_instance_buffers;
+    SwapGpuBuffer<GeometryInstanceBufferObject> m_triangle_instance_buffers;
     DescriptorSet m_triangle_descriptor_set;
     VertexBuffer m_triangle_vertex_buffer;
     IndexBuffer m_triangle_index_buffer;
 
-    SwapStorageBuffer<StorageBufferObject> m_rectangle_instance_buffers;
+    SwapGpuBuffer<GeometryInstanceBufferObject> m_rectangle_instance_buffers;
     DescriptorSet m_rectangle_descriptor_set;
     VertexBuffer m_rectangle_vertex_buffer;
     IndexBuffer m_rectangle_index_buffer;
 
-    SwapStorageBuffer<StorageBufferObject> m_hexagon_instance_buffers;
+    SwapGpuBuffer<GeometryInstanceBufferObject> m_hexagon_instance_buffers;
     DescriptorSet m_hexagon_descriptor_set;
     VertexBuffer m_hexagon_vertex_buffer;
     IndexBuffer m_hexagon_index_buffer;
@@ -95,10 +130,10 @@ class GeometryPipeline {
                      Texture &texture);
     ~GeometryPipeline();
 
-    StorageBuffer<StorageBufferObject> &get_circle_instance_buffer();
-    StorageBuffer<StorageBufferObject> &get_triangle_instance_buffer();
-    StorageBuffer<StorageBufferObject> &get_rectangle_instance_buffer();
-    StorageBuffer<StorageBufferObject> &get_hexagon_instance_buffer();
+    GpuBuffer<GeometryInstanceBufferObject> &get_circle_instance_buffer();
+    GpuBuffer<GeometryInstanceBufferObject> &get_triangle_instance_buffer();
+    GpuBuffer<GeometryInstanceBufferObject> &get_rectangle_instance_buffer();
+    GpuBuffer<GeometryInstanceBufferObject> &get_hexagon_instance_buffer();
 
     // TODO: These render function should merge into one generic call
     void render_circles(const VkCommandBuffer &command_buffer);

@@ -20,10 +20,10 @@ TextPipeline::TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> 
                            SwapChainManager &swap_chain_manager,
                            std::vector<UniformBuffer> &uniform_buffers, Sampler &sampler,
                            Texture &texture)
-    : m_ctx(ctx), m_character_buffers(SwapStorageBuffer<CharacterInstanceBufferObject>(
+    : m_ctx(ctx), m_character_buffers(SwapGpuBuffer<CharacterInstanceBufferObject>(
                       ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
       m_text_segment_buffers(
-          SwapStorageBuffer<TextSegmentBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 16)),
+          SwapGpuBuffer<TextSegmentBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 16)),
       m_vertex_buffer(
           VertexBuffer(ctx, Geometry::rectangle_vertices, swap_chain_manager)),
       m_index_buffer(IndexBuffer(ctx, Geometry::rectangle_indices, swap_chain_manager)),
@@ -40,12 +40,11 @@ TextPipeline::~TextPipeline() {
 
 VkDescriptorSetLayout TextPipeline::create_descriptor_set_layout() {
     return DescriptorSetLayoutBuilder()
-        .add(StorageBuffer<
+        .add(GpuBuffer<
              CharacterInstanceBufferObject>::create_descriptor_set_layout_binding(0))
         .add(UniformBuffer::create_descriptor_set_layout_binding(1))
         .add(Sampler::create_descriptor_set_layout_binding(2))
-        .add(StorageBuffer<TextSegmentBufferObject>::create_descriptor_set_layout_binding(
-            3))
+        .add(GpuBuffer<TextSegmentBufferObject>::create_descriptor_set_layout_binding(3))
         .build(m_ctx.get());
 }
 
@@ -77,11 +76,11 @@ Pipeline TextPipeline::create_pipeline(VkDescriptorSetLayout &descriptor_set_lay
     return pipeline;
 }
 
-StorageBuffer<CharacterInstanceBufferObject> &TextPipeline::get_character_buffer() {
+GpuBuffer<CharacterInstanceBufferObject> &TextPipeline::get_character_buffer() {
     return m_character_buffers.get_buffer();
 }
 
-StorageBuffer<TextSegmentBufferObject> &TextPipeline::get_text_segment_buffer() {
+GpuBuffer<TextSegmentBufferObject> &TextPipeline::get_text_segment_buffer() {
     return m_text_segment_buffers.get_buffer();
 }
 

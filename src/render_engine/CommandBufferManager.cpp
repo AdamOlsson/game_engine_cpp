@@ -24,7 +24,7 @@ SingleTimeCommandBuffer CommandBufferManager::get_single_time_command_buffer() {
 
 VkCommandPool CommandBufferManager::create_command_pool() {
     QueueFamilyIndices queueFamilyIndices =
-        findQueueFamilies(m_ctx->physicalDevice, m_ctx->surface);
+        findQueueFamilies(m_ctx->physical_device, m_ctx->surface);
 
     VkCommandPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;

@@ -43,7 +43,7 @@ class DescriptorSetBuilder {
     std::vector<UniformBuffer> *m_uniform_buffers;
 
     std::vector<size_t> m_instance_buffer_binding;
-    std::vector<StorageBufferRef> m_instance_buffers;
+    std::vector<GpuBufferRef> m_instance_buffers;
 
     size_t m_texture_binding;
     Texture *m_texture;
@@ -59,7 +59,7 @@ class DescriptorSetBuilder {
                          DescriptorPool &descriptor_pool, size_t capacity);
 
     DescriptorSetBuilder &
-    add_storage_buffers(size_t binding, std::vector<StorageBufferRef> &&instance_buffers);
+    add_storage_buffers(size_t binding, std::vector<GpuBufferRef> &&instance_buffers);
 
     DescriptorSetBuilder &set_texture_and_sampler(size_t binding, Texture &texture,
                                                   Sampler &sampler);
