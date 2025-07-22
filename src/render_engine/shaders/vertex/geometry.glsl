@@ -15,7 +15,7 @@ struct Shape {
 
 struct InstanceData {
     vec3 position;
-    vec3 color;
+    vec4 color;
     float rotation;
     uint shape_type;
     Shape shape;
@@ -36,7 +36,7 @@ layout(push_constant) uniform ShapeType {
 
 layout(location = 0) in vec3 inPosition;
 
-layout(location = 0) out vec3 fragColor;
+layout(location = 0) out vec4 fragColor;
 layout(location = 1) out vec2 uv;
 
 mat3 rotationMatrixZ(float theta) {
@@ -90,7 +90,7 @@ void main() {
     InstanceData instance = instance_data_block.instances[gl_InstanceIndex];
     
     vec4 position = vec4(2.0, 2.0, 0.0, 1.0);  // Position far outside visible area
-    vec3 color = vec3(0.0);
+    vec4 color = vec4(0.0);
     
     if (instance.shape_type == target_shape_type.id) {
         vec3 scaled_vertex_pos;

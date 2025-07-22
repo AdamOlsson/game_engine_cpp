@@ -3,14 +3,10 @@
 #include "glm/fwd.hpp"
 #include "physics_engine/RigidBody.h"
 #include "physics_engine/collision_resolver.h"
-#include "render_engine/RenderBody.h"
+#include "render_engine/colors.h"
 
-constexpr glm::vec3 RED{0.7, 0.0, 0.0};
-constexpr glm::vec3 GREEN{0.0, 0.7, 0.0};
-constexpr glm::vec3 BLUE{0.0, 0.0, 0.7};
-constexpr glm::vec3 YELLOW{0.7, 0.7, 0.0};
-constexpr glm::vec3 CIAN{0.0, 0.7, 0.7};
-const std::vector<glm::vec3> COLORS{RED, GREEN, BLUE, YELLOW, CIAN};
+const std::vector<glm::vec4> COLORS{colors::RED, colors::GREEN, colors::BLUE,
+                                    colors::YELLOW, colors::CYAN};
 
 // TODO: Make the RigidBodyBuilder be able to produce constexpr (low priority)
 const RigidBody BOTTOM_BORDER = RigidBodyBuilder()

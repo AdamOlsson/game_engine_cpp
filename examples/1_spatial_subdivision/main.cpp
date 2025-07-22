@@ -48,7 +48,7 @@ class Example1SpatialSubdivision : public Game {
                                        .shape(Shape::create_rectangle_data(650.0f, 80.0f))
                                        .build();
 
-    RenderBody SPINNER_RENDER_BODY = RenderBodyBuilder().color(CIAN).build();
+    RenderBody SPINNER_RENDER_BODY = RenderBodyBuilder().color(colors::CYAN).build();
 
     Example1SpatialSubdivision()
         : ecs(EntityComponentStorage()), solver(CollisionSolver(1.0f)),

@@ -1,6 +1,7 @@
 #include "entity_component_storage/ComponentStore.h"
 #include "entity_component_storage/EntityComponentStorage.h"
 #include "physics_engine/RigidBody.h"
+#include "render_engine/colors.h"
 #include <gtest/gtest.h>
 
 TEST(ECSTest, TestAdd) {
@@ -173,8 +174,7 @@ TEST(ECSTest, TestIteratoringOverAllValues) {
     EXPECT_EQ(2, count2);
 
     EntityId e3 = ecs.create_entity();
-    ecs.add_component<RenderBody>(
-        e3, std::move(RenderBody{.color = glm::vec3(1.0, 1.0, 1.0)}));
+    ecs.add_component<RenderBody>(e3, std::move(RenderBody{.color = colors::WHITE}));
     EXPECT_EQ(2, ecs.size<RigidBody>());
     EXPECT_EQ(1, ecs.size<RenderBody>());
 

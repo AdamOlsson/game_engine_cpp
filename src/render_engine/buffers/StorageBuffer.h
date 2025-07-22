@@ -16,13 +16,13 @@
 
 struct StorageBufferObject {
     alignas(16) glm::vec3 position;
-    alignas(16) glm::vec3 color;
+    alignas(16) glm::vec4 color;
     alignas(4) glm::float32_t rotation;
     alignas(4) glm::uint32 shape_type;
     alignas(16) Shape shape;
     alignas(16) glm::vec4 uvwt;
 
-    StorageBufferObject(glm::vec3 position, glm::vec3 color, glm::float32_t rotation,
+    StorageBufferObject(glm::vec3 position, glm::vec4 color, glm::float32_t rotation,
                         Shape shape, glm::vec4 uvwt)
         : position(position), color(color), rotation(rotation),
           shape_type(shape.encode_shape_type()), shape(shape), uvwt(uvwt) {}
@@ -30,14 +30,14 @@ struct StorageBufferObject {
     std::string to_string() const {
         return std::format("StorageBufferObject {{\n"
                            "  position:   ({:.3f}, {:.3f}, {:.3f})\n"
-                           "  color:      ({:.3f}, {:.3f}, {:.3f})\n"
+                           "  color:      ({:.3f}, {:.3f}, {:.3f}, {:.3f})\n"
                            "  rotation:   {:.3f}°\n"
                            "  shape_type: {}\n"
                            "  shape:      {}\n"
                            "  uvwt:       ({:.3f}, {:.3f}, {:.3f}, {:.3f})\n"
                            "}}",
                            position.x, position.y, position.z, color.r, color.g, color.b,
-                           rotation, shape_type,
+                           color.a, rotation, shape_type,
                            shape.to_string(), // Assuming Shape has a to_string() method
                            uvwt.x, uvwt.y, uvwt.z, uvwt.w);
     }
