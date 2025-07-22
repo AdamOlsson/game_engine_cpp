@@ -6,7 +6,6 @@ This project is a physics engine and render engine to support for my personal ga
     - It should be easy to create a new pipeline
 - Wrap VkDescriptorSetLayout in a class to handle descruction
 - Wrap DescriptorSet, DescriptorSetLayout and DescriptorPool in a single class
-- Wrap VkShaderModule in a class to handle descruction
 - build the render engine and physics engine separately as with software agent
 - Fetch Vulkan during CMake generation of build files
 - Implement a CPU radix sort

@@ -33,8 +33,6 @@ VKAPI_ATTR inline VkBool32 VKAPI_CALL debugCallback(
 }
 
 std::vector<char> readFile(const std::string filename);
-VkShaderModule createShaderModule(const VkDevice &device, const uint8_t *data,
-                                  const size_t len);
 VkDescriptorPool createDescriptorPool(VkDevice &device, const int capacity);
 
 class GeometryPipeline {

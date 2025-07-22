@@ -2,6 +2,7 @@
 #include "render_engine/DescriptorSet.h"
 #include "render_engine/DescriptorSetLayoutBuilder.h"
 #include "render_engine/GeometryPipeline.h"
+#include "render_engine/ShaderModule.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "render_engine/resources/shaders/ShaderResource.h"
 #include "vulkan/vulkan_core.h"
@@ -66,11 +67,8 @@ Pipeline UIPipeline::create_pipeline(SwapChainManager &swap_chain_manager) {
     auto vert_shader_code = resoure_manager.get_resource<ShaderResource>("UiVertex");
     auto frag_shader_code = resoure_manager.get_resource<ShaderResource>("UiFragment");
 
-    VkShaderModule vert_shader_module = createShaderModule(
-        m_ctx->device, vert_shader_code->bytes(), vert_shader_code->length());
-
-    VkShaderModule frag_shader_module = createShaderModule(
-        m_ctx->device, frag_shader_code->bytes(), frag_shader_code->length());
+    ShaderModule vertex_shader = ShaderModule(m_ctx, *vert_shader_code);
+    ShaderModule fragment_shader = ShaderModule(m_ctx, *frag_shader_code);
 
     VkPushConstantRange push_constants_ui_element{};
     push_constants_ui_element.stageFlags =
@@ -81,11 +79,9 @@ Pipeline UIPipeline::create_pipeline(SwapChainManager &swap_chain_manager) {
     const std::vector<VkPushConstantRange> push_constant_ranges = {
         push_constants_ui_element};
 
-    Pipeline pipeline =
-        Pipeline(m_ctx, m_descriptor_set_layout, push_constant_ranges, vert_shader_module,
-                 frag_shader_module, swap_chain_manager);
+    Pipeline pipeline = Pipeline(m_ctx, m_descriptor_set_layout, push_constant_ranges,
+                                 vertex_shader.shader_module,
+                                 fragment_shader.shader_module, swap_chain_manager);
 
-    vkDestroyShaderModule(m_ctx->device, vert_shader_module, nullptr);
-    vkDestroyShaderModule(m_ctx->device, frag_shader_module, nullptr);
     return pipeline;
 }

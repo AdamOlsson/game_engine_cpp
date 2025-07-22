@@ -4,6 +4,7 @@
 #include "render_engine/GeometryPipeline.h"
 #include "render_engine/RenderableGeometry.h"
 #include "render_engine/Sampler.h"
+#include "render_engine/ShaderModule.h"
 #include "render_engine/Texture.h"
 #include "render_engine/buffers/StorageBuffer.h"
 #include "render_engine/buffers/UniformBuffer.h"
@@ -66,17 +67,13 @@ Pipeline TextPipeline::create_pipeline(VkDescriptorSetLayout &descriptor_set_lay
     auto vert_shader_code = resoure_manager.get_resource<ShaderResource>("TextVertex");
     auto frag_shader_code = resoure_manager.get_resource<ShaderResource>("TextFragment");
 
-    VkShaderModule vert_shader_module = createShaderModule(
-        m_ctx->device, vert_shader_code->bytes(), vert_shader_code->length());
+    ShaderModule vertex_shader = ShaderModule(m_ctx, *vert_shader_code);
+    ShaderModule fragment_shader = ShaderModule(m_ctx, *frag_shader_code);
 
-    VkShaderModule frag_shader_module = createShaderModule(
-        m_ctx->device, frag_shader_code->bytes(), frag_shader_code->length());
+    Pipeline pipeline =
+        Pipeline(m_ctx, descriptor_set_layout, {}, vertex_shader.shader_module,
+                 fragment_shader.shader_module, swap_chain_manager);
 
-    Pipeline pipeline = Pipeline(m_ctx, descriptor_set_layout, {}, vert_shader_module,
-                                 frag_shader_module, swap_chain_manager);
-
-    vkDestroyShaderModule(m_ctx->device, vert_shader_module, nullptr);
-    vkDestroyShaderModule(m_ctx->device, frag_shader_module, nullptr);
     return pipeline;
 }
 

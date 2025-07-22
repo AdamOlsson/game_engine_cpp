@@ -4,6 +4,7 @@
 #include "render_engine/DescriptorSet.h"
 #include "render_engine/RenderableGeometry.h"
 #include "render_engine/Sampler.h"
+#include "render_engine/ShaderModule.h"
 #include "render_engine/Texture.h"
 #include "render_engine/buffers/StorageBuffer.h"
 #include "render_engine/buffers/UniformBuffer.h"
@@ -82,23 +83,18 @@ Pipeline GeometryPipeline::create_pipeline(VkDescriptorSetLayout &descriptor_set
     auto frag_shader_code =
         resoure_manager.get_resource<ShaderResource>("GeometryFragment");
 
-    VkShaderModule vert_shader_module = createShaderModule(
-        m_ctx->device, vert_shader_code->bytes(), vert_shader_code->length());
-
-    VkShaderModule frag_shader_module = createShaderModule(
-        m_ctx->device, frag_shader_code->bytes(), frag_shader_code->length());
+    ShaderModule vertex_shader = ShaderModule(m_ctx, *vert_shader_code);
+    ShaderModule fragment_shader = ShaderModule(m_ctx, *frag_shader_code);
 
     VkPushConstantRange push_constant_range{};
     push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     push_constant_range.offset = 0;
     push_constant_range.size = sizeof(uint32_t);
 
-    Pipeline pipeline =
-        Pipeline(m_ctx, descriptor_set_layout, {push_constant_range}, vert_shader_module,
-                 frag_shader_module, swap_chain_manager);
+    Pipeline pipeline = Pipeline(m_ctx, descriptor_set_layout, {push_constant_range},
+                                 vertex_shader.shader_module,
+                                 fragment_shader.shader_module, swap_chain_manager);
 
-    vkDestroyShaderModule(m_ctx->device, vert_shader_module, nullptr);
-    vkDestroyShaderModule(m_ctx->device, frag_shader_module, nullptr);
     return pipeline;
 }
 
@@ -190,21 +186,6 @@ VkDescriptorPool createDescriptorPool(VkDevice &device, const int capacity) {
         throw std::runtime_error("failed to create descriptor pool!");
     }
     return descriptorPool;
-}
-
-VkShaderModule createShaderModule(const VkDevice &device, const uint8_t *data,
-                                  const size_t len) {
-    VkShaderModuleCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    createInfo.codeSize = len;
-    createInfo.pCode = reinterpret_cast<const uint32_t *>(data);
-
-    VkShaderModule shaderModule;
-    if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create shader module!");
-    }
-
-    return shaderModule;
 }
 
 std::vector<char> readFile(const std::string filename) {
