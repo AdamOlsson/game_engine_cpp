@@ -22,34 +22,54 @@ GeometryPipeline::GeometryPipeline(Window &window,
                                    std::vector<UniformBuffer> &uniform_buffers,
                                    VkDescriptorSetLayout &descriptor_set_layout,
                                    Sampler &sampler, Texture &texture)
-    : m_ctx(ctx), m_pipeline(create_pipeline(descriptor_set_layout, swap_chain_manager)),
-      m_descriptor_pool(DescriptorPool(m_ctx, MAX_FRAMES_IN_FLIGHT * 6)) {
+    : m_ctx(ctx), m_circle_instance_buffers(SwapStorageBuffer<StorageBufferObject>(
+                      ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
+      m_triangle_instance_buffers(
+          SwapStorageBuffer<StorageBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
+      m_rectangle_instance_buffers(
+          SwapStorageBuffer<StorageBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
+      m_hexagon_instance_buffers(
+          SwapStorageBuffer<StorageBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
+      m_pipeline(create_pipeline(descriptor_set_layout, swap_chain_manager)),
+      m_descriptor_pool(DescriptorPool(m_ctx, m_descriptor_pool_capacity,
+                                       m_num_storage_buffers, m_num_uniform_buffers,
+                                       m_num_samplers)) {
 
-    auto descriptor_set_builder = DescriptorSetBuilder()
-                                      .set_descriptor_set_layout(descriptor_set_layout)
-                                      .set_descriptor_pool(&m_descriptor_pool)
-                                      .set_capacity(MAX_FRAMES_IN_FLIGHT)
-                                      .set_uniform_buffers(&uniform_buffers)
-                                      .set_texture(&texture)
-                                      .set_sampler(&sampler);
-
-    // TODO: Remove graphicsQueue from the API and call ctx->get_device_queues() where
-    // required
-    DescriptorSet circle_descriptor_set = descriptor_set_builder.build(m_ctx);
     circle_geometry = std::make_unique<Geometry::Circle>(
-        ctx, swap_chain_manager, std::move(circle_descriptor_set));
+        ctx, swap_chain_manager,
+        DescriptorSetBuilder(descriptor_set_layout, m_descriptor_pool,
+                             MAX_FRAMES_IN_FLIGHT)
+            .add_storage_buffers(0, m_circle_instance_buffers.get_buffer_references())
+            .set_uniform_buffers(1, uniform_buffers)
+            .set_texture_and_sampler(2, texture, sampler)
+            .build(m_ctx));
 
-    DescriptorSet triangle_descriptor_set = descriptor_set_builder.build(m_ctx);
     triangle_geometry = std::make_unique<Geometry::Triangle>(
-        ctx, swap_chain_manager, std::move(triangle_descriptor_set));
+        ctx, swap_chain_manager,
+        DescriptorSetBuilder(descriptor_set_layout, m_descriptor_pool,
+                             MAX_FRAMES_IN_FLIGHT)
+            .add_storage_buffers(0, m_triangle_instance_buffers.get_buffer_references())
+            .set_uniform_buffers(1, uniform_buffers)
+            .set_texture_and_sampler(2, texture, sampler)
+            .build(m_ctx));
 
-    DescriptorSet rectangle_descriptor_set = descriptor_set_builder.build(m_ctx);
     rectangle_geometry = std::make_unique<Geometry::Rectangle>(
-        ctx, swap_chain_manager, std::move(rectangle_descriptor_set));
+        ctx, swap_chain_manager,
+        DescriptorSetBuilder(descriptor_set_layout, m_descriptor_pool,
+                             MAX_FRAMES_IN_FLIGHT)
+            .add_storage_buffers(0, m_rectangle_instance_buffers.get_buffer_references())
+            .set_uniform_buffers(1, uniform_buffers)
+            .set_texture_and_sampler(2, texture, sampler)
+            .build(m_ctx));
 
-    DescriptorSet hexagon_descriptor_set = descriptor_set_builder.build(m_ctx);
     hexagon_geometry = std::make_unique<Geometry::Hexagon>(
-        ctx, swap_chain_manager, std::move(hexagon_descriptor_set));
+        ctx, swap_chain_manager,
+        DescriptorSetBuilder(descriptor_set_layout, m_descriptor_pool,
+                             MAX_FRAMES_IN_FLIGHT)
+            .add_storage_buffers(0, m_hexagon_instance_buffers.get_buffer_references())
+            .set_uniform_buffers(1, uniform_buffers)
+            .set_texture_and_sampler(2, texture, sampler)
+            .build(m_ctx));
 }
 
 GeometryPipeline::~GeometryPipeline() {}
@@ -57,7 +77,8 @@ GeometryPipeline::~GeometryPipeline() {}
 Pipeline GeometryPipeline::create_pipeline(VkDescriptorSetLayout &descriptor_set_layout,
                                            SwapChainManager &swap_chain_manager) {
     auto &resoure_manager = ResourceManager::get_instance();
-    auto vert_shader_code = resoure_manager.get_resource<ShaderResource>("Vert");
+    auto vert_shader_code =
+        resoure_manager.get_resource<ShaderResource>("GeometryVertex");
     auto frag_shader_code =
         resoure_manager.get_resource<ShaderResource>("GeometryFragment");
 
@@ -67,64 +88,81 @@ Pipeline GeometryPipeline::create_pipeline(VkDescriptorSetLayout &descriptor_set
     VkShaderModule frag_shader_module = createShaderModule(
         m_ctx->device, frag_shader_code->bytes(), frag_shader_code->length());
 
-    Pipeline pipeline = Pipeline(m_ctx, descriptor_set_layout, vert_shader_module,
-                                 frag_shader_module, swap_chain_manager);
+    VkPushConstantRange push_constant_range{};
+    push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    push_constant_range.offset = 0;
+    push_constant_range.size = sizeof(uint32_t);
+
+    Pipeline pipeline =
+        Pipeline(m_ctx, descriptor_set_layout, {push_constant_range}, vert_shader_module,
+                 frag_shader_module, swap_chain_manager);
 
     vkDestroyShaderModule(m_ctx->device, vert_shader_module, nullptr);
     vkDestroyShaderModule(m_ctx->device, frag_shader_module, nullptr);
     return pipeline;
 }
 
-void GeometryPipeline::render_circles(
-    const VkCommandBuffer &command_buffer,
-    std::vector<StorageBufferObject> &&circle_instance_data) {
-    circle_geometry->update_instance_buffer(
-        std::forward<std::vector<StorageBufferObject>>(circle_instance_data));
-    uint32_t num_instances = circle_instance_data.size();
+StorageBuffer<StorageBufferObject> &GeometryPipeline::get_circle_instance_buffer() {
+    return m_circle_instance_buffers.get_buffer();
+}
+
+StorageBuffer<StorageBufferObject> &GeometryPipeline::get_triangle_instance_buffer() {
+    return m_triangle_instance_buffers.get_buffer();
+}
+
+StorageBuffer<StorageBufferObject> &GeometryPipeline::get_rectangle_instance_buffer() {
+    return m_rectangle_instance_buffers.get_buffer();
+}
+
+StorageBuffer<StorageBufferObject> &GeometryPipeline::get_hexagon_instance_buffer() {
+    return m_hexagon_instance_buffers.get_buffer();
+}
+
+void GeometryPipeline::render_circles(const VkCommandBuffer &command_buffer) {
+
+    const auto &instance_buffer = m_circle_instance_buffers.get_buffer();
+    const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
         circle_geometry->record_draw_command(command_buffer, m_pipeline.m_pipeline,
                                              m_pipeline.m_pipeline_layout, num_instances);
     }
+    m_circle_instance_buffers.rotate();
 }
 
-void GeometryPipeline::render_triangles(
+void GeometryPipeline::render_triangles(const VkCommandBuffer &command_buffer) {
 
-    const VkCommandBuffer &command_buffer,
-    std::vector<StorageBufferObject> &&triangle_instance_data) {
-    triangle_geometry->update_instance_buffer(
-        std::forward<std::vector<StorageBufferObject>>(triangle_instance_data));
-    uint32_t num_instances = triangle_instance_data.size();
+    const auto &instance_buffer = m_triangle_instance_buffers.get_buffer();
+    const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
         triangle_geometry->record_draw_command(command_buffer, m_pipeline.m_pipeline,
                                                m_pipeline.m_pipeline_layout,
                                                num_instances);
     }
+    m_triangle_instance_buffers.rotate();
 }
 
-void GeometryPipeline::render_rectangles(
-    const VkCommandBuffer &command_buffer,
-    std::vector<StorageBufferObject> &&rectangle_instance_data) {
-    rectangle_geometry->update_instance_buffer(
-        std::forward<std::vector<StorageBufferObject>>(rectangle_instance_data));
-    size_t num_instances = rectangle_instance_data.size();
+void GeometryPipeline::render_rectangles(const VkCommandBuffer &command_buffer) {
+
+    const auto &instance_buffer = m_rectangle_instance_buffers.get_buffer();
+    const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
         rectangle_geometry->record_draw_command(command_buffer, m_pipeline.m_pipeline,
                                                 m_pipeline.m_pipeline_layout,
                                                 num_instances);
     }
+    m_rectangle_instance_buffers.rotate();
 }
 
-void GeometryPipeline::render_hexagons(
-    const VkCommandBuffer &command_buffer,
-    std::vector<StorageBufferObject> &&hexagon_instance_data) {
-    hexagon_geometry->update_instance_buffer(
-        std::forward<std::vector<StorageBufferObject>>(hexagon_instance_data));
-    size_t num_instances = hexagon_instance_data.size();
+void GeometryPipeline::render_hexagons(const VkCommandBuffer &command_buffer) {
+
+    const auto &instance_buffer = m_hexagon_instance_buffers.get_buffer();
+    const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
         hexagon_geometry->record_draw_command(command_buffer, m_pipeline.m_pipeline,
                                               m_pipeline.m_pipeline_layout,
                                               num_instances);
     }
+    m_hexagon_instance_buffers.rotate();
 }
 
 VkDescriptorPool createDescriptorPool(VkDevice &device, const int capacity) {

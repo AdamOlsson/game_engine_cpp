@@ -9,6 +9,7 @@
 #include "physics_engine/collision_resolver.h"
 #include "render_engine/RenderBody.h"
 #include "render_engine/Window.h"
+#include "render_engine/colors.h"
 #include "shape.h"
 #include <cstdint>
 #include <functional>
@@ -117,7 +118,7 @@ class Example0CollisionDetection : public Game {
             case ContactType::VERTEX_VERTEX:
             case ContactType::VERTEX_EDGE: {
                 const RenderBody r = RenderBody{
-                    .color = YELLOW,
+                    .color = colors::YELLOW,
                     .position = collision_point
                                     ->contact_patch[collision_point->deepest_contact_idx],
                     .shape = Shape::create_circle_data(10.0)};
@@ -133,7 +134,7 @@ class Example0CollisionDetection : public Game {
                 const float rotation =
                     std::atan2(line.y, line.x); // Crazy expensive operation
                 const RenderBody r =
-                    RenderBody{.color = YELLOW,
+                    RenderBody{.color = colors::YELLOW,
                                .position = center,
                                .rotation = -rotation, // glm has opposite hand system
                                .shape = Shape::create_rectangle_data(length, thickness)};
@@ -270,7 +271,8 @@ void state0(EntityComponentStorage &ecs) {
                                                .shape(Shape::create_triangle_data(200.0))
                                                .collision_restitution(0.3f)
                                                .build()));
-    ecs.add_component<RenderBody>(e1, std::move(RenderBodyBuilder().color(RED).build()));
+    ecs.add_component<RenderBody>(
+        e1, std::move(RenderBodyBuilder().color(colors::RED).build()));
 
     EntityId e2 = ecs.create_entity();
     ecs.add_component<RigidBody>(e2, RigidBodyBuilder()
@@ -278,7 +280,7 @@ void state0(EntityComponentStorage &ecs) {
                                          .shape(Shape::create_triangle_data(200.0))
                                          .collision_restitution(0.3f)
                                          .build());
-    ecs.add_component<RenderBody>(e2, RenderBodyBuilder().color(GREEN).build());
+    ecs.add_component<RenderBody>(e2, RenderBodyBuilder().color(colors::GREEN).build());
 }
 
 void state1(EntityComponentStorage &ecs) {
@@ -289,7 +291,8 @@ void state1(EntityComponentStorage &ecs) {
                                                .shape(Shape::create_triangle_data(200.0))
                                                .collision_restitution(0.3f)
                                                .build()));
-    ecs.add_component<RenderBody>(e1, std::move(RenderBodyBuilder().color(RED).build()));
+    ecs.add_component<RenderBody>(
+        e1, std::move(RenderBodyBuilder().color(colors::RED).build()));
 
     EntityId e2 = ecs.create_entity();
     ecs.add_component<RigidBody>(e2,
@@ -298,7 +301,7 @@ void state1(EntityComponentStorage &ecs) {
                                      .shape(Shape::create_rectangle_data(180.0, 180.0))
                                      .collision_restitution(0.3f)
                                      .build());
-    ecs.add_component<RenderBody>(e2, RenderBodyBuilder().color(GREEN).build());
+    ecs.add_component<RenderBody>(e2, RenderBodyBuilder().color(colors::GREEN).build());
 }
 
 void state2(EntityComponentStorage &ecs) {
@@ -309,7 +312,8 @@ void state2(EntityComponentStorage &ecs) {
                           .shape(Shape::create_rectangle_data(180.0, 180.0))
                           .collision_restitution(0.3f)
                           .build()));
-    ecs.add_component<RenderBody>(e1, std::move(RenderBodyBuilder().color(RED).build()));
+    ecs.add_component<RenderBody>(
+        e1, std::move(RenderBodyBuilder().color(colors::RED).build()));
 
     EntityId e2 = ecs.create_entity();
     ecs.add_component<RigidBody>(e2,
@@ -318,7 +322,7 @@ void state2(EntityComponentStorage &ecs) {
                                      .shape(Shape::create_rectangle_data(180.0, 180.0))
                                      .collision_restitution(0.3f)
                                      .build());
-    ecs.add_component<RenderBody>(e2, RenderBodyBuilder().color(GREEN).build());
+    ecs.add_component<RenderBody>(e2, RenderBodyBuilder().color(colors::GREEN).build());
 }
 
 int main() {
@@ -334,6 +338,16 @@ int main() {
     std::cout << "  T          - to toggle between shapes" << std::endl;
     std::cout << "  R          - hold to rotate selected shape (while holding Left Mouse)"
               << std::endl;
+
+    std::cout << std::endl << "=====================================" << std::endl;
+    std::cout << "============== WARNING ==============" << std::endl;
+    std::cout << "=====================================" << std::endl;
+    std::cout << "The click position calculations are wrong because I changed them to"
+              << std::endl;
+    std::cout << "align with the GPU coordinate system and I could not be bothered to"
+              << std::endl;
+    std::cout << "fix this example." << std::endl;
+    std::cout << "=====================================" << std::endl;
     std::cout << std::endl << std::endl;
 
     game_engine->run();

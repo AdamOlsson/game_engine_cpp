@@ -5,7 +5,7 @@ message(STATUS "CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "CMAKE_CXX_COMPILER_VERSION: ${CMAKE_CXX_COMPILER_VERSION}")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.4.sdk")
+set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk")
 project(game_engine CXX)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -131,6 +131,23 @@ target_link_libraries(3_collision_scenarios
 )
 # Output directory for binaries
 set_target_properties(3_collision_scenarios
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+
+file(GLOB_RECURSE DEV_SOURCES "examples/4_user_interface/*.cpp")
+add_executable(4_user_interface ${DEV_SOURCES})
+target_include_directories(4_user_interface
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(4_user_interface
+    PRIVATE
+        game_engine
+)
+# Output directory for binaries
+set_target_properties(4_user_interface
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )

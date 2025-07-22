@@ -1,5 +1,4 @@
 #pragma once
-
 #include "render_engine/resources/fonts/FontResource.h"
 #include <memory>
 

@@ -8,6 +8,9 @@
 #include "render_engine/fonts/Font.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "render_engine/resources/images/ImageResource.h"
+#include "render_engine/ui/TextBox.h"
+#include "render_engine/ui/TextPipeline.h"
+#include "render_engine/ui/UIPipeline.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
@@ -28,7 +31,8 @@ RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_
 
     auto descriptor_set_layout_builder =
         DescriptorSetLayoutBuilder()
-            .add(StorageBuffer::create_descriptor_set_layout_binding(0))
+            .add(StorageBuffer<StorageBufferObject>::create_descriptor_set_layout_binding(
+                0))
             .add(UniformBuffer::create_descriptor_set_layout_binding(1))
             .add(Sampler::create_descriptor_set_layout_binding(2));
 
@@ -55,95 +59,164 @@ RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_
     }
 
     if (m_font != nullptr) {
-        m_text_descriptor_set_layout = descriptor_set_layout_builder.build(m_ctx.get());
-        m_text_pipeline = std::make_unique<TextPipeline>(
-            m_window, m_ctx, m_swap_chain_manager, *m_window_dimension_buffers,
-            m_text_descriptor_set_layout, m_sampler, *m_font->font_atlas);
+        m_text_pipeline = std::make_unique<ui::TextPipeline>(
+            m_window, m_ctx, m_swap_chain_manager, *m_window_dimension_buffers, m_sampler,
+            *m_font->font_atlas);
     }
+
+    m_ui_pipeline = std::make_unique<ui::UIPipeline>(m_ctx, m_swap_chain_manager,
+                                                     *m_window_dimension_buffers);
 }
 
 RenderEngine::~RenderEngine() {
     vkDestroyDescriptorSetLayout(m_ctx->device, m_geometry_descriptor_set_layout,
                                  nullptr);
-    vkDestroyDescriptorSetLayout(m_ctx->device, m_text_descriptor_set_layout, nullptr);
 }
 
 void RenderEngine::render(
     const std::vector<std::reference_wrapper<const RenderBody>> &bodies) {
-    std::vector<StorageBufferObject> circle_instance_data = {};
-    std::vector<StorageBufferObject> triangle_instance_data = {};
-    std::vector<StorageBufferObject> rectangle_instance_data = {};
-    std::vector<StorageBufferObject> hexagon_instance_data = {};
-    std::vector<StorageBufferObject> arrow_instance_data = {};
-    std::vector<StorageBufferObject> line_instance_data = {};
+
+    auto &circle_instance_buffer = m_geometry_pipeline->get_circle_instance_buffer();
+    auto &triangle_instance_buffer = m_geometry_pipeline->get_triangle_instance_buffer();
+    auto &rectangle_instance_buffer =
+        m_geometry_pipeline->get_rectangle_instance_buffer();
+    auto &hexagon_instance_buffer = m_geometry_pipeline->get_hexagon_instance_buffer();
+
+    circle_instance_buffer.clear();
+    triangle_instance_buffer.clear();
+    rectangle_instance_buffer.clear();
+    hexagon_instance_buffer.clear();
+
     for (auto b : bodies) {
         auto deref_b = b.get();
         switch (deref_b.shape.encode_shape_type()) {
         case ShapeTypeEncoding::CircleShape:
-            circle_instance_data.push_back(
-                StorageBufferObject(deref_b.position, deref_b.color, deref_b.rotation,
-                                    deref_b.shape, deref_b.uvwt));
+            circle_instance_buffer.emplace_back(deref_b.position, deref_b.color,
+                                                deref_b.rotation, deref_b.shape,
+                                                deref_b.uvwt);
             break;
         case ShapeTypeEncoding::TriangleShape:
-            triangle_instance_data.push_back(
-                StorageBufferObject(deref_b.position, deref_b.color, deref_b.rotation,
-                                    deref_b.shape, deref_b.uvwt));
+            triangle_instance_buffer.emplace_back(deref_b.position, deref_b.color,
+                                                  deref_b.rotation, deref_b.shape,
+                                                  deref_b.uvwt);
             break;
         case ShapeTypeEncoding::RectangleShape:
-            rectangle_instance_data.push_back(
-                StorageBufferObject(deref_b.position, deref_b.color, deref_b.rotation,
-                                    deref_b.shape, deref_b.uvwt));
+            rectangle_instance_buffer.emplace_back(deref_b.position, deref_b.color,
+                                                   deref_b.rotation, deref_b.shape,
+                                                   deref_b.uvwt);
             break;
         case ShapeTypeEncoding::HexagonShape:
-            hexagon_instance_data.push_back(
-                StorageBufferObject(deref_b.position, deref_b.color, deref_b.rotation,
-                                    deref_b.shape, deref_b.uvwt));
-            break;
-        case ShapeTypeEncoding::ArrowShape:
-            arrow_instance_data.push_back(
-                StorageBufferObject(deref_b.position, deref_b.color, deref_b.rotation,
-                                    deref_b.shape, deref_b.uvwt));
-            break;
-        case ShapeTypeEncoding::LineShape:
-            line_instance_data.push_back(
-                StorageBufferObject(deref_b.position, deref_b.color, deref_b.rotation,
-                                    deref_b.shape, deref_b.uvwt));
-            break;
-        default:
+            hexagon_instance_buffer.emplace_back(deref_b.position, deref_b.color,
+                                                 deref_b.rotation, deref_b.shape,
+                                                 deref_b.uvwt);
             break;
         };
     }
 
+    circle_instance_buffer.transfer();
+    triangle_instance_buffer.transfer();
+    rectangle_instance_buffer.transfer();
+    hexagon_instance_buffer.transfer();
+
     auto &command_buffer = m_current_render_pass.command_buffer.m_command_buffer;
-    m_geometry_pipeline->render_circles(command_buffer, std::move(circle_instance_data));
-    m_geometry_pipeline->render_triangles(command_buffer,
-                                          std::move(triangle_instance_data));
-    m_geometry_pipeline->render_rectangles(command_buffer,
-                                           std::move(rectangle_instance_data));
-    m_geometry_pipeline->render_hexagons(command_buffer,
-                                         std::move(hexagon_instance_data));
+
+    m_geometry_pipeline->render_circles(command_buffer);
+    m_geometry_pipeline->render_triangles(command_buffer);
+    m_geometry_pipeline->render_rectangles(command_buffer);
+    m_geometry_pipeline->render_hexagons(command_buffer);
 }
 
-void RenderEngine::render_text(const std::string &text, const glm::vec2 &location,
-                               const uint size) {
+void RenderEngine::text_kerning(const font::KerningMap &kerning_map,
+                                const std::string_view text,
+                                const ui::ElementProperties properties) {
 
-    // TODO: At somepoint we use a separate struct for text instance data
-    // TODO: We can probably move all this computations to the shaders
-    std::vector<StorageBufferObject> instance_data = {};
-    const glm::vec3 offset(size / 2.5, 0.0f, 0.0f);
-    const glm::vec3 loc(location.x, location.y, 0.0f);
-    float count = 0;
-    for (const char &c : text) {
-
-        instance_data.push_back(
-            StorageBufferObject(loc + offset * count, glm::vec3(0.0f, 0.0f, 0.0f), 0.0f,
-                                Shape::create_rectangle_data(size, size),
-                                m_font->encode_ascii_char(std::toupper(c))));
-        count += 1.0f;
+    if (text.size() == 0) {
+        return;
     }
 
-    m_text_pipeline->render_text(m_current_render_pass.command_buffer.m_command_buffer,
-                                 std::move(instance_data));
+    const auto font_color = properties.font.color;
+    const auto font_size = properties.font.size;
+    const float font_rotation = properties.font.rotation;
+
+    auto &glyph_instance_buffer = m_text_pipeline->get_character_buffer();
+    auto &text_segment_buffer = m_text_pipeline->get_text_segment_buffer();
+    const size_t start_length = glyph_instance_buffer.num_elements();
+
+    const size_t num_char = text.size();
+    const auto text_center = properties.container.center;
+
+    text_segment_buffer.emplace_back(font_color, font_size, font_rotation);
+    const uint32_t text_segment_idx = text_segment_buffer.num_elements() - 1;
+
+    // First character has no offset
+    glyph_instance_buffer.emplace_back(
+        text_center, m_font->encode_ascii_char(std::toupper(text[0])), text_segment_idx);
+
+    float combined_offset = 0.0f;
+    for (auto i = 1; i < num_char; i++) {
+        const auto pair = text.substr(i - 1, 2);
+        float offset = font_size;
+        if (kerning_map.map.contains(pair)) {
+            offset -= font_size * kerning_map.map.find(pair)->second;
+        }
+        combined_offset += offset;
+        const glm::vec2 glyph_position = text_center + glm::vec2(combined_offset, 0.0f);
+        glyph_instance_buffer.emplace_back(
+            glyph_position, m_font->encode_ascii_char(std::toupper(text[i])),
+            text_segment_idx);
+    }
+
+    const size_t end_length = glyph_instance_buffer.num_elements();
+    const auto center_offset = glm::vec2(combined_offset / 2.0f, 0.0f);
+    for (auto i = start_length; i < end_length; i++) {
+        auto &glyph = glyph_instance_buffer[i];
+        glyph.position -= center_offset;
+    }
+}
+
+// TODO: This function is not compatible with render_ui. It is not possible to run them in
+// the same loop iteration as they overwrite their buffers
+void RenderEngine::render_text(const ui::TextBox &text_box) {
+
+    auto &character_instance_buffer = m_text_pipeline->get_character_buffer();
+    auto &text_segment_buffer = m_text_pipeline->get_text_segment_buffer();
+    character_instance_buffer.clear();
+    text_segment_buffer.clear();
+
+    text_kerning(font::get_default_kerning_map(), text_box.text, text_box.properties);
+
+    character_instance_buffer.transfer();
+    text_segment_buffer.transfer();
+
+    m_text_pipeline->render_text(m_current_render_pass.command_buffer.m_command_buffer);
+}
+
+// TODO: Should we instead simply pass the UI class instead of its state?
+void RenderEngine::render_ui(const ui::State &state) {
+    auto &character_instance_buffer = m_text_pipeline->get_character_buffer();
+    auto &text_segment_buffer = m_text_pipeline->get_text_segment_buffer();
+    character_instance_buffer.clear();
+    text_segment_buffer.clear();
+
+    const auto kerning_map = m_font->kerning_map;
+    for (const auto button : state.buttons) {
+
+        m_ui_pipeline->render(m_current_render_pass.command_buffer.m_command_buffer,
+                              button->properties.container);
+
+        text_kerning(font::get_default_kerning_map(), button->text, button->properties);
+    }
+
+    for (const auto text_box : state.text_boxes) {
+
+        text_kerning(font::get_default_kerning_map(), text_box->text,
+                     text_box->properties);
+    }
+
+    character_instance_buffer.transfer();
+    text_segment_buffer.transfer();
+
+    m_text_pipeline->render_text(m_current_render_pass.command_buffer.m_command_buffer);
 }
 
 void RenderEngine::wait_idle() { m_ctx->wait_idle(); }
@@ -192,6 +265,7 @@ bool RenderEngine::begin_render_pass() {
 }
 
 bool RenderEngine::end_render_pass() {
+
     auto &command_buffer = m_current_render_pass.command_buffer;
 
     command_buffer.end_render_pass();

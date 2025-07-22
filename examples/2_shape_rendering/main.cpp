@@ -6,6 +6,7 @@
 #include "render_engine/RenderBody.h"
 #include "render_engine/WindowConfig.h"
 #include "render_engine/fonts/Font.h"
+#include "render_engine/ui/ElementProperties.h"
 #include "shape.h"
 #include <functional>
 #include <memory>
@@ -20,21 +21,21 @@ class ShapeRendering : public Game {
                                       RenderBodyBuilder()
                                           .position(WorldPoint(-300, 300))
                                           .shape(Shape::create_circle_data(80.0f))
-                                          .color(glm::vec3(1.0, 0.0, 0.0))
+                                          .color(colors::RED)
                                           .build());
 
         ecs.add_component<RenderBody>(ecs.create_entity(),
                                       RenderBodyBuilder()
                                           .position(WorldPoint(-200, 300))
                                           .shape(Shape::create_triangle_data(80.0f))
-                                          .color(glm::vec3(0.0, 1.0, 0.0))
+                                          .color(colors::GREEN)
                                           .build());
 
         ecs.add_component<RenderBody>(
             ecs.create_entity(), RenderBodyBuilder()
                                      .position(WorldPoint(-100, 300))
                                      .shape(Shape::create_rectangle_data(80.0f, 80.0f))
-                                     .color(glm::vec3(0.0, 0.0, 1.0))
+                                     .color(colors::BLUE)
                                      .uvwt(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f))
                                      .build());
 
@@ -42,13 +43,13 @@ class ShapeRendering : public Game {
                                       RenderBodyBuilder()
                                           .position(WorldPoint(0, 300))
                                           .shape(Shape::create_hexagon_data(80.0f))
-                                          .color(glm::vec3(1.0, 0.0, 0.0))
+                                          .color(colors::RED)
                                           .build());
         ecs.add_component<RenderBody>(
             ecs.create_entity(), RenderBodyBuilder()
                                      .position(WorldPoint(-292, 192))
                                      .shape(Shape::create_rectangle_data(80.0f, 80.0f))
-                                     .color(glm::vec3(0.0, 0.0, 1.0))
+                                     .color(colors::BLUE)
                                      .uvwt(glm::vec4(0.0f, 0.0f, 0.5f, 0.5f))
                                      .build());
 
@@ -56,7 +57,7 @@ class ShapeRendering : public Game {
             ecs.create_entity(), RenderBodyBuilder()
                                      .position(WorldPoint(-208, 192))
                                      .shape(Shape::create_rectangle_data(80.0f, 80.0f))
-                                     .color(glm::vec3(0.0, 0.0, 1.0))
+                                     .color(colors::BLUE)
                                      .uvwt(glm::vec4(0.5f, 0.0f, 1.0f, 0.5f))
                                      .build());
 
@@ -64,7 +65,7 @@ class ShapeRendering : public Game {
             ecs.create_entity(), RenderBodyBuilder()
                                      .position(WorldPoint(-292, 108))
                                      .shape(Shape::create_rectangle_data(80.0f, 80.0f))
-                                     .color(glm::vec3(0.0, 0.0, 1.0))
+                                     .color(colors::BLUE)
                                      .uvwt(glm::vec4(0.0f, 0.5f, 0.5f, 1.0f))
                                      .build());
 
@@ -72,7 +73,7 @@ class ShapeRendering : public Game {
             ecs.create_entity(), RenderBodyBuilder()
                                      .position(WorldPoint(-208, 108))
                                      .shape(Shape::create_rectangle_data(80.0f, 80.0f))
-                                     .color(glm::vec3(0.0, 0.0, 1.0))
+                                     .color(colors::BLUE)
                                      .uvwt(glm::vec4(0.5f, 0.5f, 1.0f, 1.0f))
                                      .build());
     };
@@ -93,8 +94,12 @@ class ShapeRendering : public Game {
         }
 
         render_engine.render(render_bodies);
-        render_engine.render_text("ADAM", glm::vec2(0.0f, 0.0f), 128);
-        render_engine.render_text("LINDA", glm::vec2(0.0f, 100.0f), 64);
+
+        render_engine.render_text(
+            ui::TextBox("ADAM", ui::ElementProperties{.font.size = 128}));
+        render_engine.render_text(ui::TextBox(
+            "LINDA", ui::ElementProperties{.container.center = glm::vec2(0.0f, 100.0f),
+                                           .font.size = 64}));
 
         success = render_engine.end_render_pass();
         if (!success) {

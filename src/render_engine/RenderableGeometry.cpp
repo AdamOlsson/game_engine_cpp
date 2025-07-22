@@ -6,17 +6,14 @@
 #include <memory>
 
 Geometry::RenderableGeometry::RenderableGeometry()
-    : capacity(0), buffer_idx(0), shape_type_encoding(ShapeTypeEncoding::None),
-      vertex_buffer(VertexBuffer()), index_buffer(IndexBuffer()),
-      descriptor_set(DescriptorSet()) {}
+    : shape_type_encoding(ShapeTypeEncoding::None), vertex_buffer(VertexBuffer()),
+      index_buffer(IndexBuffer()), descriptor_set(DescriptorSet()) {}
 
 Geometry::RenderableGeometry::RenderableGeometry(
     std::shared_ptr<CoreGraphicsContext> ctx, SwapChainManager &swap_chain_manager,
     const ShapeTypeEncoding shape_type_encoding, const std::vector<Vertex> &vertices,
     const std::vector<uint16_t> &indices, DescriptorSet &&descriptor_set)
-
-    : capacity(descriptor_set.instance_buffers.size()), buffer_idx(0),
-      shape_type_encoding(shape_type_encoding),
+    : shape_type_encoding(shape_type_encoding),
       vertex_buffer(VertexBuffer(ctx, vertices, swap_chain_manager)),
       index_buffer(IndexBuffer(ctx, indices, swap_chain_manager)),
       descriptor_set(std::move(descriptor_set)) {}
@@ -39,14 +36,6 @@ void Geometry::RenderableGeometry::record_draw_command(
                            &vertex_buffers_offset);
     vkCmdBindIndexBuffer(command_buffer, index_buffer.buffer, 0, VK_INDEX_TYPE_UINT16);
     vkCmdDrawIndexed(command_buffer, index_buffer.num_indices, num_instances, 0, 0, 0);
-
-    buffer_idx = (buffer_idx + 1) % capacity;
-}
-
-void Geometry::RenderableGeometry::update_instance_buffer(
-    std::vector<StorageBufferObject> &&instance_data) {
-    descriptor_set.instance_buffers[buffer_idx].update_storage_buffer(
-        std::forward<std::vector<StorageBufferObject>>(instance_data));
 }
 
 std::vector<Vertex> Geometry::generate_circle_vertices(int num_points) {

@@ -2,13 +2,14 @@
 #include "render_engine/shapes/Vertex.h"
 #include "vulkan/vulkan_core.h"
 
-Pipeline::Pipeline(std::shared_ptr<CoreGraphicsContext> &ctx,
-                   VkDescriptorSetLayout &descriptor_set_layout,
+Pipeline::Pipeline(std::shared_ptr<CoreGraphicsContext> ctx,
+                   const VkDescriptorSetLayout &descriptor_set_layout,
+                   const std::vector<VkPushConstantRange> &push_constant_range,
                    const VkShaderModule vertex_shader_module,
                    const VkShaderModule fragment_shader_module,
                    SwapChainManager &swap_chain_manager)
-    : m_ctx(ctx),
-      m_pipeline_layout(create_graphics_pipeline_layout(descriptor_set_layout)),
+    : m_ctx(ctx), m_pipeline_layout(create_graphics_pipeline_layout(descriptor_set_layout,
+                                                                    push_constant_range)),
       m_pipeline(create_graphics_pipeline(vertex_shader_module, fragment_shader_module,
                                           swap_chain_manager)) {}
 
@@ -21,19 +22,16 @@ Pipeline::~Pipeline() {
     }
 }
 
-VkPipelineLayout
-Pipeline::create_graphics_pipeline_layout(VkDescriptorSetLayout &descriptorSetLayout) {
-    VkPushConstantRange push_constant_range{};
-    push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    push_constant_range.offset = 0;
-    push_constant_range.size = sizeof(uint32_t);
+VkPipelineLayout Pipeline::create_graphics_pipeline_layout(
+    const VkDescriptorSetLayout &descriptor_set_layout,
+    const std::vector<VkPushConstantRange> &push_constant_range) {
 
     VkPipelineLayoutCreateInfo pipeline_layout_into{};
     pipeline_layout_into.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipeline_layout_into.setLayoutCount = 1;
-    pipeline_layout_into.pSetLayouts = &descriptorSetLayout;
-    pipeline_layout_into.pushConstantRangeCount = 1;
-    pipeline_layout_into.pPushConstantRanges = &push_constant_range;
+    pipeline_layout_into.pSetLayouts = &descriptor_set_layout;
+    pipeline_layout_into.pushConstantRangeCount = push_constant_range.size();
+    pipeline_layout_into.pPushConstantRanges = push_constant_range.data();
 
     VkPipelineLayout pipeline_layout;
     if (vkCreatePipelineLayout(m_ctx->device, &pipeline_layout_into, nullptr,
@@ -43,8 +41,8 @@ Pipeline::create_graphics_pipeline_layout(VkDescriptorSetLayout &descriptorSetLa
     return pipeline_layout;
 }
 
-VkPipeline Pipeline::create_graphics_pipeline(const VkShaderModule vertShaderModule,
-                                              const VkShaderModule fragShaderModule,
+VkPipeline Pipeline::create_graphics_pipeline(const VkShaderModule vertex_shader_module,
+                                              const VkShaderModule fragment_shader_module,
                                               SwapChainManager &swap_chain_manager) {
     // Note from tutorial:
     // There is one more (optional) member, pSpecializationInfo, which we won't
@@ -59,13 +57,13 @@ VkPipeline Pipeline::create_graphics_pipeline(const VkShaderModule vertShaderMod
     VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    vertShaderStageInfo.module = vertShaderModule;
+    vertShaderStageInfo.module = vertex_shader_module;
     vertShaderStageInfo.pName = "main";
 
     VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
     fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    fragShaderStageInfo.module = fragShaderModule;
+    fragShaderStageInfo.module = fragment_shader_module;
     fragShaderStageInfo.pName = "main";
 
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo,

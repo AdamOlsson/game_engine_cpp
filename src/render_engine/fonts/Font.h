@@ -2,6 +2,7 @@
 
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/Texture.h"
+#include "render_engine/fonts/KerningMap.h"
 #include "render_engine/resources/fonts/FontResource.h"
 #include <cstddef>
 
@@ -21,6 +22,7 @@ class Font {
 
   public:
     std::unique_ptr<Texture> font_atlas;
+    const font::KerningMap kerning_map = font::get_default_kerning_map();
 
     Font()
         : char_width_px(0), char_height_px(0), font_atlas(nullptr), atlas_width_px(0),

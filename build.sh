@@ -1,22 +1,34 @@
 #!/bin/bash
 
-# Compile vertex shader
-/Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc ./src/render_engine/shaders/shader.vert -o ./src/render_engine/shaders/vert.spv
-VERT_COMPILE_STATUS=$?
+# Compile all vertex shaders
+echo "Compiling vertex shaders..."
+for shader in ./src/render_engine/shaders/vertex/*.glsl; do
+    if [ -f "$shader" ]; then
+        output="${shader%.glsl}.spv"
+        echo "Compiling: $shader -> $output"
+        /Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc -fshader-stage=vert "$shader" -o "$output"
+        if [ $? -ne 0 ]; then
+            echo "Shader compilation failed for: $shader"
+            exit 1
+        fi
+    fi
+done
 
-# Compile geometry fragment shader
-/Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc ./src/render_engine/shaders/geometry.frag -o ./src/render_engine/shaders/geometry_fragment.spv
-GEOMETRY_FRAG_COMPILE_STATUS=$?
+# Compile all fragment shaders
+echo "Compiling fragment shaders..."
+for shader in ./src/render_engine/shaders/fragment/*.glsl; do
+    if [ -f "$shader" ]; then
+        output="${shader%.glsl}.spv"
+        echo "Compiling: $shader -> $output"
+        /Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc -fshader-stage=frag "$shader" -o "$output"
+        if [ $? -ne 0 ]; then
+            echo "Shader compilation failed for: $shader"
+            exit 1
+        fi
+    fi
+done
 
-# Compile text fragment shader
-/Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc ./src/render_engine/shaders/text.frag -o ./src/render_engine/shaders/text_fragment.spv
-TEXT_FRAG_COMPILE_STATUS=$?
-
-# Check compilation status
-if [ $VERT_COMPILE_STATUS -ne 0 ] || [ $GEOMETRY_FRAG_COMPILE_STATUS -ne 0 ] || [ $TEXT_FRAG_COMPILE_STATUS -ne 0 ]; then
-    echo "Shader compilation failed"
-    exit 1
-fi
+echo "All shaders compiled successfully!"
 
 python3 compile_assets.py
 ASSETS_COMPILE_STATUS=$?
@@ -50,4 +62,4 @@ done
 
 # Create build directory and run CMake
 mkdir -p build
-cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON  -DCMAKE_BUILD_TYPE=$BUILD_TYPE && cmake --build build -- -j4
+cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON  -DCMAKE_BUILD_TYPE=$BUILD_TYPE && cmake --build build -- -j$(nproc)

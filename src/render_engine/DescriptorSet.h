@@ -18,23 +18,9 @@ class DescriptorSet {
     std::vector<VkDescriptorSet> m_descriptor_sets;
 
     DescriptorSet(std::shared_ptr<CoreGraphicsContext> ctx,
-                  VkDescriptorSetLayout &descriptor_set_layout,
-                  DescriptorPool *descriptor_pool, const int capacity,
-                  std::vector<UniformBuffer> *uniform_buffers, Texture *texture,
-                  Sampler *sampler);
-
-    std::vector<StorageBuffer> create_instance_buffers();
-    std::vector<VkDescriptorSet> create_descriptor_sets(
-        VkDescriptorSetLayout &descriptor_set_layout, DescriptorPool *descriptor_pool,
-        std::vector<StorageBuffer> &storage_buffers,
-        std::vector<UniformBuffer> *uniform_buffers, Texture *texture, Sampler *sampler);
+                  std::vector<VkDescriptorSet> &descriptor_sets);
 
   public:
-    // TODO: Make this private, would require some proper handling of updating the
-    // instance buffers through API calls. Propably need functions to get the new instance
-    // buffer related to the current frame (get()) and current one (current()).
-    std::vector<StorageBuffer> instance_buffers;
-
     DescriptorSet() = default;
 
     DescriptorSet(DescriptorSet &&other) noexcept = default;
@@ -49,22 +35,48 @@ class DescriptorSet {
 
 class DescriptorSetBuilder {
   private:
-    VkDescriptorSetLayout m_descriptor_set_layout{VK_NULL_HANDLE};
+    VkDescriptorSetLayout *m_descriptor_set_layout;
     DescriptorPool *m_descriptor_pool;
+    size_t m_capacity;
+
+    size_t m_uniform_buffer_binding;
     std::vector<UniformBuffer> *m_uniform_buffers;
-    Texture *m_texture{nullptr};
-    Sampler *m_sampler{nullptr};
-    size_t m_capacity{1};
+
+    std::vector<size_t> m_instance_buffer_binding;
+    std::vector<StorageBufferRef> m_instance_buffers;
+
+    size_t m_texture_binding;
+    Texture *m_texture;
+    Sampler *m_sampler;
+
+    VkWriteDescriptorSet
+    create_instance_buffer_descriptor_write(const VkDescriptorSet &dst_descriptor_set,
+                                            const VkDescriptorBufferInfo &buffer_info,
+                                            const size_t binding_num);
 
   public:
+    DescriptorSetBuilder(VkDescriptorSetLayout &descriptor_set_layout,
+                         DescriptorPool &descriptor_pool, size_t capacity);
+
     DescriptorSetBuilder &
-    set_descriptor_set_layout(VkDescriptorSetLayout &descriptor_set_layout);
-    DescriptorSetBuilder &set_descriptor_pool(DescriptorPool *descriptor_pool);
-    DescriptorSetBuilder &set_capacity(size_t capacity);
+    add_storage_buffers(size_t binding, std::vector<StorageBufferRef> &&instance_buffers);
+
+    DescriptorSetBuilder &set_texture_and_sampler(size_t binding, Texture &texture,
+                                                  Sampler &sampler);
+
     DescriptorSetBuilder &
-    set_uniform_buffers(std::vector<UniformBuffer> *uniform_buffers);
-    DescriptorSetBuilder &set_texture(Texture *texture);
-    DescriptorSetBuilder &set_sampler(Sampler *sampler);
+    set_uniform_buffers(size_t binding, std::vector<UniformBuffer> &uniform_buffers);
 
     DescriptorSet build(std::shared_ptr<CoreGraphicsContext> &ctx);
+
+    std::vector<VkDescriptorSet>
+    allocate_descriptor_sets(std::shared_ptr<CoreGraphicsContext> &ctx);
+
+    VkWriteDescriptorSet
+    create_uniform_buffer_descriptor_write(const VkDescriptorSet &dst_descriptor_set,
+                                           const VkDescriptorBufferInfo &buffer_info);
+
+    VkWriteDescriptorSet
+    create_texture_and_sampler_descriptor_write(const VkDescriptorSet &dst_descriptor_set,
+                                                VkDescriptorImageInfo &image_info);
 };

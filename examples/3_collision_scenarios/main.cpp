@@ -170,8 +170,8 @@ void scenario_10(EntityComponentStorage &ecs) {
                           .rotation(glm::radians(45.0f))
                           .shape(Shape::create_rectangle_data(500.0f, 40.0f))
                           .build()));
-    ecs.add_component<RenderBody>(e1,
-                                  std::move(RenderBodyBuilder().color(GREEN).build()));
+    ecs.add_component<RenderBody>(
+        e1, std::move(RenderBodyBuilder().color(colors::GREEN).build()));
     EntityId e2 = ecs.create_entity();
     ecs.add_component<RigidBody>(
         e2, std::move(RigidBodyBuilder()
@@ -181,8 +181,8 @@ void scenario_10(EntityComponentStorage &ecs) {
                           .rotation(glm::radians(-45.0f))
                           .shape(Shape::create_rectangle_data(500.0f, 40.0f))
                           .build()));
-    ecs.add_component<RenderBody>(e2,
-                                  std::move(RenderBodyBuilder().color(GREEN).build()));
+    ecs.add_component<RenderBody>(
+        e2, std::move(RenderBodyBuilder().color(colors::GREEN).build()));
 
     const int diff = 400;
     const int max = 3;
@@ -198,8 +198,8 @@ void scenario_10(EntityComponentStorage &ecs) {
                           .collision_restitution(0.8)
                           .shape(Shape::create_circle_data(80.0))
                           .build()));
-        ecs.add_component<RenderBody>(e3,
-                                      std::move(RenderBodyBuilder().color(RED).build()));
+        ecs.add_component<RenderBody>(
+            e3, std::move(RenderBodyBuilder().color(colors::RED).build()));
     }
 }
 
@@ -213,8 +213,8 @@ void scenario_9(EntityComponentStorage &ecs) {
                           .rotation(glm::radians(45.0f))
                           .shape(Shape::create_rectangle_data(300.0f, 40.0f))
                           .build()));
-    ecs.add_component<RenderBody>(e1,
-                                  std::move(RenderBodyBuilder().color(GREEN).build()));
+    ecs.add_component<RenderBody>(
+        e1, std::move(RenderBodyBuilder().color(colors::GREEN).build()));
     EntityId e2 = ecs.create_entity();
     ecs.add_component<RigidBody>(
         e2, std::move(RigidBodyBuilder()
@@ -224,8 +224,8 @@ void scenario_9(EntityComponentStorage &ecs) {
                           .rotation(glm::radians(-45.0f))
                           .shape(Shape::create_rectangle_data(300.0f, 40.0f))
                           .build()));
-    ecs.add_component<RenderBody>(e2,
-                                  std::move(RenderBodyBuilder().color(GREEN).build()));
+    ecs.add_component<RenderBody>(
+        e2, std::move(RenderBodyBuilder().color(colors::GREEN).build()));
 
     EntityId e3 = ecs.create_entity();
     ecs.add_component<RigidBody>(e3,
@@ -237,7 +237,8 @@ void scenario_9(EntityComponentStorage &ecs) {
                                                .collision_restitution(0.8)
                                                .shape(Shape::create_circle_data(100.0))
                                                .build()));
-    ecs.add_component<RenderBody>(e3, std::move(RenderBodyBuilder().color(RED).build()));
+    ecs.add_component<RenderBody>(
+        e3, std::move(RenderBodyBuilder().color(colors::RED).build()));
 }
 
 void scenario_8(EntityComponentStorage &ecs) {
@@ -249,8 +250,8 @@ void scenario_8(EntityComponentStorage &ecs) {
                                                .mass(FLT_MAX)
                                                .shape(Shape::create_circle_data(300.0f))
                                                .build()));
-    ecs.add_component<RenderBody>(e1,
-                                  std::move(RenderBodyBuilder().color(GREEN).build()));
+    ecs.add_component<RenderBody>(
+        e1, std::move(RenderBodyBuilder().color(colors::GREEN).build()));
 
     EntityId e2 = ecs.create_entity();
     ecs.add_component<RigidBody>(e2,
@@ -261,7 +262,8 @@ void scenario_8(EntityComponentStorage &ecs) {
                                                .mass(1.0)
                                                .shape(Shape::create_circle_data(150.0))
                                                .build()));
-    ecs.add_component<RenderBody>(e2, std::move(RenderBodyBuilder().color(RED).build()));
+    ecs.add_component<RenderBody>(
+        e2, std::move(RenderBodyBuilder().color(colors::RED).build()));
 }
 void scenario_7(EntityComponentStorage &ecs) {
     EntityId e1 = ecs.create_entity();
@@ -273,7 +275,7 @@ void scenario_7(EntityComponentStorage &ecs) {
                           .shape(Shape::create_rectangle_data(800.0f, 100.0f))
                           .build()));
     ecs.add_component<RenderBody>(
-        e1, std::move(RenderBodyBuilder().color(glm::vec3(0.0, 1.0, 0.0)).build()));
+        e1, std::move(RenderBodyBuilder().color(colors::GREEN).build()));
 
     EntityId e2 = ecs.create_entity();
     ecs.add_component<RigidBody>(e2,
@@ -286,7 +288,7 @@ void scenario_7(EntityComponentStorage &ecs) {
                                                .shape(Shape::create_triangle_data(150.0))
                                                .build()));
     ecs.add_component<RenderBody>(
-        e2, std::move(RenderBodyBuilder().color(glm::vec3(1.0, 0.0, 0.0)).build()));
+        e2, std::move(RenderBodyBuilder().color(colors::RED).build()));
 }
 
 void scenario_6(EntityComponentStorage &ecs) {
@@ -300,7 +302,7 @@ void scenario_6(EntityComponentStorage &ecs) {
                                                .shape(Shape::create_triangle_data(400.0))
                                                .build()));
     ecs.add_component<RenderBody>(
-        e1, std::move(RenderBodyBuilder().color(glm::vec3(0.0, 1.0, 0.0)).build()));
+        e1, std::move(RenderBodyBuilder().color(colors::GREEN).build()));
 
     EntityId e2 = ecs.create_entity();
     ecs.add_component<RigidBody>(e2,
@@ -313,7 +315,7 @@ void scenario_6(EntityComponentStorage &ecs) {
                                                .shape(Shape::create_triangle_data(150.0))
                                                .build()));
     ecs.add_component<RenderBody>(
-        e2, std::move(RenderBodyBuilder().color(glm::vec3(1.0, 0.0, 0.0)).build()));
+        e2, std::move(RenderBodyBuilder().color(colors::RED).build()));
 }
 
 void scenario_5(EntityComponentStorage &ecs) {
@@ -328,7 +330,7 @@ void scenario_5(EntityComponentStorage &ecs) {
                                                .shape(Shape::create_triangle_data(150.0))
                                                .build()));
     ecs.add_component<RenderBody>(
-        e1, std::move(RenderBodyBuilder().color(glm::vec3(0.0, 1.0, 0.0)).build()));
+        e1, std::move(RenderBodyBuilder().color(colors::GREEN).build()));
 
     EntityId e2 = ecs.create_entity();
     ecs.add_component<RigidBody>(e2,
@@ -340,7 +342,7 @@ void scenario_5(EntityComponentStorage &ecs) {
                                                .shape(Shape::create_triangle_data(150.0))
                                                .build()));
     ecs.add_component<RenderBody>(
-        e2, std::move(RenderBodyBuilder().color(glm::vec3(1.0, 0.0, 0.0)).build()));
+        e2, std::move(RenderBodyBuilder().color(colors::RED).build()));
 }
 
 void scenario_4(EntityComponentStorage &ecs) {
@@ -354,7 +356,7 @@ void scenario_4(EntityComponentStorage &ecs) {
                           .shape(Shape::create_rectangle_data(300.0, 50.0))
                           .build()));
     ecs.add_component<RenderBody>(
-        e1, std::move(RenderBodyBuilder().color(glm::vec3(0.0, 1.0, 0.0)).build()));
+        e1, std::move(RenderBodyBuilder().color(colors::GREEN).build()));
 
     EntityId e2 = ecs.create_entity();
     ecs.add_component<RigidBody>(e2,
@@ -366,7 +368,7 @@ void scenario_4(EntityComponentStorage &ecs) {
                                                .shape(Shape::create_triangle_data(150.0))
                                                .build()));
     ecs.add_component<RenderBody>(
-        e2, std::move(RenderBodyBuilder().color(glm::vec3(1.0, 0.0, 0.0)).build()));
+        e2, std::move(RenderBodyBuilder().color(colors::RED).build()));
 }
 
 void scenario_3(EntityComponentStorage &ecs) {
@@ -380,7 +382,7 @@ void scenario_3(EntityComponentStorage &ecs) {
                           .shape(Shape::create_rectangle_data(300.0, 50.0))
                           .build()));
     ecs.add_component<RenderBody>(
-        e1, std::move(RenderBodyBuilder().color(glm::vec3(0.0, 1.0, 0.0)).build()));
+        e1, std::move(RenderBodyBuilder().color(colors::GREEN).build()));
 
     EntityId e2 = ecs.create_entity();
     ecs.add_component<RigidBody>(e2,
@@ -392,7 +394,7 @@ void scenario_3(EntityComponentStorage &ecs) {
                                                .shape(Shape::create_triangle_data(150.0))
                                                .build()));
     ecs.add_component<RenderBody>(
-        e2, std::move(RenderBodyBuilder().color(glm::vec3(1.0, 0.0, 0.0)).build()));
+        e2, std::move(RenderBodyBuilder().color(colors::RED).build()));
 }
 
 void scenario_2(EntityComponentStorage &ecs) {
@@ -406,7 +408,7 @@ void scenario_2(EntityComponentStorage &ecs) {
                           .shape(Shape::create_rectangle_data(100.0, 100.0))
                           .build()));
     ecs.add_component<RenderBody>(
-        e1, std::move(RenderBodyBuilder().color(glm::vec3(0.0, 1.0, 0.0)).build()));
+        e1, std::move(RenderBodyBuilder().color(colors::GREEN).build()));
 
     EntityId e2 = ecs.create_entity();
     ecs.add_component<RigidBody>(
@@ -418,7 +420,7 @@ void scenario_2(EntityComponentStorage &ecs) {
                           .shape(Shape::create_rectangle_data(50.0, 200.0))
                           .build()));
     ecs.add_component<RenderBody>(
-        e2, std::move(RenderBodyBuilder().color(glm::vec3(1.0, 0.0, 0.0)).build()));
+        e2, std::move(RenderBodyBuilder().color(colors::RED).build()));
 }
 
 void scenario_1(EntityComponentStorage &ecs) {
@@ -432,7 +434,7 @@ void scenario_1(EntityComponentStorage &ecs) {
                           .shape(Shape::create_rectangle_data(100.0, 100.0))
                           .build()));
     ecs.add_component<RenderBody>(
-        e1, std::move(RenderBodyBuilder().color(glm::vec3(0.0, 1.0, 0.0)).build()));
+        e1, std::move(RenderBodyBuilder().color(colors::GREEN).build()));
 
     EntityId e2 = ecs.create_entity();
     ecs.add_component<RigidBody>(
@@ -444,7 +446,7 @@ void scenario_1(EntityComponentStorage &ecs) {
                           .shape(Shape::create_rectangle_data(1000.0, 1000.0))
                           .build()));
     ecs.add_component<RenderBody>(
-        e2, std::move(RenderBodyBuilder().color(glm::vec3(1.0, 0.0, 0.0)).build()));
+        e2, std::move(RenderBodyBuilder().color(colors::RED).build()));
 }
 
 void scenario_0(EntityComponentStorage &ecs) {
@@ -459,7 +461,7 @@ void scenario_0(EntityComponentStorage &ecs) {
                           /*.collision_restitution(0.7f)*/
                           .build()));
     ecs.add_component<RenderBody>(
-        e1, std::move(RenderBodyBuilder().color(glm::vec3(0.0, 1.0, 0.0)).build()));
+        e1, std::move(RenderBodyBuilder().color(colors::GREEN).build()));
 
     EntityId e2 = ecs.create_entity();
     ecs.add_component<RigidBody>(
@@ -471,7 +473,7 @@ void scenario_0(EntityComponentStorage &ecs) {
                           .shape(Shape::create_rectangle_data(100.0, 100.0))
                           .build()));
     ecs.add_component<RenderBody>(
-        e2, std::move(RenderBodyBuilder().color(glm::vec3(1.0, 0.0, 0.0)).build()));
+        e2, std::move(RenderBodyBuilder().color(colors::RED).build()));
 }
 
 int main() {

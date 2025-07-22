@@ -4,15 +4,15 @@
 
 DescriptorSetLayoutBuilder &
 DescriptorSetLayoutBuilder::add(const VkDescriptorSetLayoutBinding &&binding) {
-    bindings_.push_back(std::move(binding));
+    m_bindings.push_back(std::move(binding));
     return *this;
 }
 
 VkDescriptorSetLayout DescriptorSetLayoutBuilder::build(const CoreGraphicsContext *ctx) {
     VkDescriptorSetLayoutCreateInfo layout_info{};
     layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layout_info.bindingCount = bindings_.size();
-    layout_info.pBindings = bindings_.data();
+    layout_info.bindingCount = m_bindings.size();
+    layout_info.pBindings = m_bindings.data();
 
     VkDescriptorSetLayout layout;
     if (vkCreateDescriptorSetLayout(ctx->device, &layout_info, nullptr, &layout) !=
