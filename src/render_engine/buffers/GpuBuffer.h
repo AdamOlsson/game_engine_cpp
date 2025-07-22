@@ -218,6 +218,13 @@ class SwapGpuBuffer {
         }
     }
 
+    void write(T &&val) {
+        for (auto &buf : m_buffers) {
+            buf.push_back(val);
+            buf.transfer();
+        }
+    }
+
     std::vector<GpuBufferRef> get_buffer_references() { return m_refs; }
 };
 

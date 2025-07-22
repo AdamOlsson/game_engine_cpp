@@ -1,8 +1,6 @@
 #include "render_engine/Window.h"
 #include "render_engine/WindowConfig.h"
 #include "vulkan/vulkan_core.h"
-#include <cstdint>
-#include <tuple>
 
 Window::Window(const WindowConfig &config) : m_config(config) {
     glfwInit();
@@ -40,12 +38,6 @@ VkSurfaceKHR Window::createSurface(VkInstance *instance, GLFWwindow &window) {
         throw std::runtime_error("failed to create window surface!");
     }
     return surface;
-}
-
-std::tuple<uint32_t, uint32_t> Window::dimensions() {
-    int width, height;
-    glfwGetWindowSize(window, &width, &height);
-    return std::make_tuple(width, height);
 }
 
 /* ######################################### */

@@ -1,5 +1,4 @@
 #pragma once
-#include "io.h"
 #include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/GeometryPipeline.h"
 #include "render_engine/RenderBody.h"

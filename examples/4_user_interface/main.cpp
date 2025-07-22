@@ -62,8 +62,6 @@ class UserInterfaceExample : public Game {
 
   public:
     UserInterfaceExample() : m_number(0), m_increment(1), m_in_settings(false) {
-        // TODO: Init Window
-        // TODO: Init CoreGraphicsContext
         m_ui = ui::UI(
             ui::Menu()
                 .add_button(

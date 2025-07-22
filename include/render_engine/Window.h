@@ -2,7 +2,6 @@
 
 #include "Coordinates.h"
 #include "render_engine/WindowConfig.h"
-#include <cstdint>
 #define GLFW_INCLUDE_VULKAN
 #include "traits.h"
 #include <GLFW/glfw3.h>
@@ -72,7 +71,11 @@ class Window {
 
     VkSurfaceKHR createSurface(VkInstance *instance, GLFWwindow &window);
 
-    std::tuple<uint32_t, uint32_t> dimensions();
+    template <typename T> WindowDimension<T> dimensions() {
+        int width, height;
+        glfwGetWindowSize(window, &width, &height);
+        return WindowDimension<T>(static_cast<T>(width), static_cast<T>(height));
+    }
 
   private:
     std::optional<MouseEventCallbackFn> mouse_event_cb;

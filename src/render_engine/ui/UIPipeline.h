@@ -1,6 +1,5 @@
 #pragma once
 
-#include "io.h"
 #include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/DescriptorSet.h"
 #include "render_engine/Pipeline.h"

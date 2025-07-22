@@ -1,7 +1,6 @@
 #pragma once
 
 #include "glm/fwd.hpp"
-#include "io.h"
 #include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/DescriptorPool.h"
 #include "render_engine/DescriptorSet.h"

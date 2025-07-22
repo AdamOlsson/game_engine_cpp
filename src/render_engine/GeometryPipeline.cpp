@@ -1,6 +1,5 @@
 #include "render_engine/GeometryPipeline.h"
 #include "CoreGraphicsContext.h"
-#include "io.h"
 #include "render_engine/DescriptorPool.h"
 #include "render_engine/DescriptorSet.h"
 #include "render_engine/DescriptorSetLayoutBuilder.h"

@@ -14,6 +14,9 @@
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
+// TODO: How can I create a proper render hierarchy? Preferably I would want my pipelines
+// to act on some state object for rendering
+
 RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_font)
     : m_window(Window(window_config)),
       m_ctx(std::make_shared<CoreGraphicsContext>(m_window)),
@@ -23,10 +26,7 @@ RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_
 
 {
 
-    auto [width, height] = m_window.dimensions();
-    auto window_dimensions =
-        WindowDimension<float>(static_cast<float>(width), static_cast<float>(height));
-    m_window_dimension_buffers.write(window_dimensions);
+    m_window_dimension_buffers.write(m_window.dimensions<float>());
 
     register_all_fonts();
     register_all_images();
