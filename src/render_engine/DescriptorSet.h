@@ -4,8 +4,9 @@
 #include "render_engine/DescriptorPool.h"
 #include "render_engine/Sampler.h"
 #include "render_engine/Texture.h"
-#include "render_engine/buffers/StorageBuffer.h"
-#include "render_engine/buffers/UniformBuffer.h"
+#include "render_engine/buffers/GpuBuffer.h"
+
+#include "io.h"
 #include <cstddef>
 
 class DescriptorSet {
@@ -40,7 +41,7 @@ class DescriptorSetBuilder {
     size_t m_capacity;
 
     size_t m_uniform_buffer_binding;
-    std::vector<UniformBuffer> *m_uniform_buffers;
+    std::vector<GpuBufferRef> m_uniform_buffers;
 
     std::vector<size_t> m_instance_buffer_binding;
     std::vector<GpuBufferRef> m_instance_buffers;
@@ -65,7 +66,7 @@ class DescriptorSetBuilder {
                                                   Sampler &sampler);
 
     DescriptorSetBuilder &
-    set_uniform_buffers(size_t binding, std::vector<UniformBuffer> &uniform_buffers);
+    set_uniform_buffers(size_t binding, std::vector<GpuBufferRef> &&uniform_buffers);
 
     DescriptorSet build(std::shared_ptr<CoreGraphicsContext> &ctx);
 

@@ -4,6 +4,7 @@
 #include "render_engine/WindowConfig.h"
 #include <cstdint>
 #define GLFW_INCLUDE_VULKAN
+#include "traits.h"
 #include <GLFW/glfw3.h>
 #include <functional>
 #include <optional>
@@ -26,6 +27,18 @@ enum class KeyState { DOWN, REPEAT, UP };
 
 std::ostream &operator<<(std::ostream &os, const KeyEvent &k);
 std::ostream &operator<<(std::ostream &os, const KeyState &k);
+
+template <Printable T> struct WindowDimension {
+    T width;
+    T height;
+
+    WindowDimension(T w, T h) : width(w), height(h) {}
+};
+
+template <typename T>
+std::ostream &operator<<(std::ostream &os, const WindowDimension<T> &dim) {
+    return os << "WindowDimension(" << dim.width << ", " << dim.height << ")";
+}
 
 using MouseEventCallbackFn = std::function<void(MouseEvent, ViewportPoint &)>;
 using KeyboardEventCallbackFn = std::function<void(KeyEvent &, KeyState &)>;

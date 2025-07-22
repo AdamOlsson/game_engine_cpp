@@ -1,9 +1,10 @@
 #include "render_engine/RenderEngine.h"
+#include "render_engine/GeometryPipeline.h"
 #include "render_engine/RenderBody.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/Window.h"
 #include "render_engine/WindowConfig.h"
-#include "render_engine/buffers/StorageBuffer.h"
+#include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/fonts/Font.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "render_engine/resources/images/ImageResource.h"
@@ -13,14 +14,19 @@
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
-UniformBufferCollection create_uniform_buffers(std::shared_ptr<CoreGraphicsContext> &ctx,
-                                               Window &window);
-
 RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_font)
     : m_window(Window(window_config)),
       m_ctx(std::make_shared<CoreGraphicsContext>(m_window)),
-      m_window_dimension_buffers(std::move(create_uniform_buffers(m_ctx, m_window))),
-      m_swap_chain_manager(SwapChainManager(m_ctx, m_window)), m_sampler(Sampler(m_ctx)) {
+      m_window_dimension_buffers(
+          SwapUniformBuffer<WindowDimension<float>>(m_ctx, MAX_FRAMES_IN_FLIGHT, 1)),
+      m_swap_chain_manager(SwapChainManager(m_ctx, m_window)), m_sampler(Sampler(m_ctx))
+
+{
+
+    auto [width, height] = m_window.dimensions();
+    auto window_dimensions =
+        WindowDimension<float>(static_cast<float>(width), static_cast<float>(height));
+    m_window_dimension_buffers.write(window_dimensions);
 
     register_all_fonts();
     register_all_images();
@@ -34,7 +40,7 @@ RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_
         m_ctx, m_swap_chain_manager, m_device_queues.graphics_queue, dog_image);
 
     m_geometry_pipeline = std::make_unique<GeometryPipeline>(
-        m_window, m_ctx, m_swap_chain_manager, *m_window_dimension_buffers, m_sampler,
+        m_window, m_ctx, m_swap_chain_manager, m_window_dimension_buffers, m_sampler,
         *m_texture);
 
     switch (use_font) {
@@ -51,19 +57,18 @@ RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_
 
     if (m_font != nullptr) {
         m_text_pipeline = std::make_unique<ui::TextPipeline>(
-            m_window, m_ctx, m_swap_chain_manager, *m_window_dimension_buffers, m_sampler,
+            m_window, m_ctx, m_swap_chain_manager, m_window_dimension_buffers, m_sampler,
             *m_font->font_atlas);
     }
 
     m_ui_pipeline = std::make_unique<ui::UIPipeline>(m_ctx, m_swap_chain_manager,
-                                                     *m_window_dimension_buffers);
+                                                     m_window_dimension_buffers);
 }
 
 RenderEngine::~RenderEngine() {}
 
 void RenderEngine::render(
     const std::vector<std::reference_wrapper<const RenderBody>> &bodies) {
-
     auto &circle_instance_buffer = m_geometry_pipeline->get_circle_instance_buffer();
     auto &triangle_instance_buffer = m_geometry_pipeline->get_triangle_instance_buffer();
     auto &rectangle_instance_buffer =
@@ -117,7 +122,6 @@ void RenderEngine::render(
 void RenderEngine::text_kerning(const font::KerningMap &kerning_map,
                                 const std::string_view text,
                                 const ui::ElementProperties properties) {
-
     if (text.size() == 0) {
         return;
     }
@@ -165,7 +169,6 @@ void RenderEngine::text_kerning(const font::KerningMap &kerning_map,
 // TODO: This function is not compatible with render_ui. It is not possible to run them in
 // the same loop iteration as they overwrite their buffers
 void RenderEngine::render_text(const ui::TextBox &text_box) {
-
     auto &character_instance_buffer = m_text_pipeline->get_character_buffer();
     auto &text_segment_buffer = m_text_pipeline->get_text_segment_buffer();
     character_instance_buffer.clear();
@@ -221,20 +224,6 @@ void RenderEngine::register_keyboard_event_callback(KeyboardEventCallbackFn cb) 
     m_window.register_keyboard_event_callback(cb);
 }
 
-UniformBufferCollection create_uniform_buffers(std::shared_ptr<CoreGraphicsContext> &ctx,
-                                               Window &window) {
-    auto [width, height] = window.dimensions();
-    UniformBufferObject ubo{
-        .dimensions = glm::vec2(static_cast<float>(width), static_cast<float>(height))};
-    auto uniform_buffers = std::make_unique<std::vector<UniformBuffer>>();
-    uniform_buffers->reserve(MAX_FRAMES_IN_FLIGHT);
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        uniform_buffers->emplace_back(ctx, sizeof(UniformBufferObject));
-        uniform_buffers->at(i).update_uniform_buffer(ubo);
-    }
-    return std::move(uniform_buffers);
-}
-
 bool RenderEngine::begin_render_pass() {
     auto command_buffer_ = m_swap_chain_manager.get_command_buffer();
     if (!command_buffer_.has_value()) {
@@ -253,7 +242,6 @@ bool RenderEngine::begin_render_pass() {
 }
 
 bool RenderEngine::end_render_pass() {
-
     auto &command_buffer = m_current_render_pass.command_buffer;
 
     command_buffer.end_render_pass();

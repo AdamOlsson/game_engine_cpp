@@ -1,5 +1,6 @@
 #include "render_engine/GeometryPipeline.h"
 #include "CoreGraphicsContext.h"
+#include "io.h"
 #include "render_engine/DescriptorPool.h"
 #include "render_engine/DescriptorSet.h"
 #include "render_engine/DescriptorSetLayoutBuilder.h"
@@ -7,8 +8,7 @@
 #include "render_engine/Sampler.h"
 #include "render_engine/ShaderModule.h"
 #include "render_engine/Texture.h"
-#include "render_engine/buffers/StorageBuffer.h"
-#include "render_engine/buffers/UniformBuffer.h"
+#include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "shape.h"
 #include "vulkan/vulkan_core.h"
@@ -19,11 +19,11 @@
 #include <stdexcept>
 #include <vector>
 
-GeometryPipeline::GeometryPipeline(Window &window,
-                                   std::shared_ptr<CoreGraphicsContext> ctx,
-                                   SwapChainManager &swap_chain_manager,
-                                   std::vector<UniformBuffer> &uniform_buffers,
-                                   Sampler &sampler, Texture &texture)
+GeometryPipeline::GeometryPipeline(
+    Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
+    SwapChainManager &swap_chain_manager,
+    SwapUniformBuffer<WindowDimension<float>> &uniform_buffers, Sampler &sampler,
+    Texture &texture)
     : m_ctx(ctx), m_circle_instance_buffers(SwapGpuBuffer<GeometryInstanceBufferObject>(
                       ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
       m_triangle_instance_buffers(
@@ -47,7 +47,7 @@ GeometryPipeline::GeometryPipeline(Window &window,
           DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                MAX_FRAMES_IN_FLIGHT)
               .add_storage_buffers(0, m_circle_instance_buffers.get_buffer_references())
-              .set_uniform_buffers(1, uniform_buffers)
+              .set_uniform_buffers(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
               .build(m_ctx)),
 
@@ -59,7 +59,7 @@ GeometryPipeline::GeometryPipeline(Window &window,
           DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                MAX_FRAMES_IN_FLIGHT)
               .add_storage_buffers(0, m_triangle_instance_buffers.get_buffer_references())
-              .set_uniform_buffers(1, uniform_buffers)
+              .set_uniform_buffers(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
               .build(m_ctx)),
 
@@ -72,7 +72,7 @@ GeometryPipeline::GeometryPipeline(Window &window,
                                MAX_FRAMES_IN_FLIGHT)
               .add_storage_buffers(0,
                                    m_rectangle_instance_buffers.get_buffer_references())
-              .set_uniform_buffers(1, uniform_buffers)
+              .set_uniform_buffers(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
               .build(m_ctx)),
 
@@ -84,7 +84,7 @@ GeometryPipeline::GeometryPipeline(Window &window,
           DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                MAX_FRAMES_IN_FLIGHT)
               .add_storage_buffers(0, m_hexagon_instance_buffers.get_buffer_references())
-              .set_uniform_buffers(1, uniform_buffers)
+              .set_uniform_buffers(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
               .build(m_ctx))
 
@@ -94,10 +94,10 @@ GeometryPipeline::~GeometryPipeline() {}
 
 VkDescriptorSetLayout GeometryPipeline::create_descriptor_set_layout() {
     return DescriptorSetLayoutBuilder()
-        .add(
-            GpuBuffer<GeometryInstanceBufferObject>::create_descriptor_set_layout_binding(
-                0))
-        .add(UniformBuffer::create_descriptor_set_layout_binding(1))
+        .add(BufferDescriptor<
+             GpuBufferType::Storage>::create_descriptor_set_layout_binding(0))
+        .add(BufferDescriptor<
+             GpuBufferType::Uniform>::create_descriptor_set_layout_binding(1))
         .add(Sampler::create_descriptor_set_layout_binding(2))
         .build(m_ctx.get());
 }

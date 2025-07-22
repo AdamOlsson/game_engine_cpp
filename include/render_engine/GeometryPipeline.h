@@ -1,5 +1,6 @@
 #pragma once
 
+#include "io.h"
 #include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/DescriptorPool.h"
 #include "render_engine/DescriptorSet.h"
@@ -8,9 +9,8 @@
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/Texture.h"
 #include "render_engine/Window.h"
+#include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/buffers/IndexBuffer.h"
-#include "render_engine/buffers/StorageBuffer.h"
-#include "render_engine/buffers/UniformBuffer.h"
 #include "render_engine/buffers/VertexBuffer.h"
 #include "shape.h"
 #include "vulkan/vulkan_core.h"
@@ -113,9 +113,6 @@ class GeometryPipeline {
 
     Pipeline create_pipeline(VkDescriptorSetLayout &descriptorSetLayout,
                              SwapChainManager &swap_chain_manager);
-    bool checkDeviceExtensionSupport(const VkPhysicalDevice &physicalDevice);
-
-    void updateUniformBuffer(uint32_t currentImage);
 
     void record_draw_command(const VkCommandBuffer &command_buffer,
                              DescriptorSet &descriptor_set,
@@ -126,8 +123,9 @@ class GeometryPipeline {
   public:
     GeometryPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
                      SwapChainManager &swap_chain_manager,
-                     std::vector<UniformBuffer> &uniform_buffers, Sampler &sampler,
-                     Texture &texture);
+                     SwapUniformBuffer<WindowDimension<float>> &uniform_buffers,
+                     Sampler &sampler, Texture &texture);
+
     ~GeometryPipeline();
 
     GpuBuffer<GeometryInstanceBufferObject> &get_circle_instance_buffer();

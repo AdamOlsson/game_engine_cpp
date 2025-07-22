@@ -6,8 +6,6 @@
 #include "render_engine/Sampler.h"
 #include "render_engine/ShaderModule.h"
 #include "render_engine/Texture.h"
-#include "render_engine/buffers/StorageBuffer.h"
-#include "render_engine/buffers/UniformBuffer.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "vulkan/vulkan_core.h"
 #include <cstring>
@@ -18,8 +16,8 @@ using namespace ui;
 
 TextPipeline::TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
                            SwapChainManager &swap_chain_manager,
-                           std::vector<UniformBuffer> &uniform_buffers, Sampler &sampler,
-                           Texture &texture)
+                           SwapUniformBuffer<WindowDimension<float>> &uniform_buffers,
+                           Sampler &sampler, Texture &texture)
     : m_ctx(ctx), m_character_buffers(SwapGpuBuffer<CharacterInstanceBufferObject>(
                       ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
       m_text_segment_buffers(
@@ -40,21 +38,23 @@ TextPipeline::~TextPipeline() {
 
 VkDescriptorSetLayout TextPipeline::create_descriptor_set_layout() {
     return DescriptorSetLayoutBuilder()
-        .add(GpuBuffer<
-             CharacterInstanceBufferObject>::create_descriptor_set_layout_binding(0))
-        .add(UniformBuffer::create_descriptor_set_layout_binding(1))
+        .add(BufferDescriptor<
+             GpuBufferType::Storage>::create_descriptor_set_layout_binding(0))
+        .add(BufferDescriptor<
+             GpuBufferType::Uniform>::create_descriptor_set_layout_binding(1))
         .add(Sampler::create_descriptor_set_layout_binding(2))
-        .add(GpuBuffer<TextSegmentBufferObject>::create_descriptor_set_layout_binding(3))
+        .add(BufferDescriptor<
+             GpuBufferType::Storage>::create_descriptor_set_layout_binding(3))
         .build(m_ctx.get());
 }
 
-DescriptorSet
-TextPipeline::create_descriptor_set(std::vector<UniformBuffer> &uniform_buffers,
-                                    Sampler &sampler, Texture &texture) {
+DescriptorSet TextPipeline::create_descriptor_set(
+    SwapUniformBuffer<WindowDimension<float>> &uniform_buffers, Sampler &sampler,
+    Texture &texture) {
     return DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                 MAX_FRAMES_IN_FLIGHT)
         .add_storage_buffers(0, m_character_buffers.get_buffer_references())
-        .set_uniform_buffers(1, uniform_buffers)
+        .set_uniform_buffers(1, uniform_buffers.get_buffer_references())
         .set_texture_and_sampler(2, texture, sampler)
         .add_storage_buffers(3, m_text_segment_buffers.get_buffer_references())
         .build(m_ctx);

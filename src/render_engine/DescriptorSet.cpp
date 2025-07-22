@@ -3,8 +3,7 @@
 #include "render_engine/DescriptorPool.h"
 #include "render_engine/Sampler.h"
 #include "render_engine/Texture.h"
-#include "render_engine/buffers/StorageBuffer.h"
-#include "render_engine/buffers/UniformBuffer.h"
+#include "render_engine/buffers/GpuBuffer.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 #include <stdexcept>
@@ -26,15 +25,14 @@ DescriptorSetBuilder::DescriptorSetBuilder(VkDescriptorSetLayout &descriptor_set
     : m_descriptor_set_layout(&descriptor_set_layout),
       m_descriptor_pool(&descriptor_pool), m_capacity(capacity),
 
-      m_uniform_buffer_binding(0), m_uniform_buffers(nullptr),
-      m_instance_buffer_binding(0), m_texture_binding(0), m_texture(nullptr),
-      m_sampler(nullptr) {}
+      m_uniform_buffer_binding(0), m_instance_buffer_binding(0), m_texture_binding(0),
+      m_texture(nullptr), m_sampler(nullptr) {}
 
 DescriptorSetBuilder &
 DescriptorSetBuilder::set_uniform_buffers(size_t binding,
-                                          std::vector<UniformBuffer> &uniform_buffers) {
+                                          std::vector<GpuBufferRef> &&uniform_buffers) {
     m_uniform_buffer_binding = binding;
-    m_uniform_buffers = &uniform_buffers;
+    m_uniform_buffers = std::move(uniform_buffers);
     return *this;
 }
 
@@ -167,10 +165,10 @@ DescriptorSet DescriptorSetBuilder::build(std::shared_ptr<CoreGraphicsContext> &
         }
 
         VkDescriptorBufferInfo uniform_buffer_info{};
-        if (m_uniform_buffers != nullptr && m_uniform_buffers->size() >= m_capacity) {
-            uniform_buffer_info.buffer = m_uniform_buffers->at(i).buffer;
+        if (m_uniform_buffers.size() != 0 && m_uniform_buffers.size() >= m_capacity) {
+            uniform_buffer_info.buffer = m_uniform_buffers.at(i).buffer;
             uniform_buffer_info.offset = 0;
-            uniform_buffer_info.range = m_uniform_buffers->at(i).size;
+            uniform_buffer_info.range = m_uniform_buffers.at(i).size;
 
             descriptor_writes.push_back(create_uniform_buffer_descriptor_write(
                 descriptor_sets[i], uniform_buffer_info));

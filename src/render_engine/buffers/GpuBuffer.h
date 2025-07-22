@@ -19,9 +19,6 @@ struct GpuBufferRef {
 
 enum class GpuBufferType { Uniform, Storage };
 
-template <typename T>
-concept Printable = requires(T t) { std::cout << t; };
-
 template <Printable T, GpuBufferType BufferType = GpuBufferType::Storage>
 class GpuBuffer {
   private:
@@ -40,12 +37,20 @@ class GpuBuffer {
     GpuBuffer(std::shared_ptr<CoreGraphicsContext> ctx, size_t capacity)
         : m_ctx(ctx), m_size(capacity * sizeof(T)) {
 
-        m_staging_buffer.reserve(capacity);
+        if constexpr (BufferType == GpuBufferType::Storage) {
+            create_buffer(m_ctx.get(), m_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                              VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                          m_buffer, m_buffer_memory);
 
-        create_buffer(m_ctx.get(), m_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                          VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                      m_buffer, m_buffer_memory);
+        } else if constexpr (BufferType == GpuBufferType::Uniform) {
+            create_buffer(m_ctx.get(), m_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                              VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                          m_buffer, m_buffer_memory);
+        }
+
+        m_staging_buffer.reserve(capacity);
 
         vkMapMemory(m_ctx->device, m_buffer_memory, 0, m_size, 0, &m_buffer_mapped);
         memset(m_buffer_mapped, 0, m_size);
@@ -109,22 +114,15 @@ class GpuBuffer {
     T &operator[](size_t index) { return m_staging_buffer[index]; }
     const T &operator[](size_t index) const { return m_staging_buffer[index]; }
 
-    static VkDescriptorSetLayoutBinding
-    create_descriptor_set_layout_binding(uint32_t binding_num) {
-        VkDescriptorSetLayoutBinding layout_binding{};
-        layout_binding.binding = binding_num;
-        layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-        layout_binding.descriptorCount = 1;
-        layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        layout_binding.pImmutableSamplers = nullptr; // Optional
-        return layout_binding;
-    }
-
     void dump_data() const {
         std::cout << "=== GpuBuffer Data Dump ===" << std::endl;
+        if constexpr (BufferType == GpuBufferType::Storage) {
+            std::cout << "Buffer type: " << "Storage" << std::endl;
+        } else if constexpr (BufferType == GpuBufferType::Uniform) {
+            std::cout << "Buffer type: " << "Uniform" << std::endl;
+        }
         std::cout << "Buffer size: " << m_size << " bytes" << std::endl;
-        std::cout << "Staging buffer capacity: " << m_staging_buffer.capacity()
-                  << std::endl;
+        std::cout << "Buffer capacity: " << m_staging_buffer.capacity() << std::endl;
         std::cout << "Staging buffer size: " << m_staging_buffer.size() << " elements"
                   << std::endl;
 
@@ -164,10 +162,32 @@ class GpuBuffer {
     }
 };
 
-template <typename T> class SwapGpuBuffer {
+template <typename T> using StorageBuffer = GpuBuffer<T, GpuBufferType::Storage>;
+template <typename T> using UniformBuffer = GpuBuffer<T, GpuBufferType::Uniform>;
+
+template <GpuBufferType BufferType> class BufferDescriptor {
+  public:
+    static VkDescriptorSetLayoutBinding
+    create_descriptor_set_layout_binding(uint32_t binding_num) {
+        VkDescriptorSetLayoutBinding layout_binding{};
+        layout_binding.binding = binding_num;
+        if constexpr (BufferType == GpuBufferType::Storage) {
+            layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        } else if constexpr (BufferType == GpuBufferType::Uniform) {
+            layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        }
+        layout_binding.descriptorCount = 1;
+        layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        layout_binding.pImmutableSamplers = nullptr;
+        return layout_binding;
+    }
+};
+
+template <typename T, GpuBufferType BufferType = GpuBufferType::Storage>
+class SwapGpuBuffer {
   private:
     size_t m_idx;
-    std::vector<GpuBuffer<T>> m_buffers;
+    std::vector<GpuBuffer<T, BufferType>> m_buffers;
     std::vector<GpuBufferRef> m_refs;
 
   public:
@@ -175,6 +195,7 @@ template <typename T> class SwapGpuBuffer {
                   size_t capacity)
         : m_idx(0) {
         // Initiate buffers
+        m_buffers.reserve(num_bufs);
         for (auto i = 0; i < num_bufs; i++) {
             m_buffers.emplace_back(ctx, capacity);
         }
@@ -186,9 +207,19 @@ template <typename T> class SwapGpuBuffer {
         }
     }
 
-    GpuBuffer<T> &get_buffer() { return m_buffers[m_idx]; }
+    GpuBuffer<T, BufferType> &get_buffer() { return m_buffers[m_idx]; }
 
     void rotate() { m_idx = ++m_idx % m_buffers.size(); }
 
+    void write(T &val) {
+        for (auto &buf : m_buffers) {
+            buf.push_back(val);
+            buf.transfer();
+        }
+    }
+
     std::vector<GpuBufferRef> get_buffer_references() { return m_refs; }
 };
+
+template <typename T> using SwapStorageBuffer = SwapGpuBuffer<T, GpuBufferType::Storage>;
+template <typename T> using SwapUniformBuffer = SwapGpuBuffer<T, GpuBufferType::Uniform>;

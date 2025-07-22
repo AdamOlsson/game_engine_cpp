@@ -1,18 +1,18 @@
 #pragma once
+#include "io.h"
 #include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/GeometryPipeline.h"
 #include "render_engine/RenderBody.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/Window.h"
 #include "render_engine/WindowConfig.h"
+#include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/fonts/Font.h"
 #include "render_engine/ui/ElementProperties.h"
 #include "render_engine/ui/State.h"
 #include "render_engine/ui/TextPipeline.h"
 #include "render_engine/ui/UIPipeline.h"
 #include <GLFW/glfw3.h>
-
-using UniformBufferCollection = std::unique_ptr<std::vector<UniformBuffer>>;
 
 class RenderEngine {
   private:
@@ -21,7 +21,9 @@ class RenderEngine {
     std::shared_ptr<CoreGraphicsContext> m_ctx;
 
     DeviceQueues m_device_queues;
-    UniformBufferCollection m_window_dimension_buffers;
+
+    SwapUniformBuffer<WindowDimension<float>> m_window_dimension_buffers;
+
     SwapChainManager m_swap_chain_manager;
 
     Sampler m_sampler;
