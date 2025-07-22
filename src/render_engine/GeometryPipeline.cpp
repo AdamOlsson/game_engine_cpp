@@ -2,6 +2,7 @@
 #include "CoreGraphicsContext.h"
 #include "render_engine/DescriptorPool.h"
 #include "render_engine/DescriptorSet.h"
+#include "render_engine/DescriptorSetLayoutBuilder.h"
 #include "render_engine/Geometry.h"
 #include "render_engine/Sampler.h"
 #include "render_engine/ShaderModule.h"
@@ -22,7 +23,6 @@ GeometryPipeline::GeometryPipeline(Window &window,
                                    std::shared_ptr<CoreGraphicsContext> ctx,
                                    SwapChainManager &swap_chain_manager,
                                    std::vector<UniformBuffer> &uniform_buffers,
-                                   VkDescriptorSetLayout &descriptor_set_layout,
                                    Sampler &sampler, Texture &texture)
     : m_ctx(ctx), m_circle_instance_buffers(SwapStorageBuffer<StorageBufferObject>(
                       ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
@@ -32,7 +32,9 @@ GeometryPipeline::GeometryPipeline(Window &window,
           SwapStorageBuffer<StorageBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
       m_hexagon_instance_buffers(
           SwapStorageBuffer<StorageBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
-      m_pipeline(create_pipeline(descriptor_set_layout, swap_chain_manager)),
+
+      m_descriptor_set_layout(create_descriptor_set_layout()),
+      m_pipeline(create_pipeline(m_descriptor_set_layout, swap_chain_manager)),
       m_descriptor_pool(DescriptorPool(m_ctx, m_descriptor_pool_capacity,
                                        m_num_storage_buffers, m_num_uniform_buffers,
                                        m_num_samplers)),
@@ -42,7 +44,7 @@ GeometryPipeline::GeometryPipeline(Window &window,
       m_circle_index_buffer(
           IndexBuffer(ctx, Geometry::circle_indices, swap_chain_manager)),
       m_circle_descriptor_set(
-          DescriptorSetBuilder(descriptor_set_layout, m_descriptor_pool,
+          DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                MAX_FRAMES_IN_FLIGHT)
               .add_storage_buffers(0, m_circle_instance_buffers.get_buffer_references())
               .set_uniform_buffers(1, uniform_buffers)
@@ -54,7 +56,7 @@ GeometryPipeline::GeometryPipeline(Window &window,
       m_triangle_index_buffer(
           IndexBuffer(ctx, Geometry::triangle_indices, swap_chain_manager)),
       m_triangle_descriptor_set(
-          DescriptorSetBuilder(descriptor_set_layout, m_descriptor_pool,
+          DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                MAX_FRAMES_IN_FLIGHT)
               .add_storage_buffers(0, m_triangle_instance_buffers.get_buffer_references())
               .set_uniform_buffers(1, uniform_buffers)
@@ -66,7 +68,7 @@ GeometryPipeline::GeometryPipeline(Window &window,
       m_rectangle_index_buffer(
           IndexBuffer(ctx, Geometry::rectangle_indices, swap_chain_manager)),
       m_rectangle_descriptor_set(
-          DescriptorSetBuilder(descriptor_set_layout, m_descriptor_pool,
+          DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                MAX_FRAMES_IN_FLIGHT)
               .add_storage_buffers(0,
                                    m_rectangle_instance_buffers.get_buffer_references())
@@ -79,7 +81,7 @@ GeometryPipeline::GeometryPipeline(Window &window,
       m_hexagon_index_buffer(
           IndexBuffer(ctx, Geometry::hexagon_indices, swap_chain_manager)),
       m_hexagon_descriptor_set(
-          DescriptorSetBuilder(descriptor_set_layout, m_descriptor_pool,
+          DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                MAX_FRAMES_IN_FLIGHT)
               .add_storage_buffers(0, m_hexagon_instance_buffers.get_buffer_references())
               .set_uniform_buffers(1, uniform_buffers)
@@ -89,6 +91,14 @@ GeometryPipeline::GeometryPipeline(Window &window,
 {}
 
 GeometryPipeline::~GeometryPipeline() {}
+
+VkDescriptorSetLayout GeometryPipeline::create_descriptor_set_layout() {
+    return DescriptorSetLayoutBuilder()
+        .add(StorageBuffer<StorageBufferObject>::create_descriptor_set_layout_binding(0))
+        .add(UniformBuffer::create_descriptor_set_layout_binding(1))
+        .add(Sampler::create_descriptor_set_layout_binding(2))
+        .build(m_ctx.get());
+}
 
 void GeometryPipeline::record_draw_command(const VkCommandBuffer &command_buffer,
                                            DescriptorSet &descriptor_set,

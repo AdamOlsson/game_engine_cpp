@@ -46,6 +46,7 @@ class GeometryPipeline {
 
     std::shared_ptr<CoreGraphicsContext> m_ctx;
 
+    VkDescriptorSetLayout m_descriptor_set_layout;
     Pipeline m_pipeline;
     DescriptorPool m_descriptor_pool;
 
@@ -73,6 +74,8 @@ class GeometryPipeline {
 
     bool framebufferResized = false;
 
+    VkDescriptorSetLayout create_descriptor_set_layout();
+
     Pipeline create_pipeline(VkDescriptorSetLayout &descriptorSetLayout,
                              SwapChainManager &swap_chain_manager);
     bool checkDeviceExtensionSupport(const VkPhysicalDevice &physicalDevice);
@@ -88,8 +91,7 @@ class GeometryPipeline {
   public:
     GeometryPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
                      SwapChainManager &swap_chain_manager,
-                     std::vector<UniformBuffer> &uniform_buffers,
-                     VkDescriptorSetLayout &descriptor_set_layout, Sampler &sampler,
+                     std::vector<UniformBuffer> &uniform_buffers, Sampler &sampler,
                      Texture &texture);
     ~GeometryPipeline();
 

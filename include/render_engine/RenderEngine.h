@@ -28,7 +28,6 @@ class RenderEngine {
     Sampler m_sampler;
     std::unique_ptr<Texture> m_texture; // Having this unique prevents a segfault
 
-    VkDescriptorSetLayout m_geometry_descriptor_set_layout;
     std::unique_ptr<GeometryPipeline> m_geometry_pipeline;
 
     std::unique_ptr<Font> m_font;

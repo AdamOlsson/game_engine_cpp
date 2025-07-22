@@ -1,5 +1,4 @@
 #include "render_engine/RenderEngine.h"
-#include "render_engine/DescriptorSetLayoutBuilder.h"
 #include "render_engine/RenderBody.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/Window.h"
@@ -29,22 +28,14 @@ RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_
 
     m_device_queues = m_ctx->get_device_queues();
 
-    auto descriptor_set_layout_builder =
-        DescriptorSetLayoutBuilder()
-            .add(StorageBuffer<StorageBufferObject>::create_descriptor_set_layout_binding(
-                0))
-            .add(UniformBuffer::create_descriptor_set_layout_binding(1))
-            .add(Sampler::create_descriptor_set_layout_binding(2));
-
     auto &resource_manager = ResourceManager::get_instance();
     auto dog_image = resource_manager.get_resource<ImageResource>("DogImage");
     m_texture = Texture::unique_from_image_resource(
         m_ctx, m_swap_chain_manager, m_device_queues.graphics_queue, dog_image);
 
-    m_geometry_descriptor_set_layout = descriptor_set_layout_builder.build(m_ctx.get());
     m_geometry_pipeline = std::make_unique<GeometryPipeline>(
-        m_window, m_ctx, m_swap_chain_manager, *m_window_dimension_buffers,
-        m_geometry_descriptor_set_layout, m_sampler, *m_texture);
+        m_window, m_ctx, m_swap_chain_manager, *m_window_dimension_buffers, m_sampler,
+        *m_texture);
 
     switch (use_font) {
     case UseFont::Default: {
@@ -68,10 +59,7 @@ RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_
                                                      *m_window_dimension_buffers);
 }
 
-RenderEngine::~RenderEngine() {
-    vkDestroyDescriptorSetLayout(m_ctx->device, m_geometry_descriptor_set_layout,
-                                 nullptr);
-}
+RenderEngine::~RenderEngine() {}
 
 void RenderEngine::render(
     const std::vector<std::reference_wrapper<const RenderBody>> &bodies) {
