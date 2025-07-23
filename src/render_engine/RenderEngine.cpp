@@ -28,10 +28,6 @@ RenderEngine::RenderEngine(std::shared_ptr<CoreGraphicsContext> ctx,
 
     m_window_dimension_buffers.write(ctx->window->dimensions<float>());
 
-    register_all_fonts();
-    register_all_images();
-    register_all_shaders();
-
     m_device_queues = ctx->get_device_queues();
 
     auto &resource_manager = ResourceManager::get_instance();

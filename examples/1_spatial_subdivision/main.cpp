@@ -9,6 +9,7 @@
 #include "physics_engine/broadphase/SpatialSubdivision.h"
 #include "physics_engine/collision_resolver.h"
 #include "render_engine/RenderBody.h"
+#include "render_engine/resources/ResourceManager.h"
 #include <chrono>
 #include <functional>
 #include <memory>
@@ -136,6 +137,7 @@ class Example1SpatialSubdivision : public Game {
     };
 
     void setup(std::shared_ptr<CoreGraphicsContext> &ctx) override {
+        register_all_shaders();
         start_tick = Clock::now();
     }
 

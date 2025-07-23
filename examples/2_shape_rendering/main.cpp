@@ -5,6 +5,7 @@
 #include "entity_component_storage/EntityComponentStorage.h"
 #include "render_engine/RenderBody.h"
 #include "render_engine/fonts/Font.h"
+#include "render_engine/resources/ResourceManager.h"
 #include "render_engine/ui/ElementProperties.h"
 #include "render_engine/window/WindowConfig.h"
 #include "shape.h"
@@ -81,6 +82,12 @@ class ShapeRendering : public Game {
     ~ShapeRendering() {};
 
     void update(float dt) override {};
+
+    void setup(std::shared_ptr<CoreGraphicsContext> &ctx) override {
+        register_all_shaders();
+        register_all_fonts();
+        register_all_images();
+    }
 
     void render(RenderEngine &render_engine) override {
         std::vector<std::reference_wrapper<const RenderBody>> render_bodies = {};

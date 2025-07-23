@@ -7,12 +7,15 @@ GameEngine::GameEngine(std::unique_ptr<Game> game, GameEngineConfig &config)
       m_tick_delta(1.0 / config.ticks_per_second),
       m_window(std::make_unique<window::Window>(config.window_config)),
       m_ctx(std::make_shared<CoreGraphicsContext>(m_window.get())),
-      m_game(std::move(game)), m_render_engine(RenderEngine(m_ctx, config.use_font)) {}
+      m_game(std::move(game)) {}
 
 GameEngine::~GameEngine() {}
 
 void GameEngine::run() {
     m_game->setup(m_ctx);
+
+    auto render_engine =
+        std::make_unique<RenderEngine>(m_ctx, UseFont::Default); // TODO: remove
 
     while (!m_window->should_window_close()) {
 
@@ -27,7 +30,7 @@ void GameEngine::run() {
             update_count++;
         }
 
-        m_game->render(m_render_engine);
+        m_game->render(*render_engine);
     }
 
     m_ctx->wait_idle();

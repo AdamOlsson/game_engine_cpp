@@ -15,8 +15,6 @@ class RenderEngine {
   private:
     bool framebuffer_resized = false;
 
-    /*std::shared_ptr<CoreGraphicsContext> m_ctx;*/
-
     DeviceQueues m_device_queues;
 
     SwapUniformBuffer<window::WindowDimension<float>> m_window_dimension_buffers;

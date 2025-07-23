@@ -24,8 +24,6 @@ class GameEngine {
     std::shared_ptr<CoreGraphicsContext> m_ctx;
     std::unique_ptr<Game> m_game;
 
-    RenderEngine m_render_engine;
-
   public:
     GameEngine(std::unique_ptr<Game>, GameEngineConfig &);
     ~GameEngine();

@@ -9,6 +9,7 @@
 #include "physics_engine/collision_resolver.h"
 #include "render_engine/RenderBody.h"
 #include "render_engine/colors.h"
+#include "render_engine/resources/ResourceManager.h"
 #include "render_engine/window/Window.h"
 #include "shape.h"
 #include <cstdint>
@@ -159,6 +160,10 @@ class Example0CollisionDetection : public Game {
     };
 
     void setup(std::shared_ptr<CoreGraphicsContext> &ctx) override {
+        register_all_shaders();
+        register_all_fonts();
+        register_all_images();
+
         ctx->window->register_mouse_event_callback(
             [this](window::MouseEvent e, window::ViewportPoint &p) {
                 this->handle_mouse_event(e, p);

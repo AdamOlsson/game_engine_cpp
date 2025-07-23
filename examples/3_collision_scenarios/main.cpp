@@ -9,6 +9,7 @@
 #include "physics_engine/broadphase/SpatialSubdivision.h"
 #include "physics_engine/collision_resolver.h"
 #include "render_engine/RenderBody.h"
+#include "render_engine/resources/ResourceManager.h"
 #include <functional>
 #include <memory>
 #include <optional>
@@ -132,6 +133,12 @@ class Example3CollisionTypes : public Game {
             return;
         }
     };
+
+    void setup(std::shared_ptr<CoreGraphicsContext> &ctx) override {
+        register_all_shaders();
+        register_all_fonts();
+        register_all_images();
+    }
 
     void run_narrowphase(const float dt, const std::vector<CollisionCandidates> &pass,
                          std::vector<RigidBody> &rigid_bodies) {

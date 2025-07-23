@@ -241,9 +241,9 @@ class UserInterfaceExample : public Game {
     };
 
     void setup(std::shared_ptr<CoreGraphicsContext> &ctx) override {
-        /*register_all_fonts();*/
-        /*register_all_images();*/
-        /*register_all_shaders();*/
+        register_all_fonts();
+        register_all_images();
+        register_all_shaders();
 
         ctx->window->register_mouse_event_callback(
             [this](window::MouseEvent e, window::ViewportPoint &p) {
