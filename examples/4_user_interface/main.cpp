@@ -239,8 +239,8 @@ class UserInterfaceExample : public Game {
         }
     };
 
-    void setup(window::Window *window) override {
-        window->register_mouse_event_callback(
+    void setup(std::shared_ptr<CoreGraphicsContext> &ctx) override {
+        ctx->window->register_mouse_event_callback(
             [this](window::MouseEvent e, window::ViewportPoint &p) {
                 this->m_ui.update_state_from_mouse_event(e, p);
             });

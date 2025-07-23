@@ -6,5 +6,5 @@ class Game {
     virtual ~Game() = default;
     virtual void update(const float dt) = 0;
     virtual void render(RenderEngine &render_engine) = 0;
-    virtual void setup(window::Window *window) {};
+    virtual void setup(std::shared_ptr<CoreGraphicsContext> &ctx) {};
 };

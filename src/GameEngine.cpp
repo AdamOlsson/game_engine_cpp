@@ -12,7 +12,7 @@ GameEngine::GameEngine(std::unique_ptr<Game> game, GameEngineConfig &config)
 GameEngine::~GameEngine() {}
 
 void GameEngine::run() {
-    m_game->setup(m_window.get());
+    m_game->setup(m_ctx);
 
     while (!m_window->should_window_close()) {
 

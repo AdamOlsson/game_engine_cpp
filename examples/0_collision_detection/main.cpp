@@ -158,12 +158,12 @@ class Example0CollisionDetection : public Game {
         collision_point = std::nullopt;
     };
 
-    void setup(window::Window *window) override {
-        window->register_mouse_event_callback(
+    void setup(std::shared_ptr<CoreGraphicsContext> &ctx) override {
+        ctx->window->register_mouse_event_callback(
             [this](window::MouseEvent e, window::ViewportPoint &p) {
                 this->handle_mouse_event(e, p);
             });
-        window->register_keyboard_event_callback(
+        ctx->window->register_keyboard_event_callback(
             [this](window::KeyEvent &k, window::KeyState &s) {
                 this->handle_keyboard_event(k, s);
             });

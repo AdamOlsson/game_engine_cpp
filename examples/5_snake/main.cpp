@@ -25,7 +25,7 @@ class Snake : public Game {
          */
         /*std::make_unique<GeometryPipeline>(*/
         /*       ctx, m_swap_chain_manager, m_window_dimension_buffers, m_sampler,
-           *m_texture);*/
+         *m_texture);*/
 
     };
     ~Snake() {};
@@ -34,7 +34,7 @@ class Snake : public Game {
 
     void render(RenderEngine &render_engine) override {};
 
-    void setup(window::Window *) override {}
+    void setup(std::shared_ptr<CoreGraphicsContext> &ctx) override {}
 };
 
 int main() {
