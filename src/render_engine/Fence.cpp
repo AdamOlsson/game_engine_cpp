@@ -3,28 +3,32 @@
 #include <memory>
 
 Fence::Fence(std::shared_ptr<CoreGraphicsContext> ctx, const size_t size)
-    : ctx(ctx), size(size), next(0) {
-    fences.resize(size);
+    : m_ctx(ctx), m_size(size), m_next(0) {
+    m_fences.resize(size);
 
     VkFenceCreateInfo fenceInfo{};
     fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
     for (auto i = 0; i < size; i++) {
-        if (vkCreateFence(ctx->device, &fenceInfo, nullptr, &fences[i]) != VK_SUCCESS) {
+        if (vkCreateFence(ctx->device, &fenceInfo, nullptr, &m_fences[i]) != VK_SUCCESS) {
             throw std::runtime_error("Failed to create fence object for frame!");
         }
     }
 }
 
 Fence::~Fence() {
-    for (size_t i = 0; i < size; i++) {
-        vkDestroyFence(ctx->device, fences[i], nullptr);
+    if (m_ctx == nullptr) {
+        return;
+    }
+
+    for (size_t i = 0; i < m_size; i++) {
+        vkDestroyFence(m_ctx->device, m_fences[i], nullptr);
     }
 }
 
 const VkFence Fence::get() {
-    auto &sem = fences[next];
-    next = ++next % size;
+    auto &sem = m_fences[m_next];
+    m_next = ++m_next % m_size;
     return sem;
 }

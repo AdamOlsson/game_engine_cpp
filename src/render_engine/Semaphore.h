@@ -7,18 +7,22 @@
 
 class Semaphore {
   private:
-    std::shared_ptr<CoreGraphicsContext> ctx;
-    size_t size;
+    std::shared_ptr<CoreGraphicsContext> m_ctx;
+    size_t m_size;
 
-    size_t next;
-    std::vector<VkSemaphore> semaphores;
-
-    /*Semaphore(const Semaphore &);*/
-    /*Semaphore &operator=(const Semaphore &);*/
+    size_t m_next;
+    std::vector<VkSemaphore> m_semaphores;
 
   public:
+    Semaphore() = default;
     Semaphore(std::shared_ptr<CoreGraphicsContext> ctx, const size_t size);
     ~Semaphore();
+
+    Semaphore(Semaphore &&other) noexcept = default;
+    Semaphore &operator=(Semaphore &&other) noexcept = default;
+
+    Semaphore(const Semaphore &other) = delete;
+    Semaphore &operator=(const Semaphore &other) = delete;
 
     const VkSemaphore get();
 };

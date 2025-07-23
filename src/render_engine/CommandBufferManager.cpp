@@ -9,6 +9,10 @@ CommandBufferManager::CommandBufferManager(std::shared_ptr<CoreGraphicsContext> 
       m_command_buffers(create_command_buffers()) {}
 
 CommandBufferManager::~CommandBufferManager() {
+    if (m_ctx == nullptr) {
+        return;
+    }
+
     vkDestroyCommandPool(m_ctx->device, m_command_pool, nullptr);
 }
 

@@ -19,14 +19,16 @@ class CommandBufferManager {
     std::vector<VkCommandBuffer> create_command_buffers();
 
   public:
+    CommandBufferManager() = default;
     CommandBufferManager(std::shared_ptr<CoreGraphicsContext> ctx,
                          const size_t num_buffers);
     ~CommandBufferManager();
 
-    /*CommandBufferManager &operator=(const CommandBufferManager &) = delete;*/
-    /*CommandBufferManager &operator=(CommandBufferManager &&) noexcept = delete;*/
-    /*CommandBufferManager(const CommandBufferManager &) = delete;*/
-    /*CommandBufferManager(CommandBufferManager &&) = delete;*/
+    CommandBufferManager &operator=(CommandBufferManager &&other) noexcept = default;
+    CommandBufferManager(CommandBufferManager &&other) noexcept = default;
+
+    CommandBufferManager &operator=(const CommandBufferManager &) = delete;
+    CommandBufferManager(const CommandBufferManager &) = delete;
 
     CommandBuffer get_command_buffer();
     SingleTimeCommandBuffer get_single_time_command_buffer();

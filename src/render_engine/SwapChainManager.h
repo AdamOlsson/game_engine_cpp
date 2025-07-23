@@ -25,11 +25,13 @@ class SwapChainManager {
   public:
     SwapChain m_swap_chain;
 
+    SwapChainManager() = default;
     SwapChainManager(std::shared_ptr<CoreGraphicsContext> ctx);
 
     SwapChainManager(SwapChainManager &&other) noexcept = default;
-    SwapChainManager(const SwapChainManager &other) = delete;
     SwapChainManager &operator=(SwapChainManager &&other) noexcept = default;
+
+    SwapChainManager(const SwapChainManager &other) = delete;
     SwapChainManager &operator=(const SwapChainManager &other) = delete;
 
     ~SwapChainManager();
