@@ -7,7 +7,6 @@
 #include "render_engine/ShaderModule.h"
 #include "render_engine/Texture.h"
 #include "render_engine/resources/ResourceManager.h"
-#include "render_engine/window/Window.h"
 #include "vulkan/vulkan_core.h"
 #include <cstring>
 #include <memory>
@@ -16,8 +15,7 @@
 using namespace ui;
 
 TextPipeline::TextPipeline(
-    window::Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
-    SwapChainManager &swap_chain_manager,
+    std::shared_ptr<CoreGraphicsContext> ctx, SwapChainManager &swap_chain_manager,
     SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers, Sampler &sampler,
     Texture &texture)
     : m_ctx(ctx), m_character_buffers(SwapGpuBuffer<CharacterInstanceBufferObject>(

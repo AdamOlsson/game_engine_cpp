@@ -5,6 +5,8 @@ class Snake : public Game {
   private:
   public:
     Snake() {
+        /*auto ctx = std::make_shared<CoreGraphicsContext>(window);*/
+        /*auto swap_chain_manager = SwapChainManager(ctx, window);*/
         // create and configure text renderer
         /*
          * // Mandatory args
@@ -22,7 +24,6 @@ class Snake : public Game {
          * builder.add_font(< font >); // includes kerning
          *
          */
-
     };
     ~Snake() {};
 
@@ -30,7 +31,7 @@ class Snake : public Game {
 
     void render(RenderEngine &render_engine) override {};
 
-    void setup(RenderEngine &render_engine) override {}
+    void setup(window::Window *) override {}
 };
 
 int main() {

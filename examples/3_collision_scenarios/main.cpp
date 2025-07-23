@@ -133,8 +133,6 @@ class Example3CollisionTypes : public Game {
         }
     };
 
-    void setup(RenderEngine &render_engine) override {}
-
     void run_narrowphase(const float dt, const std::vector<CollisionCandidates> &pass,
                          std::vector<RigidBody> &rigid_bodies) {
         // The outer loop can be run in parellell

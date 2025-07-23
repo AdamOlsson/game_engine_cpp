@@ -21,6 +21,7 @@ class GameEngine {
     Duration m_next_tick;
     Duration m_tick_delta;
 
+    std::unique_ptr<window::Window> m_window;
     std::unique_ptr<Game> m_game;
     RenderEngine m_render_engine;
 

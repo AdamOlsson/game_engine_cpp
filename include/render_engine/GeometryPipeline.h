@@ -120,7 +120,7 @@ class GeometryPipeline {
                              const IndexBuffer &index_buffer, const size_t num_instances);
 
   public:
-    GeometryPipeline(window::Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
+    GeometryPipeline(std::shared_ptr<CoreGraphicsContext> ctx,
                      SwapChainManager &swap_chain_manager,
                      SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
                      Sampler &sampler, Texture &texture);

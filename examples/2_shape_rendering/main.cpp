@@ -106,8 +106,6 @@ class ShapeRendering : public Game {
             return;
         }
     };
-
-    void setup(RenderEngine &render_engine) override {}
 };
 
 int main() {

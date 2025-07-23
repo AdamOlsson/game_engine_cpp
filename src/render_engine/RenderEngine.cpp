@@ -10,24 +10,21 @@
 #include "render_engine/ui/TextPipeline.h"
 #include "render_engine/ui/UIPipeline.h"
 #include "render_engine/window/Window.h"
-#include "render_engine/window/WindowConfig.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
 // TODO: How can I create a proper render hierarchy? Preferably I would want my pipelines
 // to act on some state object for rendering
 
-RenderEngine::RenderEngine(const window::WindowConfig &window_config,
-                           const UseFont use_font)
-    : m_window(window::Window(window_config)),
-      m_ctx(std::make_shared<CoreGraphicsContext>(m_window)),
+RenderEngine::RenderEngine(window::Window *window, const UseFont use_font)
+    : m_window(window), m_ctx(std::make_shared<CoreGraphicsContext>(*m_window)),
       m_window_dimension_buffers(SwapUniformBuffer<window::WindowDimension<float>>(
           m_ctx, MAX_FRAMES_IN_FLIGHT, 1)),
-      m_swap_chain_manager(SwapChainManager(m_ctx, m_window)), m_sampler(Sampler(m_ctx))
+      m_swap_chain_manager(SwapChainManager(m_ctx, *m_window)), m_sampler(Sampler(m_ctx))
 
 {
 
-    m_window_dimension_buffers.write(m_window.dimensions<float>());
+    m_window_dimension_buffers.write(m_window->dimensions<float>());
 
     register_all_fonts();
     register_all_images();
@@ -41,8 +38,7 @@ RenderEngine::RenderEngine(const window::WindowConfig &window_config,
         m_ctx, m_swap_chain_manager, m_device_queues.graphics_queue, dog_image);
 
     m_geometry_pipeline = std::make_unique<GeometryPipeline>(
-        m_window, m_ctx, m_swap_chain_manager, m_window_dimension_buffers, m_sampler,
-        *m_texture);
+        m_ctx, m_swap_chain_manager, m_window_dimension_buffers, m_sampler, *m_texture);
 
     switch (use_font) {
     case UseFont::Default: {
@@ -58,7 +54,7 @@ RenderEngine::RenderEngine(const window::WindowConfig &window_config,
 
     if (m_font != nullptr) {
         m_text_pipeline = std::make_unique<ui::TextPipeline>(
-            m_window, m_ctx, m_swap_chain_manager, m_window_dimension_buffers, m_sampler,
+            m_ctx, m_swap_chain_manager, m_window_dimension_buffers, m_sampler,
             *m_font->font_atlas);
     }
 
@@ -213,16 +209,16 @@ void RenderEngine::render_ui(const ui::State &state) {
 
 void RenderEngine::wait_idle() { m_ctx->wait_idle(); }
 
-bool RenderEngine::should_window_close() { return m_window.should_window_close(); }
+/*bool RenderEngine::should_window_close() { return m_window->should_window_close(); }*/
 
-void RenderEngine::process_window_events() { m_window.process_window_events(); }
+/*void RenderEngine::process_window_events() { m_window->process_window_events(); }*/
 
 void RenderEngine::register_mouse_event_callback(window::MouseEventCallbackFn cb) {
-    m_window.register_mouse_event_callback(cb);
+    m_window->register_mouse_event_callback(cb);
 }
 
 void RenderEngine::register_keyboard_event_callback(window::KeyboardEventCallbackFn cb) {
-    m_window.register_keyboard_event_callback(cb);
+    m_window->register_keyboard_event_callback(cb);
 }
 
 bool RenderEngine::begin_render_pass() {

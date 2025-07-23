@@ -72,8 +72,7 @@ class TextPipeline {
                              SwapChainManager &swap_chain_manager);
 
   public:
-    TextPipeline(window::Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
-                 SwapChainManager &swap_chain,
+    TextPipeline(std::shared_ptr<CoreGraphicsContext> ctx, SwapChainManager &swap_chain,
                  SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
                  Sampler &sampler, Texture &texture);
     ~TextPipeline();

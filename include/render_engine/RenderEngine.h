@@ -10,13 +10,12 @@
 #include "render_engine/ui/TextPipeline.h"
 #include "render_engine/ui/UIPipeline.h"
 #include "render_engine/window/Window.h"
-#include "render_engine/window/WindowConfig.h"
 #include <GLFW/glfw3.h>
 
 class RenderEngine {
   private:
     bool framebuffer_resized = false;
-    window::Window m_window;
+    window::Window *m_window;
     std::shared_ptr<CoreGraphicsContext> m_ctx;
 
     DeviceQueues m_device_queues;
@@ -43,16 +42,16 @@ class RenderEngine {
                       const ui::ElementProperties properties);
 
   public:
-    RenderEngine(const window::WindowConfig &window_config, const UseFont use_font);
+    RenderEngine(window::Window *window_config, const UseFont use_font);
     ~RenderEngine();
 
-    bool should_window_close();
+    /*bool should_window_close();*/
 
     /**
      * @brief Processes any events GLFW has queued. This function triggers any callback
      * registered. Currently only forwards the call to the Window class member.
      */
-    void process_window_events();
+    /*void process_window_events();*/
 
     /**
      * @brief Register a callback function for mouse input events. Currently only forwards

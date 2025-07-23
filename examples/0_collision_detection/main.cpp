@@ -9,6 +9,7 @@
 #include "physics_engine/collision_resolver.h"
 #include "render_engine/RenderBody.h"
 #include "render_engine/colors.h"
+#include "render_engine/window/Window.h"
 #include "shape.h"
 #include <cstdint>
 #include <functional>
@@ -157,12 +158,12 @@ class Example0CollisionDetection : public Game {
         collision_point = std::nullopt;
     };
 
-    void setup(RenderEngine &render_engine) override {
-        render_engine.register_mouse_event_callback(
+    void setup(window::Window *window) override {
+        window->register_mouse_event_callback(
             [this](window::MouseEvent e, window::ViewportPoint &p) {
                 this->handle_mouse_event(e, p);
             });
-        render_engine.register_keyboard_event_callback(
+        window->register_keyboard_event_callback(
             [this](window::KeyEvent &k, window::KeyState &s) {
                 this->handle_keyboard_event(k, s);
             });

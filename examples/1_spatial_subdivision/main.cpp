@@ -135,7 +135,7 @@ class Example1SpatialSubdivision : public Game {
         render_count++;
     };
 
-    void setup(RenderEngine &render_engine) override { start_tick = Clock::now(); }
+    void setup(window::Window *) override { start_tick = Clock::now(); }
 
     void run_narrowphase(const float dt, const std::vector<CollisionCandidates> &pass,
                          std::vector<RigidBody> &rigid_bodies) {
