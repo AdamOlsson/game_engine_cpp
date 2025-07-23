@@ -16,21 +16,22 @@ const std::vector<const char *> device_extensions = {
 
 } // namespace
 
-CoreGraphicsContext::CoreGraphicsContext(const window::Window &window)
-    : m_enable_validation_layers(true), m_instance(create_instance()),
-      m_debug_messenger(setup_debug_messenger()), surface(create_surface(*window.window)),
-      physical_device(pick_physical_device(m_instance, surface)),
+CoreGraphicsContext::CoreGraphicsContext(window::Window *window)
+    : m_enable_validation_layers(true), window(window), instance(create_instance()),
+      m_debug_messenger(setup_debug_messenger()),
+      surface(create_surface(*this->window->window)),
+      physical_device(pick_physical_device(instance, surface)),
       device(create_logical_device(device_extensions)) {}
 
 CoreGraphicsContext::~CoreGraphicsContext() {
     vkDestroyDevice(device, nullptr);
-    vkDestroySurfaceKHR(m_instance, surface, nullptr);
+    vkDestroySurfaceKHR(instance, surface, nullptr);
 
     if (m_enable_validation_layers) {
         destroy_debug_messenger_ext();
     }
 
-    vkDestroyInstance(m_instance, nullptr);
+    vkDestroyInstance(instance, nullptr);
 }
 
 void CoreGraphicsContext::wait_idle() { vkDeviceWaitIdle(device); }
@@ -147,8 +148,8 @@ VkInstance CoreGraphicsContext::create_instance() {
     createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
     createInfo.ppEnabledExtensionNames = extensions.data();
 
-    VkInstance m_instance;
-    VkResult result = vkCreateInstance(&createInfo, nullptr, &m_instance);
+    VkInstance instance;
+    VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
     /*print_enabled_extensions(m_instance);*/
     switch (result) {
     case VK_SUCCESS:
@@ -162,14 +163,14 @@ VkInstance CoreGraphicsContext::create_instance() {
         throw std::runtime_error(
             "failed to create m_instance! (code: " + std::to_string(result) + ")");
     }
-    return m_instance;
+    return instance;
 }
 
 void CoreGraphicsContext::destroy_debug_messenger_ext() {
     auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
-        m_instance, "vkDestroyDebugUtilsMessengerEXT");
+        instance, "vkDestroyDebugUtilsMessengerEXT");
     if (func != nullptr) {
-        func(m_instance, m_debug_messenger.value(), nullptr);
+        func(instance, m_debug_messenger.value(), nullptr);
     }
 }
 
@@ -191,10 +192,10 @@ VkResult CoreGraphicsContext::create_debug_utils_messenger_ext(
     const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
     VkDebugUtilsMessengerEXT *pDebugMessenger) {
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
-        m_instance, "vkCreateDebugUtilsMessengerEXT");
+        instance, "vkCreateDebugUtilsMessengerEXT");
 
     if (func != nullptr) {
-        return func(m_instance, pCreateInfo, nullptr, pDebugMessenger);
+        return func(instance, pCreateInfo, nullptr, pDebugMessenger);
     } else {
         return VK_ERROR_EXTENSION_NOT_PRESENT;
     }
@@ -217,7 +218,7 @@ std::optional<VkDebugUtilsMessengerEXT> CoreGraphicsContext::setup_debug_messeng
 
 VkSurfaceKHR CoreGraphicsContext::create_surface(GLFWwindow &window) {
     VkSurfaceKHR surface;
-    if (glfwCreateWindowSurface(m_instance, &window, nullptr, &surface) != VK_SUCCESS) {
+    if (glfwCreateWindowSurface(instance, &window, nullptr, &surface) != VK_SUCCESS) {
         throw std::runtime_error("failed to create window surface!");
     }
     return surface;

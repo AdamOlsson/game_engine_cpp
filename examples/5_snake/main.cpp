@@ -5,7 +5,6 @@ class Snake : public Game {
   private:
   public:
     Snake() {
-        /*auto ctx = std::make_shared<CoreGraphicsContext>(window);*/
         /*auto swap_chain_manager = SwapChainManager(ctx, window);*/
         // create and configure text renderer
         /*
@@ -24,6 +23,10 @@ class Snake : public Game {
          * builder.add_font(< font >); // includes kerning
          *
          */
+        /*std::make_unique<GeometryPipeline>(*/
+        /*       ctx, m_swap_chain_manager, m_window_dimension_buffers, m_sampler,
+           *m_texture);*/
+
     };
     ~Snake() {};
 

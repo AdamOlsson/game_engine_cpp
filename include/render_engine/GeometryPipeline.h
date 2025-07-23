@@ -10,7 +10,6 @@
 #include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/buffers/IndexBuffer.h"
 #include "render_engine/buffers/VertexBuffer.h"
-#include "render_engine/window/Window.h"
 #include "shape.h"
 #include "vulkan/vulkan_core.h"
 #include <iostream>

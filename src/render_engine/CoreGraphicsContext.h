@@ -12,8 +12,6 @@ struct DeviceQueues {
 class CoreGraphicsContext {
 
     bool m_enable_validation_layers;
-    VkInstance m_instance;
-    std::optional<VkDebugUtilsMessengerEXT> m_debug_messenger;
 
     VkInstance create_instance();
     VkSurfaceKHR create_surface(GLFWwindow &window);
@@ -37,11 +35,15 @@ class CoreGraphicsContext {
     bool is_device_suitable(const VkPhysicalDevice &physicalDevice);
 
   public:
+    window::Window *window;
+    VkInstance instance;
     VkSurfaceKHR surface;
     VkPhysicalDevice physical_device;
     VkDevice device;
 
-    CoreGraphicsContext(const window::Window &window);
+    std::optional<VkDebugUtilsMessengerEXT> m_debug_messenger;
+
+    CoreGraphicsContext(window::Window *window);
     ~CoreGraphicsContext();
 
     void wait_idle();

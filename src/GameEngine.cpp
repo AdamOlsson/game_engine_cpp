@@ -6,8 +6,8 @@ GameEngine::GameEngine(std::unique_ptr<Game> game, GameEngineConfig &config)
     : m_start_tick(Clock::now()), m_next_tick(Duration::zero()),
       m_tick_delta(1.0 / config.ticks_per_second),
       m_window(std::make_unique<window::Window>(config.window_config)),
-      m_game(std::move(game)),
-      m_render_engine(RenderEngine(m_window.get(), config.use_font)) {}
+      m_ctx(std::make_shared<CoreGraphicsContext>(m_window.get())),
+      m_game(std::move(game)), m_render_engine(RenderEngine(m_ctx, config.use_font)) {}
 
 GameEngine::~GameEngine() {}
 
@@ -30,5 +30,5 @@ void GameEngine::run() {
         m_game->render(m_render_engine);
     }
 
-    m_render_engine.wait_idle();
+    m_ctx->wait_idle();
 }

@@ -9,14 +9,13 @@
 #include "render_engine/ui/State.h"
 #include "render_engine/ui/TextPipeline.h"
 #include "render_engine/ui/UIPipeline.h"
-#include "render_engine/window/Window.h"
 #include <GLFW/glfw3.h>
 
 class RenderEngine {
   private:
     bool framebuffer_resized = false;
-    window::Window *m_window;
-    std::shared_ptr<CoreGraphicsContext> m_ctx;
+
+    /*std::shared_ptr<CoreGraphicsContext> m_ctx;*/
 
     DeviceQueues m_device_queues;
 
@@ -42,7 +41,7 @@ class RenderEngine {
                       const ui::ElementProperties properties);
 
   public:
-    RenderEngine(window::Window *window_config, const UseFont use_font);
+    RenderEngine(std::shared_ptr<CoreGraphicsContext> ctx, const UseFont use_font);
     ~RenderEngine();
 
     /*bool should_window_close();*/
@@ -58,9 +57,9 @@ class RenderEngine {
      * the call to the Window class member.
      * @param cb The callback function which is triggered after a mouse input event.
      */
-    void register_mouse_event_callback(window::MouseEventCallbackFn);
+    /*void register_mouse_event_callback(window::MouseEventCallbackFn);*/
 
-    void register_keyboard_event_callback(window::KeyboardEventCallbackFn);
+    /*void register_keyboard_event_callback(window::KeyboardEventCallbackFn);*/
 
     void render(const std::vector<std::reference_wrapper<const RenderBody>> &bodies);
 
@@ -68,7 +67,7 @@ class RenderEngine {
 
     void render_ui(const ui::State &state);
 
-    void wait_idle();
+    /*void wait_idle();*/
 
     bool begin_render_pass();
 

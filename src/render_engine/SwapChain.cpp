@@ -2,8 +2,7 @@
 #include "render_engine/buffers/common.h"
 #include "render_engine/util.h"
 
-SwapChain::SwapChain(std::shared_ptr<CoreGraphicsContext> ctx,
-                     const window::Window &window)
+SwapChain::SwapChain(std::shared_ptr<CoreGraphicsContext> ctx)
     : m_ctx(ctx), m_next_frame_buffer(0) {
 
     SwapChainSupportDetails swap_chain_support =
@@ -13,7 +12,8 @@ SwapChain::SwapChain(std::shared_ptr<CoreGraphicsContext> ctx,
 
     VkSurfaceFormatKHR surface_format =
         choose_swap_surface_format(swap_chain_support.formats);
-    m_extent = choose_swap_extent(*window.window, swap_chain_support.capabilities);
+    m_extent =
+        choose_swap_extent(*m_ctx->window->window, swap_chain_support.capabilities);
 
     m_swap_chain = create_swap_chain(image_count, surface_format, swap_chain_support);
 

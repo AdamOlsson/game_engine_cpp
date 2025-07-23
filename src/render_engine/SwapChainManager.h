@@ -6,13 +6,11 @@
 #include "render_engine/Fence.h"
 #include "render_engine/Semaphore.h"
 #include "render_engine/SwapChain.h"
-#include "render_engine/window/Window.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
 class SwapChainManager {
   private:
-    const window::Window *m_window;
     std::shared_ptr<CoreGraphicsContext> m_ctx;
 
     size_t m_next_frame_buffer;
@@ -27,8 +25,7 @@ class SwapChainManager {
   public:
     SwapChain m_swap_chain;
 
-    SwapChainManager(std::shared_ptr<CoreGraphicsContext> ctx,
-                     const window::Window &window);
+    SwapChainManager(std::shared_ptr<CoreGraphicsContext> ctx);
 
     SwapChainManager(SwapChainManager &&other) noexcept = default;
     SwapChainManager(const SwapChainManager &other) = delete;

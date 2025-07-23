@@ -16,34 +16,36 @@
 // TODO: How can I create a proper render hierarchy? Preferably I would want my pipelines
 // to act on some state object for rendering
 
-RenderEngine::RenderEngine(window::Window *window, const UseFont use_font)
-    : m_window(window), m_ctx(std::make_shared<CoreGraphicsContext>(*m_window)),
+RenderEngine::RenderEngine(std::shared_ptr<CoreGraphicsContext> ctx,
+                           const UseFont use_font)
+    : m_swap_chain_manager(SwapChainManager(ctx)),
+
       m_window_dimension_buffers(SwapUniformBuffer<window::WindowDimension<float>>(
-          m_ctx, MAX_FRAMES_IN_FLIGHT, 1)),
-      m_swap_chain_manager(SwapChainManager(m_ctx, *m_window)), m_sampler(Sampler(m_ctx))
+          ctx, MAX_FRAMES_IN_FLIGHT, 1)),
+      m_sampler(Sampler(ctx))
 
 {
 
-    m_window_dimension_buffers.write(m_window->dimensions<float>());
+    m_window_dimension_buffers.write(ctx->window->dimensions<float>());
 
     register_all_fonts();
     register_all_images();
     register_all_shaders();
 
-    m_device_queues = m_ctx->get_device_queues();
+    m_device_queues = ctx->get_device_queues();
 
     auto &resource_manager = ResourceManager::get_instance();
     auto dog_image = resource_manager.get_resource<ImageResource>("DogImage");
     m_texture = Texture::unique_from_image_resource(
-        m_ctx, m_swap_chain_manager, m_device_queues.graphics_queue, dog_image);
+        ctx, m_swap_chain_manager, m_device_queues.graphics_queue, dog_image);
 
     m_geometry_pipeline = std::make_unique<GeometryPipeline>(
-        m_ctx, m_swap_chain_manager, m_window_dimension_buffers, m_sampler, *m_texture);
+        ctx, m_swap_chain_manager, m_window_dimension_buffers, m_sampler, *m_texture);
 
     switch (use_font) {
     case UseFont::Default: {
         auto default_font = resource_manager.get_resource<FontResource>("DefaultFont");
-        m_font = std::make_unique<Font>(m_ctx, m_swap_chain_manager,
+        m_font = std::make_unique<Font>(ctx, m_swap_chain_manager,
                                         m_device_queues.graphics_queue, default_font);
         break;
     }
@@ -54,11 +56,11 @@ RenderEngine::RenderEngine(window::Window *window, const UseFont use_font)
 
     if (m_font != nullptr) {
         m_text_pipeline = std::make_unique<ui::TextPipeline>(
-            m_ctx, m_swap_chain_manager, m_window_dimension_buffers, m_sampler,
+            ctx, m_swap_chain_manager, m_window_dimension_buffers, m_sampler,
             *m_font->font_atlas);
     }
 
-    m_ui_pipeline = std::make_unique<ui::UIPipeline>(m_ctx, m_swap_chain_manager,
+    m_ui_pipeline = std::make_unique<ui::UIPipeline>(ctx, m_swap_chain_manager,
                                                      m_window_dimension_buffers);
 }
 
@@ -207,19 +209,20 @@ void RenderEngine::render_ui(const ui::State &state) {
     m_text_pipeline->render_text(m_current_render_pass.command_buffer.m_command_buffer);
 }
 
-void RenderEngine::wait_idle() { m_ctx->wait_idle(); }
+/*void RenderEngine::wait_idle() { m_ctx->wait_idle(); }*/
 
 /*bool RenderEngine::should_window_close() { return m_window->should_window_close(); }*/
 
 /*void RenderEngine::process_window_events() { m_window->process_window_events(); }*/
 
-void RenderEngine::register_mouse_event_callback(window::MouseEventCallbackFn cb) {
-    m_window->register_mouse_event_callback(cb);
-}
+/*void RenderEngine::register_mouse_event_callback(window::MouseEventCallbackFn cb) {*/
+/*    m_window->register_mouse_event_callback(cb);*/
+/*}*/
 
-void RenderEngine::register_keyboard_event_callback(window::KeyboardEventCallbackFn cb) {
-    m_window->register_keyboard_event_callback(cb);
-}
+/*void RenderEngine::register_keyboard_event_callback(window::KeyboardEventCallbackFn cb)
+ * {*/
+/*    m_window->register_keyboard_event_callback(cb);*/
+/*}*/
 
 bool RenderEngine::begin_render_pass() {
     auto command_buffer_ = m_swap_chain_manager.get_command_buffer();

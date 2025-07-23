@@ -3,10 +3,8 @@
 #include "vulkan/vulkan_core.h"
 #include <optional>
 
-SwapChainManager::SwapChainManager(std::shared_ptr<CoreGraphicsContext> ctx,
-                                   const window::Window &window)
-    : m_window(&window), m_ctx(ctx), m_next_frame_buffer(0),
-      m_swap_chain(SwapChain(ctx, window)),
+SwapChainManager::SwapChainManager(std::shared_ptr<CoreGraphicsContext> ctx)
+    : m_ctx(ctx), m_next_frame_buffer(0), m_swap_chain(SwapChain(ctx)),
       m_command_buffer_manager(CommandBufferManager(m_ctx, MAX_FRAMES_IN_FLIGHT)),
       m_image_available(Semaphore(m_ctx, MAX_FRAMES_IN_FLIGHT)),
       m_submit_completed(Semaphore(m_ctx, MAX_FRAMES_IN_FLIGHT)),
@@ -18,12 +16,12 @@ void SwapChainManager::recreate_swap_chain() {
     // All execution is paused when the window is minimized
     int width = 0, height = 0;
     while (width == 0 || height == 0) {
-        glfwGetFramebufferSize(m_window->window, &width, &height);
+        glfwGetFramebufferSize(m_ctx->window->window, &width, &height);
         glfwWaitEvents();
     }
 
     vkDeviceWaitIdle(m_ctx->device);
-    m_swap_chain = SwapChain(m_ctx, *m_window);
+    m_swap_chain = SwapChain(m_ctx);
 }
 
 SingleTimeCommandBuffer SwapChainManager::get_single_time_command_buffer() {

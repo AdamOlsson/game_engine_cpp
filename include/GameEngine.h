@@ -22,7 +22,9 @@ class GameEngine {
     Duration m_tick_delta;
 
     std::unique_ptr<window::Window> m_window;
+    std::shared_ptr<CoreGraphicsContext> m_ctx;
     std::unique_ptr<Game> m_game;
+
     RenderEngine m_render_engine;
 
   public:
