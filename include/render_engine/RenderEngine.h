@@ -10,6 +10,7 @@
 #include "render_engine/ui/TextPipeline.h"
 #include "render_engine/ui/UIPipeline.h"
 #include <GLFW/glfw3.h>
+#include <memory>
 
 class RenderEngine {
   private:
@@ -19,7 +20,7 @@ class RenderEngine {
 
     SwapUniformBuffer<window::WindowDimension<float>> m_window_dimension_buffers;
 
-    SwapChainManager m_swap_chain_manager;
+    std::unique_ptr<SwapChainManager> m_swap_chain_manager;
 
     Sampler m_sampler;
     std::unique_ptr<Texture> m_texture; // Having this unique prevents a segfault

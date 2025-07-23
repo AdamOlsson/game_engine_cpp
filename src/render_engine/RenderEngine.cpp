@@ -18,7 +18,7 @@
 
 RenderEngine::RenderEngine(std::shared_ptr<CoreGraphicsContext> ctx,
                            const UseFont use_font)
-    : m_swap_chain_manager(SwapChainManager(ctx)),
+    : m_swap_chain_manager(std::make_unique<SwapChainManager>(ctx)),
 
       m_window_dimension_buffers(SwapUniformBuffer<window::WindowDimension<float>>(
           ctx, MAX_FRAMES_IN_FLIGHT, 1)),
@@ -33,15 +33,15 @@ RenderEngine::RenderEngine(std::shared_ptr<CoreGraphicsContext> ctx,
     auto &resource_manager = ResourceManager::get_instance();
     auto dog_image = resource_manager.get_resource<ImageResource>("DogImage");
     m_texture = Texture::unique_from_image_resource(
-        ctx, m_swap_chain_manager, m_device_queues.graphics_queue, dog_image);
+        ctx, *m_swap_chain_manager, m_device_queues.graphics_queue, dog_image);
 
     m_geometry_pipeline = std::make_unique<GeometryPipeline>(
-        ctx, m_swap_chain_manager, m_window_dimension_buffers, m_sampler, *m_texture);
+        ctx, *m_swap_chain_manager, m_window_dimension_buffers, m_sampler, *m_texture);
 
     switch (use_font) {
     case UseFont::Default: {
         auto default_font = resource_manager.get_resource<FontResource>("DefaultFont");
-        m_font = std::make_unique<Font>(ctx, m_swap_chain_manager,
+        m_font = std::make_unique<Font>(ctx, *m_swap_chain_manager,
                                         m_device_queues.graphics_queue, default_font);
         break;
     }
@@ -52,11 +52,11 @@ RenderEngine::RenderEngine(std::shared_ptr<CoreGraphicsContext> ctx,
 
     if (m_font != nullptr) {
         m_text_pipeline = std::make_unique<ui::TextPipeline>(
-            ctx, m_swap_chain_manager, m_window_dimension_buffers, m_sampler,
+            ctx, *m_swap_chain_manager, m_window_dimension_buffers, m_sampler,
             *m_font->font_atlas);
     }
 
-    m_ui_pipeline = std::make_unique<ui::UIPipeline>(ctx, m_swap_chain_manager,
+    m_ui_pipeline = std::make_unique<ui::UIPipeline>(ctx, *m_swap_chain_manager,
                                                      m_window_dimension_buffers);
 }
 
@@ -206,7 +206,7 @@ void RenderEngine::render_ui(const ui::State &state) {
 }
 
 bool RenderEngine::begin_render_pass() {
-    auto command_buffer_ = m_swap_chain_manager.get_command_buffer();
+    auto command_buffer_ = m_swap_chain_manager->get_command_buffer();
     if (!command_buffer_.has_value()) {
         return false;
     }
@@ -214,8 +214,8 @@ bool RenderEngine::begin_render_pass() {
 
     command_buffer.begin_render_pass();
     command_buffer.set_viewport(
-        Dimension::from_extent2d(m_swap_chain_manager.m_swap_chain.m_extent));
-    command_buffer.set_scissor(m_swap_chain_manager.m_swap_chain.m_extent);
+        Dimension::from_extent2d(m_swap_chain_manager->m_swap_chain.m_extent));
+    command_buffer.set_scissor(m_swap_chain_manager->m_swap_chain.m_extent);
 
     m_current_render_pass.command_buffer = std::move(command_buffer);
 
@@ -233,7 +233,7 @@ bool RenderEngine::end_render_pass() {
     // window is resized
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
         framebuffer_resized) {
-        m_swap_chain_manager.recreate_swap_chain();
+        m_swap_chain_manager->recreate_swap_chain();
 
         return false;
         // It is important to do this after vkQueuePresentKHR to ensure that the
