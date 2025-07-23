@@ -2,11 +2,11 @@
 
 #include "Game.h"
 #include "render_engine/RenderEngine.h"
-#include "render_engine/WindowConfig.h"
+#include "render_engine/window/WindowConfig.h"
 #include <memory>
 
 struct GameEngineConfig {
-    WindowConfig window_config;
+    window::WindowConfig window_config;
     float ticks_per_second = 60.0f;
     UseFont use_font = UseFont::None;
 };

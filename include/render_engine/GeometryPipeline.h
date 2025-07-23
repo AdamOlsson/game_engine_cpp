@@ -7,10 +7,10 @@
 #include "render_engine/Sampler.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/Texture.h"
-#include "render_engine/Window.h"
 #include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/buffers/IndexBuffer.h"
 #include "render_engine/buffers/VertexBuffer.h"
+#include "render_engine/window/Window.h"
 #include "shape.h"
 #include "vulkan/vulkan_core.h"
 #include <iostream>
@@ -120,9 +120,9 @@ class GeometryPipeline {
                              const IndexBuffer &index_buffer, const size_t num_instances);
 
   public:
-    GeometryPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
+    GeometryPipeline(window::Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
                      SwapChainManager &swap_chain_manager,
-                     SwapUniformBuffer<WindowDimension<float>> &uniform_buffers,
+                     SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
                      Sampler &sampler, Texture &texture);
 
     ~GeometryPipeline();

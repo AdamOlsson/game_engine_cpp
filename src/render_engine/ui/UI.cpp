@@ -74,24 +74,24 @@ Menu *UI::get_last_menu() {
     return m_menu_trace[m_menu_trace.size() - 1];
 }
 
-ui::State &UI::update_state_from_mouse_event(const MouseEvent mouse_event,
-                                             const ViewportPoint &cursor_pos) {
+ui::State &UI::update_state_from_mouse_event(const window::MouseEvent mouse_event,
+                                             const window::ViewportPoint &cursor_pos) {
 
     switch (mouse_event) {
-    case MouseEvent::CURSOR_MOVED:
+    case window::MouseEvent::CURSOR_MOVED:
         return update_state_using_cursor(cursor_pos);
-    case MouseEvent::LEFT_BUTTON_DOWN:
-    case MouseEvent::LEFT_BUTTON_UP:
-    case MouseEvent::RIGHT_BUTTON_DOWN:
-    case MouseEvent::RIGHT_BUTTON_UP:
+    case window::MouseEvent::LEFT_BUTTON_DOWN:
+    case window::MouseEvent::LEFT_BUTTON_UP:
+    case window::MouseEvent::RIGHT_BUTTON_DOWN:
+    case window::MouseEvent::RIGHT_BUTTON_UP:
         return update_state_using_click_event(mouse_event, cursor_pos);
         break;
     }
     return m_current_menu_state;
 }
 
-ui::State &UI::update_state_using_click_event(const MouseEvent mouse_event,
-                                              const ViewportPoint &cursor_pos) {
+ui::State &UI::update_state_using_click_event(const window::MouseEvent mouse_event,
+                                              const window::ViewportPoint &cursor_pos) {
     // Find the item the cursor is over
     Button *target_button = nullptr;
     Menu *current_menu = m_last_menu_in_trace;
@@ -107,19 +107,19 @@ ui::State &UI::update_state_using_click_event(const MouseEvent mouse_event,
     }
 
     switch (mouse_event) {
-    case MouseEvent::CURSOR_MOVED:
+    case window::MouseEvent::CURSOR_MOVED:
         break;
-    case MouseEvent::LEFT_BUTTON_DOWN:
+    case window::MouseEvent::LEFT_BUTTON_DOWN:
         target_button->click_state = ButtonClickState::Pressed;
         target_button->on_click(*target_button);
         break;
-    case MouseEvent::LEFT_BUTTON_UP:
+    case window::MouseEvent::LEFT_BUTTON_UP:
         target_button->click_state = ButtonClickState::Unpressed;
         target_button->on_unclick(*target_button);
         break;
-    case MouseEvent::RIGHT_BUTTON_DOWN:
+    case window::MouseEvent::RIGHT_BUTTON_DOWN:
         break;
-    case MouseEvent::RIGHT_BUTTON_UP:
+    case window::MouseEvent::RIGHT_BUTTON_UP:
         break;
     };
 
@@ -127,7 +127,7 @@ ui::State &UI::update_state_using_click_event(const MouseEvent mouse_event,
     return m_current_menu_state;
 }
 
-State &UI::update_state_using_cursor(const ViewportPoint &cursor_pos) {
+State &UI::update_state_using_cursor(const window::ViewportPoint &cursor_pos) {
     Menu *current_menu = m_last_menu_in_trace;
     for (auto &button : current_menu->button_vector) {
         bool cursor_is_inside = is_inside(cursor_pos, button->properties);
@@ -169,7 +169,8 @@ State &UI::update_state_using_cursor(const ViewportPoint &cursor_pos) {
 
 /*State UI::update_state_using_keypress() {}*/
 
-bool UI::is_inside(const ViewportPoint &cursor_pos, const ElementProperties &element) {
+bool UI::is_inside(const window::ViewportPoint &cursor_pos,
+                   const ElementProperties &element) {
     float half_width = element.container.dimension.x / 2.0f;
     float half_height = element.container.dimension.y / 2.0f;
 

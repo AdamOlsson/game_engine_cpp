@@ -4,9 +4,9 @@
 #include "entity_component_storage/ComponentStore.h"
 #include "entity_component_storage/EntityComponentStorage.h"
 #include "render_engine/RenderBody.h"
-#include "render_engine/WindowConfig.h"
 #include "render_engine/fonts/Font.h"
 #include "render_engine/ui/ElementProperties.h"
+#include "render_engine/window/WindowConfig.h"
 #include "shape.h"
 #include <functional>
 #include <memory>
@@ -113,8 +113,8 @@ class ShapeRendering : public Game {
 int main() {
 
     GameEngineConfig config{
-        .window_config = WindowConfig{.dims = WindowDimensions(800, 800),
-                                      .title = "2_shape_rendering"},
+        .window_config = window::WindowConfig{.dims = window::WindowDimension(800, 800),
+                                              .title = "2_shape_rendering"},
         .use_font = UseFont::Default,
     };
 

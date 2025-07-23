@@ -12,7 +12,7 @@ using namespace ui;
 
 UIPipeline::UIPipeline(std::shared_ptr<CoreGraphicsContext> ctx,
                        SwapChainManager &swap_chain_manager,
-                       SwapUniformBuffer<WindowDimension<float>> &uniform_buffers)
+                       SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers)
     : m_ctx(ctx),
       // TODO: Is it not better to merge all these to a single Descriptor class
       m_descriptor_set_layout(create_descriptor_set_layout()),
@@ -57,7 +57,7 @@ VkDescriptorSetLayout UIPipeline::create_descriptor_set_layout() {
 }
 
 DescriptorSet UIPipeline::create_descriptor_set(
-    SwapUniformBuffer<WindowDimension<float>> &uniform_buffers) {
+    SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers) {
     return DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                 MAX_FRAMES_IN_FLIGHT)
         .set_uniform_buffers(0, uniform_buffers.get_buffer_references())

@@ -3,25 +3,25 @@
 #include "render_engine/GeometryPipeline.h"
 #include "render_engine/RenderBody.h"
 #include "render_engine/SwapChainManager.h"
-#include "render_engine/Window.h"
-#include "render_engine/WindowConfig.h"
 #include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/fonts/Font.h"
 #include "render_engine/ui/ElementProperties.h"
 #include "render_engine/ui/State.h"
 #include "render_engine/ui/TextPipeline.h"
 #include "render_engine/ui/UIPipeline.h"
+#include "render_engine/window/Window.h"
+#include "render_engine/window/WindowConfig.h"
 #include <GLFW/glfw3.h>
 
 class RenderEngine {
   private:
     bool framebuffer_resized = false;
-    Window m_window;
+    window::Window m_window;
     std::shared_ptr<CoreGraphicsContext> m_ctx;
 
     DeviceQueues m_device_queues;
 
-    SwapUniformBuffer<WindowDimension<float>> m_window_dimension_buffers;
+    SwapUniformBuffer<window::WindowDimension<float>> m_window_dimension_buffers;
 
     SwapChainManager m_swap_chain_manager;
 
@@ -43,7 +43,7 @@ class RenderEngine {
                       const ui::ElementProperties properties);
 
   public:
-    RenderEngine(const WindowConfig &window_config, const UseFont use_font);
+    RenderEngine(const window::WindowConfig &window_config, const UseFont use_font);
     ~RenderEngine();
 
     bool should_window_close();
@@ -59,9 +59,9 @@ class RenderEngine {
      * the call to the Window class member.
      * @param cb The callback function which is triggered after a mouse input event.
      */
-    void register_mouse_event_callback(MouseEventCallbackFn);
+    void register_mouse_event_callback(window::MouseEventCallbackFn);
 
-    void register_keyboard_event_callback(KeyboardEventCallbackFn);
+    void register_keyboard_event_callback(window::KeyboardEventCallbackFn);
 
     void render(const std::vector<std::reference_wrapper<const RenderBody>> &bodies);
 

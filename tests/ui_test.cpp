@@ -1,11 +1,12 @@
 #include "render_engine/colors.h"
 #include "render_engine/ui/Button.h"
 #include "render_engine/ui/UI.h"
+#include "render_engine/window/ViewportPoint.h"
 #include <gtest/gtest.h>
 
 TEST(UITest, TestOnEnterAndOnLeaveWithSingleButton) {
-    const auto cursor_pos_on_button = ViewportPoint(0.0f, 0.0f);
-    const auto cursor_pos_off_button = ViewportPoint(200.1f, 0.0f);
+    const auto cursor_pos_on_button = window::ViewportPoint(0.0f, 0.0f);
+    const auto cursor_pos_off_button = window::ViewportPoint(200.1f, 0.0f);
     auto m_ui = ui::UI(ui::Menu().add_button(
         ui::Button("",
                    ui::ElementProperties{
@@ -28,14 +29,16 @@ TEST(UITest, TestOnEnterAndOnLeaveWithSingleButton) {
     ASSERT_EQ(initial_state.buttons.size(), 1);
     ASSERT_EQ(initial_state.buttons[0]->properties.container.border.color, colors::GREEN);
 
-    m_ui.update_state_from_mouse_event(MouseEvent::CURSOR_MOVED, cursor_pos_on_button);
+    m_ui.update_state_from_mouse_event(window::MouseEvent::CURSOR_MOVED,
+                                       cursor_pos_on_button);
     const ui::State state_1 = m_ui.get_state();
 
     // Validate state 1
     ASSERT_EQ(state_1.buttons.size(), 1);
     ASSERT_EQ(state_1.buttons[0]->properties.container.border.color, colors::BLUE);
 
-    m_ui.update_state_from_mouse_event(MouseEvent::CURSOR_MOVED, cursor_pos_off_button);
+    m_ui.update_state_from_mouse_event(window::MouseEvent::CURSOR_MOVED,
+                                       cursor_pos_off_button);
     const ui::State state_2 = m_ui.get_state();
 
     // Validate state 2
@@ -44,8 +47,8 @@ TEST(UITest, TestOnEnterAndOnLeaveWithSingleButton) {
 }
 
 TEST(UITest, TestOnEnterAndOnLeaveWithThreeeButtons) {
-    const auto cursor_pos_on_button = ViewportPoint(0.0f, 0.0f);
-    const auto cursor_pos_off_button = ViewportPoint(200.1f, 0.0f);
+    const auto cursor_pos_on_button = window::ViewportPoint(0.0f, 0.0f);
+    const auto cursor_pos_off_button = window::ViewportPoint(200.1f, 0.0f);
     auto m_ui = ui::UI(
         ui::Menu()
             .add_button(ui::Button("",
@@ -106,7 +109,8 @@ TEST(UITest, TestOnEnterAndOnLeaveWithThreeeButtons) {
     ASSERT_EQ(initial_state.buttons[2]->properties.container.border.color,
               colors::LIGHT_GREEN);
 
-    m_ui.update_state_from_mouse_event(MouseEvent::CURSOR_MOVED, cursor_pos_on_button);
+    m_ui.update_state_from_mouse_event(window::MouseEvent::CURSOR_MOVED,
+                                       cursor_pos_on_button);
     const ui::State state_1 = m_ui.get_state();
 
     // Validate state 1
@@ -117,7 +121,8 @@ TEST(UITest, TestOnEnterAndOnLeaveWithThreeeButtons) {
     ASSERT_EQ(initial_state.buttons[2]->properties.container.border.color,
               colors::LIGHT_GREEN);
 
-    m_ui.update_state_from_mouse_event(MouseEvent::CURSOR_MOVED, cursor_pos_off_button);
+    m_ui.update_state_from_mouse_event(window::MouseEvent::CURSOR_MOVED,
+                                       cursor_pos_off_button);
     const ui::State state_2 = m_ui.get_state();
 
     // Validate state 2

@@ -8,7 +8,6 @@
 #include "physics_engine/SAT.h"
 #include "physics_engine/collision_resolver.h"
 #include "render_engine/RenderBody.h"
-#include "render_engine/Window.h"
 #include "render_engine/colors.h"
 #include "shape.h"
 #include <cstdint>
@@ -160,14 +159,18 @@ class Example0CollisionDetection : public Game {
 
     void setup(RenderEngine &render_engine) override {
         render_engine.register_mouse_event_callback(
-            [this](MouseEvent e, ViewportPoint &p) { this->handle_mouse_event(e, p); });
+            [this](window::MouseEvent e, window::ViewportPoint &p) {
+                this->handle_mouse_event(e, p);
+            });
         render_engine.register_keyboard_event_callback(
-            [this](KeyEvent &k, KeyState &s) { this->handle_keyboard_event(k, s); });
+            [this](window::KeyEvent &k, window::KeyState &s) {
+                this->handle_keyboard_event(k, s);
+            });
     }
 
-    void handle_mouse_event(MouseEvent event, ViewportPoint &point) {
+    void handle_mouse_event(window::MouseEvent event, window::ViewportPoint &point) {
         switch (event) {
-        case MouseEvent::LEFT_BUTTON_UP:
+        case window::MouseEvent::LEFT_BUTTON_UP:
             if (selected_entity_id.has_value()) {
                 WorldPoint wp = point.to_world_point(camera_center);
                 size_t entity_handle = selected_entity_id.value();
@@ -185,7 +188,7 @@ class Example0CollisionDetection : public Game {
             selected_entity_cursor_offset.y = 0.0;
             selected_entity_cursor_offset.z = 0.0;
             break;
-        case MouseEvent::LEFT_BUTTON_DOWN: {
+        case window::MouseEvent::LEFT_BUTTON_DOWN: {
             WorldPoint wp = point.to_world_point(camera_center);
 
             for (auto it = ecs.begin<RigidBody>(); it != ecs.end<RigidBody>(); it++) {
@@ -198,11 +201,11 @@ class Example0CollisionDetection : public Game {
                 }
             }
         } break;
-        case MouseEvent::RIGHT_BUTTON_DOWN:
+        case window::MouseEvent::RIGHT_BUTTON_DOWN:
             break;
-        case MouseEvent::RIGHT_BUTTON_UP:
+        case window::MouseEvent::RIGHT_BUTTON_UP:
             break;
-        case MouseEvent::CURSOR_MOVED:
+        case window::MouseEvent::CURSOR_MOVED:
             if (selected_entity_id.has_value()) {
                 WorldPoint wp = point.to_world_point(camera_center);
                 size_t entity_handle = selected_entity_id.value();
@@ -220,10 +223,10 @@ class Example0CollisionDetection : public Game {
         }
     }
 
-    void handle_keyboard_event(KeyEvent &key, KeyState &key_state) {
+    void handle_keyboard_event(window::KeyEvent &key, window::KeyState &key_state) {
         switch (key) {
-        case KeyEvent::T: {
-            if (key_state != KeyState::DOWN) {
+        case window::KeyEvent::T: {
+            if (key_state != window::KeyState::DOWN) {
                 return;
             }
             state = (state + 1) % 3;
@@ -242,17 +245,17 @@ class Example0CollisionDetection : public Game {
             }
             break;
         }
-        case KeyEvent::R: {
+        case window::KeyEvent::R: {
             if (!selected_entity_id.has_value()) {
                 return;
             }
 
-            if (key_state == KeyState::DOWN) {
+            if (key_state == window::KeyState::DOWN) {
                 ecs.update_component<RigidBody>(
                     selected_entity_id.value(),
                     [](RigidBody &r) { r.angular_velocity = glm::radians(45.0); });
 
-            } else if (key_state == KeyState::UP) {
+            } else if (key_state == window::KeyState::UP) {
                 ecs.update_component<RigidBody>(
                     selected_entity_id.value(),
                     [](RigidBody &r) { r.angular_velocity = 0.0; });
@@ -326,9 +329,9 @@ void state2(EntityComponentStorage &ecs) {
 }
 
 int main() {
-    GameEngineConfig config{.window_config =
-                                WindowConfig{.dims = WindowDimensions(800, 800),
-                                             .title = "0_collision_detection"}};
+    GameEngineConfig config{
+        .window_config = window::WindowConfig{.dims = window::WindowDimension(800, 800),
+                                              .title = "0_collision_detection"}};
 
     auto game = std::make_unique<Example0CollisionDetection>();
     auto game_engine = std::make_unique<GameEngine>(std::move(game), config);

@@ -1,6 +1,6 @@
-#include "render_engine/Window.h"
-#include "render_engine/WindowConfig.h"
-#include "vulkan/vulkan_core.h"
+#include "render_engine/window/Window.h"
+#include "render_engine/window/WindowConfig.h"
+using namespace window;
 
 Window::Window(const WindowConfig &config) : m_config(config) {
     glfwInit();
@@ -47,7 +47,7 @@ VkSurfaceKHR Window::createSurface(VkInstance *instance, GLFWwindow &window) {
 void Window::cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
     auto w = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
     if (w->mouse_event_cb.has_value()) {
-        WindowDimensions dims = w->m_config.dims;
+        WindowDimension dims = w->m_config.dims;
         auto p =
             ViewportPoint(xpos - dims.width / 2.0f, -1.0f * (ypos - dims.height / 2.0f));
         w->mouse_event_cb.value()(MouseEvent::CURSOR_MOVED, p);
@@ -84,7 +84,7 @@ void Window::mouse_button_callback(GLFWwindow *window, int button, int action, i
     if (w->mouse_event_cb.has_value()) {
         double xpos, ypos;
         glfwGetCursorPos(window, &xpos, &ypos);
-        WindowDimensions dims = w->m_config.dims;
+        WindowDimension dims = w->m_config.dims;
         auto p =
             ViewportPoint(xpos - dims.width / 2.0f, -1.0f * (ypos - dims.height / 2.0f));
 

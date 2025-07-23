@@ -1,13 +1,12 @@
-#include "Coordinates.h"
 #include "Game.h"
 #include "GameEngine.h"
 #include "render_engine/PerformanceWindow.h"
-#include "render_engine/WindowConfig.h"
 #include "render_engine/colors.h"
 #include "render_engine/fonts/Font.h"
 #include "render_engine/ui/Button.h"
 #include "render_engine/ui/ElementProperties.h"
 #include "render_engine/ui/UI.h"
+#include "render_engine/window/WindowConfig.h"
 #include <memory>
 
 // FUTURE IMPROVEMENTS (without any particular order):
@@ -242,7 +241,7 @@ class UserInterfaceExample : public Game {
 
     void setup(RenderEngine &render_engine) override {
         render_engine.register_mouse_event_callback(
-            [this](MouseEvent e, ViewportPoint &p) {
+            [this](window::MouseEvent e, window::ViewportPoint &p) {
                 this->m_ui.update_state_from_mouse_event(e, p);
             });
     }
@@ -251,8 +250,8 @@ class UserInterfaceExample : public Game {
 int main() {
 
     GameEngineConfig config{
-        .window_config =
-            WindowConfig{.dims = WindowDimensions(800, 800), .title = "4_user_interface"},
+        .window_config = window::WindowConfig{.dims = window::WindowDimension(800, 800),
+                                              .title = "4_user_interface"},
         .use_font = UseFont::Default,
     };
 

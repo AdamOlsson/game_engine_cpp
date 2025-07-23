@@ -1,8 +1,8 @@
 #pragma once
 
 #include "render_engine/CoreGraphicsContext.h"
-#include "render_engine/Window.h"
 #include "render_engine/util.h"
+#include "render_engine/window/Window.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
 
@@ -37,7 +37,7 @@ class SwapChain {
     VkRenderPass m_render_pass;
 
     SwapChain() = default;
-    SwapChain(std::shared_ptr<CoreGraphicsContext> ctx, const Window &window);
+    SwapChain(std::shared_ptr<CoreGraphicsContext> ctx, const window::Window &window);
     ~SwapChain();
 
     SwapChain(const SwapChain &other) = delete;

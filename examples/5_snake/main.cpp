@@ -4,7 +4,26 @@
 class Snake : public Game {
   private:
   public:
-    Snake() {};
+    Snake() {
+        // create and configure text renderer
+        /*
+         * // Mandatory args
+         * - shaders
+         * - Window()
+         * - SwapChainManager()
+         * - CoreGraphicsContext()
+         * auto builder = TextRendererBuilder();
+         * // Generic
+         * builder.add_buffer(< uniform buffer >);
+         * builder.add_buffer(< storage buffer >);
+         * builder.add_texture(< texture >);
+         *
+         * // Specific
+         * builder.add_font(< font >); // includes kerning
+         *
+         */
+
+    };
     ~Snake() {};
 
     void update(float dt) override {};
@@ -17,8 +36,8 @@ class Snake : public Game {
 int main() {
 
     GameEngineConfig config{
-        .window_config =
-            WindowConfig{.dims = WindowDimensions(800, 800), .title = "Snake"},
+        .window_config = window::WindowConfig{.dims = window::WindowDimension(800, 800),
+                                              .title = "Snake"},
         .use_font = UseFont::Default,
     };
 

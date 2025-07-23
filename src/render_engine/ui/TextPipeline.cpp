@@ -7,6 +7,7 @@
 #include "render_engine/ShaderModule.h"
 #include "render_engine/Texture.h"
 #include "render_engine/resources/ResourceManager.h"
+#include "render_engine/window/Window.h"
 #include "vulkan/vulkan_core.h"
 #include <cstring>
 #include <memory>
@@ -14,10 +15,11 @@
 
 using namespace ui;
 
-TextPipeline::TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
-                           SwapChainManager &swap_chain_manager,
-                           SwapUniformBuffer<WindowDimension<float>> &uniform_buffers,
-                           Sampler &sampler, Texture &texture)
+TextPipeline::TextPipeline(
+    window::Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
+    SwapChainManager &swap_chain_manager,
+    SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers, Sampler &sampler,
+    Texture &texture)
     : m_ctx(ctx), m_character_buffers(SwapGpuBuffer<CharacterInstanceBufferObject>(
                       ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
       m_text_segment_buffers(
@@ -49,7 +51,7 @@ VkDescriptorSetLayout TextPipeline::create_descriptor_set_layout() {
 }
 
 DescriptorSet TextPipeline::create_descriptor_set(
-    SwapUniformBuffer<WindowDimension<float>> &uniform_buffers, Sampler &sampler,
+    SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers, Sampler &sampler,
     Texture &texture) {
     return DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                 MAX_FRAMES_IN_FLIGHT)

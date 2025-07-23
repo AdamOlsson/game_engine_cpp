@@ -2,8 +2,6 @@
 #include "render_engine/GeometryPipeline.h"
 #include "render_engine/RenderBody.h"
 #include "render_engine/SwapChainManager.h"
-#include "render_engine/Window.h"
-#include "render_engine/WindowConfig.h"
 #include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/fonts/Font.h"
 #include "render_engine/resources/ResourceManager.h"
@@ -11,17 +9,20 @@
 #include "render_engine/ui/TextBox.h"
 #include "render_engine/ui/TextPipeline.h"
 #include "render_engine/ui/UIPipeline.h"
+#include "render_engine/window/Window.h"
+#include "render_engine/window/WindowConfig.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
 // TODO: How can I create a proper render hierarchy? Preferably I would want my pipelines
 // to act on some state object for rendering
 
-RenderEngine::RenderEngine(const WindowConfig &window_config, const UseFont use_font)
-    : m_window(Window(window_config)),
+RenderEngine::RenderEngine(const window::WindowConfig &window_config,
+                           const UseFont use_font)
+    : m_window(window::Window(window_config)),
       m_ctx(std::make_shared<CoreGraphicsContext>(m_window)),
-      m_window_dimension_buffers(
-          SwapUniformBuffer<WindowDimension<float>>(m_ctx, MAX_FRAMES_IN_FLIGHT, 1)),
+      m_window_dimension_buffers(SwapUniformBuffer<window::WindowDimension<float>>(
+          m_ctx, MAX_FRAMES_IN_FLIGHT, 1)),
       m_swap_chain_manager(SwapChainManager(m_ctx, m_window)), m_sampler(Sampler(m_ctx))
 
 {
@@ -216,11 +217,11 @@ bool RenderEngine::should_window_close() { return m_window.should_window_close()
 
 void RenderEngine::process_window_events() { m_window.process_window_events(); }
 
-void RenderEngine::register_mouse_event_callback(MouseEventCallbackFn cb) {
+void RenderEngine::register_mouse_event_callback(window::MouseEventCallbackFn cb) {
     m_window.register_mouse_event_callback(cb);
 }
 
-void RenderEngine::register_keyboard_event_callback(KeyboardEventCallbackFn cb) {
+void RenderEngine::register_keyboard_event_callback(window::KeyboardEventCallbackFn cb) {
     m_window.register_keyboard_event_callback(cb);
 }
 

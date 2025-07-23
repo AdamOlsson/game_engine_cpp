@@ -30,15 +30,15 @@ class UIPipeline {
     IndexBuffer m_index_buffer;
 
     VkDescriptorSetLayout create_descriptor_set_layout();
-    DescriptorSet
-    create_descriptor_set(SwapUniformBuffer<WindowDimension<float>> &uniform_buffers);
+    DescriptorSet create_descriptor_set(
+        SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers);
 
     Pipeline create_pipeline(SwapChainManager &swap_chain_manager);
 
   public:
     UIPipeline(std::shared_ptr<CoreGraphicsContext> ctx,
                SwapChainManager &swap_chain_manager,
-               SwapUniformBuffer<WindowDimension<float>> &uniform_buffers);
+               SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers);
     ~UIPipeline();
 
     void render(const VkCommandBuffer &command_buffer,

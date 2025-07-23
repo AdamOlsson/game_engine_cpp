@@ -1,5 +1,5 @@
 #include "CoreGraphicsContext.h"
-#include "render_engine/Window.h"
+#include "render_engine/window/Window.h"
 #include "util.h"
 #include "vulkan/vulkan_beta.h"
 #include "vulkan/vulkan_core.h"
@@ -16,7 +16,7 @@ const std::vector<const char *> device_extensions = {
 
 } // namespace
 
-CoreGraphicsContext::CoreGraphicsContext(const Window &window)
+CoreGraphicsContext::CoreGraphicsContext(const window::Window &window)
     : m_enable_validation_layers(true), m_instance(create_instance()),
       m_debug_messenger(setup_debug_messenger()), surface(create_surface(*window.window)),
       physical_device(pick_physical_device(m_instance, surface)),

@@ -8,10 +8,10 @@
 #include "render_engine/Sampler.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/Texture.h"
-#include "render_engine/Window.h"
 #include "render_engine/buffers/IndexBuffer.h"
 #include "render_engine/buffers/VertexBuffer.h"
 #include "render_engine/colors.h"
+#include "render_engine/window/Window.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 #include <vulkan/vulkan.h>
@@ -65,16 +65,16 @@ class TextPipeline {
     Pipeline m_pipeline;
 
     VkDescriptorSetLayout create_descriptor_set_layout();
-    DescriptorSet
-    create_descriptor_set(SwapUniformBuffer<WindowDimension<float>> &uniform_buffers,
-                          Sampler &sampler, Texture &texture);
+    DescriptorSet create_descriptor_set(
+        SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
+        Sampler &sampler, Texture &texture);
     Pipeline create_pipeline(VkDescriptorSetLayout &descriptor_set_layout,
                              SwapChainManager &swap_chain_manager);
 
   public:
-    TextPipeline(Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
+    TextPipeline(window::Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
                  SwapChainManager &swap_chain,
-                 SwapUniformBuffer<WindowDimension<float>> &uniform_buffers,
+                 SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
                  Sampler &sampler, Texture &texture);
     ~TextPipeline();
 

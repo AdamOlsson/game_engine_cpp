@@ -1,6 +1,6 @@
 #pragma once
 
-#include "render_engine/Window.h"
+#include "render_engine/window/Window.h"
 #include "vulkan/vulkan_core.h"
 #include <vector>
 
@@ -41,7 +41,7 @@ class CoreGraphicsContext {
     VkPhysicalDevice physical_device;
     VkDevice device;
 
-    CoreGraphicsContext(const Window &window);
+    CoreGraphicsContext(const window::Window &window);
     ~CoreGraphicsContext();
 
     void wait_idle();

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Coordinates.h"
-#include "render_engine/Window.h"
 #include "render_engine/ui/Menu.h"
 #include "render_engine/ui/State.h"
 #include "render_engine/ui/TextBox.h"
+#include "render_engine/window/MouseEvent.h"
+#include "render_engine/window/ViewportPoint.h"
 #include <unordered_map>
 namespace ui {
 
@@ -18,15 +18,16 @@ class UI {
     std::vector<ui::Menu *> m_menu_trace;
     Menu *m_last_menu_in_trace;
 
-    bool is_inside(const ViewportPoint &cursor_pos, const ElementProperties &element);
+    bool is_inside(const window::ViewportPoint &cursor_pos,
+                   const ElementProperties &element);
 
     Menu *get_last_menu();
 
     // TODO: These can probably be merged to a single function and use event based args
-    ui::State &update_state_using_cursor(const ViewportPoint &cursor_pos);
+    ui::State &update_state_using_cursor(const window::ViewportPoint &cursor_pos);
     ui::State &update_state_using_keypress();
-    ui::State &update_state_using_click_event(const MouseEvent mouse_event,
-                                              const ViewportPoint &cursor_pos);
+    ui::State &update_state_using_click_event(const window::MouseEvent mouse_event,
+                                              const window::ViewportPoint &cursor_pos);
 
   public:
     UI() = default;
@@ -44,8 +45,8 @@ class UI {
     TextBox &get_text_box(const std::string &id);
 
     ui::State &get_state();
-    ui::State &update_state_from_mouse_event(const MouseEvent mouse_event,
-                                             const ViewportPoint &cursor_pos);
+    ui::State &update_state_from_mouse_event(const window::MouseEvent mouse_event,
+                                             const window::ViewportPoint &cursor_pos);
 
     void push_new_menu(Menu *new_menu);
     void pop_menu();

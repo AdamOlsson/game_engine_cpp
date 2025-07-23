@@ -9,6 +9,7 @@
 #include "render_engine/Texture.h"
 #include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/resources/ResourceManager.h"
+#include "render_engine/window/Window.h"
 #include "shape.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
@@ -19,9 +20,9 @@
 #include <vector>
 
 GeometryPipeline::GeometryPipeline(
-    Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
+    window::Window &window, std::shared_ptr<CoreGraphicsContext> ctx,
     SwapChainManager &swap_chain_manager,
-    SwapUniformBuffer<WindowDimension<float>> &uniform_buffers, Sampler &sampler,
+    SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers, Sampler &sampler,
     Texture &texture)
     : m_ctx(ctx), m_circle_instance_buffers(SwapGpuBuffer<GeometryInstanceBufferObject>(
                       ctx, MAX_FRAMES_IN_FLIGHT, 1024)),

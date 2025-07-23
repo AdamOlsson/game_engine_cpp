@@ -4,7 +4,7 @@
 #include <optional>
 
 SwapChainManager::SwapChainManager(std::shared_ptr<CoreGraphicsContext> ctx,
-                                   const Window &window)
+                                   const window::Window &window)
     : m_window(&window), m_ctx(ctx), m_next_frame_buffer(0),
       m_swap_chain(SwapChain(ctx, window)),
       m_command_buffer_manager(CommandBufferManager(m_ctx, MAX_FRAMES_IN_FLIGHT)),

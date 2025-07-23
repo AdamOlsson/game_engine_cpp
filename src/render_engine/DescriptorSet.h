@@ -5,8 +5,6 @@
 #include "render_engine/Sampler.h"
 #include "render_engine/Texture.h"
 #include "render_engine/buffers/GpuBuffer.h"
-
-#include "io.h"
 #include <cstddef>
 
 class DescriptorSet {

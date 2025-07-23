@@ -1,46 +1,14 @@
 #pragma once
 
-#include "Coordinates.h"
-#include "render_engine/WindowConfig.h"
+#include "KeyEvent.h"
+#include "MouseEvent.h"
+#include "WindowConfig.h"
+#include "render_engine/window/WindowDimension.h"
 #define GLFW_INCLUDE_VULKAN
-#include "traits.h"
 #include <GLFW/glfw3.h>
-#include <functional>
 #include <optional>
-#include <ostream>
 
-enum class MouseEvent {
-    CURSOR_MOVED,
-    LEFT_BUTTON_DOWN,
-    LEFT_BUTTON_UP,
-    RIGHT_BUTTON_DOWN,
-    RIGHT_BUTTON_UP
-};
-
-enum class KeyEvent {
-    R,
-    T,
-};
-
-enum class KeyState { DOWN, REPEAT, UP };
-
-std::ostream &operator<<(std::ostream &os, const KeyEvent &k);
-std::ostream &operator<<(std::ostream &os, const KeyState &k);
-
-template <Printable T> struct WindowDimension {
-    T width;
-    T height;
-
-    WindowDimension(T w, T h) : width(w), height(h) {}
-};
-
-template <typename T>
-std::ostream &operator<<(std::ostream &os, const WindowDimension<T> &dim) {
-    return os << "WindowDimension(" << dim.width << ", " << dim.height << ")";
-}
-
-using MouseEventCallbackFn = std::function<void(MouseEvent, ViewportPoint &)>;
-using KeyboardEventCallbackFn = std::function<void(KeyEvent &, KeyState &)>;
+namespace window {
 
 /**
  * @brief Wrapper class for GLFW window api.
@@ -87,3 +55,5 @@ class Window {
     static void keyboard_callback(GLFWwindow *window, int key, int scancode, int action,
                                   int mods);
 };
+
+} // namespace window
