@@ -44,30 +44,11 @@ class RenderEngine {
     RenderEngine(std::shared_ptr<CoreGraphicsContext> ctx, const UseFont use_font);
     ~RenderEngine();
 
-    /*bool should_window_close();*/
-
-    /**
-     * @brief Processes any events GLFW has queued. This function triggers any callback
-     * registered. Currently only forwards the call to the Window class member.
-     */
-    /*void process_window_events();*/
-
-    /**
-     * @brief Register a callback function for mouse input events. Currently only forwards
-     * the call to the Window class member.
-     * @param cb The callback function which is triggered after a mouse input event.
-     */
-    /*void register_mouse_event_callback(window::MouseEventCallbackFn);*/
-
-    /*void register_keyboard_event_callback(window::KeyboardEventCallbackFn);*/
-
     void render(const std::vector<std::reference_wrapper<const RenderBody>> &bodies);
 
     void render_text(const ui::TextBox &text_box);
 
     void render_ui(const ui::State &state);
-
-    /*void wait_idle();*/
 
     bool begin_render_pass();
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Game.h"
-#include "render_engine/RenderEngine.h"
 #include "render_engine/window/WindowConfig.h"
 #include <memory>
 

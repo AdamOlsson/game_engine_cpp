@@ -209,21 +209,6 @@ void RenderEngine::render_ui(const ui::State &state) {
     m_text_pipeline->render_text(m_current_render_pass.command_buffer.m_command_buffer);
 }
 
-/*void RenderEngine::wait_idle() { m_ctx->wait_idle(); }*/
-
-/*bool RenderEngine::should_window_close() { return m_window->should_window_close(); }*/
-
-/*void RenderEngine::process_window_events() { m_window->process_window_events(); }*/
-
-/*void RenderEngine::register_mouse_event_callback(window::MouseEventCallbackFn cb) {*/
-/*    m_window->register_mouse_event_callback(cb);*/
-/*}*/
-
-/*void RenderEngine::register_keyboard_event_callback(window::KeyboardEventCallbackFn cb)
- * {*/
-/*    m_window->register_keyboard_event_callback(cb);*/
-/*}*/
-
 bool RenderEngine::begin_render_pass() {
     auto command_buffer_ = m_swap_chain_manager.get_command_buffer();
     if (!command_buffer_.has_value()) {

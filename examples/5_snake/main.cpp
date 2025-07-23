@@ -1,11 +1,11 @@
 #include "Game.h"
 #include "GameEngine.h"
 
+// CONTINUE: Move render setup from RenderEngine to setup function
 class Snake : public Game {
   private:
   public:
     Snake() {
-        /*auto swap_chain_manager = SwapChainManager(ctx, window);*/
         // create and configure text renderer
         /*
          * // Mandatory args

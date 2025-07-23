@@ -3,6 +3,7 @@
 #include "render_engine/PerformanceWindow.h"
 #include "render_engine/colors.h"
 #include "render_engine/fonts/Font.h"
+#include "render_engine/resources/ResourceManager.h"
 #include "render_engine/ui/Button.h"
 #include "render_engine/ui/ElementProperties.h"
 #include "render_engine/ui/UI.h"
@@ -240,6 +241,10 @@ class UserInterfaceExample : public Game {
     };
 
     void setup(std::shared_ptr<CoreGraphicsContext> &ctx) override {
+        /*register_all_fonts();*/
+        /*register_all_images();*/
+        /*register_all_shaders();*/
+
         ctx->window->register_mouse_event_callback(
             [this](window::MouseEvent e, window::ViewportPoint &p) {
                 this->m_ui.update_state_from_mouse_event(e, p);

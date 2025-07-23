@@ -1,4 +1,4 @@
-#include "ResourceManager.h"
+#include "render_engine/resources/ResourceManager.h"
 #include "render_engine/resources/fonts/FontResource.h"
 #include "render_engine/resources/images/ImageResource.h"
 
@@ -14,9 +14,9 @@ void register_all_fonts() {
 void register_all_images() {
     ResourceManager &instance = ResourceManager::get_instance();
 
-    auto fonts = fetch_all_images();
-    for (auto &f : fonts) {
-        instance.register_resource<ImageResource>(std::move(f));
+    auto images = fetch_all_images();
+    for (auto &i : images) {
+        instance.register_resource<ImageResource>(std::move(i));
     }
 }
 
