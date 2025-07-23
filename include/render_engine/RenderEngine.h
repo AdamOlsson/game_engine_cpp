@@ -16,7 +16,7 @@ class RenderEngine {
   private:
     bool framebuffer_resized = false;
 
-    DeviceQueues m_device_queues;
+    /*DeviceQueues m_device_queues;*/
 
     SwapUniformBuffer<window::WindowDimension<float>> m_window_dimension_buffers;
 
@@ -49,7 +49,7 @@ class RenderEngine {
 
     void render_ui(const ui::State &state);
 
-    bool begin_render_pass();
+    bool begin_render_pass(DeviceQueues &m_device_queues);
 
-    bool end_render_pass();
+    bool end_render_pass(DeviceQueues &m_device_queues);
 };

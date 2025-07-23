@@ -28,12 +28,12 @@ RenderEngine::RenderEngine(std::shared_ptr<CoreGraphicsContext> ctx,
 
     m_window_dimension_buffers.write(ctx->window->dimensions<float>());
 
-    m_device_queues = ctx->get_device_queues();
+    auto device_queues = ctx->get_device_queues();
 
     auto &resource_manager = ResourceManager::get_instance();
     auto dog_image = resource_manager.get_resource<ImageResource>("DogImage");
     m_texture = Texture::unique_from_image_resource(
-        ctx, *m_swap_chain_manager, m_device_queues.graphics_queue, dog_image);
+        ctx, *m_swap_chain_manager, device_queues.graphics_queue, dog_image);
 
     m_geometry_pipeline = std::make_unique<GeometryPipeline>(
         ctx, *m_swap_chain_manager, m_window_dimension_buffers, m_sampler, *m_texture);
@@ -42,7 +42,7 @@ RenderEngine::RenderEngine(std::shared_ptr<CoreGraphicsContext> ctx,
     case UseFont::Default: {
         auto default_font = resource_manager.get_resource<FontResource>("DefaultFont");
         m_font = std::make_unique<Font>(ctx, *m_swap_chain_manager,
-                                        m_device_queues.graphics_queue, default_font);
+                                        device_queues.graphics_queue, default_font);
         break;
     }
     default:
@@ -205,7 +205,7 @@ void RenderEngine::render_ui(const ui::State &state) {
     m_text_pipeline->render_text(m_current_render_pass.command_buffer.m_command_buffer);
 }
 
-bool RenderEngine::begin_render_pass() {
+bool RenderEngine::begin_render_pass(DeviceQueues &m_device_queues) {
     auto command_buffer_ = m_swap_chain_manager->get_command_buffer();
     if (!command_buffer_.has_value()) {
         return false;
@@ -222,7 +222,7 @@ bool RenderEngine::begin_render_pass() {
     return true;
 }
 
-bool RenderEngine::end_render_pass() {
+bool RenderEngine::end_render_pass(DeviceQueues &m_device_queues) {
     auto &command_buffer = m_current_render_pass.command_buffer;
 
     command_buffer.end_render_pass();

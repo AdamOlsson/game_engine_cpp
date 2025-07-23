@@ -90,28 +90,29 @@ class ShapeRendering : public Game {
     }
 
     void render(RenderEngine &render_engine) override {
-        std::vector<std::reference_wrapper<const RenderBody>> render_bodies = {};
-        for (auto it = ecs.begin<RenderBody>(); it != ecs.end<RenderBody>(); it++) {
-            render_bodies.push_back(ecs.get_component<RenderBody>(it.id()).value());
-        }
-
-        bool success = render_engine.begin_render_pass();
-        if (!success) {
-            return;
-        }
-
-        render_engine.render(render_bodies);
-
-        render_engine.render_text(
-            ui::TextBox("ADAM", ui::ElementProperties{.font.size = 128}));
-        render_engine.render_text(ui::TextBox(
-            "LINDA", ui::ElementProperties{.container.center = glm::vec2(0.0f, 100.0f),
-                                           .font.size = 64}));
-
-        success = render_engine.end_render_pass();
-        if (!success) {
-            return;
-        }
+        /*std::vector<std::reference_wrapper<const RenderBody>> render_bodies = {};*/
+        /*for (auto it = ecs.begin<RenderBody>(); it != ecs.end<RenderBody>(); it++) {*/
+        /*    render_bodies.push_back(ecs.get_component<RenderBody>(it.id()).value());*/
+        /*}*/
+        /**/
+        /*bool success = render_engine.begin_render_pass();*/
+        /*if (!success) {*/
+        /*    return;*/
+        /*}*/
+        /**/
+        /*render_engine.render(render_bodies);*/
+        /**/
+        /*render_engine.render_text(*/
+        /*    ui::TextBox("ADAM", ui::ElementProperties{.font.size = 128}));*/
+        /*render_engine.render_text(ui::TextBox(*/
+        /*    "LINDA", ui::ElementProperties{.container.center = glm::vec2(0.0f,
+           100.0f),*/
+        /*                                   .font.size = 64}));*/
+        /**/
+        /*success = render_engine.end_render_pass();*/
+        /*if (!success) {*/
+        /*    return;*/
+        /*}*/
     };
 };
 

@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "GameEngine.h"
+#include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/PerformanceWindow.h"
 #include "render_engine/colors.h"
 #include "render_engine/fonts/Font.h"
@@ -34,6 +35,8 @@ void on_leave_callback(ui::Button &self) {
 class UserInterfaceExample : public Game {
   private:
     ui::UI m_ui;
+    DeviceQueues
+        m_device_queues; // TODO: Request from CoreGraphicsContext instead of storing
 
     const std::string VERSION_ID = "VERSION";
     const std::string NUMBER_ID = "NUMBER";
@@ -215,7 +218,8 @@ class UserInterfaceExample : public Game {
     void update(float dt) override {};
 
     void render(RenderEngine &render_engine) override {
-        bool success = render_engine.begin_render_pass();
+
+        bool success = render_engine.begin_render_pass(m_device_queues);
         if (!success) {
             return;
         }
@@ -234,7 +238,7 @@ class UserInterfaceExample : public Game {
 
         PerformanceWindow::get_instance().render(render_engine);
 
-        success = render_engine.end_render_pass();
+        success = render_engine.end_render_pass(m_device_queues);
         if (!success) {
             return;
         }
@@ -244,6 +248,7 @@ class UserInterfaceExample : public Game {
         register_all_fonts();
         register_all_images();
         register_all_shaders();
+        m_device_queues = ctx->get_device_queues();
 
         ctx->window->register_mouse_event_callback(
             [this](window::MouseEvent e, window::ViewportPoint &p) {

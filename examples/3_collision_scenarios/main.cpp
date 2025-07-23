@@ -110,28 +110,28 @@ class Example3CollisionTypes : public Game {
     };
 
     void render(RenderEngine &render_engine) override {
-        std::vector<std::reference_wrapper<const RenderBody>> render_bodies = {};
-
-        for (auto it = ecs.begin<RenderBody>(); it != ecs.end<RenderBody>(); it++) {
-            auto &render_body = *it;
-            auto rigid_body = ecs.get_component<RigidBody>(it.id()).value();
-            render_body.position = rigid_body.get().position;
-            render_body.rotation = rigid_body.get().rotation;
-            render_body.shape = rigid_body.get().shape;
-            render_bodies.push_back(render_body);
-        }
-
-        bool success = render_engine.begin_render_pass();
-        if (!success) {
-            return;
-        }
-
-        render_engine.render(render_bodies);
-
-        success = render_engine.end_render_pass();
-        if (!success) {
-            return;
-        }
+        /*std::vector<std::reference_wrapper<const RenderBody>> render_bodies = {};*/
+        /**/
+        /*for (auto it = ecs.begin<RenderBody>(); it != ecs.end<RenderBody>(); it++) {*/
+        /*    auto &render_body = *it;*/
+        /*    auto rigid_body = ecs.get_component<RigidBody>(it.id()).value();*/
+        /*    render_body.position = rigid_body.get().position;*/
+        /*    render_body.rotation = rigid_body.get().rotation;*/
+        /*    render_body.shape = rigid_body.get().shape;*/
+        /*    render_bodies.push_back(render_body);*/
+        /*}*/
+        /**/
+        /*bool success = render_engine.begin_render_pass();*/
+        /*if (!success) {*/
+        /*    return;*/
+        /*}*/
+        /**/
+        /*render_engine.render(render_bodies);*/
+        /**/
+        /*success = render_engine.end_render_pass();*/
+        /*if (!success) {*/
+        /*    return;*/
+        /*}*/
     };
 
     void setup(std::shared_ptr<CoreGraphicsContext> &ctx) override {

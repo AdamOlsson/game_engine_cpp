@@ -101,61 +101,63 @@ class Example0CollisionDetection : public Game {
     };
 
     void render(RenderEngine &render_engine) override {
-        std::vector<std::reference_wrapper<const RenderBody>> render_bodies = {};
-
-        for (auto it = ecs.begin<RenderBody>(); it != ecs.end<RenderBody>(); it++) {
-            auto &render_body = *it;
-            auto rigid_body = ecs.get_component<RigidBody>(it.id()).value();
-            render_body.position = rigid_body.get().position;
-            render_body.rotation = rigid_body.get().rotation;
-            render_body.shape = rigid_body.get().shape;
-            render_bodies.push_back(render_body);
-        }
-
-        if (collision_point.has_value()) {
-            switch (collision_point->contact_type) {
-            case ContactType::NONE:
-                break;
-            case ContactType::VERTEX_VERTEX:
-            case ContactType::VERTEX_EDGE: {
-                const RenderBody r = RenderBody{
-                    .color = colors::YELLOW,
-                    .position = collision_point
-                                    ->contact_patch[collision_point->deepest_contact_idx],
-                    .shape = Shape::create_circle_data(10.0)};
-                render_bodies.push_back(std::cref(r));
-                break;
-            }
-            case ContactType::EDGE_EDGE: {
-                const auto line =
-                    collision_point->contact_patch[1] - collision_point->contact_patch[0];
-                const auto center = collision_point->contact_patch[0] + (line / 2.0f);
-                const float length = glm::length(line);
-                const float thickness = 10.0f;
-                const float rotation =
-                    std::atan2(line.y, line.x); // Crazy expensive operation
-                const RenderBody r =
-                    RenderBody{.color = colors::YELLOW,
-                               .position = center,
-                               .rotation = -rotation, // glm has opposite hand system
-                               .shape = Shape::create_rectangle_data(length, thickness)};
-                render_bodies.push_back(std::cref(r));
-                break;
-            }
-            };
-        }
-
-        bool success = render_engine.begin_render_pass();
-        if (!success) {
-            return;
-        }
-
-        render_engine.render(render_bodies);
-
-        success = render_engine.end_render_pass();
-        if (!success) {
-            return;
-        }
+        /*std::vector<std::reference_wrapper<const RenderBody>> render_bodies = {};*/
+        /**/
+        /*for (auto it = ecs.begin<RenderBody>(); it != ecs.end<RenderBody>(); it++) {*/
+        /*    auto &render_body = *it;*/
+        /*    auto rigid_body = ecs.get_component<RigidBody>(it.id()).value();*/
+        /*    render_body.position = rigid_body.get().position;*/
+        /*    render_body.rotation = rigid_body.get().rotation;*/
+        /*    render_body.shape = rigid_body.get().shape;*/
+        /*    render_bodies.push_back(render_body);*/
+        /*}*/
+        /**/
+        /*if (collision_point.has_value()) {*/
+        /*    switch (collision_point->contact_type) {*/
+        /*    case ContactType::NONE:*/
+        /*        break;*/
+        /*    case ContactType::VERTEX_VERTEX:*/
+        /*    case ContactType::VERTEX_EDGE: {*/
+        /*        const RenderBody r = RenderBody{*/
+        /*            .color = colors::YELLOW,*/
+        /*            .position = collision_point*/
+        /*                            ->contact_patch[collision_point->deepest_contact_idx],*/
+        /*            .shape = Shape::create_circle_data(10.0)};*/
+        /*        render_bodies.push_back(std::cref(r));*/
+        /*        break;*/
+        /*    }*/
+        /*    case ContactType::EDGE_EDGE: {*/
+        /*        const auto line =*/
+        /*            collision_point->contact_patch[1] -
+         * collision_point->contact_patch[0];*/
+        /*        const auto center = collision_point->contact_patch[0] + (line / 2.0f);*/
+        /*        const float length = glm::length(line);*/
+        /*        const float thickness = 10.0f;*/
+        /*        const float rotation =*/
+        /*            std::atan2(line.y, line.x); // Crazy expensive operation*/
+        /*        const RenderBody r =*/
+        /*            RenderBody{.color = colors::YELLOW,*/
+        /*                       .position = center,*/
+        /*                       .rotation = -rotation, // glm has opposite hand system*/
+        /*                       .shape = Shape::create_rectangle_data(length,
+         * thickness)};*/
+        /*        render_bodies.push_back(std::cref(r));*/
+        /*        break;*/
+        /*    }*/
+        /*    };*/
+        /*}*/
+        /**/
+        /*bool success = render_engine.begin_render_pass();*/
+        /*if (!success) {*/
+        /*    return;*/
+        /*}*/
+        /**/
+        /*render_engine.render(render_bodies);*/
+        /**/
+        /*success = render_engine.end_render_pass();*/
+        /*if (!success) {*/
+        /*    return;*/
+        /*}*/
         collision_point = std::nullopt;
     };
 
