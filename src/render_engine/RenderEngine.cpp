@@ -17,10 +17,8 @@
 // to act on some state object for rendering
 
 RenderEngine::RenderEngine(std::shared_ptr<CoreGraphicsContext> ctx,
-                           const UseFont use_font)
-    : m_swap_chain_manager(std::make_unique<SwapChainManager>(ctx)),
-
-      m_window_dimension_buffers(SwapUniformBuffer<window::WindowDimension<float>>(
+                           SwapChainManager *swap_chain_manager, const UseFont use_font)
+    : m_window_dimension_buffers(SwapUniformBuffer<window::WindowDimension<float>>(
           ctx, MAX_FRAMES_IN_FLIGHT, 1)),
       m_sampler(Sampler(ctx))
 
@@ -33,15 +31,15 @@ RenderEngine::RenderEngine(std::shared_ptr<CoreGraphicsContext> ctx,
     auto &resource_manager = ResourceManager::get_instance();
     auto dog_image = resource_manager.get_resource<ImageResource>("DogImage");
     m_texture = Texture::unique_from_image_resource(
-        ctx, *m_swap_chain_manager, device_queues.graphics_queue, dog_image);
+        ctx, *swap_chain_manager, device_queues.graphics_queue, dog_image);
 
     m_geometry_pipeline = std::make_unique<GeometryPipeline>(
-        ctx, *m_swap_chain_manager, m_window_dimension_buffers, m_sampler, *m_texture);
+        ctx, *swap_chain_manager, m_window_dimension_buffers, m_sampler, *m_texture);
 
     switch (use_font) {
     case UseFont::Default: {
         auto default_font = resource_manager.get_resource<FontResource>("DefaultFont");
-        m_font = std::make_unique<Font>(ctx, *m_swap_chain_manager,
+        m_font = std::make_unique<Font>(ctx, *swap_chain_manager,
                                         device_queues.graphics_queue, default_font);
         break;
     }
@@ -52,11 +50,11 @@ RenderEngine::RenderEngine(std::shared_ptr<CoreGraphicsContext> ctx,
 
     if (m_font != nullptr) {
         m_text_pipeline = std::make_unique<ui::TextPipeline>(
-            ctx, *m_swap_chain_manager, m_window_dimension_buffers, m_sampler,
+            ctx, *swap_chain_manager, m_window_dimension_buffers, m_sampler,
             *m_font->font_atlas);
     }
 
-    m_ui_pipeline = std::make_unique<ui::UIPipeline>(ctx, *m_swap_chain_manager,
+    m_ui_pipeline = std::make_unique<ui::UIPipeline>(ctx, *swap_chain_manager,
                                                      m_window_dimension_buffers);
 }
 
@@ -205,8 +203,9 @@ void RenderEngine::render_ui(const ui::State &state) {
     m_text_pipeline->render_text(m_current_render_pass.command_buffer.m_command_buffer);
 }
 
-bool RenderEngine::begin_render_pass(DeviceQueues &m_device_queues) {
-    auto command_buffer_ = m_swap_chain_manager->get_command_buffer();
+bool RenderEngine::begin_render_pass(SwapChainManager *swap_chain_manager,
+                                     DeviceQueues &m_device_queues) {
+    auto command_buffer_ = swap_chain_manager->get_command_buffer();
     if (!command_buffer_.has_value()) {
         return false;
     }
@@ -214,15 +213,16 @@ bool RenderEngine::begin_render_pass(DeviceQueues &m_device_queues) {
 
     command_buffer.begin_render_pass();
     command_buffer.set_viewport(
-        Dimension::from_extent2d(m_swap_chain_manager->m_swap_chain.m_extent));
-    command_buffer.set_scissor(m_swap_chain_manager->m_swap_chain.m_extent);
+        Dimension::from_extent2d(swap_chain_manager->m_swap_chain.m_extent));
+    command_buffer.set_scissor(swap_chain_manager->m_swap_chain.m_extent);
 
     m_current_render_pass.command_buffer = std::move(command_buffer);
 
     return true;
 }
 
-bool RenderEngine::end_render_pass(DeviceQueues &m_device_queues) {
+bool RenderEngine::end_render_pass(SwapChainManager *swap_chain_manager,
+                                   DeviceQueues &m_device_queues) {
     auto &command_buffer = m_current_render_pass.command_buffer;
 
     command_buffer.end_render_pass();
@@ -233,7 +233,7 @@ bool RenderEngine::end_render_pass(DeviceQueues &m_device_queues) {
     // window is resized
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
         framebuffer_resized) {
-        m_swap_chain_manager->recreate_swap_chain();
+        swap_chain_manager->recreate_swap_chain();
 
         return false;
         // It is important to do this after vkQueuePresentKHR to ensure that the

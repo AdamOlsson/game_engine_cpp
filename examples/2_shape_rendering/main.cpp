@@ -89,7 +89,7 @@ class ShapeRendering : public Game {
         register_all_images();
     }
 
-    void render(RenderEngine &render_engine) override {
+    void render() override {
         /*std::vector<std::reference_wrapper<const RenderBody>> render_bodies = {};*/
         /*for (auto it = ecs.begin<RenderBody>(); it != ecs.end<RenderBody>(); it++) {*/
         /*    render_bodies.push_back(ecs.get_component<RenderBody>(it.id()).value());*/

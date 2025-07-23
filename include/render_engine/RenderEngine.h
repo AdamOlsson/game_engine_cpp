@@ -16,11 +16,7 @@ class RenderEngine {
   private:
     bool framebuffer_resized = false;
 
-    /*DeviceQueues m_device_queues;*/
-
     SwapUniformBuffer<window::WindowDimension<float>> m_window_dimension_buffers;
-
-    std::unique_ptr<SwapChainManager> m_swap_chain_manager;
 
     Sampler m_sampler;
     std::unique_ptr<Texture> m_texture; // Having this unique prevents a segfault
@@ -40,7 +36,8 @@ class RenderEngine {
                       const ui::ElementProperties properties);
 
   public:
-    RenderEngine(std::shared_ptr<CoreGraphicsContext> ctx, const UseFont use_font);
+    RenderEngine(std::shared_ptr<CoreGraphicsContext> ctx,
+                 SwapChainManager *swap_chain_manager, const UseFont use_font);
     ~RenderEngine();
 
     void render(const std::vector<std::reference_wrapper<const RenderBody>> &bodies);
@@ -49,7 +46,9 @@ class RenderEngine {
 
     void render_ui(const ui::State &state);
 
-    bool begin_render_pass(DeviceQueues &m_device_queues);
+    bool begin_render_pass(SwapChainManager *swap_chain_manager,
+                           DeviceQueues &m_device_queues);
 
-    bool end_render_pass(DeviceQueues &m_device_queues);
+    bool end_render_pass(SwapChainManager *swap_chain_manager,
+                         DeviceQueues &m_device_queues);
 };

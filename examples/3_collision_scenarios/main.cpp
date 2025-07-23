@@ -9,6 +9,7 @@
 #include "physics_engine/broadphase/SpatialSubdivision.h"
 #include "physics_engine/collision_resolver.h"
 #include "render_engine/RenderBody.h"
+#include "render_engine/colors.h"
 #include "render_engine/resources/ResourceManager.h"
 #include <functional>
 #include <memory>
@@ -109,7 +110,7 @@ class Example3CollisionTypes : public Game {
         }
     };
 
-    void render(RenderEngine &render_engine) override {
+    void render() override {
         /*std::vector<std::reference_wrapper<const RenderBody>> render_bodies = {};*/
         /**/
         /*for (auto it = ecs.begin<RenderBody>(); it != ecs.end<RenderBody>(); it++) {*/

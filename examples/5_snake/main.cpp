@@ -32,7 +32,7 @@ class Snake : public Game {
 
     void update(float dt) override {};
 
-    void render(RenderEngine &render_engine) override {};
+    void render() override {};
 
     void setup(std::shared_ptr<CoreGraphicsContext> &ctx) override {}
 };

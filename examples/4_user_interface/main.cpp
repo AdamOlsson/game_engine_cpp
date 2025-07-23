@@ -37,6 +37,8 @@ class UserInterfaceExample : public Game {
     ui::UI m_ui;
     DeviceQueues
         m_device_queues; // TODO: Request from CoreGraphicsContext instead of storing
+    std::unique_ptr<RenderEngine> m_render_engine; // TODO: Remove
+    std::unique_ptr<SwapChainManager> m_swap_chain_manager;
 
     const std::string VERSION_ID = "VERSION";
     const std::string NUMBER_ID = "NUMBER";
@@ -217,9 +219,10 @@ class UserInterfaceExample : public Game {
 
     void update(float dt) override {};
 
-    void render(RenderEngine &render_engine) override {
+    void render() override {
 
-        bool success = render_engine.begin_render_pass(m_device_queues);
+        bool success = m_render_engine->begin_render_pass(m_swap_chain_manager.get(),
+                                                          m_device_queues);
         if (!success) {
             return;
         }
@@ -234,11 +237,12 @@ class UserInterfaceExample : public Game {
 
         auto ui_state = m_ui.get_state();
 
-        render_engine.render_ui(ui_state);
+        m_render_engine->render_ui(ui_state);
 
-        PerformanceWindow::get_instance().render(render_engine);
+        PerformanceWindow::get_instance().render(*m_render_engine);
 
-        success = render_engine.end_render_pass(m_device_queues);
+        success =
+            m_render_engine->end_render_pass(m_swap_chain_manager.get(), m_device_queues);
         if (!success) {
             return;
         }
@@ -249,6 +253,12 @@ class UserInterfaceExample : public Game {
         register_all_images();
         register_all_shaders();
         m_device_queues = ctx->get_device_queues();
+
+        m_swap_chain_manager = std::make_unique<SwapChainManager>(
+            ctx); // Maybe associate with CoreGraphicsContext
+
+        m_render_engine = std::make_unique<RenderEngine>(
+            ctx, m_swap_chain_manager.get(), UseFont::Default); // TODO: remove
 
         ctx->window->register_mouse_event_callback(
             [this](window::MouseEvent e, window::ViewportPoint &p) {

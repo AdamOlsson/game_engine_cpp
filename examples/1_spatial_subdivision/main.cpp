@@ -104,7 +104,7 @@ class Example1SpatialSubdivision : public Game {
         }
     };
 
-    void render(RenderEngine &render_engine) override {
+    void render() override {
         /*std::vector<std::reference_wrapper<const RenderBody>> render_bodies = {};*/
         /**/
         /*for (auto it = ecs.begin<RenderBody>(); it != ecs.end<RenderBody>(); it++) {*/
