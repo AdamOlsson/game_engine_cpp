@@ -32,8 +32,8 @@ VkInstance Instance::create_instance() {
         createInfo.enabledLayerCount =
             static_cast<uint32_t>(validation_layers::validation_layers.size());
         createInfo.ppEnabledLayerNames = validation_layers::validation_layers.data();
-        validation_layers::messenger::populate_debug_messenger_create_info(
-            debugCreateInfo);
+        validation_layers::messenger::DebugMessenger::
+            populate_debug_messenger_create_info(debugCreateInfo);
         createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT *)&debugCreateInfo;
     } else {
         createInfo.enabledLayerCount = 0;
@@ -80,4 +80,18 @@ std::vector<const char *> Instance::get_required_extensions() {
     extensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
 
     return extensions;
+}
+
+void Instance::print_enabled_extensions() {
+    uint32_t extensionCount = 0;
+    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+
+    std::vector<VkExtensionProperties> extensions(extensionCount);
+    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
+
+    // Print all supported extensions
+    std::cout << "Available m_instance extensions:" << std::endl;
+    for (const auto &ext : extensions) {
+        std::cout << ext.extensionName << std::endl;
+    }
 }

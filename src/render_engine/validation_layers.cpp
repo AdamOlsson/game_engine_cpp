@@ -25,7 +25,49 @@ bool validation_layers::check_validation_layer_support() {
     return true;
 }
 
-void validation_layers::messenger::populate_debug_messenger_create_info(
+validation_layers::messenger::DebugMessenger::DebugMessenger(Instance &instance)
+    : m_instance(&instance), m_debug_messenger(setup_debug_messenger()) {}
+
+validation_layers::messenger::DebugMessenger::~DebugMessenger() {
+    destroy_debug_messenger_ext();
+}
+
+VkDebugUtilsMessengerEXT
+validation_layers::messenger::DebugMessenger::setup_debug_messenger() {
+
+    VkDebugUtilsMessengerCreateInfoEXT create_info;
+    validation_layers::messenger::DebugMessenger::populate_debug_messenger_create_info(
+        create_info);
+
+    VkDebugUtilsMessengerEXT debug_messenger;
+    if (create_debug_utils_messenger_ext(&create_info, &debug_messenger) != VK_SUCCESS) {
+        throw std::runtime_error("failed to set up debug messenger!");
+    }
+    return debug_messenger;
+}
+
+VkResult validation_layers::messenger::DebugMessenger::create_debug_utils_messenger_ext(
+    const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
+    VkDebugUtilsMessengerEXT *pDebugMessenger) {
+    auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
+        m_instance->instance, "vkCreateDebugUtilsMessengerEXT");
+
+    if (func != nullptr) {
+        return func(m_instance->instance, pCreateInfo, nullptr, pDebugMessenger);
+    } else {
+        return VK_ERROR_EXTENSION_NOT_PRESENT;
+    }
+}
+
+void validation_layers::messenger::DebugMessenger::destroy_debug_messenger_ext() {
+    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
+        m_instance->instance, "vkDestroyDebugUtilsMessengerEXT");
+    if (func != nullptr) {
+        func(m_instance->instance, m_debug_messenger.value(), nullptr);
+    }
+}
+
+void validation_layers::messenger::DebugMessenger::populate_debug_messenger_create_info(
     VkDebugUtilsMessengerCreateInfoEXT &create_info) {
     create_info = {};
     create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;

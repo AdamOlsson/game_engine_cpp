@@ -1,5 +1,6 @@
 #pragma once
 
+#include "render_engine/Instance.h"
 #include "vulkan/vulkan_core.h"
 #include <iostream>
 #include <vector>
@@ -17,13 +18,27 @@ VKAPI_ATTR inline VkBool32 VKAPI_CALL debugCallback(
 bool check_validation_layer_support();
 
 namespace messenger {
-void populate_debug_messenger_create_info(
-    VkDebugUtilsMessengerCreateInfoEXT &create_info);
 
-/*VkResult*/
-/*create_debug_utils_messenger_ext(const VkDebugUtilsMessengerCreateInfoEXT
- * *p_create_info,*/
-/*                                 VkDebugUtilsMessengerEXT *p_debug_messenger);*/
+class DebugMessenger {
+  private:
+    Instance *m_instance;
+    std::optional<VkDebugUtilsMessengerEXT> m_debug_messenger;
+
+    VkDebugUtilsMessengerEXT setup_debug_messenger();
+
+    VkResult create_debug_utils_messenger_ext(
+        const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
+        VkDebugUtilsMessengerEXT *pDebugMessenger);
+
+    void destroy_debug_messenger_ext();
+
+  public:
+    DebugMessenger(Instance &instance);
+    ~DebugMessenger();
+
+    static void
+    populate_debug_messenger_create_info(VkDebugUtilsMessengerCreateInfoEXT &create_info);
+};
 
 }; // namespace messenger
 

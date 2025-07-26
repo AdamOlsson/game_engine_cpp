@@ -4,7 +4,6 @@
 #include "util.h"
 #include "vulkan/vulkan_beta.h"
 #include "vulkan/vulkan_core.h"
-#include <iostream>
 #include <set>
 #include <stdexcept>
 
@@ -19,18 +18,18 @@ const std::vector<const char *> device_extensions = {
 CoreGraphicsContext::CoreGraphicsContext(window::Window *window)
     : m_enable_validation_layers(true), window(window),
       instance(Instance(m_enable_validation_layers)),
-      m_debug_messenger(setup_debug_messenger()),
       surface(create_surface(*this->window->window)),
       physical_device(pick_physical_device(instance.instance)),
-      device(create_logical_device(device_extensions)) {}
+      device(create_logical_device(device_extensions)) {
+
+    if (m_enable_validation_layers) {
+        m_debug_messenger = validation_layers::messenger::DebugMessenger(instance);
+    }
+}
 
 CoreGraphicsContext::~CoreGraphicsContext() {
     vkDestroyDevice(device, nullptr);
     vkDestroySurfaceKHR(instance.instance, surface, nullptr);
-
-    if (m_enable_validation_layers) {
-        destroy_debug_messenger_ext();
-    }
 }
 
 void CoreGraphicsContext::wait_idle() { vkDeviceWaitIdle(device); }
@@ -43,75 +42,6 @@ DeviceQueues CoreGraphicsContext::get_device_queues() {
     vkGetDeviceQueue(device, indices_.graphicsFamily.value(), index, &graphics_queue);
     vkGetDeviceQueue(device, indices_.presentFamily.value(), index, &present_queue);
     return DeviceQueues{.graphics_queue = graphics_queue, .present_queue = present_queue};
-}
-
-std::vector<const char *> CoreGraphicsContext::get_required_extensions() {
-    uint32_t glfwExtensionCount = 0;
-    const char **glfwExtensions;
-    glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-    std::vector<const char *> extensions(glfwExtensions,
-                                         glfwExtensions + glfwExtensionCount);
-
-    if (m_enable_validation_layers) {
-        extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-        // required for VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME
-        extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-    }
-
-    extensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-
-    return extensions;
-}
-
-void CoreGraphicsContext::print_enabled_extensions() {
-    uint32_t extensionCount = 0;
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-
-    std::vector<VkExtensionProperties> extensions(extensionCount);
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
-
-    // Print all supported extensions
-    std::cout << "Available m_instance extensions:" << std::endl;
-    for (const auto &ext : extensions) {
-        std::cout << ext.extensionName << std::endl;
-    }
-}
-
-void CoreGraphicsContext::destroy_debug_messenger_ext() {
-    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
-        instance.instance, "vkDestroyDebugUtilsMessengerEXT");
-    if (func != nullptr) {
-        func(instance.instance, m_debug_messenger.value(), nullptr);
-    }
-}
-
-VkResult CoreGraphicsContext::create_debug_utils_messenger_ext(
-    const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
-    VkDebugUtilsMessengerEXT *pDebugMessenger) {
-    auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
-        instance.instance, "vkCreateDebugUtilsMessengerEXT");
-
-    if (func != nullptr) {
-        return func(instance.instance, pCreateInfo, nullptr, pDebugMessenger);
-    } else {
-        return VK_ERROR_EXTENSION_NOT_PRESENT;
-    }
-}
-
-std::optional<VkDebugUtilsMessengerEXT> CoreGraphicsContext::setup_debug_messenger() {
-    if (!m_enable_validation_layers) {
-        return std::nullopt;
-    }
-
-    VkDebugUtilsMessengerCreateInfoEXT create_info;
-    validation_layers::messenger::populate_debug_messenger_create_info(create_info);
-
-    VkDebugUtilsMessengerEXT debug_messenger;
-    if (create_debug_utils_messenger_ext(&create_info, &debug_messenger) != VK_SUCCESS) {
-        throw std::runtime_error("failed to set up debug messenger!");
-    }
-    return debug_messenger;
 }
 
 VkSurfaceKHR CoreGraphicsContext::create_surface(GLFWwindow &window) {

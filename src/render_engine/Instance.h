@@ -9,6 +9,8 @@ class Instance {
     VkInstance create_instance();
     std::vector<const char *> get_required_extensions();
 
+    void print_enabled_extensions();
+
   public:
     VkInstance instance;
 
