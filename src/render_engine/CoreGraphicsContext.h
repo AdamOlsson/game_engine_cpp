@@ -1,6 +1,7 @@
 #pragma once
 
 #include "render_engine/Instance.h"
+#include "render_engine/Surface.h"
 #include "render_engine/validation_layers.h"
 #include "render_engine/window/Window.h"
 #include "vulkan/vulkan_core.h"
@@ -15,7 +16,6 @@ class CoreGraphicsContext {
 
     bool m_enable_validation_layers;
 
-    VkSurfaceKHR create_surface(GLFWwindow &window);
     VkPhysicalDevice pick_physical_device(VkInstance &instance);
     VkDevice create_logical_device(const std::vector<const char *> &deviceExtensions);
 
@@ -26,7 +26,7 @@ class CoreGraphicsContext {
   public:
     window::Window *window;
     Instance instance;
-    VkSurfaceKHR surface;
+    Surface surface;
     VkPhysicalDevice physical_device;
     VkDevice device;
 

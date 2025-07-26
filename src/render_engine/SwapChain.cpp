@@ -6,7 +6,7 @@ SwapChain::SwapChain(std::shared_ptr<CoreGraphicsContext> ctx)
     : m_ctx(ctx), m_next_frame_buffer(0) {
 
     SwapChainSupportDetails swap_chain_support =
-        querySwapChainSupport(m_ctx->physical_device, m_ctx->surface);
+        querySwapChainSupport(m_ctx->physical_device, m_ctx->surface.surface);
 
     uint32_t image_count = get_image_count(swap_chain_support);
 
@@ -94,7 +94,7 @@ VkSwapchainKHR SwapChain::create_swap_chain(uint32_t image_count,
 
     VkSwapchainCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = m_ctx->surface;
+    createInfo.surface = m_ctx->surface.surface;
     createInfo.minImageCount = image_count;
     createInfo.imageFormat = surface_format.format;
     createInfo.imageColorSpace = surface_format.colorSpace;
@@ -103,7 +103,7 @@ VkSwapchainKHR SwapChain::create_swap_chain(uint32_t image_count,
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
     QueueFamilyIndices indices =
-        findQueueFamilies(m_ctx->physical_device, m_ctx->surface);
+        findQueueFamilies(m_ctx->physical_device, m_ctx->surface.surface);
     uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(),
                                      indices.presentFamily.value()};
 

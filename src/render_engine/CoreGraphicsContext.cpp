@@ -17,8 +17,7 @@ const std::vector<const char *> device_extensions = {
 
 CoreGraphicsContext::CoreGraphicsContext(window::Window *window)
     : m_enable_validation_layers(true), window(window),
-      instance(Instance(m_enable_validation_layers)),
-      surface(create_surface(*this->window->window)),
+      instance(Instance(m_enable_validation_layers)), surface(Surface(instance, *window)),
       physical_device(pick_physical_device(instance.instance)),
       device(create_logical_device(device_extensions)) {
 
@@ -27,30 +26,18 @@ CoreGraphicsContext::CoreGraphicsContext(window::Window *window)
     }
 }
 
-CoreGraphicsContext::~CoreGraphicsContext() {
-    vkDestroyDevice(device, nullptr);
-    vkDestroySurfaceKHR(instance.instance, surface, nullptr);
-}
+CoreGraphicsContext::~CoreGraphicsContext() { vkDestroyDevice(device, nullptr); }
 
 void CoreGraphicsContext::wait_idle() { vkDeviceWaitIdle(device); }
 
 DeviceQueues CoreGraphicsContext::get_device_queues() {
-    QueueFamilyIndices indices_ = findQueueFamilies(physical_device, surface);
+    QueueFamilyIndices indices_ = findQueueFamilies(physical_device, surface.surface);
     VkQueue graphics_queue;
     VkQueue present_queue;
     uint32_t index = 0;
     vkGetDeviceQueue(device, indices_.graphicsFamily.value(), index, &graphics_queue);
     vkGetDeviceQueue(device, indices_.presentFamily.value(), index, &present_queue);
     return DeviceQueues{.graphics_queue = graphics_queue, .present_queue = present_queue};
-}
-
-VkSurfaceKHR CoreGraphicsContext::create_surface(GLFWwindow &window) {
-    VkSurfaceKHR surface;
-    if (glfwCreateWindowSurface(instance.instance, &window, nullptr, &surface) !=
-        VK_SUCCESS) {
-        throw std::runtime_error("failed to create window surface!");
-    }
-    return surface;
 }
 
 bool CoreGraphicsContext::check_device_extension_support(
@@ -82,13 +69,13 @@ bool CoreGraphicsContext::is_device_suitable(const VkPhysicalDevice &physicalDev
     VkPhysicalDeviceFeatures deviceFeatures;
     vkGetPhysicalDeviceFeatures(physicalDevice, &deviceFeatures);
 
-    QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
+    QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface.surface);
     bool extensionsSupported = check_device_extension_support(physicalDevice);
 
     bool swapChainAdequate = false;
     if (extensionsSupported) {
         SwapChainSupportDetails swapChainSupport =
-            querySwapChainSupport(physicalDevice, surface);
+            querySwapChainSupport(physicalDevice, surface.surface);
         swapChainAdequate =
             !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
     }
@@ -124,7 +111,7 @@ VkPhysicalDevice CoreGraphicsContext::pick_physical_device(VkInstance &m_instanc
 
 VkDevice CoreGraphicsContext::create_logical_device(
     const std::vector<const char *> &deviceExtensions) {
-    QueueFamilyIndices indices = findQueueFamilies(physical_device, surface);
+    QueueFamilyIndices indices = findQueueFamilies(physical_device, surface.surface);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(),
