@@ -30,6 +30,9 @@ RenderEngine::RenderEngine(std::shared_ptr<CoreGraphicsContext> ctx,
 
     auto &resource_manager = ResourceManager::get_instance();
     auto dog_image = resource_manager.get_resource<ImageResource>("DogImage");
+
+    // TODO: Move this into the GeometryPipeline temporarily so that I do not need to
+    // think about it for now
     m_texture = Texture::unique_from_image_resource(
         ctx, *swap_chain_manager, device_queues.graphics_queue, dog_image);
 
@@ -39,6 +42,8 @@ RenderEngine::RenderEngine(std::shared_ptr<CoreGraphicsContext> ctx,
     switch (use_font) {
     case UseFont::Default: {
         auto default_font = resource_manager.get_resource<FontResource>("DefaultFont");
+        // TODO: This could be moved into the TextPipeline but the text kerning is
+        // dependent on this the map
         m_font = std::make_unique<Font>(ctx, *swap_chain_manager,
                                         device_queues.graphics_queue, default_font);
         break;
