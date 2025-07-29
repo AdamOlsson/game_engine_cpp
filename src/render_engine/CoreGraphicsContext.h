@@ -1,7 +1,7 @@
 #pragma once
 
+#include "render_engine/Device.h"
 #include "render_engine/Instance.h"
-#include "render_engine/PhysicalDevice.h"
 #include "render_engine/Surface.h"
 #include "render_engine/validation_layers.h"
 #include "render_engine/window/Window.h"
