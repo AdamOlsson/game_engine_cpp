@@ -1,5 +1,5 @@
 #include "validation_layers.h"
-#include <optional>
+#include "vulkan/vulkan_core.h"
 
 bool validation_layers::check_validation_layer_support() {
     uint32_t layer_count;
@@ -26,17 +26,17 @@ bool validation_layers::check_validation_layer_support() {
     return true;
 }
 
-validation_layers::messenger::DebugMessenger::DebugMessenger(Instance &instance)
-    : m_instance(&instance), m_debug_messenger(setup_debug_messenger()) {}
+validation_layers::messenger::DebugMessenger::DebugMessenger(Instance *instance)
+    : m_instance(instance), m_debug_messenger(setup_debug_messenger()) {}
 
 validation_layers::messenger::DebugMessenger::~DebugMessenger() {
-    /*std::cout << "DebugMessenger::destructor" << std::endl;*/
-    if (m_debug_messenger == std::nullopt) {
+    if (m_debug_messenger == VK_NULL_HANDLE) {
         return;
     }
+
     destroy_debug_messenger_ext();
 
-    m_debug_messenger = std::nullopt;
+    m_debug_messenger = VK_NULL_HANDLE;
 }
 
 VkDebugUtilsMessengerEXT
@@ -67,10 +67,14 @@ VkResult validation_layers::messenger::DebugMessenger::create_debug_utils_messen
 }
 
 void validation_layers::messenger::DebugMessenger::destroy_debug_messenger_ext() {
+    if (m_debug_messenger == VK_NULL_HANDLE) {
+        return;
+    }
+
     auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
         m_instance->instance, "vkDestroyDebugUtilsMessengerEXT");
     if (func != nullptr) {
-        func(m_instance->instance, m_debug_messenger.value(), nullptr);
+        func(*m_instance, m_debug_messenger, nullptr);
     }
 }
 

@@ -23,7 +23,7 @@ CoreGraphicsContext::CoreGraphicsContext(window::Window *window)
       device(create_logical_device(device_extensions)) {
 
     if (m_enable_validation_layers) {
-        m_debug_messenger = validation_layers::messenger::DebugMessenger(instance);
+        m_debug_messenger = validation_layers::messenger::DebugMessenger(&instance);
     }
 }
 
