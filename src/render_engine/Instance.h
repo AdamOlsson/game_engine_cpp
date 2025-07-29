@@ -5,6 +5,7 @@
 class Instance {
   private:
     bool m_enable_validation_layers;
+    VkInstance m_instance;
 
     VkInstance create_instance();
     std::vector<const char *> get_required_extensions();
@@ -12,8 +13,6 @@ class Instance {
     void print_enabled_extensions();
 
   public:
-    VkInstance instance;
-
     Instance(bool enable_validation_layers);
     ~Instance();
 
@@ -22,5 +21,5 @@ class Instance {
     Instance(const Instance &) = delete;
     Instance &operator=(const Instance &) = delete;
 
-    operator VkInstance() const { return instance; }
+    operator VkInstance() const { return m_instance; }
 };

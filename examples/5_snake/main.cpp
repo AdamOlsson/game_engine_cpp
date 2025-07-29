@@ -1,7 +1,6 @@
 #include "Game.h"
 #include "GameEngine.h"
 
-// CONTINUE: Move render setup from RenderEngine to setup function
 class Snake : public Game {
   private:
   public:

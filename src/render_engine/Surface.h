@@ -6,13 +6,13 @@
 
 class Surface {
   private:
-    Instance *m_instance;
-    VkSurfaceKHR create_surface(Instance &instance, window::Window &window);
+    const Instance *m_instance;
+    VkSurfaceKHR create_surface(const Instance *instance, const window::Window *window);
 
   public:
     VkSurfaceKHR surface;
 
-    Surface(Instance &instance, window::Window &window);
+    Surface(const Instance *instance, const window::Window *window);
     ~Surface();
 
     Surface(Surface &&) noexcept = default;

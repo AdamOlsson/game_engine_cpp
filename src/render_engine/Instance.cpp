@@ -4,9 +4,10 @@
 #include <GLFW/glfw3.h>
 
 Instance::Instance(bool enable_validation_layers)
-    : m_enable_validation_layers(enable_validation_layers), instance(create_instance()) {}
+    : m_enable_validation_layers(enable_validation_layers),
+      m_instance(create_instance()) {}
 
-Instance::~Instance() { vkDestroyInstance(instance, nullptr); }
+Instance::~Instance() { vkDestroyInstance(m_instance, nullptr); }
 
 VkInstance Instance::create_instance() {
     if (m_enable_validation_layers &&

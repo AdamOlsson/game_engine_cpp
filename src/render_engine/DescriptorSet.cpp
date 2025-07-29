@@ -74,8 +74,8 @@ std::vector<VkDescriptorSet> DescriptorSetBuilder::allocate_descriptor_sets(
 
     std::vector<VkDescriptorSet> descriptor_sets;
     descriptor_sets.resize(m_capacity);
-    if (vkAllocateDescriptorSets(ctx->device, &alloc_info, descriptor_sets.data()) !=
-        VK_SUCCESS) {
+    if (vkAllocateDescriptorSets(ctx->logical_device, &alloc_info,
+                                 descriptor_sets.data()) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate descriptor sets!");
     }
     return descriptor_sets;
@@ -184,7 +184,7 @@ DescriptorSet DescriptorSetBuilder::build(std::shared_ptr<CoreGraphicsContext> &
                 descriptor_sets[i], image_info));
         }
 
-        vkUpdateDescriptorSets(ctx->device, descriptor_writes.size(),
+        vkUpdateDescriptorSets(ctx->logical_device, descriptor_writes.size(),
                                descriptor_writes.data(), 0, nullptr);
     }
 

@@ -25,7 +25,7 @@ UIPipeline::UIPipeline(std::shared_ptr<CoreGraphicsContext> ctx,
       m_index_buffer(IndexBuffer(ctx, Geometry::rectangle_indices, swap_chain_manager)) {}
 
 UIPipeline::~UIPipeline() {
-    vkDestroyDescriptorSetLayout(m_ctx->device, m_descriptor_set_layout, nullptr);
+    vkDestroyDescriptorSetLayout(m_ctx->logical_device, m_descriptor_set_layout, nullptr);
 }
 
 void UIPipeline::render(const VkCommandBuffer &command_buffer,

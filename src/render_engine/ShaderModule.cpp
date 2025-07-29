@@ -5,7 +5,7 @@ ShaderModule::ShaderModule(std::shared_ptr<CoreGraphicsContext> ctx,
     : m_ctx(ctx), shader_module(create_shader_module(shader.bytes(), shader.length())) {}
 
 ShaderModule::~ShaderModule() {
-    vkDestroyShaderModule(m_ctx->device, shader_module, nullptr);
+    vkDestroyShaderModule(m_ctx->logical_device, shader_module, nullptr);
 }
 
 VkShaderModule ShaderModule::create_shader_module(const uint8_t *data, const size_t len) {
@@ -15,8 +15,8 @@ VkShaderModule ShaderModule::create_shader_module(const uint8_t *data, const siz
     create_info.pCode = reinterpret_cast<const uint32_t *>(data);
 
     VkShaderModule shader_module;
-    if (vkCreateShaderModule(m_ctx->device, &create_info, nullptr, &shader_module) !=
-        VK_SUCCESS) {
+    if (vkCreateShaderModule(m_ctx->logical_device, &create_info, nullptr,
+                             &shader_module) != VK_SUCCESS) {
         throw std::runtime_error("failed to create shader module!");
     }
 

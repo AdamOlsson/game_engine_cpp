@@ -52,7 +52,8 @@ class GpuBuffer {
 
         m_staging_buffer.reserve(capacity);
 
-        vkMapMemory(m_ctx->device, m_buffer_memory, 0, m_size, 0, &m_buffer_mapped);
+        vkMapMemory(m_ctx->logical_device, m_buffer_memory, 0, m_size, 0,
+                    &m_buffer_mapped);
         memset(m_buffer_mapped, 0, m_size);
     }
 
@@ -60,9 +61,9 @@ class GpuBuffer {
         if (m_buffer == VK_NULL_HANDLE) {
             return;
         }
-        vkUnmapMemory(m_ctx->device, m_buffer_memory);
-        vkFreeMemory(m_ctx->device, m_buffer_memory, nullptr);
-        vkDestroyBuffer(m_ctx->device, m_buffer, nullptr);
+        vkUnmapMemory(m_ctx->logical_device, m_buffer_memory);
+        vkFreeMemory(m_ctx->logical_device, m_buffer_memory, nullptr);
+        vkDestroyBuffer(m_ctx->logical_device, m_buffer, nullptr);
     }
 
     GpuBuffer(const GpuBuffer &other) = delete;

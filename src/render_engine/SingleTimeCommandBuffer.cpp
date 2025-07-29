@@ -5,7 +5,7 @@ SingleTimeCommandBuffer::SingleTimeCommandBuffer(std::shared_ptr<CoreGraphicsCon
     : m_ctx(ctx), m_command_pool(command_pool), m_command_buffer(allocate_buffer()) {}
 
 SingleTimeCommandBuffer::~SingleTimeCommandBuffer() {
-    vkFreeCommandBuffers(m_ctx->device, m_command_pool, 1, &m_command_buffer);
+    vkFreeCommandBuffers(m_ctx->logical_device, m_command_pool, 1, &m_command_buffer);
 }
 
 VkCommandBuffer SingleTimeCommandBuffer::allocate_buffer() {
@@ -21,7 +21,7 @@ VkCommandBuffer SingleTimeCommandBuffer::allocate_buffer() {
     alloc_info.commandBufferCount = 1;
 
     VkCommandBuffer command_buffer;
-    vkAllocateCommandBuffers(m_ctx->device, &alloc_info, &command_buffer);
+    vkAllocateCommandBuffers(m_ctx->logical_device, &alloc_info, &command_buffer);
     return command_buffer;
 }
 

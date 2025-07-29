@@ -15,10 +15,10 @@ Pipeline::Pipeline(std::shared_ptr<CoreGraphicsContext> ctx,
 
 Pipeline::~Pipeline() {
     if (m_pipeline != VK_NULL_HANDLE) {
-        vkDestroyPipeline(m_ctx->device, m_pipeline, nullptr);
+        vkDestroyPipeline(m_ctx->logical_device, m_pipeline, nullptr);
     }
     if (m_pipeline_layout != VK_NULL_HANDLE) {
-        vkDestroyPipelineLayout(m_ctx->device, m_pipeline_layout, nullptr);
+        vkDestroyPipelineLayout(m_ctx->logical_device, m_pipeline_layout, nullptr);
     }
 }
 
@@ -34,7 +34,7 @@ VkPipelineLayout Pipeline::create_graphics_pipeline_layout(
     pipeline_layout_into.pPushConstantRanges = push_constant_range.data();
 
     VkPipelineLayout pipeline_layout;
-    if (vkCreatePipelineLayout(m_ctx->device, &pipeline_layout_into, nullptr,
+    if (vkCreatePipelineLayout(m_ctx->logical_device, &pipeline_layout_into, nullptr,
                                &pipeline_layout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
@@ -174,7 +174,7 @@ VkPipeline Pipeline::create_graphics_pipeline(const VkShaderModule vertex_shader
     pipelineInfo.basePipelineIndex = -1;              // Optional
 
     VkPipeline graphicsPipeline;
-    if (vkCreateGraphicsPipelines(m_ctx->device, VK_NULL_HANDLE, 1, &pipelineInfo,
+    if (vkCreateGraphicsPipelines(m_ctx->logical_device, VK_NULL_HANDLE, 1, &pipelineInfo,
                                   nullptr, &graphicsPipeline) != VK_SUCCESS) {
         throw std::runtime_error("failed to create graphics pipeline!");
     }

@@ -57,10 +57,10 @@ VkResult validation_layers::messenger::DebugMessenger::create_debug_utils_messen
     const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
     VkDebugUtilsMessengerEXT *pDebugMessenger) {
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
-        m_instance->instance, "vkCreateDebugUtilsMessengerEXT");
+        *m_instance, "vkCreateDebugUtilsMessengerEXT");
 
     if (func != nullptr) {
-        return func(m_instance->instance, pCreateInfo, nullptr, pDebugMessenger);
+        return func(*m_instance, pCreateInfo, nullptr, pDebugMessenger);
     } else {
         return VK_ERROR_EXTENSION_NOT_PRESENT;
     }
@@ -72,7 +72,7 @@ void validation_layers::messenger::DebugMessenger::destroy_debug_messenger_ext()
     }
 
     auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
-        m_instance->instance, "vkDestroyDebugUtilsMessengerEXT");
+        *m_instance, "vkDestroyDebugUtilsMessengerEXT");
     if (func != nullptr) {
         func(*m_instance, m_debug_messenger, nullptr);
     }

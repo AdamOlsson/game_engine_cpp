@@ -10,8 +10,8 @@ Semaphore::Semaphore(std::shared_ptr<CoreGraphicsContext> ctx, const size_t size
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
     for (auto i = 0; i < size; i++) {
-        if (vkCreateSemaphore(ctx->device, &semaphoreInfo, nullptr, &m_semaphores[i]) !=
-            VK_SUCCESS) {
+        if (vkCreateSemaphore(ctx->logical_device, &semaphoreInfo, nullptr,
+                              &m_semaphores[i]) != VK_SUCCESS) {
             throw std::runtime_error("Failed to create semaphore object for frame!");
         }
     }
@@ -23,7 +23,7 @@ Semaphore::~Semaphore() {
     }
 
     for (size_t i = 0; i < m_size; i++) {
-        vkDestroySemaphore(m_ctx->device, m_semaphores[i], nullptr);
+        vkDestroySemaphore(m_ctx->logical_device, m_semaphores[i], nullptr);
     }
 }
 

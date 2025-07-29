@@ -6,30 +6,30 @@ Window::Window(const WindowConfig &config) : m_config(config) {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-    this->window = glfwCreateWindow(config.dims.width, config.dims.height, config.title,
-                                    nullptr, nullptr);
+    m_window = glfwCreateWindow(config.dims.width, config.dims.height, config.title,
+                                nullptr, nullptr);
 }
 
 Window::~Window() {
-    glfwDestroyWindow(this->window);
+    glfwDestroyWindow(m_window);
     glfwTerminate();
 }
 
-bool Window::should_window_close() { return glfwWindowShouldClose(this->window); }
+bool Window::should_window_close() { return glfwWindowShouldClose(m_window); }
 
 void Window::process_window_events() { glfwPollEvents(); }
 
 void Window::register_mouse_event_callback(MouseEventCallbackFn cb) {
     this->mouse_event_cb = cb;
-    glfwSetMouseButtonCallback(this->window, this->mouse_button_callback);
-    glfwSetCursorPosCallback(this->window, this->cursor_position_callback);
-    glfwSetWindowUserPointer(this->window,
+    glfwSetMouseButtonCallback(m_window, this->mouse_button_callback);
+    glfwSetCursorPosCallback(m_window, this->cursor_position_callback);
+    glfwSetWindowUserPointer(m_window,
                              this); // This should preferably be set elsewhere
 }
 
 void Window::register_keyboard_event_callback(KeyboardEventCallbackFn cb) {
     this->keyboard_event_cb = cb;
-    glfwSetKeyCallback(this->window, this->keyboard_callback);
+    glfwSetKeyCallback(m_window, this->keyboard_callback);
 }
 
 VkSurfaceKHR Window::createSurface(VkInstance *instance, GLFWwindow &window) {

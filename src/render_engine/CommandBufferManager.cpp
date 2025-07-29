@@ -13,7 +13,7 @@ CommandBufferManager::~CommandBufferManager() {
         return;
     }
 
-    vkDestroyCommandPool(m_ctx->device, m_command_pool, nullptr);
+    vkDestroyCommandPool(m_ctx->logical_device, m_command_pool, nullptr);
 }
 
 CommandBuffer CommandBufferManager::get_command_buffer() {
@@ -36,7 +36,7 @@ VkCommandPool CommandBufferManager::create_command_pool() {
     poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
 
     VkCommandPool commandPool;
-    if (vkCreateCommandPool(m_ctx->device, &poolInfo, nullptr, &commandPool) !=
+    if (vkCreateCommandPool(m_ctx->logical_device, &poolInfo, nullptr, &commandPool) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create command pool!");
     }
@@ -53,8 +53,8 @@ std::vector<VkCommandBuffer> CommandBufferManager::create_command_buffers() {
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     allocInfo.commandBufferCount = (uint32_t)command_buffers.size();
 
-    if (vkAllocateCommandBuffers(m_ctx->device, &allocInfo, command_buffers.data()) !=
-        VK_SUCCESS) {
+    if (vkAllocateCommandBuffers(m_ctx->logical_device, &allocInfo,
+                                 command_buffers.data()) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
 

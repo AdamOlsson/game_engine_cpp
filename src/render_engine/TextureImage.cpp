@@ -28,24 +28,25 @@ TextureImage::TextureImage(std::shared_ptr<CoreGraphicsContext> ctx,
     image_info.samples = VK_SAMPLE_COUNT_1_BIT;
     image_info.flags = 0;
 
-    if (vkCreateImage(ctx->device, &image_info, nullptr, &m_image) != VK_SUCCESS) {
+    if (vkCreateImage(ctx->logical_device, &image_info, nullptr, &m_image) !=
+        VK_SUCCESS) {
         throw std::runtime_error("Failed to create texture image");
     }
 
     VkMemoryRequirements mem_requirements;
-    vkGetImageMemoryRequirements(ctx->device, m_image, &mem_requirements);
+    vkGetImageMemoryRequirements(ctx->logical_device, m_image, &mem_requirements);
 
     VkMemoryAllocateInfo alloc_info{};
     alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     alloc_info.allocationSize = mem_requirements.size;
     alloc_info.memoryTypeIndex = find_memory_type(
         ctx.get(), mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    if (vkAllocateMemory(ctx->device, &alloc_info, nullptr, &m_image_memory) !=
+    if (vkAllocateMemory(ctx->logical_device, &alloc_info, nullptr, &m_image_memory) !=
         VK_SUCCESS) {
         throw std::runtime_error("Failed to create texture image memory");
     }
 
-    vkBindImageMemory(ctx->device, m_image, m_image_memory, 0);
+    vkBindImageMemory(ctx->logical_device, m_image, m_image_memory, 0);
     m_image_view = create_image_view(ctx.get(), m_image, VK_FORMAT_R8G8B8A8_SRGB);
 }
 
@@ -77,9 +78,9 @@ TextureImage &TextureImage::operator=(TextureImage &&other) noexcept {
 }
 
 TextureImage::~TextureImage() {
-    vkDestroyImageView(m_ctx->device, m_image_view, nullptr);
-    vkDestroyImage(m_ctx->device, m_image, nullptr);
-    vkFreeMemory(m_ctx->device, m_image_memory, nullptr);
+    vkDestroyImageView(m_ctx->logical_device, m_image_view, nullptr);
+    vkDestroyImage(m_ctx->logical_device, m_image, nullptr);
+    vkFreeMemory(m_ctx->logical_device, m_image_memory, nullptr);
 }
 
 void TextureImage::transition_image_layout(SwapChainManager &swap_chain_manager,

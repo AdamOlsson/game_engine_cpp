@@ -14,7 +14,7 @@ Sampler::~Sampler() {
     if (sampler == VK_NULL_HANDLE) {
         return;
     }
-    vkDestroySampler(ctx->device, sampler, nullptr);
+    vkDestroySampler(ctx->logical_device, sampler, nullptr);
 }
 
 Sampler::Sampler(Sampler &&other) noexcept
@@ -46,7 +46,7 @@ Sampler::create_descriptor_set_layout_binding(const size_t binding_num) {
 
 VkSampler create_sampler(const CoreGraphicsContext *ctx) {
     VkPhysicalDeviceProperties properties{};
-    vkGetPhysicalDeviceProperties(ctx->physical_device.physical_device, &properties);
+    vkGetPhysicalDeviceProperties(ctx->physical_device, &properties);
 
     VkSamplerCreateInfo sampler_info{};
     sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -67,7 +67,8 @@ VkSampler create_sampler(const CoreGraphicsContext *ctx) {
     sampler_info.maxLod = 0.0f;
 
     VkSampler sampler;
-    if (vkCreateSampler(ctx->device, &sampler_info, nullptr, &sampler) != VK_SUCCESS) {
+    if (vkCreateSampler(ctx->logical_device, &sampler_info, nullptr, &sampler) !=
+        VK_SUCCESS) {
         throw std::runtime_error("Failed to create sampler");
     }
     return sampler;

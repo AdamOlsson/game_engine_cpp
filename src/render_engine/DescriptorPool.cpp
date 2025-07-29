@@ -9,7 +9,7 @@ DescriptorPool::DescriptorPool(std::shared_ptr<CoreGraphicsContext> &ctx,
 
 DescriptorPool::~DescriptorPool() {
     if (m_descriptor_pool != nullptr) {
-        vkDestroyDescriptorPool(m_ctx->device, m_descriptor_pool, nullptr);
+        vkDestroyDescriptorPool(m_ctx->logical_device, m_descriptor_pool, nullptr);
     }
 }
 
@@ -35,8 +35,8 @@ VkDescriptorPool DescriptorPool::create_descriptor_pool(const uint32_t capacity,
     pool_info.maxSets = capacity;
 
     VkDescriptorPool descriptor_pool;
-    if (vkCreateDescriptorPool(m_ctx->device, &pool_info, nullptr, &descriptor_pool) !=
-        VK_SUCCESS) {
+    if (vkCreateDescriptorPool(m_ctx->logical_device, &pool_info, nullptr,
+                               &descriptor_pool) != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor pool!");
     }
     return descriptor_pool;

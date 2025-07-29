@@ -33,7 +33,7 @@ TextPipeline::TextPipeline(
       m_pipeline(create_pipeline(m_descriptor_set_layout, swap_chain_manager)) {}
 
 TextPipeline::~TextPipeline() {
-    vkDestroyDescriptorSetLayout(m_ctx->device, m_descriptor_set_layout, nullptr);
+    vkDestroyDescriptorSetLayout(m_ctx->logical_device, m_descriptor_set_layout, nullptr);
 }
 
 VkDescriptorSetLayout TextPipeline::create_descriptor_set_layout() {

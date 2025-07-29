@@ -15,8 +15,8 @@ VkDescriptorSetLayout DescriptorSetLayoutBuilder::build(const CoreGraphicsContex
     layout_info.pBindings = m_bindings.data();
 
     VkDescriptorSetLayout layout;
-    if (vkCreateDescriptorSetLayout(ctx->device, &layout_info, nullptr, &layout) !=
-        VK_SUCCESS) {
+    if (vkCreateDescriptorSetLayout(ctx->logical_device, &layout_info, nullptr,
+                                    &layout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
     return layout;

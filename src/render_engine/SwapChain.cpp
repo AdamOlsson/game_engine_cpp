@@ -12,8 +12,7 @@ SwapChain::SwapChain(std::shared_ptr<CoreGraphicsContext> ctx)
 
     VkSurfaceFormatKHR surface_format =
         choose_swap_surface_format(swap_chain_support.formats);
-    m_extent =
-        choose_swap_extent(*m_ctx->window->window, swap_chain_support.capabilities);
+    m_extent = choose_swap_extent(**m_ctx->window, swap_chain_support.capabilities);
 
     m_swap_chain = create_swap_chain(image_count, surface_format, swap_chain_support);
 
@@ -24,13 +23,13 @@ SwapChain::SwapChain(std::shared_ptr<CoreGraphicsContext> ctx)
 }
 
 SwapChain::~SwapChain() {
-    vkDestroyRenderPass(m_ctx->device, m_render_pass, nullptr);
+    vkDestroyRenderPass(m_ctx->logical_device, m_render_pass, nullptr);
     for (size_t i = 0; i < m_image_views.size(); i++) {
-        vkDestroyImageView(m_ctx->device, m_image_views[i], nullptr);
+        vkDestroyImageView(m_ctx->logical_device, m_image_views[i], nullptr);
     }
-    vkDestroySwapchainKHR(m_ctx->device, m_swap_chain, nullptr);
+    vkDestroySwapchainKHR(m_ctx->logical_device, m_swap_chain, nullptr);
     for (size_t i = 0; i < m_frame_buffers.size(); i++) {
-        vkDestroyFramebuffer(m_ctx->device, m_frame_buffers[i], nullptr);
+        vkDestroyFramebuffer(m_ctx->logical_device, m_frame_buffers[i], nullptr);
     }
 }
 
@@ -103,7 +102,7 @@ VkSwapchainKHR SwapChain::create_swap_chain(uint32_t image_count,
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
     QueueFamilyIndices indices =
-        findQueueFamilies(m_ctx->physical_device.physical_device, m_ctx->surface.surface);
+        findQueueFamilies(m_ctx->physical_device, m_ctx->surface.surface);
     uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(),
                                      indices.presentFamily.value()};
 
@@ -123,7 +122,7 @@ VkSwapchainKHR SwapChain::create_swap_chain(uint32_t image_count,
     createInfo.clipped = VK_TRUE;
     createInfo.oldSwapchain = VK_NULL_HANDLE;
     VkSwapchainKHR swap_chain;
-    if (vkCreateSwapchainKHR(m_ctx->device, &createInfo, nullptr, &swap_chain) !=
+    if (vkCreateSwapchainKHR(m_ctx->logical_device, &createInfo, nullptr, &swap_chain) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create swap chain!");
     }
@@ -133,7 +132,8 @@ VkSwapchainKHR SwapChain::create_swap_chain(uint32_t image_count,
 std::vector<VkImage> SwapChain::create_swap_chain_images(uint32_t image_count) {
     std::vector<VkImage> images;
     images.resize(image_count);
-    vkGetSwapchainImagesKHR(m_ctx->device, m_swap_chain, &image_count, images.data());
+    vkGetSwapchainImagesKHR(m_ctx->logical_device, m_swap_chain, &image_count,
+                            images.data());
     return images;
 }
 
@@ -165,7 +165,7 @@ std::vector<VkFramebuffer> SwapChain::create_frame_buffers() {
         framebufferInfo.height = m_extent.height;
         framebufferInfo.layers = 1;
 
-        if (vkCreateFramebuffer(m_ctx->device, &framebufferInfo, nullptr,
+        if (vkCreateFramebuffer(m_ctx->logical_device, &framebufferInfo, nullptr,
                                 &swapChainFramebuffers[i]) != VK_SUCCESS) {
             throw std::runtime_error("failed to create framebuffer!");
         }
@@ -211,8 +211,8 @@ VkRenderPass SwapChain::create_render_pass(VkFormat &image_format) {
     render_pass_info.pDependencies = &dependency;
 
     VkRenderPass render_pass;
-    if (vkCreateRenderPass(m_ctx->device, &render_pass_info, nullptr, &render_pass) !=
-        VK_SUCCESS) {
+    if (vkCreateRenderPass(m_ctx->logical_device, &render_pass_info, nullptr,
+                           &render_pass) != VK_SUCCESS) {
         throw std::runtime_error("failed to create render pass!");
     }
     return render_pass;
@@ -227,8 +227,8 @@ VkFramebuffer SwapChain::get_frame_buffer() {
 std::optional<uint32_t> SwapChain::get_next_image_index(VkSemaphore &image_available) {
     uint32_t image_index;
     VkResult result =
-        vkAcquireNextImageKHR(m_ctx->device, m_swap_chain, UINT64_MAX, image_available,
-                              VK_NULL_HANDLE, &image_index);
+        vkAcquireNextImageKHR(m_ctx->logical_device, m_swap_chain, UINT64_MAX,
+                              image_available, VK_NULL_HANDLE, &image_index);
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
         return std::nullopt;
     } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {

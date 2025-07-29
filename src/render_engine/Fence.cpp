@@ -11,7 +11,8 @@ Fence::Fence(std::shared_ptr<CoreGraphicsContext> ctx, const size_t size)
     fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
     for (auto i = 0; i < size; i++) {
-        if (vkCreateFence(ctx->device, &fenceInfo, nullptr, &m_fences[i]) != VK_SUCCESS) {
+        if (vkCreateFence(ctx->logical_device, &fenceInfo, nullptr, &m_fences[i]) !=
+            VK_SUCCESS) {
             throw std::runtime_error("Failed to create fence object for frame!");
         }
     }
@@ -23,7 +24,7 @@ Fence::~Fence() {
     }
 
     for (size_t i = 0; i < m_size; i++) {
-        vkDestroyFence(m_ctx->device, m_fences[i], nullptr);
+        vkDestroyFence(m_ctx->logical_device, m_fences[i], nullptr);
     }
 }
 

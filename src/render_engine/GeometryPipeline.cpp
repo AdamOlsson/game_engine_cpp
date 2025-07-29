@@ -89,7 +89,7 @@ GeometryPipeline::GeometryPipeline(
 {}
 
 GeometryPipeline::~GeometryPipeline() {
-    vkDestroyDescriptorSetLayout(m_ctx->device, m_descriptor_set_layout, nullptr);
+    vkDestroyDescriptorSetLayout(m_ctx->logical_device, m_descriptor_set_layout, nullptr);
 }
 
 VkDescriptorSetLayout GeometryPipeline::create_descriptor_set_layout() {

@@ -6,7 +6,6 @@
 #include "render_engine/validation_layers.h"
 #include "render_engine/window/Window.h"
 #include "vulkan/vulkan_core.h"
-#include <vector>
 
 struct DeviceQueues {
     VkQueue graphics_queue;
@@ -14,17 +13,14 @@ struct DeviceQueues {
 };
 
 class CoreGraphicsContext {
-
     bool m_enable_validation_layers;
-
-    VkDevice create_logical_device(const std::vector<const char *> &deviceExtensions);
 
   public:
     window::Window *window;
     Instance instance;
     Surface surface;
-    PhysicalDevice physical_device;
-    VkDevice device;
+    device::PhysicalDevice physical_device;
+    device::LogicalDevice logical_device;
 
     std::optional<validation_layers::messenger::DebugMessenger> m_debug_messenger;
 

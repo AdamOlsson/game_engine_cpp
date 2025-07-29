@@ -16,12 +16,13 @@ void create_buffer(const CoreGraphicsContext *ctx, const VkDeviceSize size,
     buffer_info.usage = usage;
     buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    if (vkCreateBuffer(ctx->device, &buffer_info, nullptr, &buffer) != VK_SUCCESS) {
+    if (vkCreateBuffer(ctx->logical_device, &buffer_info, nullptr, &buffer) !=
+        VK_SUCCESS) {
         throw std::runtime_error("failed to create buffer!");
     }
 
     VkMemoryRequirements mem_requirements;
-    vkGetBufferMemoryRequirements(ctx->device, buffer, &mem_requirements);
+    vkGetBufferMemoryRequirements(ctx->logical_device, buffer, &mem_requirements);
 
     VkMemoryAllocateInfo alloc_info{};
     alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -29,19 +30,18 @@ void create_buffer(const CoreGraphicsContext *ctx, const VkDeviceSize size,
     alloc_info.memoryTypeIndex =
         find_memory_type(ctx, mem_requirements.memoryTypeBits, properties);
 
-    if (vkAllocateMemory(ctx->device, &alloc_info, nullptr, &buffer_memory) !=
+    if (vkAllocateMemory(ctx->logical_device, &alloc_info, nullptr, &buffer_memory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate buffer memory!");
     }
 
-    vkBindBufferMemory(ctx->device, buffer, buffer_memory, 0);
+    vkBindBufferMemory(ctx->logical_device, buffer, buffer_memory, 0);
 }
 
 uint32_t find_memory_type(const CoreGraphicsContext *ctx, const uint32_t type_filter,
                           const VkMemoryPropertyFlags properties) {
     VkPhysicalDeviceMemoryProperties memProperties;
-    vkGetPhysicalDeviceMemoryProperties(ctx->physical_device.physical_device,
-                                        &memProperties);
+    vkGetPhysicalDeviceMemoryProperties(ctx->physical_device, &memProperties);
     for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
         if ((type_filter & (1 << i)) &&
             (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
@@ -86,7 +86,8 @@ VkImageView create_image_view(const CoreGraphicsContext *ctx, const VkImage &ima
     createInfo.subresourceRange.baseArrayLayer = 0;
     createInfo.subresourceRange.layerCount = 1;
     VkImageView image_view;
-    if (vkCreateImageView(ctx->device, &createInfo, nullptr, &image_view) != VK_SUCCESS) {
+    if (vkCreateImageView(ctx->logical_device, &createInfo, nullptr, &image_view) !=
+        VK_SUCCESS) {
         throw std::runtime_error("failed to create image views!");
     }
     return image_view;

@@ -20,9 +20,9 @@ VertexBuffer::VertexBuffer(std::shared_ptr<CoreGraphicsContext> ctx,
                   staging_buffer, staging_buffer_memory);
 
     void *data;
-    vkMapMemory(m_ctx->device, staging_buffer_memory, 0, size, 0, &data);
+    vkMapMemory(m_ctx->logical_device, staging_buffer_memory, 0, size, 0, &data);
     memcpy(data, vertices.data(), size);
-    vkUnmapMemory(m_ctx->device, staging_buffer_memory);
+    vkUnmapMemory(m_ctx->logical_device, staging_buffer_memory);
 
     create_buffer(m_ctx.get(), size,
                   VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
@@ -30,11 +30,11 @@ VertexBuffer::VertexBuffer(std::shared_ptr<CoreGraphicsContext> ctx,
 
     copy_buffer(m_ctx.get(), staging_buffer, buffer, size, swap_chain_manager,
                 graphics_queue);
-    vkDestroyBuffer(m_ctx->device, staging_buffer, nullptr);
-    vkFreeMemory(m_ctx->device, staging_buffer_memory, nullptr);
+    vkDestroyBuffer(m_ctx->logical_device, staging_buffer, nullptr);
+    vkFreeMemory(m_ctx->logical_device, staging_buffer_memory, nullptr);
 }
 
 VertexBuffer::~VertexBuffer() {
-    vkDestroyBuffer(m_ctx->device, buffer, nullptr);
-    vkFreeMemory(m_ctx->device, bufferMemory, nullptr);
+    vkDestroyBuffer(m_ctx->logical_device, buffer, nullptr);
+    vkFreeMemory(m_ctx->logical_device, bufferMemory, nullptr);
 }

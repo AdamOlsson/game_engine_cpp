@@ -1,10 +1,5 @@
 #include "util.h"
 
-QueueFamilyIndices findQueueFamilies(const PhysicalDevice &device,
-                                     const Surface &surface) {
-    return findQueueFamilies(device.physical_device, surface.surface);
-}
-
 QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice &device,
                                      const VkSurfaceKHR &surface) {
     QueueFamilyIndices indices;

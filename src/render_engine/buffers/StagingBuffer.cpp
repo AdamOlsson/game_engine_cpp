@@ -10,15 +10,16 @@ StagingBuffer::StagingBuffer(std::shared_ptr<CoreGraphicsContext> ctx,
       m_staging_buffer(create_staging_buffer()) {}
 
 StagingBuffer::~StagingBuffer() {
-    vkDestroyBuffer(m_ctx->device, m_staging_buffer.buffer, nullptr);
-    vkFreeMemory(m_ctx->device, m_staging_buffer.buffer_memory, nullptr);
+    vkDestroyBuffer(m_ctx->logical_device, m_staging_buffer.buffer, nullptr);
+    vkFreeMemory(m_ctx->logical_device, m_staging_buffer.buffer_memory, nullptr);
 }
 
 void StagingBuffer::map_memory(const ImageData &image) {
     void *data;
-    vkMapMemory(m_ctx->device, m_staging_buffer.buffer_memory, 0, image.size, 0, &data);
+    vkMapMemory(m_ctx->logical_device, m_staging_buffer.buffer_memory, 0, image.size, 0,
+                &data);
     memcpy(data, image.pixels, static_cast<size_t>(image.size));
-    vkUnmapMemory(m_ctx->device, m_staging_buffer.buffer_memory);
+    vkUnmapMemory(m_ctx->logical_device, m_staging_buffer.buffer_memory);
 }
 
 void StagingBuffer::transfer_image_to_device_image(const ImageData &src,

@@ -16,9 +16,9 @@ namespace window {
 class Window {
   private:
     WindowConfig m_config;
+    GLFWwindow *m_window;
 
   public:
-    GLFWwindow *window;
     Window(const WindowConfig &window_dims);
 
     ~Window();
@@ -41,9 +41,11 @@ class Window {
 
     template <typename T> WindowDimension<T> dimensions() {
         int width, height;
-        glfwGetWindowSize(window, &width, &height);
+        glfwGetWindowSize(m_window, &width, &height);
         return WindowDimension<T>(static_cast<T>(width), static_cast<T>(height));
     }
+
+    operator GLFWwindow *() const { return m_window; }
 
   private:
     std::optional<MouseEventCallbackFn> mouse_event_cb;

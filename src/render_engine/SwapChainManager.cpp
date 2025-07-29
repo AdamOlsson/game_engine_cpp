@@ -16,11 +16,11 @@ void SwapChainManager::recreate_swap_chain() {
     // All execution is paused when the window is minimized
     int width = 0, height = 0;
     while (width == 0 || height == 0) {
-        glfwGetFramebufferSize(m_ctx->window->window, &width, &height);
+        glfwGetFramebufferSize(*m_ctx->window, &width, &height);
         glfwWaitEvents();
     }
 
-    vkDeviceWaitIdle(m_ctx->device);
+    vkDeviceWaitIdle(m_ctx->logical_device);
     m_swap_chain = SwapChain(m_ctx);
 }
 
@@ -30,9 +30,9 @@ SingleTimeCommandBuffer SwapChainManager::get_single_time_command_buffer() {
 
 VkFence SwapChainManager::wait_for_in_flight_fence() {
     const VkFence in_flight_fence = m_in_flight_fence.get();
-    vkWaitForFences(m_ctx->device, 1, &in_flight_fence, VK_TRUE, UINT64_MAX);
+    vkWaitForFences(m_ctx->logical_device, 1, &in_flight_fence, VK_TRUE, UINT64_MAX);
 
-    vkResetFences(m_ctx->device, 1, &in_flight_fence);
+    vkResetFences(m_ctx->logical_device, 1, &in_flight_fence);
     return in_flight_fence;
 }
 
