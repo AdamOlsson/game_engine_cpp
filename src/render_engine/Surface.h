@@ -19,4 +19,6 @@ class Surface {
     Surface &operator=(Surface &&) noexcept = default;
     Surface(const Surface &) = delete;
     Surface &operator=(const Surface &) = delete;
+
+    operator VkSurfaceKHR() const { return surface; }
 };

@@ -1,4 +1,5 @@
 #include "validation_layers.h"
+#include <optional>
 
 bool validation_layers::check_validation_layer_support() {
     uint32_t layer_count;
@@ -29,7 +30,13 @@ validation_layers::messenger::DebugMessenger::DebugMessenger(Instance &instance)
     : m_instance(&instance), m_debug_messenger(setup_debug_messenger()) {}
 
 validation_layers::messenger::DebugMessenger::~DebugMessenger() {
+    /*std::cout << "DebugMessenger::destructor" << std::endl;*/
+    if (m_debug_messenger == std::nullopt) {
+        return;
+    }
     destroy_debug_messenger_ext();
+
+    m_debug_messenger = std::nullopt;
 }
 
 VkDebugUtilsMessengerEXT

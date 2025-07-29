@@ -21,4 +21,6 @@ class Instance {
     Instance &operator=(Instance &&) noexcept = default;
     Instance(const Instance &) = delete;
     Instance &operator=(const Instance &) = delete;
+
+    operator VkInstance() const { return instance; }
 };
