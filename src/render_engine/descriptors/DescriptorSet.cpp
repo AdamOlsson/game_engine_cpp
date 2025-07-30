@@ -25,7 +25,7 @@ DescriptorSetBuilder::DescriptorSetBuilder(
     : m_descriptor_set_layout(descriptor_set_layout), m_descriptor_pool(&descriptor_pool),
       m_capacity(capacity),
 
-      m_uniform_buffer_binding(0), m_instance_buffer_binding(0), m_texture_binding(0),
+      m_uniform_buffer_binding(0), m_storage_buffer_binding(0), m_texture_binding(0),
       m_texture(nullptr), m_sampler(nullptr) {}
 
 DescriptorSetBuilder &
@@ -44,11 +44,11 @@ DescriptorSetBuilder::add_storage_buffer(size_t binding,
             "size of storage buffer reference needs to be equal to capacity");
     }
 
-    m_instance_buffer_binding.insert(m_instance_buffer_binding.end(),
-                                     instance_buffers.size(), binding);
-    m_instance_buffers.insert(m_instance_buffers.end(),
-                              std::make_move_iterator(instance_buffers.begin()),
-                              std::make_move_iterator(instance_buffers.end()));
+    m_storage_buffer_binding.insert(m_storage_buffer_binding.end(),
+                                    instance_buffers.size(), binding);
+    m_storage_buffers.insert(m_storage_buffers.end(),
+                             std::make_move_iterator(instance_buffers.begin()),
+                             std::make_move_iterator(instance_buffers.end()));
 
     return *this;
 }
@@ -81,34 +81,18 @@ std::vector<VkDescriptorSet> DescriptorSetBuilder::allocate_descriptor_sets(
     return descriptor_sets;
 }
 
-VkWriteDescriptorSet DescriptorSetBuilder::create_instance_buffer_descriptor_write(
-    const VkDescriptorSet &dst_descriptor_set, const VkDescriptorBufferInfo &buffer_info,
-    const size_t binding_num) {
-    VkWriteDescriptorSet instance_buffer_descriptor_write{};
-    instance_buffer_descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    instance_buffer_descriptor_write.dstSet = dst_descriptor_set;
-    instance_buffer_descriptor_write.dstBinding = binding_num;
-    instance_buffer_descriptor_write.dstArrayElement = 0;
-    instance_buffer_descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    instance_buffer_descriptor_write.descriptorCount = 1;
-    instance_buffer_descriptor_write.pBufferInfo = &buffer_info;
-    instance_buffer_descriptor_write.pImageInfo = nullptr;       // Optional
-    instance_buffer_descriptor_write.pTexelBufferView = nullptr; // Optional
-    return instance_buffer_descriptor_write;
-}
-
-VkWriteDescriptorSet DescriptorSetBuilder::create_uniform_buffer_descriptor_write(
-    const VkDescriptorSet &dst_descriptor_set,
-    const VkDescriptorBufferInfo &buffer_info) {
-    VkWriteDescriptorSet uniform_buffer_descriptor_write{};
-    uniform_buffer_descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    uniform_buffer_descriptor_write.dstSet = dst_descriptor_set;
-    uniform_buffer_descriptor_write.dstBinding = m_uniform_buffer_binding;
-    uniform_buffer_descriptor_write.dstArrayElement = 0;
-    uniform_buffer_descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    uniform_buffer_descriptor_write.descriptorCount = 1;
-    uniform_buffer_descriptor_write.pBufferInfo = &buffer_info;
-    return uniform_buffer_descriptor_write;
+VkWriteDescriptorSet DescriptorSetBuilder::create_buffer_descriptor_write(
+    const VkDescriptorType type, const VkDescriptorSet &dst_descriptor_set,
+    const VkDescriptorBufferInfo &buffer_info, const size_t binding_num) {
+    VkWriteDescriptorSet buffer_descriptor_write{};
+    buffer_descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    buffer_descriptor_write.dstSet = dst_descriptor_set;
+    buffer_descriptor_write.dstBinding = binding_num;
+    buffer_descriptor_write.dstArrayElement = 0;
+    buffer_descriptor_write.descriptorType = type;
+    buffer_descriptor_write.descriptorCount = 1;
+    buffer_descriptor_write.pBufferInfo = &buffer_info;
+    return buffer_descriptor_write;
 }
 
 VkWriteDescriptorSet DescriptorSetBuilder::create_texture_and_sampler_descriptor_write(
@@ -134,7 +118,7 @@ DescriptorSetBuilder::build(std::shared_ptr<graphics_context::GraphicsContext> &
         throw std::runtime_error("Descriptor pool not set");
     }
 
-    if (m_instance_buffers.size() % m_capacity != 0) {
+    if (m_storage_buffers.size() % m_capacity != 0) {
         throw std::runtime_error(
             "Number of storage buffers needs to be a multiple of capacity");
     }
@@ -156,38 +140,41 @@ DescriptorSetBuilder::build(std::shared_ptr<graphics_context::GraphicsContext> &
 
     std::vector<VkDescriptorSet> descriptor_sets = allocate_descriptor_sets(ctx);
 
-    const size_t num_buffers_per_set = m_instance_buffers.size() / m_capacity;
+    const size_t num_buffers_per_set = m_storage_buffers.size() / m_capacity;
 
     for (auto i = 0; i < m_capacity; i++) {
         std::vector<VkWriteDescriptorSet> descriptor_writes = {};
 
         std::vector<VkDescriptorBufferInfo> storage_buffer_infos = {};
         storage_buffer_infos.reserve(num_buffers_per_set);
-        if (m_instance_buffers.size() != 0) {
+        if (m_storage_buffers.size() != 0) {
             for (auto j = 0; j < num_buffers_per_set; j++) {
 
                 VkDescriptorBufferInfo storage_buffer_info{};
                 const auto idx = j * m_capacity + i;
 
-                storage_buffer_info.buffer = m_instance_buffers.at(idx).buffer;
+                storage_buffer_info.buffer = m_storage_buffers.at(idx).buffer;
                 storage_buffer_info.offset = 0;
-                storage_buffer_info.range = m_instance_buffers.at(idx).size;
+                storage_buffer_info.range = m_storage_buffers.at(idx).size;
                 storage_buffer_infos.push_back(storage_buffer_info);
 
-                descriptor_writes.push_back(create_instance_buffer_descriptor_write(
-                    descriptor_sets[i], storage_buffer_infos.back(),
-                    m_instance_buffer_binding[idx]));
+                descriptor_writes.push_back(create_buffer_descriptor_write(
+                    VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, descriptor_sets[i],
+                    storage_buffer_infos.back(), m_storage_buffer_binding[idx]));
             }
         }
 
+        // TODO: See if this can be merged into the above storage buffer write as both are
+        // based on GpuBuffer
         VkDescriptorBufferInfo uniform_buffer_info{};
         if (m_uniform_buffers.size() != 0 && m_uniform_buffers.size() >= m_capacity) {
             uniform_buffer_info.buffer = m_uniform_buffers.at(i).buffer;
             uniform_buffer_info.offset = 0;
             uniform_buffer_info.range = m_uniform_buffers.at(i).size;
 
-            descriptor_writes.push_back(create_uniform_buffer_descriptor_write(
-                descriptor_sets[i], uniform_buffer_info));
+            descriptor_writes.push_back(create_buffer_descriptor_write(
+                VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, descriptor_sets[i],
+                uniform_buffer_info, m_uniform_buffer_binding));
         }
 
         VkDescriptorImageInfo image_info{};

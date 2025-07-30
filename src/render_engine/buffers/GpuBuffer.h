@@ -12,12 +12,13 @@
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #include <glm/glm.hpp>
 
+enum class GpuBufferType { Uniform, Storage };
+
 struct GpuBufferRef {
     VkDeviceSize size;
     VkBuffer buffer;
+    GpuBufferType type;
 };
-
-enum class GpuBufferType { Uniform, Storage };
 
 template <Printable T, GpuBufferType BufferType = GpuBufferType::Storage>
 class GpuBuffer {
@@ -96,7 +97,9 @@ class GpuBuffer {
         return *this;
     }
 
-    GpuBufferRef get_reference() { return {.buffer = m_buffer, .size = m_size}; }
+    GpuBufferRef get_reference() {
+        return {.buffer = m_buffer, .size = m_size, .type = BufferType};
+    }
     size_t size() const { return m_size; }
     size_t num_elements() const { return m_staging_buffer.size(); }
     void clear() { m_staging_buffer.clear(); }
