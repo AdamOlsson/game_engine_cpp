@@ -11,6 +11,28 @@ struct SwapChainSupportDetails {
     VkSurfaceCapabilitiesKHR capabilities;
     std::vector<VkSurfaceFormatKHR> formats;
     std::vector<VkPresentModeKHR> presentModes;
+
+    uint32_t get_image_count() {
+        uint32_t image_count = capabilities.minImageCount + 1;
+        if (capabilities.maxImageCount > 0 && image_count > capabilities.maxImageCount) {
+            image_count = capabilities.maxImageCount;
+        }
+        return image_count;
+    }
+
+    VkSurfaceFormatKHR
+    choose_swap_surface_format(const VkSurfaceFormatKHR &&requested_format) {
+        for (const auto &available_format : formats) {
+            if (available_format.format == requested_format.format &&
+                available_format.colorSpace == requested_format.colorSpace) {
+                return available_format;
+            }
+        }
+        std::cout << "SwapChainSupportDetails::Warning requested format not found, "
+                     "returning first available"
+                  << std::endl;
+        return formats[0];
+    }
 };
 
 struct QueueFamilyIndices {

@@ -1,5 +1,6 @@
 #include "SwapChain.h"
 #include "render_engine/buffers/common.h"
+#include "vulkan/vulkan_core.h"
 
 SwapChain::SwapChain(std::shared_ptr<graphics_context::GraphicsContext> ctx)
     : m_ctx(ctx), m_next_frame_buffer(0) {
@@ -7,10 +8,12 @@ SwapChain::SwapChain(std::shared_ptr<graphics_context::GraphicsContext> ctx)
     graphics_context::device::SwapChainSupportDetails swap_chain_support =
         m_ctx->physical_device.query_swap_chain_support(m_ctx->surface);
 
-    uint32_t image_count = get_image_count(swap_chain_support);
+    uint32_t image_count = swap_chain_support.get_image_count();
 
-    VkSurfaceFormatKHR surface_format =
-        choose_swap_surface_format(swap_chain_support.formats);
+    VkSurfaceFormatKHR surface_format = swap_chain_support.choose_swap_surface_format(
+        {.format = VK_FORMAT_B8G8R8A8_SRGB,
+         .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR});
+
     m_extent = choose_swap_extent(**m_ctx->window, swap_chain_support.capabilities);
 
     m_swap_chain = create_swap_chain(image_count, surface_format, swap_chain_support);
@@ -30,27 +33,6 @@ SwapChain::~SwapChain() {
     for (size_t i = 0; i < m_frame_buffers.size(); i++) {
         vkDestroyFramebuffer(m_ctx->logical_device, m_frame_buffers[i], nullptr);
     }
-}
-
-uint32_t SwapChain::get_image_count(
-    graphics_context::device::SwapChainSupportDetails &swap_chain_support) {
-    uint32_t image_count = swap_chain_support.capabilities.minImageCount + 1;
-    if (swap_chain_support.capabilities.maxImageCount > 0 &&
-        image_count > swap_chain_support.capabilities.maxImageCount) {
-        image_count = swap_chain_support.capabilities.maxImageCount;
-    }
-    return image_count;
-}
-
-VkSurfaceFormatKHR SwapChain::choose_swap_surface_format(
-    const std::vector<VkSurfaceFormatKHR> &available_formats) {
-    for (const auto &availableFormat : available_formats) {
-        if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB &&
-            availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
-            return availableFormat;
-        }
-    }
-    return available_formats[0];
 }
 
 VkPresentModeKHR SwapChain::choose_swap_present_mode(
