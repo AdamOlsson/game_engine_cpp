@@ -1,5 +1,4 @@
 #include "Device.h"
-#include "render_engine/util.h"
 #include "validation_layers.h"
 #include "vulkan/vulkan_beta.h"
 #include "vulkan/vulkan_core.h"
@@ -18,7 +17,7 @@ graphics_context::device::PhysicalDevice::PhysicalDevice(const Instance &instanc
     : m_physical_device(pick_physical_device(instance, surface)) {}
 
 VkPhysicalDevice graphics_context::device::PhysicalDevice::pick_physical_device(
-    const graphics_context::Instance &instance, const Surface &surface) {
+    const graphics_context::Instance &instance, const Surface &surface) const {
     uint32_t device_count = 0;
     vkEnumeratePhysicalDevices(instance, &device_count, nullptr);
 
@@ -44,7 +43,7 @@ VkPhysicalDevice graphics_context::device::PhysicalDevice::pick_physical_device(
 }
 
 bool graphics_context::device::PhysicalDevice::is_device_suitable(
-    const VkPhysicalDevice &physical_device, const Surface &surface) {
+    const VkPhysicalDevice &physical_device, const Surface &surface) const {
     // NOTE: For mor info check:
     // https://vulkan-tutorial.com/en/Drawing_a_triangle/Setup/Physical_devices_and_queue_families
     /*VkPhysicalDeviceProperties deviceProperties;*/
@@ -59,10 +58,11 @@ bool graphics_context::device::PhysicalDevice::is_device_suitable(
 
     bool swapChainAdequate = false;
     if (extensionsSupported) {
-        SwapChainSupportDetails swapChainSupport =
-            querySwapChainSupport(physical_device, surface);
-        swapChainAdequate =
-            !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+        graphics_context::device::SwapChainSupportDetails swap_chain_support =
+            query_swap_chain_support(physical_device, surface);
+
+        swapChainAdequate = !swap_chain_support.formats.empty() &&
+                            !swap_chain_support.presentModes.empty();
     }
 
     return indices.isComplete() && extensionsSupported && swapChainAdequate &&
@@ -70,7 +70,7 @@ bool graphics_context::device::PhysicalDevice::is_device_suitable(
 }
 
 bool graphics_context::device::PhysicalDevice::check_device_extension_support(
-    const VkPhysicalDevice &physical_device) {
+    const VkPhysicalDevice &physical_device) const {
     uint32_t extensionCount;
     vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extensionCount,
                                          nullptr);
@@ -128,6 +128,39 @@ graphics_context::device::PhysicalDevice::find_queue_families(
     }
 
     return indices;
+}
+graphics_context::device::SwapChainSupportDetails
+graphics_context::device::PhysicalDevice::query_swap_chain_support(
+    const Surface &surface) const {
+    return query_swap_chain_support(m_physical_device, surface);
+}
+
+graphics_context::device::SwapChainSupportDetails
+graphics_context::device::PhysicalDevice::query_swap_chain_support(
+    const VkPhysicalDevice &physical_device, const Surface &surface) {
+    SwapChainSupportDetails details;
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, surface,
+                                              &details.capabilities);
+
+    uint32_t format_count;
+    vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &format_count,
+                                         nullptr);
+    if (format_count != 0) {
+        details.formats.resize(format_count);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &format_count,
+                                             details.formats.data());
+    }
+
+    uint32_t presentModeCount;
+    vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &presentModeCount,
+                                              nullptr);
+    if (presentModeCount != 0) {
+        details.presentModes.resize(presentModeCount);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(
+            physical_device, surface, &presentModeCount, details.presentModes.data());
+    }
+
+    return details;
 }
 
 graphics_context::device::LogicalDevice::LogicalDevice(

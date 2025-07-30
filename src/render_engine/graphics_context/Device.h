@@ -6,6 +6,13 @@
 
 namespace graphics_context {
 namespace device {
+
+struct SwapChainSupportDetails {
+    VkSurfaceCapabilitiesKHR capabilities;
+    std::vector<VkSurfaceFormatKHR> formats;
+    std::vector<VkPresentModeKHR> presentModes;
+};
+
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
     std::optional<uint32_t> presentFamily;
@@ -18,11 +25,11 @@ class PhysicalDevice {
     VkPhysicalDevice m_physical_device;
 
     bool is_device_suitable(const VkPhysicalDevice &physical_device,
-                            const Surface &surface);
-    bool check_device_extension_support(const VkPhysicalDevice &physical_device);
+                            const Surface &surface) const;
+    bool check_device_extension_support(const VkPhysicalDevice &physical_device) const;
 
     VkPhysicalDevice pick_physical_device(const graphics_context::Instance &instance,
-                                          const Surface &surface);
+                                          const Surface &surface) const;
 
   public:
     PhysicalDevice(const graphics_context::Instance &instance, const Surface &surface);
@@ -38,6 +45,11 @@ class PhysicalDevice {
     QueueFamilyIndices find_queue_families(const Surface &surface) const;
     static QueueFamilyIndices find_queue_families(const VkPhysicalDevice &physical_device,
                                                   const Surface &surface);
+
+    SwapChainSupportDetails query_swap_chain_support(const Surface &surface) const;
+    static SwapChainSupportDetails
+    query_swap_chain_support(const VkPhysicalDevice &physical_device,
+                             const Surface &surface);
 };
 
 class LogicalDevice {

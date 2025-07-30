@@ -1,12 +1,11 @@
 #include "SwapChain.h"
 #include "render_engine/buffers/common.h"
-#include "render_engine/util.h"
 
 SwapChain::SwapChain(std::shared_ptr<graphics_context::GraphicsContext> ctx)
     : m_ctx(ctx), m_next_frame_buffer(0) {
 
-    SwapChainSupportDetails swap_chain_support =
-        querySwapChainSupport(m_ctx->physical_device, m_ctx->surface);
+    graphics_context::device::SwapChainSupportDetails swap_chain_support =
+        m_ctx->physical_device.query_swap_chain_support(m_ctx->surface);
 
     uint32_t image_count = get_image_count(swap_chain_support);
 
@@ -33,7 +32,8 @@ SwapChain::~SwapChain() {
     }
 }
 
-uint32_t SwapChain::get_image_count(SwapChainSupportDetails &swap_chain_support) {
+uint32_t SwapChain::get_image_count(
+    graphics_context::device::SwapChainSupportDetails &swap_chain_support) {
     uint32_t image_count = swap_chain_support.capabilities.minImageCount + 1;
     if (swap_chain_support.capabilities.maxImageCount > 0 &&
         image_count > swap_chain_support.capabilities.maxImageCount) {
@@ -85,9 +85,9 @@ VkExtent2D SwapChain::choose_swap_extent(GLFWwindow &window,
     }
 }
 
-VkSwapchainKHR SwapChain::create_swap_chain(uint32_t image_count,
-                                            VkSurfaceFormatKHR &surface_format,
-                                            SwapChainSupportDetails &swap_chain_support) {
+VkSwapchainKHR SwapChain::create_swap_chain(
+    uint32_t image_count, VkSurfaceFormatKHR &surface_format,
+    graphics_context::device::SwapChainSupportDetails &swap_chain_support) {
     VkPresentModeKHR present_mode =
         choose_swap_present_mode(swap_chain_support.presentModes);
 

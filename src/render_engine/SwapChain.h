@@ -1,7 +1,6 @@
 #pragma once
 
 #include "render_engine/graphics_context/GraphicsContext.h"
-#include "render_engine/util.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
 
@@ -14,16 +13,17 @@ class SwapChain {
     std::vector<VkImageView> m_image_views;
     std::vector<VkFramebuffer> m_frame_buffers;
 
-    uint32_t get_image_count(SwapChainSupportDetails &swap_chain_support);
+    uint32_t get_image_count(
+        graphics_context::device::SwapChainSupportDetails &swap_chain_support);
     VkSurfaceFormatKHR
     choose_swap_surface_format(const std::vector<VkSurfaceFormatKHR> &available_formats);
     VkPresentModeKHR choose_swap_present_mode(
         const std::vector<VkPresentModeKHR> &available_present_modes);
     VkExtent2D choose_swap_extent(GLFWwindow &window,
                                   const VkSurfaceCapabilitiesKHR &capabilities);
-    VkSwapchainKHR create_swap_chain(uint32_t image_count,
-                                     VkSurfaceFormatKHR &surface_format,
-                                     SwapChainSupportDetails &swap_chain_support);
+    VkSwapchainKHR create_swap_chain(
+        uint32_t image_count, VkSurfaceFormatKHR &surface_format,
+        graphics_context::device::SwapChainSupportDetails &swap_chain_support);
 
     std::vector<VkImage> create_swap_chain_images(uint32_t image_count);
     std::vector<VkImageView> create_image_views(VkFormat &image_format);
