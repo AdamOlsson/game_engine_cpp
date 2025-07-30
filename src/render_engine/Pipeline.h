@@ -1,13 +1,13 @@
 #pragma once
 
-#include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/SwapChainManager.h"
+#include "render_engine/graphics_context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
 class Pipeline {
   private:
-    std::shared_ptr<CoreGraphicsContext> m_ctx;
+    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
 
     VkPipelineLayout create_graphics_pipeline_layout(
         const VkDescriptorSetLayout &descriptor_set_layout,
@@ -22,7 +22,7 @@ class Pipeline {
     VkPipeline m_pipeline;
 
     Pipeline() = default;
-    Pipeline(std::shared_ptr<CoreGraphicsContext> ctx,
+    Pipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
              const VkDescriptorSetLayout &descriptor_set_layout,
              const std::vector<VkPushConstantRange> &push_constant_range,
              const VkShaderModule vertex_shader_module,

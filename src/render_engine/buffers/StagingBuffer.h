@@ -1,8 +1,8 @@
 #pragma once
 
-#include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/ImageData.h"
 #include "render_engine/TextureImage.h"
+#include "render_engine/graphics_context/GraphicsContext.h"
 #include <memory>
 
 struct Buffer {
@@ -12,7 +12,7 @@ struct Buffer {
 
 class StagingBuffer {
   private:
-    std::shared_ptr<CoreGraphicsContext> m_ctx;
+    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
     const size_t m_staging_buffer_size;
     Buffer m_staging_buffer;
 
@@ -24,7 +24,8 @@ class StagingBuffer {
 
   public:
     StagingBuffer() = delete;
-    StagingBuffer(std::shared_ptr<CoreGraphicsContext> ctx, const size_t buffer_size);
+    StagingBuffer(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+                  const size_t buffer_size);
     StagingBuffer(StagingBuffer &&other) noexcept = delete;
     StagingBuffer(const StagingBuffer &other) = delete;
     StagingBuffer &operator=(StagingBuffer &&other) noexcept = delete;

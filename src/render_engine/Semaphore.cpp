@@ -1,8 +1,8 @@
 #include "Semaphore.h"
-#include "render_engine/CoreGraphicsContext.h"
 #include <memory>
 
-Semaphore::Semaphore(std::shared_ptr<CoreGraphicsContext> ctx, const size_t size)
+Semaphore::Semaphore(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+                     const size_t size)
     : m_ctx(ctx), m_size(size), m_next(0) {
     m_semaphores.resize(size);
 

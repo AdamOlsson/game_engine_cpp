@@ -1,11 +1,11 @@
 #pragma once
 
-#include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/DescriptorSet.h"
 #include "render_engine/Pipeline.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/buffers/IndexBuffer.h"
 #include "render_engine/buffers/VertexBuffer.h"
+#include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/ui/ElementProperties.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
@@ -19,7 +19,7 @@ class UIPipeline {
     const uint32_t m_num_samplers = 2 * 1;
     const uint32_t m_descriptor_pool_capacity = 2;
 
-    std::shared_ptr<CoreGraphicsContext> m_ctx;
+    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
 
     VkDescriptorSetLayout m_descriptor_set_layout;
     DescriptorPool m_descriptor_pool;
@@ -36,7 +36,7 @@ class UIPipeline {
     Pipeline create_pipeline(SwapChainManager &swap_chain_manager);
 
   public:
-    UIPipeline(std::shared_ptr<CoreGraphicsContext> ctx,
+    UIPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                SwapChainManager &swap_chain_manager,
                SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers);
     ~UIPipeline();

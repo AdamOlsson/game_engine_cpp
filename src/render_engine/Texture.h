@@ -1,14 +1,14 @@
 #pragma once
 
-#include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/TextureImage.h"
+#include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/resources/images/ImageResource.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
 class Texture {
   private:
-    std::shared_ptr<CoreGraphicsContext> m_ctx;
+    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
     TextureImage m_texture_image;
 
   public:
@@ -16,36 +16,38 @@ class Texture {
 
     // As the make_unique needs to have access to the constructor it needs to be left
     // public
-    Texture(std::shared_ptr<CoreGraphicsContext> ctx,
+    Texture(std::shared_ptr<graphics_context::GraphicsContext> ctx,
             SwapChainManager &swap_chain_manager, const VkQueue &graphics_queue,
             const ImageData &image_data);
 
-    static Texture from_filepath(std::shared_ptr<CoreGraphicsContext> &ctx,
-                                 SwapChainManager &swap_chain_manager,
-                                 const VkQueue &graphics_queue, const char *filepath);
+    static Texture
+    from_filepath(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+                  SwapChainManager &swap_chain_manager, const VkQueue &graphics_queue,
+                  const char *filepath);
     static std::unique_ptr<Texture>
-    unique_from_filepath(std::shared_ptr<CoreGraphicsContext> &ctx,
+    unique_from_filepath(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
                          SwapChainManager &swap_chain_manager,
                          const VkQueue &graphics_queue, const char *filepath);
 
-    static Texture from_bytes(std::shared_ptr<CoreGraphicsContext> &ctx,
+    static Texture from_bytes(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
                               SwapChainManager &swap_chain_manager,
                               const VkQueue &graphics_queue, const uint8_t *bytes,
                               const unsigned int length);
 
     static std::unique_ptr<Texture>
-    unique_from_bytes(std::shared_ptr<CoreGraphicsContext> &ctx,
+    unique_from_bytes(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
                       SwapChainManager &swap_chain_manager, const VkQueue &graphics_queue,
                       const uint8_t *bytes, const unsigned int length);
 
-    static Texture from_image_resource(std::shared_ptr<CoreGraphicsContext> &ctx,
-                                       SwapChainManager &swap_chain_manager,
-                                       const VkQueue &graphics_queue,
-                                       const ImageResource *resource);
+    static Texture
+    from_image_resource(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+                        SwapChainManager &swap_chain_manager,
+                        const VkQueue &graphics_queue, const ImageResource *resource);
 
     static std::unique_ptr<Texture> unique_from_image_resource(
-        std::shared_ptr<CoreGraphicsContext> &ctx, SwapChainManager &swap_chain_manager,
-        const VkQueue &graphics_queue, const ImageResource *resource);
+        std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+        SwapChainManager &swap_chain_manager, const VkQueue &graphics_queue,
+        const ImageResource *resource);
 
     ~Texture();
 

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "render_engine/CoreGraphicsContext.h"
+#include "render_engine/graphics_context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 class SingleTimeCommandBuffer {
   private:
-    std::shared_ptr<CoreGraphicsContext> m_ctx;
+    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
     VkCommandPool m_command_pool;
 
     VkCommandBuffer allocate_buffer();
@@ -13,7 +13,7 @@ class SingleTimeCommandBuffer {
   public:
     VkCommandBuffer m_command_buffer; // TODO: Make private
 
-    SingleTimeCommandBuffer(std::shared_ptr<CoreGraphicsContext> ctx,
+    SingleTimeCommandBuffer(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                             VkCommandPool &command_pool);
     ~SingleTimeCommandBuffer();
 

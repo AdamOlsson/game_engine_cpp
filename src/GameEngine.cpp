@@ -5,7 +5,7 @@ GameEngine::GameEngine(std::unique_ptr<Game> game, GameEngineConfig &config)
     : m_start_tick(Clock::now()), m_next_tick(Duration::zero()),
       m_tick_delta(1.0 / config.ticks_per_second),
       m_window(std::make_unique<window::Window>(config.window_config)),
-      m_ctx(std::make_shared<CoreGraphicsContext>(m_window.get())),
+      m_ctx(std::make_shared<graphics_context::GraphicsContext>(m_window.get())),
       m_game(std::move(game)) {}
 
 GameEngine::~GameEngine() {}

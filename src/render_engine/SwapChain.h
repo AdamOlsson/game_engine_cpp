@@ -1,13 +1,13 @@
 #pragma once
 
-#include "render_engine/CoreGraphicsContext.h"
+#include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/util.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
 
 class SwapChain {
   private:
-    std::shared_ptr<CoreGraphicsContext> m_ctx;
+    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
     size_t m_next_frame_buffer;
 
     std::vector<VkImage> m_images;
@@ -36,7 +36,7 @@ class SwapChain {
     VkRenderPass m_render_pass;
 
     SwapChain() = default;
-    SwapChain(std::shared_ptr<CoreGraphicsContext> ctx);
+    SwapChain(std::shared_ptr<graphics_context::GraphicsContext> ctx);
     ~SwapChain();
 
     SwapChain(const SwapChain &other) = delete;

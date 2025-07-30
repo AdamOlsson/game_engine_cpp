@@ -28,7 +28,7 @@ class Font {
         : char_width_px(0), char_height_px(0), font_atlas(nullptr), atlas_width_px(0),
           atlas_height_px(0), atlas_width(0), atlas_height(0) {}
 
-    Font(std::shared_ptr<CoreGraphicsContext> &g_ctx,
+    Font(std::shared_ptr<graphics_context::GraphicsContext> &g_ctx,
          SwapChainManager &swap_chain_manager, const VkQueue &graphics_queue,
          const FontResource *resource)
 

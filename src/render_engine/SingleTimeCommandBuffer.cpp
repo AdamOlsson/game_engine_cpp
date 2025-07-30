@@ -1,7 +1,8 @@
 #include "SingleTimeCommandBuffer.h"
 
-SingleTimeCommandBuffer::SingleTimeCommandBuffer(std::shared_ptr<CoreGraphicsContext> ctx,
-                                                 VkCommandPool &command_pool)
+SingleTimeCommandBuffer::SingleTimeCommandBuffer(
+    std::shared_ptr<graphics_context::GraphicsContext> ctx,
+    VkCommandPool &command_pool)
     : m_ctx(ctx), m_command_pool(command_pool), m_command_buffer(allocate_buffer()) {}
 
 SingleTimeCommandBuffer::~SingleTimeCommandBuffer() {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "render_engine/CoreGraphicsContext.h"
+#include "render_engine/graphics_context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <vector>
 class DescriptorSetLayoutBuilder {
@@ -13,5 +13,5 @@ class DescriptorSetLayoutBuilder {
 
     DescriptorSetLayoutBuilder &add(const VkDescriptorSetLayoutBinding &&binding);
 
-    VkDescriptorSetLayout build(const CoreGraphicsContext *ctx);
+    VkDescriptorSetLayout build(const graphics_context::GraphicsContext *ctx);
 };

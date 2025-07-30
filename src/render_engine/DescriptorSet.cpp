@@ -1,5 +1,4 @@
 #include "DescriptorSet.h"
-#include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/DescriptorPool.h"
 #include "render_engine/Sampler.h"
 #include "render_engine/Texture.h"
@@ -8,7 +7,7 @@
 #include <memory>
 #include <stdexcept>
 
-DescriptorSet::DescriptorSet(std::shared_ptr<CoreGraphicsContext> ctx,
+DescriptorSet::DescriptorSet(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                              std::vector<VkDescriptorSet> &descriptor_sets)
     : m_ctx(ctx), m_capacity(descriptor_sets.size()), m_next(0),
       m_descriptor_sets(std::move(descriptor_sets)) {}
@@ -63,7 +62,7 @@ DescriptorSetBuilder &DescriptorSetBuilder::set_texture_and_sampler(size_t bindi
 }
 
 std::vector<VkDescriptorSet> DescriptorSetBuilder::allocate_descriptor_sets(
-    std::shared_ptr<CoreGraphicsContext> &ctx) {
+    std::shared_ptr<graphics_context::GraphicsContext> &ctx) {
     std::vector<VkDescriptorSetLayout> layouts(m_capacity, *m_descriptor_set_layout);
 
     VkDescriptorSetAllocateInfo alloc_info{};
@@ -124,7 +123,8 @@ VkWriteDescriptorSet DescriptorSetBuilder::create_texture_and_sampler_descriptor
     return texture_descriptor_write;
 }
 
-DescriptorSet DescriptorSetBuilder::build(std::shared_ptr<CoreGraphicsContext> &ctx) {
+DescriptorSet
+DescriptorSetBuilder::build(std::shared_ptr<graphics_context::GraphicsContext> &ctx) {
     if (m_descriptor_set_layout == nullptr) {
         throw std::runtime_error("Descriptor set layout not set");
     }

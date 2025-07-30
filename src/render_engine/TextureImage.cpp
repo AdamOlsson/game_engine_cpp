@@ -8,7 +8,7 @@ TextureImage::TextureImage()
     : m_ctx(nullptr), m_image(nullptr), m_image_memory(nullptr), m_image_view(nullptr),
       m_dimension(TextureImageDimension{0, 0}) {}
 
-TextureImage::TextureImage(std::shared_ptr<CoreGraphicsContext> ctx,
+TextureImage::TextureImage(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                            const TextureImageDimension &dim)
     : m_ctx(ctx), m_dimension(dim) {
 

@@ -1,13 +1,13 @@
 #pragma once
 
-#include "render_engine/CoreGraphicsContext.h"
+#include "render_engine/graphics_context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <cstddef>
 #include <memory>
 
 class Fence {
   private:
-    std::shared_ptr<CoreGraphicsContext> m_ctx;
+    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
     size_t m_size;
 
     size_t m_next;
@@ -15,7 +15,7 @@ class Fence {
 
   public:
     Fence() = default;
-    Fence(std::shared_ptr<CoreGraphicsContext> ctx, const size_t size);
+    Fence(std::shared_ptr<graphics_context::GraphicsContext> ctx, const size_t size);
     ~Fence();
 
     Fence(Fence &&other) noexcept = default;

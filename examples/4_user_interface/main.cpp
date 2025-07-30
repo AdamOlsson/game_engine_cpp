@@ -1,9 +1,9 @@
 #include "Game.h"
 #include "GameEngine.h"
-#include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/PerformanceWindow.h"
 #include "render_engine/colors.h"
 #include "render_engine/fonts/Font.h"
+#include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "render_engine/ui/Button.h"
 #include "render_engine/ui/ElementProperties.h"
@@ -35,7 +35,7 @@ void on_leave_callback(ui::Button &self) {
 class UserInterfaceExample : public Game {
   private:
     ui::UI m_ui;
-    DeviceQueues
+    graphics_context::DeviceQueues
         m_device_queues; // TODO: Request from CoreGraphicsContext instead of storing
     std::unique_ptr<RenderEngine> m_render_engine; // TODO: Remove
     std::unique_ptr<SwapChainManager> m_swap_chain_manager;
@@ -248,7 +248,7 @@ class UserInterfaceExample : public Game {
         }
     };
 
-    void setup(std::shared_ptr<CoreGraphicsContext> &ctx) override {
+    void setup(std::shared_ptr<graphics_context::GraphicsContext> &ctx) override {
         register_all_fonts();
         register_all_images();
         register_all_shaders();

@@ -15,7 +15,8 @@
 using namespace ui;
 
 TextPipeline::TextPipeline(
-    std::shared_ptr<CoreGraphicsContext> ctx, SwapChainManager &swap_chain_manager,
+    std::shared_ptr<graphics_context::GraphicsContext> ctx,
+    SwapChainManager &swap_chain_manager,
     SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers, Sampler &sampler,
     Texture &texture)
     : m_ctx(ctx), m_character_buffers(SwapGpuBuffer<CharacterInstanceBufferObject>(

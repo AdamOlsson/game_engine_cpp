@@ -2,7 +2,7 @@
 #include "render_engine/buffers/common.h"
 #include "render_engine/util.h"
 
-SwapChain::SwapChain(std::shared_ptr<CoreGraphicsContext> ctx)
+SwapChain::SwapChain(std::shared_ptr<graphics_context::GraphicsContext> ctx)
     : m_ctx(ctx), m_next_frame_buffer(0) {
 
     SwapChainSupportDetails swap_chain_support =

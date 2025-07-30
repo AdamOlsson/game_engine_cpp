@@ -7,12 +7,13 @@
 #include "render_engine/window/Window.h"
 #include "vulkan/vulkan_core.h"
 
+namespace graphics_context {
 struct DeviceQueues {
     VkQueue graphics_queue;
     VkQueue present_queue;
 };
 
-class CoreGraphicsContext {
+class GraphicsContext {
     bool m_enable_validation_layers;
 
   public:
@@ -24,10 +25,12 @@ class CoreGraphicsContext {
 
     std::optional<validation_layers::messenger::DebugMessenger> m_debug_messenger;
 
-    CoreGraphicsContext(window::Window *window);
-    ~CoreGraphicsContext();
+    GraphicsContext(window::Window *window);
+    ~GraphicsContext();
 
     void wait_idle();
 
     DeviceQueues get_device_queues();
 };
+
+} // namespace graphics_context

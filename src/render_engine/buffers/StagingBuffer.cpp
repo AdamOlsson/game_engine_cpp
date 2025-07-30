@@ -4,7 +4,7 @@
 #include "render_engine/TextureImage.h"
 #include "render_engine/buffers/common.h"
 
-StagingBuffer::StagingBuffer(std::shared_ptr<CoreGraphicsContext> ctx,
+StagingBuffer::StagingBuffer(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                              const size_t buffer_size)
     : m_ctx(ctx), m_staging_buffer_size(buffer_size),
       m_staging_buffer(create_staging_buffer()) {}

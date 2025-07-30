@@ -1,7 +1,7 @@
 #pragma once
 
-#include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/buffers/common.h"
+#include "render_engine/graphics_context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
 #include <iostream>
@@ -22,7 +22,7 @@ enum class GpuBufferType { Uniform, Storage };
 template <Printable T, GpuBufferType BufferType = GpuBufferType::Storage>
 class GpuBuffer {
   private:
-    std::shared_ptr<CoreGraphicsContext> m_ctx;
+    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
 
     std::vector<T> m_staging_buffer;
 
@@ -34,7 +34,7 @@ class GpuBuffer {
   public:
     GpuBuffer() = default;
 
-    GpuBuffer(std::shared_ptr<CoreGraphicsContext> ctx, size_t capacity)
+    GpuBuffer(std::shared_ptr<graphics_context::GraphicsContext> ctx, size_t capacity)
         : m_ctx(ctx), m_size(capacity * sizeof(T)) {
 
         if constexpr (BufferType == GpuBufferType::Storage) {
@@ -192,8 +192,8 @@ class SwapGpuBuffer {
     std::vector<GpuBufferRef> m_refs;
 
   public:
-    SwapGpuBuffer(std::shared_ptr<CoreGraphicsContext> &ctx, size_t num_bufs,
-                  size_t capacity)
+    SwapGpuBuffer(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+                  size_t num_bufs, size_t capacity)
         : m_idx(0) {
         // Initiate buffers
         m_buffers.reserve(num_bufs);

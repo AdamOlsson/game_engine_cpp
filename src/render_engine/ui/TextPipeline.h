@@ -1,7 +1,6 @@
 #pragma once
 
 #include "glm/fwd.hpp"
-#include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/DescriptorPool.h"
 #include "render_engine/DescriptorSet.h"
 #include "render_engine/Pipeline.h"
@@ -11,6 +10,7 @@
 #include "render_engine/buffers/IndexBuffer.h"
 #include "render_engine/buffers/VertexBuffer.h"
 #include "render_engine/colors.h"
+#include "render_engine/graphics_context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 #include <vulkan/vulkan.h>
@@ -51,7 +51,7 @@ class TextPipeline {
     const uint32_t m_num_samplers = 2 * 1;
     const uint32_t m_descriptor_pool_capacity = 2;
 
-    std::shared_ptr<CoreGraphicsContext> m_ctx;
+    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
 
     SwapGpuBuffer<CharacterInstanceBufferObject> m_character_buffers;
     SwapGpuBuffer<TextSegmentBufferObject> m_text_segment_buffers;
@@ -71,7 +71,8 @@ class TextPipeline {
                              SwapChainManager &swap_chain_manager);
 
   public:
-    TextPipeline(std::shared_ptr<CoreGraphicsContext> ctx, SwapChainManager &swap_chain,
+    TextPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+                 SwapChainManager &swap_chain,
                  SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
                  Sampler &sampler, Texture &texture);
     ~TextPipeline();

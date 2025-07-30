@@ -33,7 +33,7 @@ class Snake : public Game {
 
     void render() override {};
 
-    void setup(std::shared_ptr<CoreGraphicsContext> &ctx) override {}
+    void setup(std::shared_ptr<graphics_context::GraphicsContext> &ctx) override {}
 };
 
 int main() {

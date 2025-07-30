@@ -1,6 +1,5 @@
 #pragma once
 
-#include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/DescriptorPool.h"
 #include "render_engine/DescriptorSet.h"
 #include "render_engine/Pipeline.h"
@@ -10,6 +9,7 @@
 #include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/buffers/IndexBuffer.h"
 #include "render_engine/buffers/VertexBuffer.h"
+#include "render_engine/graphics_context/GraphicsContext.h"
 #include "shape.h"
 #include "vulkan/vulkan_core.h"
 #include <iostream>
@@ -77,7 +77,7 @@ class GeometryPipeline {
     const uint32_t m_num_samplers = MAX_FRAMES_IN_FLIGHT * 4;
     const uint32_t m_descriptor_pool_capacity = MAX_FRAMES_IN_FLIGHT * 4;
 
-    std::shared_ptr<CoreGraphicsContext> m_ctx;
+    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
 
     VkDescriptorSetLayout m_descriptor_set_layout;
     Pipeline m_pipeline;
@@ -119,7 +119,7 @@ class GeometryPipeline {
                              const IndexBuffer &index_buffer, const size_t num_instances);
 
   public:
-    GeometryPipeline(std::shared_ptr<CoreGraphicsContext> ctx,
+    GeometryPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                      SwapChainManager &swap_chain_manager,
                      SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
                      Sampler &sampler, Texture &texture);

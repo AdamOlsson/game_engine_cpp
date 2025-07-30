@@ -1,10 +1,10 @@
 #pragma once
-#include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/GeometryPipeline.h"
 #include "render_engine/RenderBody.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/fonts/Font.h"
+#include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/ui/ElementProperties.h"
 #include "render_engine/ui/State.h"
 #include "render_engine/ui/TextPipeline.h"
@@ -36,7 +36,7 @@ class RenderEngine {
                       const ui::ElementProperties properties);
 
   public:
-    RenderEngine(std::shared_ptr<CoreGraphicsContext> ctx,
+    RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                  SwapChainManager *swap_chain_manager, const UseFont use_font);
     ~RenderEngine();
 
@@ -47,8 +47,8 @@ class RenderEngine {
     void render_ui(const ui::State &state);
 
     bool begin_render_pass(SwapChainManager *swap_chain_manager,
-                           DeviceQueues &m_device_queues);
+                           graphics_context::DeviceQueues &m_device_queues);
 
     bool end_render_pass(SwapChainManager *swap_chain_manager,
-                         DeviceQueues &m_device_queues);
+                         graphics_context::DeviceQueues &m_device_queues);
 };

@@ -1,17 +1,17 @@
 #pragma once
 
-#include "render_engine/CoreGraphicsContext.h"
+#include "render_engine/graphics_context/GraphicsContext.h"
 #include <memory>
 
 class Sampler {
   private:
-    std::shared_ptr<CoreGraphicsContext> ctx;
+    std::shared_ptr<graphics_context::GraphicsContext> ctx;
 
   public:
     VkSampler sampler;
 
     Sampler();
-    Sampler(std::shared_ptr<CoreGraphicsContext> ctx);
+    Sampler(std::shared_ptr<graphics_context::GraphicsContext> ctx);
     ~Sampler();
 
     Sampler(Sampler &&other) noexcept;

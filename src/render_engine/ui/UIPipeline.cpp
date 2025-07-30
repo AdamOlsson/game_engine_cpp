@@ -10,7 +10,7 @@
 
 using namespace ui;
 
-UIPipeline::UIPipeline(std::shared_ptr<CoreGraphicsContext> ctx,
+UIPipeline::UIPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                        SwapChainManager &swap_chain_manager,
                        SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers)
     : m_ctx(ctx),

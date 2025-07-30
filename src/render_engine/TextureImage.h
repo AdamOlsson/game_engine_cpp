@@ -1,8 +1,8 @@
 #pragma once
 
-#include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/ImageData.h"
 #include "render_engine/SwapChainManager.h"
+#include "render_engine/graphics_context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 
 struct TextureImageDimension {
@@ -17,7 +17,7 @@ struct TextureImageDimension {
 class TextureImage {
   private:
     const VkFormat m_format = VK_FORMAT_R8G8B8A8_SRGB;
-    std::shared_ptr<CoreGraphicsContext> m_ctx;
+    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
 
   public:
     VkImage m_image;
@@ -26,7 +26,7 @@ class TextureImage {
     TextureImageDimension m_dimension;
 
     TextureImage();
-    TextureImage(std::shared_ptr<CoreGraphicsContext> ctx,
+    TextureImage(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                  const TextureImageDimension &dim);
     TextureImage(TextureImage &&other) noexcept;
     TextureImage(const TextureImage &other) = delete;

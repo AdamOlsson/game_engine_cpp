@@ -8,7 +8,7 @@ IndexBuffer::IndexBuffer()
     : m_ctx(nullptr), buffer(VK_NULL_HANDLE), bufferMemory(VK_NULL_HANDLE), size(0),
       num_indices(0) {}
 
-IndexBuffer::IndexBuffer(std::shared_ptr<CoreGraphicsContext> ctx,
+IndexBuffer::IndexBuffer(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                          const std::vector<uint16_t> &indices,
                          SwapChainManager &swap_chain_manager)
     : m_ctx(ctx), size(sizeof(uint16_t) * indices.size()),

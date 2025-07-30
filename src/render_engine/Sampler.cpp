@@ -1,13 +1,12 @@
 #include "Sampler.h"
-#include "render_engine/CoreGraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
-VkSampler create_sampler(const CoreGraphicsContext *ctx);
+VkSampler create_sampler(const graphics_context::GraphicsContext *ctx);
 
 Sampler::Sampler() : ctx(nullptr), sampler(VK_NULL_HANDLE) {}
 
-Sampler::Sampler(std::shared_ptr<CoreGraphicsContext> ctx)
+Sampler::Sampler(std::shared_ptr<graphics_context::GraphicsContext> ctx)
     : ctx(ctx), sampler(create_sampler(ctx.get())) {}
 
 Sampler::~Sampler() {
@@ -44,7 +43,7 @@ Sampler::create_descriptor_set_layout_binding(const size_t binding_num) {
     return sampler_layout_binding;
 }
 
-VkSampler create_sampler(const CoreGraphicsContext *ctx) {
+VkSampler create_sampler(const graphics_context::GraphicsContext *ctx) {
     VkPhysicalDeviceProperties properties{};
     vkGetPhysicalDeviceProperties(ctx->physical_device, &properties);
 

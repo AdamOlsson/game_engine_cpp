@@ -4,7 +4,7 @@
 
 VertexBuffer::VertexBuffer() {}
 
-VertexBuffer::VertexBuffer(std::shared_ptr<CoreGraphicsContext> ctx,
+VertexBuffer::VertexBuffer(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                            const std::vector<Vertex> &vertices,
                            SwapChainManager &swap_chain_manager)
     : m_ctx(ctx), size(sizeof(Vertex) * vertices.size()),

@@ -2,7 +2,7 @@
 #include "render_engine/shapes/Vertex.h"
 #include "vulkan/vulkan_core.h"
 
-Pipeline::Pipeline(std::shared_ptr<CoreGraphicsContext> ctx,
+Pipeline::Pipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                    const VkDescriptorSetLayout &descriptor_set_layout,
                    const std::vector<VkPushConstantRange> &push_constant_range,
                    const VkShaderModule vertex_shader_module,

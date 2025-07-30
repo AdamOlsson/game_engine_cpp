@@ -1,6 +1,6 @@
 #include "render_engine/ShaderModule.h"
 
-ShaderModule::ShaderModule(std::shared_ptr<CoreGraphicsContext> ctx,
+ShaderModule::ShaderModule(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                            const ShaderResource &shader)
     : m_ctx(ctx), shader_module(create_shader_module(shader.bytes(), shader.length())) {}
 

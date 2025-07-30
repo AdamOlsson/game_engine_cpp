@@ -1,22 +1,22 @@
 #pragma once
 
-#include "render_engine/CoreGraphicsContext.h"
 #include "render_engine/DescriptorPool.h"
 #include "render_engine/Sampler.h"
 #include "render_engine/Texture.h"
 #include "render_engine/buffers/GpuBuffer.h"
+#include "render_engine/graphics_context/GraphicsContext.h"
 #include <cstddef>
 
 class DescriptorSet {
     friend class DescriptorSetBuilder;
 
   private:
-    std::shared_ptr<CoreGraphicsContext> m_ctx;
+    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
     size_t m_capacity;
     size_t m_next;
     std::vector<VkDescriptorSet> m_descriptor_sets;
 
-    DescriptorSet(std::shared_ptr<CoreGraphicsContext> ctx,
+    DescriptorSet(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                   std::vector<VkDescriptorSet> &descriptor_sets);
 
   public:
@@ -66,10 +66,10 @@ class DescriptorSetBuilder {
     DescriptorSetBuilder &
     set_uniform_buffers(size_t binding, std::vector<GpuBufferRef> &&uniform_buffers);
 
-    DescriptorSet build(std::shared_ptr<CoreGraphicsContext> &ctx);
+    DescriptorSet build(std::shared_ptr<graphics_context::GraphicsContext> &ctx);
 
     std::vector<VkDescriptorSet>
-    allocate_descriptor_sets(std::shared_ptr<CoreGraphicsContext> &ctx);
+    allocate_descriptor_sets(std::shared_ptr<graphics_context::GraphicsContext> &ctx);
 
     VkWriteDescriptorSet
     create_uniform_buffer_descriptor_write(const VkDescriptorSet &dst_descriptor_set,

@@ -16,7 +16,7 @@
 // TODO: How can I create a proper render hierarchy? Preferably I would want my pipelines
 // to act on some state object for rendering
 
-RenderEngine::RenderEngine(std::shared_ptr<CoreGraphicsContext> ctx,
+RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                            SwapChainManager *swap_chain_manager, const UseFont use_font)
     : m_window_dimension_buffers(SwapUniformBuffer<window::WindowDimension<float>>(
           ctx, MAX_FRAMES_IN_FLIGHT, 1)),
@@ -209,7 +209,7 @@ void RenderEngine::render_ui(const ui::State &state) {
 }
 
 bool RenderEngine::begin_render_pass(SwapChainManager *swap_chain_manager,
-                                     DeviceQueues &m_device_queues) {
+                                     graphics_context::DeviceQueues &m_device_queues) {
     auto command_buffer_ = swap_chain_manager->get_command_buffer();
     if (!command_buffer_.has_value()) {
         return false;
@@ -227,7 +227,7 @@ bool RenderEngine::begin_render_pass(SwapChainManager *swap_chain_manager,
 }
 
 bool RenderEngine::end_render_pass(SwapChainManager *swap_chain_manager,
-                                   DeviceQueues &m_device_queues) {
+                                   graphics_context::DeviceQueues &m_device_queues) {
     auto &command_buffer = m_current_render_pass.command_buffer;
 
     command_buffer.end_render_pass();

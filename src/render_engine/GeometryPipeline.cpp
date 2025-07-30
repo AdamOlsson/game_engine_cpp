@@ -1,5 +1,4 @@
 #include "render_engine/GeometryPipeline.h"
-#include "CoreGraphicsContext.h"
 #include "render_engine/DescriptorPool.h"
 #include "render_engine/DescriptorSet.h"
 #include "render_engine/DescriptorSetLayoutBuilder.h"
@@ -19,7 +18,8 @@
 #include <vector>
 
 GeometryPipeline::GeometryPipeline(
-    std::shared_ptr<CoreGraphicsContext> ctx, SwapChainManager &swap_chain_manager,
+    std::shared_ptr<graphics_context::GraphicsContext> ctx,
+    SwapChainManager &swap_chain_manager,
     SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers, Sampler &sampler,
     Texture &texture)
     : m_ctx(ctx), m_circle_instance_buffers(SwapGpuBuffer<GeometryInstanceBufferObject>(
