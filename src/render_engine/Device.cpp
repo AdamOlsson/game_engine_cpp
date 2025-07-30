@@ -52,7 +52,8 @@ bool device::PhysicalDevice::is_device_suitable(const VkPhysicalDevice &physical
     VkPhysicalDeviceFeatures device_features;
     vkGetPhysicalDeviceFeatures(physical_device, &device_features);
 
-    QueueFamilyIndices indices = findQueueFamilies(physical_device, surface);
+    QueueFamilyIndices indices =
+        device::PhysicalDevice::find_queue_families(physical_device, surface);
     bool extensionsSupported = check_device_extension_support(physical_device);
 
     bool swapChainAdequate = false;
@@ -87,6 +88,46 @@ bool device::PhysicalDevice::check_device_extension_support(
     return requiredExtensions.empty();
 }
 
+device::QueueFamilyIndices
+device::PhysicalDevice::find_queue_families(const Surface &surface) const {
+    return find_queue_families(m_physical_device, surface);
+}
+
+device::QueueFamilyIndices
+device::PhysicalDevice::find_queue_families(const VkPhysicalDevice &physical_device,
+                                            const Surface &surface) {
+    QueueFamilyIndices indices;
+
+    uint32_t queue_family_count = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &queue_family_count,
+                                             nullptr);
+
+    std::vector<VkQueueFamilyProperties> queue_families(queue_family_count);
+    vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &queue_family_count,
+                                             queue_families.data());
+
+    int i = 0;
+    for (const auto &queue_family : queue_families) {
+        VkBool32 present_support = false;
+        vkGetPhysicalDeviceSurfaceSupportKHR(physical_device, i, surface,
+                                             &present_support);
+        if (present_support) {
+            indices.presentFamily = i;
+        }
+
+        if (queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+            indices.graphicsFamily = i;
+        }
+
+        if (indices.isComplete()) {
+            break;
+        }
+        i++;
+    }
+
+    return indices;
+}
+
 device::LogicalDevice::LogicalDevice(const bool enable_validation_layers,
                                      const Surface &surface,
                                      const PhysicalDevice &physical_device)
@@ -104,7 +145,7 @@ device::LogicalDevice::~LogicalDevice() {
 VkDevice device::LogicalDevice::create_logical_device(
     const Surface &surface, const PhysicalDevice &physical_device,
     const std::vector<const char *> &device_extensions) {
-    QueueFamilyIndices indices = findQueueFamilies(physical_device, surface);
+    QueueFamilyIndices indices = physical_device.find_queue_families(surface);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(),

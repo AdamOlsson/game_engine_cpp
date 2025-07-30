@@ -1,6 +1,5 @@
 #include "CommandBufferManager.h"
 #include "render_engine/SingleTimeCommandBuffer.h"
-#include "util.h"
 #include "vulkan/vulkan_core.h"
 
 CommandBufferManager::CommandBufferManager(std::shared_ptr<CoreGraphicsContext> ctx,
@@ -27,8 +26,8 @@ SingleTimeCommandBuffer CommandBufferManager::get_single_time_command_buffer() {
 }
 
 VkCommandPool CommandBufferManager::create_command_pool() {
-    QueueFamilyIndices queueFamilyIndices =
-        findQueueFamilies(m_ctx->physical_device, m_ctx->surface);
+    device::QueueFamilyIndices queueFamilyIndices =
+        m_ctx->physical_device.find_queue_families(m_ctx->surface);
 
     VkCommandPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;

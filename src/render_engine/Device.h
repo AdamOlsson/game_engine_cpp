@@ -4,6 +4,13 @@
 #include "render_engine/Surface.h"
 
 namespace device {
+struct QueueFamilyIndices {
+    std::optional<uint32_t> graphicsFamily;
+    std::optional<uint32_t> presentFamily;
+
+    bool isComplete() { return graphicsFamily.has_value() && presentFamily.has_value(); }
+};
+
 class PhysicalDevice {
   private:
     VkPhysicalDevice m_physical_device;
@@ -25,6 +32,10 @@ class PhysicalDevice {
     PhysicalDevice &operator=(const PhysicalDevice &) = delete;
 
     operator VkPhysicalDevice() const { return m_physical_device; }
+
+    QueueFamilyIndices find_queue_families(const Surface &surface) const;
+    static QueueFamilyIndices find_queue_families(const VkPhysicalDevice &physical_device,
+                                                  const Surface &surface);
 };
 
 class LogicalDevice {

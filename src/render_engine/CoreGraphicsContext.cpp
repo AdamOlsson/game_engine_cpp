@@ -1,10 +1,12 @@
 #include "CoreGraphicsContext.h"
 #include "render_engine/validation_layers.h"
-#include "util.h"
 #include "vulkan/vulkan_core.h"
 
 // CONTINUE: Find function like get_device_queues() below and integrate them with their
 // specific class (i.e Instance, Surface, etc)
+// - TODO: also have a uniform method to reference class dependencies (i.e pointers or
+// references)
+// - TODO: Move swap chain into CoreGraphicsContext
 CoreGraphicsContext::CoreGraphicsContext(window::Window *window)
     : m_enable_validation_layers(true), window(window),
       instance(Instance(m_enable_validation_layers)), surface(Surface(&instance, window)),
@@ -28,7 +30,7 @@ CoreGraphicsContext::~CoreGraphicsContext() {
 void CoreGraphicsContext::wait_idle() { logical_device.wait_idle(); }
 
 DeviceQueues CoreGraphicsContext::get_device_queues() {
-    QueueFamilyIndices indices_ = findQueueFamilies(physical_device, surface);
+    device::QueueFamilyIndices indices_ = physical_device.find_queue_families(surface);
     VkQueue graphics_queue;
     VkQueue present_queue;
     uint32_t index = 0;
