@@ -1,10 +1,10 @@
 #pragma once
 
-#include "render_engine/DescriptorSet.h"
 #include "render_engine/Pipeline.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/buffers/IndexBuffer.h"
 #include "render_engine/buffers/VertexBuffer.h"
+#include "render_engine/descriptors/DescriptorSet.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/ui/ElementProperties.h"
 #include "vulkan/vulkan_core.h"

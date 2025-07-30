@@ -1,5 +1,6 @@
 #include "DescriptorSet.h"
-#include "render_engine/DescriptorPool.h"
+#include "DescriptorPool.h"
+#include "DescriptorSetLayoutBuilder.h"
 #include "render_engine/Sampler.h"
 #include "render_engine/Texture.h"
 #include "render_engine/buffers/GpuBuffer.h"
@@ -28,16 +29,16 @@ DescriptorSetBuilder::DescriptorSetBuilder(VkDescriptorSetLayout &descriptor_set
       m_texture(nullptr), m_sampler(nullptr) {}
 
 DescriptorSetBuilder &
-DescriptorSetBuilder::set_uniform_buffers(size_t binding,
-                                          std::vector<GpuBufferRef> &&uniform_buffers) {
+DescriptorSetBuilder::set_uniform_buffer(size_t binding,
+                                         std::vector<GpuBufferRef> &&uniform_buffers) {
     m_uniform_buffer_binding = binding;
     m_uniform_buffers = std::move(uniform_buffers);
     return *this;
 }
 
 DescriptorSetBuilder &
-DescriptorSetBuilder::add_storage_buffers(size_t binding,
-                                          std::vector<GpuBufferRef> &&instance_buffers) {
+DescriptorSetBuilder::add_storage_buffer(size_t binding,
+                                         std::vector<GpuBufferRef> &&instance_buffers) {
     if (instance_buffers.size() != m_capacity) {
         throw std::runtime_error(
             "size of storage buffer reference needs to be equal to capacity");
@@ -137,6 +138,21 @@ DescriptorSetBuilder::build(std::shared_ptr<graphics_context::GraphicsContext> &
         throw std::runtime_error(
             "Number of storage buffers needs to be a multiple of capacity");
     }
+
+    auto descriptor_set_layout_builder = DescriptorSetLayoutBuilder();
+
+    /*if (m_sampler != nullptr && m_texture != nullptr) {*/
+    /*    descriptor_set_layout_builder.add(*/
+    /*        m_sampler->create_descriptor_set_layout_binding(m_texture_binding));*/
+    /*}*/
+
+    /*if (m_instance_buffers.size() != 0) {*/
+    /*for (auto i = 0; i < m_instance_buffers.size(); i++) {*/
+    /*descriptor_set_layout_builder.add(*/
+    /*    m_instance_buffers[i].create_descriptor_set_layout_binding(*/
+    /*        m_instance_buffer_binding[i]));*/
+    /*}*/
+    /*}*/
 
     std::vector<VkDescriptorSet> descriptor_sets = allocate_descriptor_sets(ctx);
 

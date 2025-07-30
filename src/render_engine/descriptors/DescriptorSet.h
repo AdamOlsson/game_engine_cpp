@@ -1,6 +1,6 @@
 #pragma once
 
-#include "render_engine/DescriptorPool.h"
+#include "DescriptorPool.h"
 #include "render_engine/Sampler.h"
 #include "render_engine/Texture.h"
 #include "render_engine/buffers/GpuBuffer.h"
@@ -15,6 +15,7 @@ class DescriptorSet {
     size_t m_capacity;
     size_t m_next;
     std::vector<VkDescriptorSet> m_descriptor_sets;
+    // std::vector<VkDescriptorSetLayout> m_descriptor_set_layouts;
 
     DescriptorSet(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                   std::vector<VkDescriptorSet> &descriptor_sets);
@@ -53,21 +54,6 @@ class DescriptorSetBuilder {
                                             const VkDescriptorBufferInfo &buffer_info,
                                             const size_t binding_num);
 
-  public:
-    DescriptorSetBuilder(VkDescriptorSetLayout &descriptor_set_layout,
-                         DescriptorPool &descriptor_pool, size_t capacity);
-
-    DescriptorSetBuilder &
-    add_storage_buffers(size_t binding, std::vector<GpuBufferRef> &&instance_buffers);
-
-    DescriptorSetBuilder &set_texture_and_sampler(size_t binding, Texture &texture,
-                                                  Sampler &sampler);
-
-    DescriptorSetBuilder &
-    set_uniform_buffers(size_t binding, std::vector<GpuBufferRef> &&uniform_buffers);
-
-    DescriptorSet build(std::shared_ptr<graphics_context::GraphicsContext> &ctx);
-
     std::vector<VkDescriptorSet>
     allocate_descriptor_sets(std::shared_ptr<graphics_context::GraphicsContext> &ctx);
 
@@ -78,4 +64,19 @@ class DescriptorSetBuilder {
     VkWriteDescriptorSet
     create_texture_and_sampler_descriptor_write(const VkDescriptorSet &dst_descriptor_set,
                                                 VkDescriptorImageInfo &image_info);
+
+  public:
+    DescriptorSetBuilder(VkDescriptorSetLayout &descriptor_set_layout,
+                         DescriptorPool &descriptor_pool, size_t capacity);
+
+    DescriptorSetBuilder &
+    add_storage_buffer(size_t binding, std::vector<GpuBufferRef> &&instance_buffers);
+
+    DescriptorSetBuilder &set_texture_and_sampler(size_t binding, Texture &texture,
+                                                  Sampler &sampler);
+
+    DescriptorSetBuilder &set_uniform_buffer(size_t binding,
+                                             std::vector<GpuBufferRef> &&uniform_buffers);
+
+    DescriptorSet build(std::shared_ptr<graphics_context::GraphicsContext> &ctx);
 };

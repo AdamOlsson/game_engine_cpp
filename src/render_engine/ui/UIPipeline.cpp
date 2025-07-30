@@ -1,9 +1,9 @@
 #include "UIPipeline.h"
-#include "render_engine/DescriptorSet.h"
-#include "render_engine/DescriptorSetLayoutBuilder.h"
 #include "render_engine/Geometry.h"
 #include "render_engine/GeometryPipeline.h"
 #include "render_engine/ShaderModule.h"
+#include "render_engine/descriptors/DescriptorSet.h"
+#include "render_engine/descriptors/DescriptorSetLayoutBuilder.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "render_engine/resources/shaders/ShaderResource.h"
 #include "vulkan/vulkan_core.h"
@@ -60,7 +60,7 @@ DescriptorSet UIPipeline::create_descriptor_set(
     SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers) {
     return DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                 MAX_FRAMES_IN_FLIGHT)
-        .set_uniform_buffers(0, uniform_buffers.get_buffer_references())
+        .set_uniform_buffer(0, uniform_buffers.get_buffer_references())
         .build(m_ctx);
 }
 

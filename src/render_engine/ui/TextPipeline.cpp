@@ -1,11 +1,11 @@
 #include "render_engine/ui/TextPipeline.h"
-#include "render_engine/DescriptorSet.h"
-#include "render_engine/DescriptorSetLayoutBuilder.h"
 #include "render_engine/Geometry.h"
 #include "render_engine/GeometryPipeline.h"
 #include "render_engine/Sampler.h"
 #include "render_engine/ShaderModule.h"
 #include "render_engine/Texture.h"
+#include "render_engine/descriptors/DescriptorSet.h"
+#include "render_engine/descriptors/DescriptorSetLayoutBuilder.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "vulkan/vulkan_core.h"
 #include <cstring>
@@ -54,10 +54,10 @@ DescriptorSet TextPipeline::create_descriptor_set(
     Texture &texture) {
     return DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                 MAX_FRAMES_IN_FLIGHT)
-        .add_storage_buffers(0, m_character_buffers.get_buffer_references())
-        .set_uniform_buffers(1, uniform_buffers.get_buffer_references())
+        .add_storage_buffer(0, m_character_buffers.get_buffer_references())
+        .set_uniform_buffer(1, uniform_buffers.get_buffer_references())
         .set_texture_and_sampler(2, texture, sampler)
-        .add_storage_buffers(3, m_text_segment_buffers.get_buffer_references())
+        .add_storage_buffer(3, m_text_segment_buffers.get_buffer_references())
         .build(m_ctx);
 }
 

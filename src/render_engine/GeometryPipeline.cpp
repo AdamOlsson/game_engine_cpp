@@ -1,12 +1,12 @@
 #include "render_engine/GeometryPipeline.h"
-#include "render_engine/DescriptorPool.h"
-#include "render_engine/DescriptorSet.h"
-#include "render_engine/DescriptorSetLayoutBuilder.h"
 #include "render_engine/Geometry.h"
 #include "render_engine/Sampler.h"
 #include "render_engine/ShaderModule.h"
 #include "render_engine/Texture.h"
 #include "render_engine/buffers/GpuBuffer.h"
+#include "render_engine/descriptors/DescriptorPool.h"
+#include "render_engine/descriptors/DescriptorSet.h"
+#include "render_engine/descriptors/DescriptorSetLayoutBuilder.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "shape.h"
 #include "vulkan/vulkan_core.h"
@@ -44,8 +44,8 @@ GeometryPipeline::GeometryPipeline(
       m_circle_descriptor_set(
           DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                MAX_FRAMES_IN_FLIGHT)
-              .add_storage_buffers(0, m_circle_instance_buffers.get_buffer_references())
-              .set_uniform_buffers(1, uniform_buffers.get_buffer_references())
+              .add_storage_buffer(0, m_circle_instance_buffers.get_buffer_references())
+              .set_uniform_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
               .build(m_ctx)),
 
@@ -56,8 +56,8 @@ GeometryPipeline::GeometryPipeline(
       m_triangle_descriptor_set(
           DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                MAX_FRAMES_IN_FLIGHT)
-              .add_storage_buffers(0, m_triangle_instance_buffers.get_buffer_references())
-              .set_uniform_buffers(1, uniform_buffers.get_buffer_references())
+              .add_storage_buffer(0, m_triangle_instance_buffers.get_buffer_references())
+              .set_uniform_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
               .build(m_ctx)),
 
@@ -68,9 +68,8 @@ GeometryPipeline::GeometryPipeline(
       m_rectangle_descriptor_set(
           DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                MAX_FRAMES_IN_FLIGHT)
-              .add_storage_buffers(0,
-                                   m_rectangle_instance_buffers.get_buffer_references())
-              .set_uniform_buffers(1, uniform_buffers.get_buffer_references())
+              .add_storage_buffer(0, m_rectangle_instance_buffers.get_buffer_references())
+              .set_uniform_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
               .build(m_ctx)),
 
@@ -81,8 +80,8 @@ GeometryPipeline::GeometryPipeline(
       m_hexagon_descriptor_set(
           DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                MAX_FRAMES_IN_FLIGHT)
-              .add_storage_buffers(0, m_hexagon_instance_buffers.get_buffer_references())
-              .set_uniform_buffers(1, uniform_buffers.get_buffer_references())
+              .add_storage_buffer(0, m_hexagon_instance_buffers.get_buffer_references())
+              .set_uniform_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
               .build(m_ctx))
 

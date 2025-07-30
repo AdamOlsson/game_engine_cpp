@@ -39,6 +39,10 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
     m_geometry_pipeline = std::make_unique<GeometryPipeline>(
         ctx, *swap_chain_manager, m_window_dimension_buffers, m_sampler, *m_texture);
 
+    // std::unique_ptr<GeometryPipeline> geometry_pipeline = PipelineBuilder(ctx,
+    // swap_chain_manager)
+    //
+
     switch (use_font) {
     case UseFont::Default: {
         auto default_font = resource_manager.get_resource<FontResource>("DefaultFont");
