@@ -1,18 +1,20 @@
 #pragma once
 
-#include "render_engine/Instance.h"
+#include "Instance.h"
 #include "render_engine/window/Window.h"
 #include "vulkan/vulkan_core.h"
 
+namespace graphics_context {
 class Surface {
   private:
-    const Instance *m_instance;
-    VkSurfaceKHR create_surface(const Instance *instance, const window::Window *window);
+    const graphics_context::Instance *m_instance;
+    VkSurfaceKHR create_surface(const graphics_context::Instance *instance,
+                                const window::Window *window);
 
   public:
     VkSurfaceKHR surface;
 
-    Surface(const Instance *instance, const window::Window *window);
+    Surface(const graphics_context::Instance *instance, const window::Window *window);
     ~Surface();
 
     Surface(Surface &&) noexcept = default;
@@ -22,3 +24,4 @@ class Surface {
 
     operator VkSurfaceKHR() const { return surface; }
 };
+} // namespace graphics_context

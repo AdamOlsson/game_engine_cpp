@@ -1,8 +1,10 @@
 #pragma once
 
-#include "render_engine/Instance.h"
-#include "render_engine/Surface.h"
+#include "Instance.h"
+#include "Surface.h"
+#include "render_engine/graphics_context/Instance.h"
 
+namespace graphics_context {
 namespace device {
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
@@ -19,11 +21,11 @@ class PhysicalDevice {
                             const Surface &surface);
     bool check_device_extension_support(const VkPhysicalDevice &physical_device);
 
-    VkPhysicalDevice pick_physical_device(const Instance &instance,
+    VkPhysicalDevice pick_physical_device(const graphics_context::Instance &instance,
                                           const Surface &surface);
 
   public:
-    PhysicalDevice(const Instance &instance, const Surface &surface);
+    PhysicalDevice(const graphics_context::Instance &instance, const Surface &surface);
     ~PhysicalDevice() = default;
 
     PhysicalDevice(PhysicalDevice &&) noexcept = default;
@@ -62,3 +64,4 @@ class LogicalDevice {
 };
 
 } // namespace device
+} // namespace graphics_context

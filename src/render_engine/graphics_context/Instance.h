@@ -2,6 +2,8 @@
 
 #include "vulkan/vulkan_core.h"
 #include <vector>
+
+namespace graphics_context {
 class Instance {
   private:
     bool m_enable_validation_layers;
@@ -23,3 +25,5 @@ class Instance {
 
     operator VkInstance() const { return m_instance; }
 };
+
+} // namespace graphics_context

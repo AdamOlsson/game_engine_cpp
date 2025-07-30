@@ -1,15 +1,15 @@
 #include "Instance.h"
-#include "render_engine/validation_layers.h"
+#include "validation_layers.h"
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-Instance::Instance(bool enable_validation_layers)
+graphics_context::Instance::Instance(bool enable_validation_layers)
     : m_enable_validation_layers(enable_validation_layers),
       m_instance(create_instance()) {}
 
-Instance::~Instance() { vkDestroyInstance(m_instance, nullptr); }
+graphics_context::Instance::~Instance() { vkDestroyInstance(m_instance, nullptr); }
 
-VkInstance Instance::create_instance() {
+VkInstance graphics_context::Instance::create_instance() {
     if (m_enable_validation_layers &&
         !validation_layers::check_validation_layer_support()) {
         throw std::runtime_error("validation layers requested, but not available!");
@@ -64,7 +64,7 @@ VkInstance Instance::create_instance() {
     return instance;
 }
 
-std::vector<const char *> Instance::get_required_extensions() {
+std::vector<const char *> graphics_context::Instance::get_required_extensions() {
     uint32_t glfwExtensionCount = 0;
     const char **glfwExtensions;
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
@@ -83,7 +83,7 @@ std::vector<const char *> Instance::get_required_extensions() {
     return extensions;
 }
 
-void Instance::print_enabled_extensions() {
+void graphics_context::Instance::print_enabled_extensions() {
     uint32_t extensionCount = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 

@@ -101,7 +101,7 @@ VkSwapchainKHR SwapChain::create_swap_chain(uint32_t image_count,
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    device::QueueFamilyIndices indices =
+    graphics_context::device::QueueFamilyIndices indices =
         m_ctx->physical_device.find_queue_families(m_ctx->surface);
 
     uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(),

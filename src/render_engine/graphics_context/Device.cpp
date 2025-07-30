@@ -1,6 +1,6 @@
 #include "Device.h"
 #include "render_engine/util.h"
-#include "render_engine/validation_layers.h"
+#include "validation_layers.h"
 #include "vulkan/vulkan_beta.h"
 #include "vulkan/vulkan_core.h"
 #include <set>
@@ -13,11 +13,12 @@ const std::vector<const char *> device_extensions = {
 
 }
 
-device::PhysicalDevice::PhysicalDevice(const Instance &instance, const Surface &surface)
+graphics_context::device::PhysicalDevice::PhysicalDevice(const Instance &instance,
+                                                         const Surface &surface)
     : m_physical_device(pick_physical_device(instance, surface)) {}
 
-VkPhysicalDevice device::PhysicalDevice::pick_physical_device(const Instance &instance,
-                                                              const Surface &surface) {
+VkPhysicalDevice graphics_context::device::PhysicalDevice::pick_physical_device(
+    const graphics_context::Instance &instance, const Surface &surface) {
     uint32_t device_count = 0;
     vkEnumeratePhysicalDevices(instance, &device_count, nullptr);
 
@@ -42,8 +43,8 @@ VkPhysicalDevice device::PhysicalDevice::pick_physical_device(const Instance &in
     return physical_device;
 }
 
-bool device::PhysicalDevice::is_device_suitable(const VkPhysicalDevice &physical_device,
-                                                const Surface &surface) {
+bool graphics_context::device::PhysicalDevice::is_device_suitable(
+    const VkPhysicalDevice &physical_device, const Surface &surface) {
     // NOTE: For mor info check:
     // https://vulkan-tutorial.com/en/Drawing_a_triangle/Setup/Physical_devices_and_queue_families
     /*VkPhysicalDeviceProperties deviceProperties;*/
@@ -68,7 +69,7 @@ bool device::PhysicalDevice::is_device_suitable(const VkPhysicalDevice &physical
            device_features.samplerAnisotropy;
 }
 
-bool device::PhysicalDevice::check_device_extension_support(
+bool graphics_context::device::PhysicalDevice::check_device_extension_support(
     const VkPhysicalDevice &physical_device) {
     uint32_t extensionCount;
     vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extensionCount,
@@ -88,14 +89,15 @@ bool device::PhysicalDevice::check_device_extension_support(
     return requiredExtensions.empty();
 }
 
-device::QueueFamilyIndices
-device::PhysicalDevice::find_queue_families(const Surface &surface) const {
+graphics_context::device::QueueFamilyIndices
+graphics_context::device::PhysicalDevice::find_queue_families(
+    const Surface &surface) const {
     return find_queue_families(m_physical_device, surface);
 }
 
-device::QueueFamilyIndices
-device::PhysicalDevice::find_queue_families(const VkPhysicalDevice &physical_device,
-                                            const Surface &surface) {
+graphics_context::device::QueueFamilyIndices
+graphics_context::device::PhysicalDevice::find_queue_families(
+    const VkPhysicalDevice &physical_device, const Surface &surface) {
     QueueFamilyIndices indices;
 
     uint32_t queue_family_count = 0;
@@ -128,21 +130,21 @@ device::PhysicalDevice::find_queue_families(const VkPhysicalDevice &physical_dev
     return indices;
 }
 
-device::LogicalDevice::LogicalDevice(const bool enable_validation_layers,
-                                     const Surface &surface,
-                                     const PhysicalDevice &physical_device)
+graphics_context::device::LogicalDevice::LogicalDevice(
+    const bool enable_validation_layers, const Surface &surface,
+    const PhysicalDevice &physical_device)
     : m_enable_validation_layers(enable_validation_layers),
       m_logical_device(
           create_logical_device(surface, physical_device, device_extensions)) {}
 
-device::LogicalDevice::~LogicalDevice() {
+graphics_context::device::LogicalDevice::~LogicalDevice() {
     if (m_logical_device == VK_NULL_HANDLE) {
         return;
     }
     vkDestroyDevice(m_logical_device, nullptr);
 }
 
-VkDevice device::LogicalDevice::create_logical_device(
+VkDevice graphics_context::device::LogicalDevice::create_logical_device(
     const Surface &surface, const PhysicalDevice &physical_device,
     const std::vector<const char *> &device_extensions) {
     QueueFamilyIndices indices = physical_device.find_queue_families(surface);
@@ -198,4 +200,6 @@ VkDevice device::LogicalDevice::create_logical_device(
     return device;
 }
 
-void device::LogicalDevice::wait_idle() { vkDeviceWaitIdle(m_logical_device); }
+void graphics_context::device::LogicalDevice::wait_idle() {
+    vkDeviceWaitIdle(m_logical_device);
+}

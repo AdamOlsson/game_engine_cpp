@@ -1,9 +1,11 @@
 #pragma once
 
-#include "render_engine/Instance.h"
+#include "Instance.h"
 #include "vulkan/vulkan_core.h"
 #include <iostream>
 #include <vector>
+
+namespace graphics_context {
 namespace validation_layers {
 const std::vector<const char *> validation_layers = {"VK_LAYER_KHRONOS_validation"};
 
@@ -21,7 +23,7 @@ namespace messenger {
 
 class DebugMessenger {
   private:
-    Instance *m_instance;
+    graphics_context::Instance *m_instance;
     VkDebugUtilsMessengerEXT m_debug_messenger;
 
     VkDebugUtilsMessengerEXT setup_debug_messenger();
@@ -33,7 +35,7 @@ class DebugMessenger {
     void destroy_debug_messenger_ext();
 
   public:
-    DebugMessenger(Instance *instance);
+    DebugMessenger(graphics_context::Instance *instance);
     ~DebugMessenger();
 
     DebugMessenger(DebugMessenger &&other) noexcept
@@ -62,3 +64,4 @@ class DebugMessenger {
 }; // namespace messenger
 
 }; // namespace validation_layers
+} // namespace graphics_context

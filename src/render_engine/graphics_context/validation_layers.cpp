@@ -1,7 +1,7 @@
 #include "validation_layers.h"
 #include "vulkan/vulkan_core.h"
 
-bool validation_layers::check_validation_layer_support() {
+bool graphics_context::validation_layers::check_validation_layer_support() {
     uint32_t layer_count;
     vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
 
@@ -26,10 +26,11 @@ bool validation_layers::check_validation_layer_support() {
     return true;
 }
 
-validation_layers::messenger::DebugMessenger::DebugMessenger(Instance *instance)
+graphics_context::validation_layers::messenger::DebugMessenger::DebugMessenger(
+    Instance *instance)
     : m_instance(instance), m_debug_messenger(setup_debug_messenger()) {}
 
-validation_layers::messenger::DebugMessenger::~DebugMessenger() {
+graphics_context::validation_layers::messenger::DebugMessenger::~DebugMessenger() {
     if (m_debug_messenger == VK_NULL_HANDLE) {
         return;
     }
@@ -40,7 +41,7 @@ validation_layers::messenger::DebugMessenger::~DebugMessenger() {
 }
 
 VkDebugUtilsMessengerEXT
-validation_layers::messenger::DebugMessenger::setup_debug_messenger() {
+graphics_context::validation_layers::messenger::DebugMessenger::setup_debug_messenger() {
 
     VkDebugUtilsMessengerCreateInfoEXT create_info;
     validation_layers::messenger::DebugMessenger::populate_debug_messenger_create_info(
@@ -53,9 +54,10 @@ validation_layers::messenger::DebugMessenger::setup_debug_messenger() {
     return debug_messenger;
 }
 
-VkResult validation_layers::messenger::DebugMessenger::create_debug_utils_messenger_ext(
-    const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
-    VkDebugUtilsMessengerEXT *pDebugMessenger) {
+VkResult graphics_context::validation_layers::messenger::DebugMessenger::
+    create_debug_utils_messenger_ext(
+        const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
+        VkDebugUtilsMessengerEXT *pDebugMessenger) {
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
         *m_instance, "vkCreateDebugUtilsMessengerEXT");
 
@@ -66,7 +68,8 @@ VkResult validation_layers::messenger::DebugMessenger::create_debug_utils_messen
     }
 }
 
-void validation_layers::messenger::DebugMessenger::destroy_debug_messenger_ext() {
+void graphics_context::validation_layers::messenger::DebugMessenger::
+    destroy_debug_messenger_ext() {
     if (m_debug_messenger == VK_NULL_HANDLE) {
         return;
     }
@@ -78,8 +81,9 @@ void validation_layers::messenger::DebugMessenger::destroy_debug_messenger_ext()
     }
 }
 
-void validation_layers::messenger::DebugMessenger::populate_debug_messenger_create_info(
-    VkDebugUtilsMessengerCreateInfoEXT &create_info) {
+void graphics_context::validation_layers::messenger::DebugMessenger::
+    populate_debug_messenger_create_info(
+        VkDebugUtilsMessengerCreateInfoEXT &create_info) {
     create_info = {};
     create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
     create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |

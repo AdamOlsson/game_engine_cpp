@@ -1,5 +1,5 @@
 #include "GraphicsContext.h"
-#include "render_engine/validation_layers.h"
+#include "validation_layers.h"
 #include "vulkan/vulkan_core.h"
 
 // CONTINUE: Find function like get_device_queues() below and integrate them with their

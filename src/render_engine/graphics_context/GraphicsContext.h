@@ -1,10 +1,10 @@
 #pragma once
 
-#include "render_engine/Device.h"
-#include "render_engine/Instance.h"
-#include "render_engine/Surface.h"
-#include "render_engine/validation_layers.h"
+#include "Device.h"
+#include "Instance.h"
+#include "Surface.h"
 #include "render_engine/window/Window.h"
+#include "validation_layers.h"
 #include "vulkan/vulkan_core.h"
 
 namespace graphics_context {
