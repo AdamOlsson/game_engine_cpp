@@ -35,7 +35,7 @@ class DescriptorSet {
 
 class DescriptorSetBuilder {
   private:
-    VkDescriptorSetLayout *m_descriptor_set_layout;
+    const VkDescriptorSetLayout m_descriptor_set_layout;
     DescriptorPool *m_descriptor_pool;
     size_t m_capacity;
 
@@ -66,7 +66,7 @@ class DescriptorSetBuilder {
                                                 VkDescriptorImageInfo &image_info);
 
   public:
-    DescriptorSetBuilder(VkDescriptorSetLayout &descriptor_set_layout,
+    DescriptorSetBuilder(const VkDescriptorSetLayout &descriptor_set_layout,
                          DescriptorPool &descriptor_pool, size_t capacity);
 
     DescriptorSetBuilder &

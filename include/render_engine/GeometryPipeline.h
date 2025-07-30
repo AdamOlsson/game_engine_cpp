@@ -9,6 +9,7 @@
 #include "render_engine/buffers/VertexBuffer.h"
 #include "render_engine/descriptors/DescriptorPool.h"
 #include "render_engine/descriptors/DescriptorSet.h"
+#include "render_engine/descriptors/DescriptorSetLayout.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "shape.h"
 #include "vulkan/vulkan_core.h"
@@ -79,7 +80,7 @@ class GeometryPipeline {
 
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
 
-    VkDescriptorSetLayout m_descriptor_set_layout;
+    DescriptorSetLayout m_descriptor_set_layout;
     Pipeline m_pipeline;
     DescriptorPool m_descriptor_pool;
 
@@ -107,9 +108,9 @@ class GeometryPipeline {
 
     bool framebufferResized = false;
 
-    VkDescriptorSetLayout create_descriptor_set_layout();
+    DescriptorSetLayout create_descriptor_set_layout();
 
-    Pipeline create_pipeline(VkDescriptorSetLayout &descriptorSetLayout,
+    Pipeline create_pipeline(DescriptorSetLayout &descriptorSetLayout,
                              SwapChainManager &swap_chain_manager);
 
     void record_draw_command(const VkCommandBuffer &command_buffer,

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "render_engine/descriptors/DescriptorSetLayout.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <vector>
@@ -13,5 +14,5 @@ class DescriptorSetLayoutBuilder {
 
     DescriptorSetLayoutBuilder &add(const VkDescriptorSetLayoutBinding &&binding);
 
-    VkDescriptorSetLayout build(const graphics_context::GraphicsContext *ctx);
+    DescriptorSetLayout build(std::shared_ptr<graphics_context::GraphicsContext> &ctx);
 };

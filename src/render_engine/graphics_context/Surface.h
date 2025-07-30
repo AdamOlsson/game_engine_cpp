@@ -8,12 +8,12 @@ namespace graphics_context {
 class Surface {
   private:
     const graphics_context::Instance *m_instance;
+    VkSurfaceKHR m_surface;
+
     VkSurfaceKHR create_surface(const graphics_context::Instance *instance,
                                 const window::Window *window);
 
   public:
-    VkSurfaceKHR surface;
-
     Surface(const graphics_context::Instance *instance, const window::Window *window);
     ~Surface();
 
@@ -22,6 +22,6 @@ class Surface {
     Surface(const Surface &) = delete;
     Surface &operator=(const Surface &) = delete;
 
-    operator VkSurfaceKHR() const { return surface; }
+    operator VkSurfaceKHR() const { return m_surface; }
 };
 } // namespace graphics_context

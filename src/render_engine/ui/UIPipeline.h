@@ -5,6 +5,7 @@
 #include "render_engine/buffers/IndexBuffer.h"
 #include "render_engine/buffers/VertexBuffer.h"
 #include "render_engine/descriptors/DescriptorSet.h"
+#include "render_engine/descriptors/DescriptorSetLayout.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/ui/ElementProperties.h"
 #include "vulkan/vulkan_core.h"
@@ -21,7 +22,7 @@ class UIPipeline {
 
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
 
-    VkDescriptorSetLayout m_descriptor_set_layout;
+    DescriptorSetLayout m_descriptor_set_layout;
     DescriptorPool m_descriptor_pool;
     DescriptorSet m_descriptor_set;
     Pipeline m_pipeline;
@@ -29,7 +30,7 @@ class UIPipeline {
     VertexBuffer m_vertex_buffer;
     IndexBuffer m_index_buffer;
 
-    VkDescriptorSetLayout create_descriptor_set_layout();
+    DescriptorSetLayout create_descriptor_set_layout();
     DescriptorSet create_descriptor_set(
         SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers);
 

@@ -24,9 +24,7 @@ UIPipeline::UIPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
       m_vertex_buffer(m_ctx, Geometry::rectangle_vertices, swap_chain_manager),
       m_index_buffer(IndexBuffer(ctx, Geometry::rectangle_indices, swap_chain_manager)) {}
 
-UIPipeline::~UIPipeline() {
-    vkDestroyDescriptorSetLayout(m_ctx->logical_device, m_descriptor_set_layout, nullptr);
-}
+UIPipeline::~UIPipeline() {}
 
 void UIPipeline::render(const VkCommandBuffer &command_buffer,
                         const ElementProperties::ContainerProperties &ui_element) {
@@ -49,11 +47,11 @@ void UIPipeline::render(const VkCommandBuffer &command_buffer,
     vkCmdDrawIndexed(command_buffer, m_index_buffer.num_indices, 1, 0, 0, 0);
 }
 
-VkDescriptorSetLayout UIPipeline::create_descriptor_set_layout() {
+DescriptorSetLayout UIPipeline::create_descriptor_set_layout() {
     return DescriptorSetLayoutBuilder()
         .add(BufferDescriptor<
              GpuBufferType::Uniform>::create_descriptor_set_layout_binding(0))
-        .build(m_ctx.get());
+        .build(m_ctx);
 }
 
 DescriptorSet UIPipeline::create_descriptor_set(

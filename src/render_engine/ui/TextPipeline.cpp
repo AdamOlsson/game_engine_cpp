@@ -1,4 +1,4 @@
-#include "render_engine/ui/TextPipeline.h"
+#include "TextPipeline.h"
 #include "render_engine/Geometry.h"
 #include "render_engine/GeometryPipeline.h"
 #include "render_engine/Sampler.h"
@@ -33,11 +33,9 @@ TextPipeline::TextPipeline(
       m_descriptor_set(create_descriptor_set(uniform_buffers, sampler, texture)),
       m_pipeline(create_pipeline(m_descriptor_set_layout, swap_chain_manager)) {}
 
-TextPipeline::~TextPipeline() {
-    vkDestroyDescriptorSetLayout(m_ctx->logical_device, m_descriptor_set_layout, nullptr);
-}
+TextPipeline::~TextPipeline() {}
 
-VkDescriptorSetLayout TextPipeline::create_descriptor_set_layout() {
+DescriptorSetLayout TextPipeline::create_descriptor_set_layout() {
     return DescriptorSetLayoutBuilder()
         .add(BufferDescriptor<
              GpuBufferType::Storage>::create_descriptor_set_layout_binding(0))
@@ -46,7 +44,7 @@ VkDescriptorSetLayout TextPipeline::create_descriptor_set_layout() {
         .add(Sampler::create_descriptor_set_layout_binding(2))
         .add(BufferDescriptor<
              GpuBufferType::Storage>::create_descriptor_set_layout_binding(3))
-        .build(m_ctx.get());
+        .build(m_ctx);
 }
 
 DescriptorSet TextPipeline::create_descriptor_set(
@@ -61,7 +59,7 @@ DescriptorSet TextPipeline::create_descriptor_set(
         .build(m_ctx);
 }
 
-Pipeline TextPipeline::create_pipeline(VkDescriptorSetLayout &descriptor_set_layout,
+Pipeline TextPipeline::create_pipeline(DescriptorSetLayout &descriptor_set_layout,
                                        SwapChainManager &swap_chain_manager) {
     auto &resoure_manager = ResourceManager::get_instance();
     auto vert_shader_code = resoure_manager.get_resource<ShaderResource>("TextVertex");

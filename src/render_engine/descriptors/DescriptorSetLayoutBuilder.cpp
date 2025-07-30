@@ -7,8 +7,8 @@ DescriptorSetLayoutBuilder::add(const VkDescriptorSetLayoutBinding &&binding) {
     return *this;
 }
 
-VkDescriptorSetLayout
-DescriptorSetLayoutBuilder::build(const graphics_context::GraphicsContext *ctx) {
+DescriptorSetLayout DescriptorSetLayoutBuilder::build(
+    std::shared_ptr<graphics_context::GraphicsContext> &ctx) {
     VkDescriptorSetLayoutCreateInfo layout_info{};
     layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     layout_info.bindingCount = m_bindings.size();
@@ -19,5 +19,5 @@ DescriptorSetLayoutBuilder::build(const graphics_context::GraphicsContext *ctx) 
                                     &layout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
-    return layout;
+    return DescriptorSetLayout(ctx, layout);
 }

@@ -87,18 +87,16 @@ GeometryPipeline::GeometryPipeline(
 
 {}
 
-GeometryPipeline::~GeometryPipeline() {
-    vkDestroyDescriptorSetLayout(m_ctx->logical_device, m_descriptor_set_layout, nullptr);
-}
+GeometryPipeline::~GeometryPipeline() {}
 
-VkDescriptorSetLayout GeometryPipeline::create_descriptor_set_layout() {
+DescriptorSetLayout GeometryPipeline::create_descriptor_set_layout() {
     return DescriptorSetLayoutBuilder()
         .add(BufferDescriptor<
              GpuBufferType::Storage>::create_descriptor_set_layout_binding(0))
         .add(BufferDescriptor<
              GpuBufferType::Uniform>::create_descriptor_set_layout_binding(1))
         .add(Sampler::create_descriptor_set_layout_binding(2))
-        .build(m_ctx.get());
+        .build(m_ctx);
 }
 
 void GeometryPipeline::record_draw_command(const VkCommandBuffer &command_buffer,
@@ -197,7 +195,7 @@ VkDescriptorPool createDescriptorPool(VkDevice &device, const int capacity) {
     return descriptorPool;
 }
 
-Pipeline GeometryPipeline::create_pipeline(VkDescriptorSetLayout &descriptor_set_layout,
+Pipeline GeometryPipeline::create_pipeline(DescriptorSetLayout &descriptor_set_layout,
                                            SwapChainManager &swap_chain_manager) {
     auto &resoure_manager = ResourceManager::get_instance();
     auto vert_shader_code =

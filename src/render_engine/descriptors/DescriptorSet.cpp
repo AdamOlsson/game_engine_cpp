@@ -19,11 +19,11 @@ const VkDescriptorSet DescriptorSet::get() {
     return desc;
 }
 
-DescriptorSetBuilder::DescriptorSetBuilder(VkDescriptorSetLayout &descriptor_set_layout,
-                                           DescriptorPool &descriptor_pool,
-                                           size_t capacity)
-    : m_descriptor_set_layout(&descriptor_set_layout),
-      m_descriptor_pool(&descriptor_pool), m_capacity(capacity),
+DescriptorSetBuilder::DescriptorSetBuilder(
+    const VkDescriptorSetLayout &descriptor_set_layout, DescriptorPool &descriptor_pool,
+    size_t capacity)
+    : m_descriptor_set_layout(descriptor_set_layout), m_descriptor_pool(&descriptor_pool),
+      m_capacity(capacity),
 
       m_uniform_buffer_binding(0), m_instance_buffer_binding(0), m_texture_binding(0),
       m_texture(nullptr), m_sampler(nullptr) {}
@@ -64,7 +64,7 @@ DescriptorSetBuilder &DescriptorSetBuilder::set_texture_and_sampler(size_t bindi
 
 std::vector<VkDescriptorSet> DescriptorSetBuilder::allocate_descriptor_sets(
     std::shared_ptr<graphics_context::GraphicsContext> &ctx) {
-    std::vector<VkDescriptorSetLayout> layouts(m_capacity, *m_descriptor_set_layout);
+    std::vector<VkDescriptorSetLayout> layouts(m_capacity, m_descriptor_set_layout);
 
     VkDescriptorSetAllocateInfo alloc_info{};
     alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
