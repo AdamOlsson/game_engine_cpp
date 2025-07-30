@@ -14,14 +14,15 @@ SwapChain::SwapChain(std::shared_ptr<graphics_context::GraphicsContext> ctx)
         {.format = VK_FORMAT_B8G8R8A8_SRGB,
          .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR});
 
-    m_extent = choose_swap_extent(**m_ctx->window, swap_chain_support.capabilities);
+    auto window_framebuffer_size = m_ctx->window->get_framebuffer_size<uint32_t>();
+    m_extent = swap_chain_support.choose_swap_extent(window_framebuffer_size);
 
     m_swap_chain = create_swap_chain(image_count, surface_format, swap_chain_support);
 
     m_images = create_swap_chain_images(image_count);
     m_image_views = create_image_views(surface_format.format);
     m_render_pass = create_render_pass(surface_format.format);
-    m_frame_buffers = create_frame_buffers();
+    m_frame_buffers = create_framebuffers();
 }
 
 SwapChain::~SwapChain() {
@@ -35,43 +36,11 @@ SwapChain::~SwapChain() {
     }
 }
 
-VkPresentModeKHR SwapChain::choose_swap_present_mode(
-    const std::vector<VkPresentModeKHR> &available_present_modes) {
-    for (const auto &availablePresentMode : available_present_modes) {
-        if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
-            return availablePresentMode;
-        }
-    }
-    return VK_PRESENT_MODE_FIFO_KHR;
-}
-
-VkExtent2D SwapChain::choose_swap_extent(GLFWwindow &window,
-                                         const VkSurfaceCapabilitiesKHR &capabilities) {
-    if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
-        return capabilities.currentExtent;
-    } else {
-        int width, height;
-        glfwGetFramebufferSize(&window, &width, &height);
-
-        VkExtent2D actualExtent = {static_cast<uint32_t>(width),
-                                   static_cast<uint32_t>(height)};
-
-        actualExtent.width =
-            std::clamp(actualExtent.width, capabilities.minImageExtent.width,
-                       capabilities.maxImageExtent.width);
-        actualExtent.height =
-            std::clamp(actualExtent.height, capabilities.minImageExtent.height,
-                       capabilities.maxImageExtent.height);
-
-        return actualExtent;
-    }
-}
-
 VkSwapchainKHR SwapChain::create_swap_chain(
     uint32_t image_count, VkSurfaceFormatKHR &surface_format,
     graphics_context::device::SwapChainSupportDetails &swap_chain_support) {
     VkPresentModeKHR present_mode =
-        choose_swap_present_mode(swap_chain_support.presentModes);
+        swap_chain_support.choose_swap_present_mode(VK_PRESENT_MODE_MAILBOX_KHR);
 
     VkSwapchainCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -130,7 +99,7 @@ std::vector<VkImageView> SwapChain::create_image_views(VkFormat &image_format) {
     return swapChainImageViews;
 }
 
-std::vector<VkFramebuffer> SwapChain::create_frame_buffers() {
+std::vector<VkFramebuffer> SwapChain::create_framebuffers() {
 
     const size_t capacity = m_image_views.size();
     std::vector<VkFramebuffer> swapChainFramebuffers;

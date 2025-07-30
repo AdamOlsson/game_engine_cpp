@@ -24,5 +24,5 @@ class Fence {
     Fence(const Fence &other) = delete;
     Fence &operator=(const Fence &other) = delete;
 
-    const VkFence get();
+    const VkFence &get();
 };

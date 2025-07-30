@@ -236,3 +236,11 @@ VkDevice graphics_context::device::LogicalDevice::create_logical_device(
 void graphics_context::device::LogicalDevice::wait_idle() {
     vkDeviceWaitIdle(m_logical_device);
 }
+
+void graphics_context::device::LogicalDevice::wait_for_fence(const VkFence &fence) const {
+    vkWaitForFences(m_logical_device, 1, &fence, VK_TRUE, UINT64_MAX);
+}
+
+void graphics_context::device::LogicalDevice::reset_fence(const VkFence &fence) const {
+    vkResetFences(m_logical_device, 1, &fence);
+}

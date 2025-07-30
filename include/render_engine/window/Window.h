@@ -37,11 +37,15 @@ class Window {
 
     void register_keyboard_event_callback(KeyboardEventCallbackFn cb);
 
-    VkSurfaceKHR createSurface(VkInstance *instance, GLFWwindow &window);
-
     template <typename T> WindowDimension<T> dimensions() {
         int width, height;
         glfwGetWindowSize(m_window, &width, &height);
+        return WindowDimension<T>(static_cast<T>(width), static_cast<T>(height));
+    }
+
+    template <typename T> WindowDimension<T> get_framebuffer_size() const {
+        int width, height;
+        glfwGetFramebufferSize(m_window, &width, &height);
         return WindowDimension<T>(static_cast<T>(width), static_cast<T>(height));
     }
 

@@ -3,8 +3,7 @@
 #include "vulkan/vulkan_core.h"
 #include <optional>
 
-SwapChainManager::SwapChainManager(
-    std::shared_ptr<graphics_context::GraphicsContext> ctx)
+SwapChainManager::SwapChainManager(std::shared_ptr<graphics_context::GraphicsContext> ctx)
     : m_ctx(ctx), m_next_frame_buffer(0), m_swap_chain(SwapChain(ctx)),
       m_command_buffer_manager(CommandBufferManager(m_ctx, MAX_FRAMES_IN_FLIGHT)),
       m_image_available(Semaphore(m_ctx, MAX_FRAMES_IN_FLIGHT)),
@@ -21,7 +20,7 @@ void SwapChainManager::recreate_swap_chain() {
         glfwWaitEvents();
     }
 
-    vkDeviceWaitIdle(m_ctx->logical_device);
+    m_ctx->logical_device.wait_idle();
     m_swap_chain = SwapChain(m_ctx);
 }
 
@@ -30,10 +29,9 @@ SingleTimeCommandBuffer SwapChainManager::get_single_time_command_buffer() {
 }
 
 VkFence SwapChainManager::wait_for_in_flight_fence() {
-    const VkFence in_flight_fence = m_in_flight_fence.get();
-    vkWaitForFences(m_ctx->logical_device, 1, &in_flight_fence, VK_TRUE, UINT64_MAX);
-
-    vkResetFences(m_ctx->logical_device, 1, &in_flight_fence);
+    const VkFence &in_flight_fence = m_in_flight_fence.get();
+    m_ctx->logical_device.wait_for_fence(in_flight_fence);
+    m_ctx->logical_device.reset_fence(in_flight_fence);
     return in_flight_fence;
 }
 

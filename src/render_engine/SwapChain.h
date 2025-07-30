@@ -13,17 +13,13 @@ class SwapChain {
     std::vector<VkImageView> m_image_views;
     std::vector<VkFramebuffer> m_frame_buffers;
 
-    VkPresentModeKHR choose_swap_present_mode(
-        const std::vector<VkPresentModeKHR> &available_present_modes);
-    VkExtent2D choose_swap_extent(GLFWwindow &window,
-                                  const VkSurfaceCapabilitiesKHR &capabilities);
     VkSwapchainKHR create_swap_chain(
         uint32_t image_count, VkSurfaceFormatKHR &surface_format,
         graphics_context::device::SwapChainSupportDetails &swap_chain_support);
 
     std::vector<VkImage> create_swap_chain_images(uint32_t image_count);
     std::vector<VkImageView> create_image_views(VkFormat &image_format);
-    std::vector<VkFramebuffer> create_frame_buffers();
+    std::vector<VkFramebuffer> create_framebuffers();
     VkRenderPass create_render_pass(VkFormat &image_format);
 
   public:

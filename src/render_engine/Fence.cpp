@@ -1,8 +1,7 @@
 #include "Fence.h"
 #include <memory>
 
-Fence::Fence(std::shared_ptr<graphics_context::GraphicsContext> ctx,
-             const size_t size)
+Fence::Fence(std::shared_ptr<graphics_context::GraphicsContext> ctx, const size_t size)
     : m_ctx(ctx), m_size(size), m_next(0) {
     m_fences.resize(size);
 
@@ -28,7 +27,7 @@ Fence::~Fence() {
     }
 }
 
-const VkFence Fence::get() {
+const VkFence &Fence::get() {
     auto &sem = m_fences[m_next];
     m_next = ++m_next % m_size;
     return sem;

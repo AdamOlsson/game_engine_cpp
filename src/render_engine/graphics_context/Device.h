@@ -12,7 +12,7 @@ struct SwapChainSupportDetails {
     std::vector<VkSurfaceFormatKHR> formats;
     std::vector<VkPresentModeKHR> presentModes;
 
-    uint32_t get_image_count() {
+    uint32_t get_image_count() const {
         uint32_t image_count = capabilities.minImageCount + 1;
         if (capabilities.maxImageCount > 0 && image_count > capabilities.maxImageCount) {
             image_count = capabilities.maxImageCount;
@@ -21,7 +21,7 @@ struct SwapChainSupportDetails {
     }
 
     VkSurfaceFormatKHR
-    choose_swap_surface_format(const VkSurfaceFormatKHR &&requested_format) {
+    choose_swap_surface_format(const VkSurfaceFormatKHR &&requested_format) const {
         for (const auto &available_format : formats) {
             if (available_format.format == requested_format.format &&
                 available_format.colorSpace == requested_format.colorSpace) {
@@ -32,6 +32,40 @@ struct SwapChainSupportDetails {
                      "returning first available"
                   << std::endl;
         return formats[0];
+    }
+
+    VkPresentModeKHR
+    choose_swap_present_mode(const VkPresentModeKHR &&requested_present_mode) const {
+        for (const auto &available_present_mode : presentModes) {
+            if (available_present_mode == requested_present_mode) {
+                return available_present_mode;
+            }
+        }
+        std::cout << "SwapChainSupportDetails::Warning requested present mode not found, "
+                     "returning VK_PRESENT_MODE_FIFO_KHR"
+                  << std::endl;
+
+        return VK_PRESENT_MODE_FIFO_KHR;
+    }
+
+    VkExtent2D choose_swap_extent(
+        const window::WindowDimension<uint32_t> &window_framebuffer) const {
+        if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
+            return capabilities.currentExtent;
+        } else {
+
+            VkExtent2D window_extent = {window_framebuffer.width,
+                                        window_framebuffer.height};
+
+            window_extent.width =
+                std::clamp(window_extent.width, capabilities.minImageExtent.width,
+                           capabilities.maxImageExtent.width);
+            window_extent.height =
+                std::clamp(window_extent.height, capabilities.minImageExtent.height,
+                           capabilities.maxImageExtent.height);
+
+            return window_extent;
+        }
     }
 };
 
@@ -95,6 +129,9 @@ class LogicalDevice {
     operator VkDevice() const { return m_logical_device; }
 
     void wait_idle();
+    void wait_for_fence(const VkFence &fence) const;
+
+    void reset_fence(const VkFence &fence) const;
 };
 
 } // namespace device

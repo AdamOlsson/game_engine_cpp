@@ -32,14 +32,6 @@ void Window::register_keyboard_event_callback(KeyboardEventCallbackFn cb) {
     glfwSetKeyCallback(m_window, this->keyboard_callback);
 }
 
-VkSurfaceKHR Window::createSurface(VkInstance *instance, GLFWwindow &window) {
-    VkSurfaceKHR surface;
-    if (glfwCreateWindowSurface(*instance, &window, nullptr, &surface) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create window surface!");
-    }
-    return surface;
-}
-
 /* ######################################### */
 /* ---------! PRIVATE FUNCTIONS !------------*/
 /* ######################################### */
