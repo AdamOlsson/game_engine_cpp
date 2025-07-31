@@ -64,14 +64,11 @@ class DescriptorSetBuilder {
     DescriptorSetBuilder(const VkDescriptorSetLayout &descriptor_set_layout,
                          DescriptorPool &descriptor_pool, size_t capacity);
 
-    DescriptorSetBuilder &add_storage_buffer(size_t binding,
-                                             std::vector<GpuBufferRef> &&storage_buffers);
+    DescriptorSetBuilder &add_gpu_buffer(size_t binding,
+                                         std::vector<GpuBufferRef> &&buffers);
 
     DescriptorSetBuilder &set_texture_and_sampler(size_t binding, Texture &texture,
                                                   Sampler &sampler);
-
-    DescriptorSetBuilder &set_uniform_buffer(size_t binding,
-                                             std::vector<GpuBufferRef> &&uniform_buffers);
 
     DescriptorSet build(std::shared_ptr<graphics_context::GraphicsContext> &ctx);
 };

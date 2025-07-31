@@ -29,26 +29,18 @@ DescriptorSetBuilder::DescriptorSetBuilder(
       m_texture(nullptr), m_sampler(nullptr) {}
 
 DescriptorSetBuilder &
-DescriptorSetBuilder::set_uniform_buffer(size_t binding,
-                                         std::vector<GpuBufferRef> &&uniform_buffers) {
-    m_uniform_buffer_binding = binding;
-    m_uniform_buffers = std::move(uniform_buffers);
-    return *this;
-}
-
-DescriptorSetBuilder &
-DescriptorSetBuilder::add_storage_buffer(size_t binding,
-                                         std::vector<GpuBufferRef> &&instance_buffers) {
-    if (instance_buffers.size() != m_capacity) {
+DescriptorSetBuilder::add_gpu_buffer(size_t binding,
+                                     std::vector<GpuBufferRef> &&buffers) {
+    if (buffers.size() != m_capacity) {
         throw std::runtime_error(
             "size of storage buffer reference needs to be equal to capacity");
     }
 
-    m_storage_buffer_binding.insert(m_storage_buffer_binding.end(),
-                                    instance_buffers.size(), binding);
+    m_storage_buffer_binding.insert(m_storage_buffer_binding.end(), buffers.size(),
+                                    binding);
     m_storage_buffers.insert(m_storage_buffers.end(),
-                             std::make_move_iterator(instance_buffers.begin()),
-                             std::make_move_iterator(instance_buffers.end()));
+                             std::make_move_iterator(buffers.begin()),
+                             std::make_move_iterator(buffers.end()));
 
     return *this;
 }
@@ -125,16 +117,25 @@ DescriptorSetBuilder::build(std::shared_ptr<graphics_context::GraphicsContext> &
 
     auto descriptor_set_layout_builder = DescriptorSetLayoutBuilder();
 
+    // TODO: Start of merging descriptor set layout builder into this class
     /*if (m_sampler != nullptr && m_texture != nullptr) {*/
     /*    descriptor_set_layout_builder.add(*/
     /*        m_sampler->create_descriptor_set_layout_binding(m_texture_binding));*/
     /*}*/
-
     /*if (m_instance_buffers.size() != 0) {*/
-    /*for (auto i = 0; i < m_instance_buffers.size(); i++) {*/
-    /*descriptor_set_layout_builder.add(*/
-    /*    m_instance_buffers[i].create_descriptor_set_layout_binding(*/
-    /*        m_instance_buffer_binding[i]));*/
+    /*for (auto i = 0; i < m_storage_buffers.size(); i++) {*/
+    /*    switch (m_storage_buffers[i].type) {*/
+    /*    case GpuBufferType::Storage:*/
+    /*        descriptor_set_layout_builder.add(*/
+    /*            BufferDescriptor<GpuBufferType::Storage>::*/
+    /*                create_descriptor_set_layout_binding(m_storage_buffer_binding[i]));*/
+    /*        break;*/
+    /*    case GpuBufferType::Uniform:*/
+    /*        descriptor_set_layout_builder.add(*/
+    /*            BufferDescriptor<GpuBufferType::Uniform>::*/
+    /*                create_descriptor_set_layout_binding(m_storage_buffer_binding[i]));*/
+    /*        break;*/
+    /*    }*/
     /*}*/
     /*}*/
 
@@ -157,24 +158,19 @@ DescriptorSetBuilder::build(std::shared_ptr<graphics_context::GraphicsContext> &
                 storage_buffer_info.offset = 0;
                 storage_buffer_info.range = m_storage_buffers.at(idx).size;
                 storage_buffer_infos.push_back(storage_buffer_info);
-
-                descriptor_writes.push_back(create_buffer_descriptor_write(
-                    VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, descriptor_sets[i],
-                    storage_buffer_infos.back(), m_storage_buffer_binding[idx]));
+                switch (m_storage_buffers[idx].type) {
+                case GpuBufferType::Storage:
+                    descriptor_writes.push_back(create_buffer_descriptor_write(
+                        VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, descriptor_sets[i],
+                        storage_buffer_infos.back(), m_storage_buffer_binding[idx]));
+                    break;
+                case GpuBufferType::Uniform:
+                    descriptor_writes.push_back(create_buffer_descriptor_write(
+                        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, descriptor_sets[i],
+                        storage_buffer_infos.back(), m_storage_buffer_binding[idx]));
+                    break;
+                }
             }
-        }
-
-        // TODO: See if this can be merged into the above storage buffer write as both are
-        // based on GpuBuffer
-        VkDescriptorBufferInfo uniform_buffer_info{};
-        if (m_uniform_buffers.size() != 0 && m_uniform_buffers.size() >= m_capacity) {
-            uniform_buffer_info.buffer = m_uniform_buffers.at(i).buffer;
-            uniform_buffer_info.offset = 0;
-            uniform_buffer_info.range = m_uniform_buffers.at(i).size;
-
-            descriptor_writes.push_back(create_buffer_descriptor_write(
-                VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, descriptor_sets[i],
-                uniform_buffer_info, m_uniform_buffer_binding));
         }
 
         VkDescriptorImageInfo image_info{};

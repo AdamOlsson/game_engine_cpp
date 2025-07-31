@@ -44,8 +44,8 @@ GeometryPipeline::GeometryPipeline(
       m_circle_descriptor_set(
           DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                MAX_FRAMES_IN_FLIGHT)
-              .add_storage_buffer(0, m_circle_instance_buffers.get_buffer_references())
-              .set_uniform_buffer(1, uniform_buffers.get_buffer_references())
+              .add_gpu_buffer(0, m_circle_instance_buffers.get_buffer_references())
+              .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
               .build(m_ctx)),
 
@@ -56,8 +56,8 @@ GeometryPipeline::GeometryPipeline(
       m_triangle_descriptor_set(
           DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                MAX_FRAMES_IN_FLIGHT)
-              .add_storage_buffer(0, m_triangle_instance_buffers.get_buffer_references())
-              .set_uniform_buffer(1, uniform_buffers.get_buffer_references())
+              .add_gpu_buffer(0, m_triangle_instance_buffers.get_buffer_references())
+              .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
               .build(m_ctx)),
 
@@ -68,8 +68,8 @@ GeometryPipeline::GeometryPipeline(
       m_rectangle_descriptor_set(
           DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                MAX_FRAMES_IN_FLIGHT)
-              .add_storage_buffer(0, m_rectangle_instance_buffers.get_buffer_references())
-              .set_uniform_buffer(1, uniform_buffers.get_buffer_references())
+              .add_gpu_buffer(0, m_rectangle_instance_buffers.get_buffer_references())
+              .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
               .build(m_ctx)),
 
@@ -80,8 +80,8 @@ GeometryPipeline::GeometryPipeline(
       m_hexagon_descriptor_set(
           DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                MAX_FRAMES_IN_FLIGHT)
-              .add_storage_buffer(0, m_hexagon_instance_buffers.get_buffer_references())
-              .set_uniform_buffer(1, uniform_buffers.get_buffer_references())
+              .add_gpu_buffer(0, m_hexagon_instance_buffers.get_buffer_references())
+              .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
               .build(m_ctx))
 

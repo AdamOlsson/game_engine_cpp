@@ -58,7 +58,7 @@ DescriptorSet UIPipeline::create_descriptor_set(
     SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers) {
     return DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
                                 MAX_FRAMES_IN_FLIGHT)
-        .set_uniform_buffer(0, uniform_buffers.get_buffer_references())
+        .add_gpu_buffer(0, uniform_buffers.get_buffer_references())
         .build(m_ctx);
 }
 
