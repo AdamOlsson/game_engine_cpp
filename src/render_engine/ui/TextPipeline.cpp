@@ -20,14 +20,13 @@ TextPipeline::TextPipeline(
     SwapChainManager &swap_chain_manager,
     SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers, Sampler &sampler,
     Texture &texture)
-    : m_ctx(ctx), m_character_buffers(SwapGpuBuffer<CharacterInstanceBufferObject>(
+    : m_ctx(ctx), m_character_buffers(SwapStorageBuffer<CharacterInstanceBufferObject>(
                       ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
       m_text_segment_buffers(
-          SwapGpuBuffer<TextSegmentBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 16)),
+          SwapStorageBuffer<TextSegmentBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 16)),
       m_vertex_buffer(
           VertexBuffer(ctx, Geometry::rectangle_vertices, swap_chain_manager)),
       m_index_buffer(IndexBuffer(ctx, Geometry::rectangle_indices, swap_chain_manager)),
-      m_descriptor_set_layout(create_descriptor_set_layout()),
       m_descriptor_pool(DescriptorPool(m_ctx, m_descriptor_pool_capacity,
                                        m_num_storage_buffers, m_num_uniform_buffers,
                                        m_num_samplers)),
@@ -37,29 +36,28 @@ TextPipeline::TextPipeline(
         graphics_pipeline::GraphicsPipelineBuilder()
             .set_vertex_shader(ResourceManager::get_instance().get_resource<ShaderResource>("TextVertex"))
             .set_fragment_shader(ResourceManager::get_instance().get_resource<ShaderResource>("TextFragment"))
-            .set_descriptor_set_layout(&m_descriptor_set_layout)
+            .set_descriptor_set_layout(&m_descriptor_set.get_layout())
             .build(m_ctx, swap_chain_manager)
           // clang-format on
       ) {}
 
 TextPipeline::~TextPipeline() {}
 
-DescriptorSetLayout TextPipeline::create_descriptor_set_layout() {
-    return DescriptorSetLayoutBuilder()
-        .add(BufferDescriptor<
-             GpuBufferType::Storage>::create_descriptor_set_layout_binding(0))
-        .add(BufferDescriptor<
-             GpuBufferType::Uniform>::create_descriptor_set_layout_binding(1))
-        .add(Sampler::create_descriptor_set_layout_binding(2))
-        .add(BufferDescriptor<
-             GpuBufferType::Storage>::create_descriptor_set_layout_binding(3))
-        .build(m_ctx);
-}
-
 DescriptorSet TextPipeline::create_descriptor_set(
     SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers, Sampler &sampler,
     Texture &texture) {
-    return DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
+    auto layout =
+        DescriptorSetLayoutBuilder()
+            .add(BufferDescriptor<
+                 GpuBufferType::Storage>::create_descriptor_set_layout_binding(0))
+            .add(BufferDescriptor<
+                 GpuBufferType::Uniform>::create_descriptor_set_layout_binding(1))
+            .add(Sampler::create_descriptor_set_layout_binding(2))
+            .add(BufferDescriptor<
+                 GpuBufferType::Storage>::create_descriptor_set_layout_binding(3))
+            .build(m_ctx);
+
+    return DescriptorSetBuilder(std::move(layout), m_descriptor_pool,
                                 MAX_FRAMES_IN_FLIGHT)
         .add_gpu_buffer(0, m_character_buffers.get_buffer_references())
         .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
@@ -68,11 +66,11 @@ DescriptorSet TextPipeline::create_descriptor_set(
         .build(m_ctx);
 }
 
-GpuBuffer<CharacterInstanceBufferObject> &TextPipeline::get_character_buffer() {
+StorageBuffer<CharacterInstanceBufferObject> &TextPipeline::get_character_buffer() {
     return m_character_buffers.get_buffer();
 }
 
-GpuBuffer<TextSegmentBufferObject> &TextPipeline::get_text_segment_buffer() {
+StorageBuffer<TextSegmentBufferObject> &TextPipeline::get_text_segment_buffer() {
     return m_text_segment_buffers.get_buffer();
 }
 

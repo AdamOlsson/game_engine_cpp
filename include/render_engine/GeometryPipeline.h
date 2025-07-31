@@ -80,29 +80,29 @@ class GeometryPipeline {
 
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
 
-    DescriptorSetLayout m_descriptor_set_layout;
-    Pipeline m_pipeline;
     DescriptorPool m_descriptor_pool;
 
-    SwapGpuBuffer<GeometryInstanceBufferObject> m_circle_instance_buffers;
+    SwapStorageBuffer<GeometryInstanceBufferObject> m_circle_instance_buffers;
     DescriptorSet m_circle_descriptor_set;
     VertexBuffer m_circle_vertex_buffer;
     IndexBuffer m_circle_index_buffer;
 
-    SwapGpuBuffer<GeometryInstanceBufferObject> m_triangle_instance_buffers;
+    SwapStorageBuffer<GeometryInstanceBufferObject> m_triangle_instance_buffers;
     DescriptorSet m_triangle_descriptor_set;
     VertexBuffer m_triangle_vertex_buffer;
     IndexBuffer m_triangle_index_buffer;
 
-    SwapGpuBuffer<GeometryInstanceBufferObject> m_rectangle_instance_buffers;
+    SwapStorageBuffer<GeometryInstanceBufferObject> m_rectangle_instance_buffers;
     DescriptorSet m_rectangle_descriptor_set;
     VertexBuffer m_rectangle_vertex_buffer;
     IndexBuffer m_rectangle_index_buffer;
 
-    SwapGpuBuffer<GeometryInstanceBufferObject> m_hexagon_instance_buffers;
+    SwapStorageBuffer<GeometryInstanceBufferObject> m_hexagon_instance_buffers;
     DescriptorSet m_hexagon_descriptor_set;
     VertexBuffer m_hexagon_vertex_buffer;
     IndexBuffer m_hexagon_index_buffer;
+
+    Pipeline m_pipeline;
 
     const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 
@@ -110,8 +110,7 @@ class GeometryPipeline {
 
     DescriptorSetLayout create_descriptor_set_layout();
 
-    Pipeline create_pipeline(DescriptorSetLayout &descriptorSetLayout,
-                             SwapChainManager &swap_chain_manager);
+    Pipeline create_pipeline(SwapChainManager &swap_chain_manager);
 
     void record_draw_command(const VkCommandBuffer &command_buffer,
                              DescriptorSet &descriptor_set,
@@ -127,10 +126,10 @@ class GeometryPipeline {
 
     ~GeometryPipeline();
 
-    GpuBuffer<GeometryInstanceBufferObject> &get_circle_instance_buffer();
-    GpuBuffer<GeometryInstanceBufferObject> &get_triangle_instance_buffer();
-    GpuBuffer<GeometryInstanceBufferObject> &get_rectangle_instance_buffer();
-    GpuBuffer<GeometryInstanceBufferObject> &get_hexagon_instance_buffer();
+    StorageBuffer<GeometryInstanceBufferObject> &get_circle_instance_buffer();
+    StorageBuffer<GeometryInstanceBufferObject> &get_triangle_instance_buffer();
+    StorageBuffer<GeometryInstanceBufferObject> &get_rectangle_instance_buffer();
+    StorageBuffer<GeometryInstanceBufferObject> &get_hexagon_instance_buffer();
 
     // TODO: These render function should merge into one generic call
     void render_circles(const VkCommandBuffer &command_buffer);

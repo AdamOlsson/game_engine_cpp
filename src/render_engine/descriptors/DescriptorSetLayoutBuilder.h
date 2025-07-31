@@ -12,6 +12,12 @@ class DescriptorSetLayoutBuilder {
     DescriptorSetLayoutBuilder() = default;
     ~DescriptorSetLayoutBuilder() = default;
 
+    DescriptorSetLayoutBuilder(DescriptorSetLayoutBuilder &&) noexcept = delete;
+    DescriptorSetLayoutBuilder &
+    operator=(DescriptorSetLayoutBuilder &&) noexcept = delete;
+    DescriptorSetLayoutBuilder(const DescriptorSetLayoutBuilder &) = delete;
+    DescriptorSetLayoutBuilder &operator=(const DescriptorSetLayoutBuilder &) = delete;
+
     DescriptorSetLayoutBuilder &add(const VkDescriptorSetLayoutBinding &&binding);
 
     DescriptorSetLayout build(std::shared_ptr<graphics_context::GraphicsContext> &ctx);

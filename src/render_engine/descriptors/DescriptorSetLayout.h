@@ -8,13 +8,14 @@ class DescriptorSetLayout {
     VkDescriptorSetLayout m_layout;
 
   public:
+    DescriptorSetLayout() = default;
     DescriptorSetLayout(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                         VkDescriptorSetLayout &layout);
 
     ~DescriptorSetLayout();
 
-    DescriptorSetLayout(DescriptorSetLayout &&) noexcept = default;
-    DescriptorSetLayout &operator=(DescriptorSetLayout &&) noexcept = default;
+    DescriptorSetLayout(DescriptorSetLayout &&) noexcept;
+    DescriptorSetLayout &operator=(DescriptorSetLayout &&) noexcept;
     DescriptorSetLayout(const DescriptorSetLayout &) = delete;
     DescriptorSetLayout &operator=(const DescriptorSetLayout &) = delete;
 

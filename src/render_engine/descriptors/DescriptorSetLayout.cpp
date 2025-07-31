@@ -6,5 +6,28 @@ DescriptorSetLayout::DescriptorSetLayout(
     : m_ctx(ctx), m_layout(layout) {}
 
 DescriptorSetLayout::~DescriptorSetLayout() {
+    if (m_layout == VK_NULL_HANDLE) {
+        return;
+    }
     vkDestroyDescriptorSetLayout(m_ctx->logical_device, m_layout, nullptr);
+}
+
+DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout &&other) noexcept
+    : m_ctx(std::move(other.m_ctx)), m_layout(other.m_layout) {
+    other.m_layout = VK_NULL_HANDLE;
+}
+
+DescriptorSetLayout &
+DescriptorSetLayout::operator=(DescriptorSetLayout &&other) noexcept {
+    if (this != &other) {
+        if (m_layout != VK_NULL_HANDLE && m_ctx) {
+            vkDestroyDescriptorSetLayout(m_ctx->logical_device, m_layout, nullptr);
+        }
+
+        m_ctx = std::move(other.m_ctx);
+        m_layout = other.m_layout;
+
+        other.m_layout = VK_NULL_HANDLE;
+    }
+    return *this;
 }

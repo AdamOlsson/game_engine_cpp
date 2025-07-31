@@ -15,8 +15,6 @@ UIPipeline::UIPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                        SwapChainManager &swap_chain_manager,
                        SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers)
     : m_ctx(ctx),
-      // TODO: Is it not better to merge all these to a single Descriptor class
-      m_descriptor_set_layout(create_descriptor_set_layout()),
       m_descriptor_pool(DescriptorPool(m_ctx, m_descriptor_pool_capacity,
                                        m_num_storage_buffers, m_num_uniform_buffers,
                                        m_num_samplers)),
@@ -48,16 +46,16 @@ void UIPipeline::render(const VkCommandBuffer &command_buffer,
     vkCmdDrawIndexed(command_buffer, m_index_buffer.num_indices, 1, 0, 0, 0);
 }
 
-DescriptorSetLayout UIPipeline::create_descriptor_set_layout() {
-    return DescriptorSetLayoutBuilder()
-        .add(BufferDescriptor<
-             GpuBufferType::Uniform>::create_descriptor_set_layout_binding(0))
-        .build(m_ctx);
-}
-
 DescriptorSet UIPipeline::create_descriptor_set(
     SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers) {
-    return DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
+
+    auto layout =
+        DescriptorSetLayoutBuilder()
+            .add(BufferDescriptor<
+                 GpuBufferType::Uniform>::create_descriptor_set_layout_binding(0))
+            .build(m_ctx);
+
+    return DescriptorSetBuilder(std::move(layout), m_descriptor_pool,
                                 MAX_FRAMES_IN_FLIGHT)
         .add_gpu_buffer(0, uniform_buffers.get_buffer_references())
         .build(m_ctx);
@@ -80,8 +78,9 @@ Pipeline UIPipeline::create_pipeline(SwapChainManager &swap_chain_manager) {
     const std::vector<VkPushConstantRange> push_constant_ranges = {
         push_constants_ui_element};
 
-    Pipeline pipeline = Pipeline(m_ctx, m_descriptor_set_layout, push_constant_ranges,
-                                 vertex_shader, fragment_shader, swap_chain_manager);
+    Pipeline pipeline =
+        Pipeline(m_ctx, m_descriptor_set.get_layout(), push_constant_ranges,
+                 vertex_shader, fragment_shader, swap_chain_manager);
 
     return pipeline;
 }

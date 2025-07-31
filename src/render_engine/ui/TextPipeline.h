@@ -1,7 +1,6 @@
 #pragma once
 
 #include "glm/fwd.hpp"
-#include "render_engine/Pipeline.h"
 #include "render_engine/Sampler.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/Texture.h"
@@ -11,7 +10,6 @@
 #include "render_engine/colors.h"
 #include "render_engine/descriptors/DescriptorPool.h"
 #include "render_engine/descriptors/DescriptorSet.h"
-#include "render_engine/descriptors/DescriptorSetLayout.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/graphics_pipeline/GraphicsPipeline.h"
 #include "vulkan/vulkan_core.h"
@@ -56,17 +54,15 @@ class TextPipeline {
 
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
 
-    SwapGpuBuffer<CharacterInstanceBufferObject> m_character_buffers;
-    SwapGpuBuffer<TextSegmentBufferObject> m_text_segment_buffers;
+    SwapStorageBuffer<CharacterInstanceBufferObject> m_character_buffers;
+    SwapStorageBuffer<TextSegmentBufferObject> m_text_segment_buffers;
     VertexBuffer m_vertex_buffer;
     IndexBuffer m_index_buffer;
 
-    DescriptorSetLayout m_descriptor_set_layout;
     DescriptorPool m_descriptor_pool;
     DescriptorSet m_descriptor_set;
     graphics_pipeline::GraphicsPipeline m_graphics_pipeline;
 
-    DescriptorSetLayout create_descriptor_set_layout();
     DescriptorSet create_descriptor_set(
         SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
         Sampler &sampler, Texture &texture);
@@ -78,8 +74,8 @@ class TextPipeline {
                  Sampler &sampler, Texture &texture);
     ~TextPipeline();
 
-    GpuBuffer<CharacterInstanceBufferObject> &get_character_buffer();
-    GpuBuffer<TextSegmentBufferObject> &get_text_segment_buffer();
+    StorageBuffer<CharacterInstanceBufferObject> &get_character_buffer();
+    StorageBuffer<TextSegmentBufferObject> &get_text_segment_buffer();
 
     void render_text(const VkCommandBuffer &command_buffer);
 };

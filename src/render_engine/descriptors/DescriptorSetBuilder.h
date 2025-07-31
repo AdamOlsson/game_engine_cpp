@@ -1,30 +1,32 @@
 #pragma once
 
 #include "DescriptorPool.h"
+#include "DescriptorSet.h"
+#include "DescriptorSetLayoutBuilder.h"
 #include "render_engine/Sampler.h"
 #include "render_engine/Texture.h"
 #include "render_engine/buffers/GpuBuffer.h"
-#include "render_engine/descriptors/DescriptorSet.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
 
 class DescriptorSetBuilder {
   private:
-    const VkDescriptorSetLayout m_descriptor_set_layout;
+    DescriptorSetLayout m_descriptor_set_layout;
+
+    DescriptorSetLayoutBuilder m_descriptor_set_layout_builder;
+
     DescriptorPool *m_descriptor_pool;
     size_t m_capacity;
 
-    size_t m_uniform_buffer_binding;
-    std::vector<GpuBufferRef> m_uniform_buffers;
-
-    std::vector<size_t> m_storage_buffer_binding;
-    std::vector<GpuBufferRef> m_storage_buffers;
+    std::vector<size_t> m_gpu_buffer_binding;
+    std::vector<GpuBufferRef> m_gpu_buffers;
 
     size_t m_texture_binding;
     Texture *m_texture;
     Sampler *m_sampler;
 
     std::vector<VkDescriptorSet>
-    allocate_descriptor_sets(std::shared_ptr<graphics_context::GraphicsContext> &ctx);
+    allocate_descriptor_sets(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+                             const VkDescriptorSetLayout &descriptor_set_layout);
 
     VkWriteDescriptorSet create_buffer_descriptor_write(
         const VkDescriptorType type, const VkDescriptorSet &dst_descriptor_set,
@@ -35,7 +37,7 @@ class DescriptorSetBuilder {
                                                 VkDescriptorImageInfo &image_info);
 
   public:
-    DescriptorSetBuilder(const VkDescriptorSetLayout &descriptor_set_layout,
+    DescriptorSetBuilder(DescriptorSetLayout &&descriptor_set_layout,
                          DescriptorPool &descriptor_pool, size_t capacity);
 
     DescriptorSetBuilder &add_gpu_buffer(size_t binding,

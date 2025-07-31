@@ -23,17 +23,16 @@ GeometryPipeline::GeometryPipeline(
     SwapChainManager &swap_chain_manager,
     SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers, Sampler &sampler,
     Texture &texture)
-    : m_ctx(ctx), m_circle_instance_buffers(SwapGpuBuffer<GeometryInstanceBufferObject>(
-                      ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
-      m_triangle_instance_buffers(
-          SwapGpuBuffer<GeometryInstanceBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
-      m_rectangle_instance_buffers(
-          SwapGpuBuffer<GeometryInstanceBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
-      m_hexagon_instance_buffers(
-          SwapGpuBuffer<GeometryInstanceBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
+    : m_ctx(ctx),
+      m_circle_instance_buffers(SwapStorageBuffer<GeometryInstanceBufferObject>(
+          ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
+      m_triangle_instance_buffers(SwapStorageBuffer<GeometryInstanceBufferObject>(
+          ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
+      m_rectangle_instance_buffers(SwapStorageBuffer<GeometryInstanceBufferObject>(
+          ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
+      m_hexagon_instance_buffers(SwapStorageBuffer<GeometryInstanceBufferObject>(
+          ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
 
-      m_descriptor_set_layout(create_descriptor_set_layout()),
-      m_pipeline(create_pipeline(m_descriptor_set_layout, swap_chain_manager)),
       m_descriptor_pool(DescriptorPool(m_ctx, m_descriptor_pool_capacity,
                                        m_num_storage_buffers, m_num_uniform_buffers,
                                        m_num_samplers)),
@@ -43,8 +42,8 @@ GeometryPipeline::GeometryPipeline(
       m_circle_index_buffer(
           IndexBuffer(ctx, Geometry::circle_indices, swap_chain_manager)),
       m_circle_descriptor_set(
-          DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
-                               MAX_FRAMES_IN_FLIGHT)
+          DescriptorSetBuilder(std::move(create_descriptor_set_layout()),
+                               m_descriptor_pool, MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_circle_instance_buffers.get_buffer_references())
               .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
@@ -55,8 +54,8 @@ GeometryPipeline::GeometryPipeline(
       m_triangle_index_buffer(
           IndexBuffer(ctx, Geometry::triangle_indices, swap_chain_manager)),
       m_triangle_descriptor_set(
-          DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
-                               MAX_FRAMES_IN_FLIGHT)
+          DescriptorSetBuilder(std::move(create_descriptor_set_layout()),
+                               m_descriptor_pool, MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_triangle_instance_buffers.get_buffer_references())
               .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
@@ -67,8 +66,8 @@ GeometryPipeline::GeometryPipeline(
       m_rectangle_index_buffer(
           IndexBuffer(ctx, Geometry::rectangle_indices, swap_chain_manager)),
       m_rectangle_descriptor_set(
-          DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
-                               MAX_FRAMES_IN_FLIGHT)
+          DescriptorSetBuilder(std::move(create_descriptor_set_layout()),
+                               m_descriptor_pool, MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_rectangle_instance_buffers.get_buffer_references())
               .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
@@ -79,14 +78,14 @@ GeometryPipeline::GeometryPipeline(
       m_hexagon_index_buffer(
           IndexBuffer(ctx, Geometry::hexagon_indices, swap_chain_manager)),
       m_hexagon_descriptor_set(
-          DescriptorSetBuilder(m_descriptor_set_layout, m_descriptor_pool,
-                               MAX_FRAMES_IN_FLIGHT)
+          DescriptorSetBuilder(std::move(create_descriptor_set_layout()),
+                               m_descriptor_pool, MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_hexagon_instance_buffers.get_buffer_references())
               .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
-              .build(m_ctx))
+              .build(m_ctx)),
 
-{}
+      m_pipeline(create_pipeline(swap_chain_manager)) {}
 
 GeometryPipeline::~GeometryPipeline() {}
 
@@ -196,8 +195,7 @@ VkDescriptorPool createDescriptorPool(VkDevice &device, const int capacity) {
     return descriptorPool;
 }
 
-Pipeline GeometryPipeline::create_pipeline(DescriptorSetLayout &descriptor_set_layout,
-                                           SwapChainManager &swap_chain_manager) {
+Pipeline GeometryPipeline::create_pipeline(SwapChainManager &swap_chain_manager) {
     auto &resoure_manager = ResourceManager::get_instance();
     auto vert_shader_code =
         resoure_manager.get_resource<ShaderResource>("GeometryVertex");
@@ -212,27 +210,30 @@ Pipeline GeometryPipeline::create_pipeline(DescriptorSetLayout &descriptor_set_l
     push_constant_range.offset = 0;
     push_constant_range.size = sizeof(uint32_t);
 
-    Pipeline pipeline = Pipeline(m_ctx, descriptor_set_layout, {push_constant_range},
-                                 vertex_shader, fragment_shader, swap_chain_manager);
+    Pipeline pipeline =
+        Pipeline(m_ctx, std::move(create_descriptor_set_layout()), {push_constant_range},
+                 vertex_shader, fragment_shader, swap_chain_manager);
 
     return pipeline;
 }
 
-GpuBuffer<GeometryInstanceBufferObject> &GeometryPipeline::get_circle_instance_buffer() {
+StorageBuffer<GeometryInstanceBufferObject> &
+GeometryPipeline::get_circle_instance_buffer() {
     return m_circle_instance_buffers.get_buffer();
 }
 
-GpuBuffer<GeometryInstanceBufferObject> &
+StorageBuffer<GeometryInstanceBufferObject> &
 GeometryPipeline::get_triangle_instance_buffer() {
     return m_triangle_instance_buffers.get_buffer();
 }
 
-GpuBuffer<GeometryInstanceBufferObject> &
+StorageBuffer<GeometryInstanceBufferObject> &
 GeometryPipeline::get_rectangle_instance_buffer() {
     return m_rectangle_instance_buffers.get_buffer();
 }
 
-GpuBuffer<GeometryInstanceBufferObject> &GeometryPipeline::get_hexagon_instance_buffer() {
+StorageBuffer<GeometryInstanceBufferObject> &
+GeometryPipeline::get_hexagon_instance_buffer() {
     return m_hexagon_instance_buffers.get_buffer();
 }
 
