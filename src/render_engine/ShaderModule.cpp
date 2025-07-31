@@ -2,10 +2,11 @@
 
 ShaderModule::ShaderModule(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                            const ShaderResource &shader)
-    : m_ctx(ctx), shader_module(create_shader_module(shader.bytes(), shader.length())) {}
+    : m_ctx(ctx), m_shader_module(create_shader_module(shader.bytes(), shader.length())) {
+}
 
 ShaderModule::~ShaderModule() {
-    vkDestroyShaderModule(m_ctx->logical_device, shader_module, nullptr);
+    vkDestroyShaderModule(m_ctx->logical_device, m_shader_module, nullptr);
 }
 
 VkShaderModule ShaderModule::create_shader_module(const uint8_t *data, const size_t len) {

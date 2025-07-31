@@ -81,8 +81,7 @@ Pipeline UIPipeline::create_pipeline(SwapChainManager &swap_chain_manager) {
         push_constants_ui_element};
 
     Pipeline pipeline = Pipeline(m_ctx, m_descriptor_set_layout, push_constant_ranges,
-                                 vertex_shader.shader_module,
-                                 fragment_shader.shader_module, swap_chain_manager);
+                                 vertex_shader, fragment_shader, swap_chain_manager);
 
     return pipeline;
 }

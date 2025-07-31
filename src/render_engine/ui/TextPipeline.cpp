@@ -69,9 +69,8 @@ Pipeline TextPipeline::create_pipeline(DescriptorSetLayout &descriptor_set_layou
     ShaderModule vertex_shader = ShaderModule(m_ctx, *vert_shader_code);
     ShaderModule fragment_shader = ShaderModule(m_ctx, *frag_shader_code);
 
-    Pipeline pipeline =
-        Pipeline(m_ctx, descriptor_set_layout, {}, vertex_shader.shader_module,
-                 fragment_shader.shader_module, swap_chain_manager);
+    Pipeline pipeline = Pipeline(m_ctx, descriptor_set_layout, {}, vertex_shader,
+                                 fragment_shader, swap_chain_manager);
 
     return pipeline;
 }

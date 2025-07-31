@@ -6,13 +6,14 @@
 class ShaderModule {
   private:
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
+    VkShaderModule m_shader_module;
 
     VkShaderModule create_shader_module(const uint8_t *data, const size_t len);
 
   public:
-    VkShaderModule shader_module;
-
     ShaderModule(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                  const ShaderResource &shader);
     ~ShaderModule();
+
+    operator VkShaderModule() const { return m_shader_module; }
 };

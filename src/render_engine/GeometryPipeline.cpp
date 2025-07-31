@@ -213,8 +213,7 @@ Pipeline GeometryPipeline::create_pipeline(DescriptorSetLayout &descriptor_set_l
     push_constant_range.size = sizeof(uint32_t);
 
     Pipeline pipeline = Pipeline(m_ctx, descriptor_set_layout, {push_constant_range},
-                                 vertex_shader.shader_module,
-                                 fragment_shader.shader_module, swap_chain_manager);
+                                 vertex_shader, fragment_shader, swap_chain_manager);
 
     return pipeline;
 }
