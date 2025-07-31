@@ -11,9 +11,15 @@ class ShaderModule {
     VkShaderModule create_shader_module(const uint8_t *data, const size_t len);
 
   public:
+    ShaderModule() = default;
     ShaderModule(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                  const ShaderResource &shader);
     ~ShaderModule();
+
+    ShaderModule(ShaderModule &&other) noexcept = default;
+    ShaderModule &operator=(ShaderModule &&other) noexcept = default;
+    ShaderModule(const ShaderModule &other) = delete;
+    ShaderModule &operator=(const ShaderModule &other) = delete;
 
     operator VkShaderModule() const { return m_shader_module; }
 };

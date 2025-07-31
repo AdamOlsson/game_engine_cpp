@@ -6,15 +6,12 @@
 #include <vector>
 
 class ShaderResource : public Resource {
-
   private:
-    // All resources
-    const std::string name_;
-    const unsigned int length_;
-    const uint8_t *bytes_;
+    std::string name_;
+    unsigned int length_;
+    uint8_t *bytes_;
 
-    ShaderResource(const std::string &&name, const unsigned int length,
-                   const uint8_t *bytes);
+    ShaderResource(std::string &&name, unsigned int length, uint8_t *bytes);
 
     friend class ShaderResourceBuilder;
 
@@ -22,6 +19,11 @@ class ShaderResource : public Resource {
     const uint8_t *bytes() const override;
     const std::string &name() const override;
     const unsigned int length() const override;
+
+    ShaderResource(ShaderResource &&other) noexcept = default;
+    ShaderResource &operator=(ShaderResource &&other) noexcept = default;
+    ShaderResource(const ShaderResource &other) = delete;
+    ShaderResource &operator=(const ShaderResource &other) = delete;
 };
 
 std::vector<std::unique_ptr<ShaderResource>> fetch_all_shaders();
@@ -39,12 +41,12 @@ class ShaderResourceBuilder {
     ShaderResourceBuilder(const ShaderResourceBuilder &) = delete;
     ShaderResourceBuilder &operator=(const ShaderResourceBuilder &) = delete;
 
-    ShaderResourceBuilder &name(const std::string &&name) {
+    ShaderResourceBuilder &name(std::string &&name) {
         name_ = std::move(name);
         return *this;
     }
 
-    ShaderResourceBuilder &length(const unsigned int length) {
+    ShaderResourceBuilder &length(unsigned int length) {
         length_ = length;
         return *this;
     }

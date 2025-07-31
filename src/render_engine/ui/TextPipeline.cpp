@@ -2,16 +2,16 @@
 #include "render_engine/Geometry.h"
 #include "render_engine/GeometryPipeline.h"
 #include "render_engine/Sampler.h"
-#include "render_engine/ShaderModule.h"
 #include "render_engine/Texture.h"
 #include "render_engine/descriptors/DescriptorSet.h"
 #include "render_engine/descriptors/DescriptorSetBuilder.h"
 #include "render_engine/descriptors/DescriptorSetLayoutBuilder.h"
+#include "render_engine/graphics_pipeline/GraphicsPipeline.h"
+#include "render_engine/graphics_pipeline/GraphicsPipelineBuilder.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "vulkan/vulkan_core.h"
 #include <cstring>
 #include <memory>
-#include <vector>
 
 using namespace ui;
 
@@ -32,7 +32,15 @@ TextPipeline::TextPipeline(
                                        m_num_storage_buffers, m_num_uniform_buffers,
                                        m_num_samplers)),
       m_descriptor_set(create_descriptor_set(uniform_buffers, sampler, texture)),
-      m_pipeline(create_pipeline(m_descriptor_set_layout, swap_chain_manager)) {}
+      m_graphics_pipeline(
+          // clang-format off
+        graphics_pipeline::GraphicsPipelineBuilder()
+            .set_vertex_shader(ResourceManager::get_instance().get_resource<ShaderResource>("TextVertex"))
+            .set_fragment_shader(ResourceManager::get_instance().get_resource<ShaderResource>("TextFragment"))
+            .set_descriptor_set_layout(&m_descriptor_set_layout)
+            .build(m_ctx, swap_chain_manager)
+          // clang-format on
+      ) {}
 
 TextPipeline::~TextPipeline() {}
 
@@ -60,21 +68,6 @@ DescriptorSet TextPipeline::create_descriptor_set(
         .build(m_ctx);
 }
 
-Pipeline TextPipeline::create_pipeline(DescriptorSetLayout &descriptor_set_layout,
-                                       SwapChainManager &swap_chain_manager) {
-    auto &resoure_manager = ResourceManager::get_instance();
-    auto vert_shader_code = resoure_manager.get_resource<ShaderResource>("TextVertex");
-    auto frag_shader_code = resoure_manager.get_resource<ShaderResource>("TextFragment");
-
-    ShaderModule vertex_shader = ShaderModule(m_ctx, *vert_shader_code);
-    ShaderModule fragment_shader = ShaderModule(m_ctx, *frag_shader_code);
-
-    Pipeline pipeline = Pipeline(m_ctx, descriptor_set_layout, {}, vertex_shader,
-                                 fragment_shader, swap_chain_manager);
-
-    return pipeline;
-}
-
 GpuBuffer<CharacterInstanceBufferObject> &TextPipeline::get_character_buffer() {
     return m_character_buffers.get_buffer();
 }
@@ -94,18 +87,10 @@ void TextPipeline::render_text(const VkCommandBuffer &command_buffer) {
     const auto &text_segment_buffer = m_text_segment_buffers.get_buffer();
 
     const VkDeviceSize vertex_buffers_offset = 0;
-    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                      m_pipeline.m_pipeline);
 
-    auto descriptor = m_descriptor_set.get();
-    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            m_pipeline.m_pipeline_layout, 0, 1, &descriptor, 0, nullptr);
-
-    vkCmdBindVertexBuffers(command_buffer, 0, 1, &m_vertex_buffer.buffer,
-                           &vertex_buffers_offset);
-    vkCmdBindIndexBuffer(command_buffer, m_index_buffer.buffer, 0, VK_INDEX_TYPE_UINT16);
-    vkCmdDrawIndexed(command_buffer, m_index_buffer.num_indices, num_instances, 0, 0, 0);
-
+    auto descriptor_set = m_descriptor_set.get();
+    m_graphics_pipeline.render(command_buffer, m_vertex_buffer, m_index_buffer,
+                               descriptor_set, num_instances);
     m_character_buffers.rotate();
     m_text_segment_buffers.rotate();
 }

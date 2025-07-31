@@ -2,7 +2,7 @@
 #include "ui.h"
 
 namespace {
-const std::string resource_name = "UiVertex";
+std::string resource_name = "UiVertex";
 
 unsigned char ui_spv[] = {
   0x03, 0x02, 0x23, 0x07, 0x00, 0x00, 0x01, 0x00, 0x0b, 0x00, 0x0d, 0x00,

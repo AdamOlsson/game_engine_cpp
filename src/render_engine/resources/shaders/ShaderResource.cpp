@@ -7,8 +7,7 @@
 #include "render_engine/resources/shaders/vertex/ui/ui.h"
 #include <memory>
 
-ShaderResource::ShaderResource(const std::string &&name, const unsigned int length,
-                               const uint8_t *bytes)
+ShaderResource::ShaderResource(std::string &&name, unsigned int length, uint8_t *bytes)
     : name_(std::move(name)), length_(length), bytes_(bytes) {}
 
 const uint8_t *ShaderResource::bytes() const { return bytes_; }

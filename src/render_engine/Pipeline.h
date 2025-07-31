@@ -30,9 +30,10 @@ class Pipeline {
              SwapChainManager &swap_chain_manager);
 
     ~Pipeline();
-    Pipeline(const Pipeline &other) = delete;
-    Pipeline(Pipeline &&other) noexcept = default;
+
+    Pipeline(Pipeline &&other) noexcept;
+    Pipeline &operator=(Pipeline &&other) noexcept;
 
     Pipeline &operator=(const Pipeline &other) = delete;
-    Pipeline &operator=(Pipeline &&other) noexcept = default;
+    Pipeline(const Pipeline &other) = delete;
 };

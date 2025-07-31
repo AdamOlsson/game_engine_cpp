@@ -263,7 +263,7 @@ class AssetCompiler:
 #include "{header_name}.h"
 
 namespace {{
-const std::string resource_name = "{resource_name}";
+std::string resource_name = "{resource_name}";
 
 {xxd_content}
 }} // namespace

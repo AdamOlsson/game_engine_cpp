@@ -13,6 +13,7 @@
 #include "render_engine/descriptors/DescriptorSet.h"
 #include "render_engine/descriptors/DescriptorSetLayout.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
+#include "render_engine/graphics_pipeline/GraphicsPipeline.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 #include <vulkan/vulkan.h>
@@ -63,14 +64,12 @@ class TextPipeline {
     DescriptorSetLayout m_descriptor_set_layout;
     DescriptorPool m_descriptor_pool;
     DescriptorSet m_descriptor_set;
-    Pipeline m_pipeline;
+    graphics_pipeline::GraphicsPipeline m_graphics_pipeline;
 
     DescriptorSetLayout create_descriptor_set_layout();
     DescriptorSet create_descriptor_set(
         SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
         Sampler &sampler, Texture &texture);
-    Pipeline create_pipeline(DescriptorSetLayout &descriptor_set_layout,
-                             SwapChainManager &swap_chain_manager);
 
   public:
     TextPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,

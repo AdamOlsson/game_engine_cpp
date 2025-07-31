@@ -22,6 +22,31 @@ Pipeline::~Pipeline() {
     }
 }
 
+Pipeline::Pipeline(Pipeline &&other) noexcept
+    : m_ctx(std::move(other.m_ctx)), m_pipeline_layout(other.m_pipeline_layout),
+      m_pipeline(other.m_pipeline) {
+    other.m_pipeline_layout = VK_NULL_HANDLE;
+    other.m_pipeline = VK_NULL_HANDLE;
+}
+
+Pipeline &Pipeline::operator=(Pipeline &&other) noexcept {
+    if (this != &other) {
+        if (m_pipeline != VK_NULL_HANDLE) {
+            vkDestroyPipeline(m_ctx->logical_device, m_pipeline, nullptr);
+        }
+        if (m_pipeline_layout != VK_NULL_HANDLE) {
+            vkDestroyPipelineLayout(m_ctx->logical_device, m_pipeline_layout, nullptr);
+        }
+        m_ctx = std::move(other.m_ctx);
+        m_pipeline_layout = other.m_pipeline_layout;
+        m_pipeline = other.m_pipeline;
+
+        other.m_pipeline_layout = VK_NULL_HANDLE;
+        other.m_pipeline = VK_NULL_HANDLE;
+    }
+    return *this;
+}
+
 VkPipelineLayout Pipeline::create_graphics_pipeline_layout(
     const VkDescriptorSetLayout &descriptor_set_layout,
     const std::vector<VkPushConstantRange> &push_constant_range) {
