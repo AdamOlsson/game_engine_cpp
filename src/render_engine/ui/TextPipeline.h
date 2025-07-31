@@ -5,6 +5,7 @@
 #include "render_engine/Sampler.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/Texture.h"
+#include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/buffers/IndexBuffer.h"
 #include "render_engine/buffers/VertexBuffer.h"
 #include "render_engine/colors.h"

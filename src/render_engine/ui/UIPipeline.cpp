@@ -3,6 +3,7 @@
 #include "render_engine/GeometryPipeline.h"
 #include "render_engine/ShaderModule.h"
 #include "render_engine/descriptors/DescriptorSet.h"
+#include "render_engine/descriptors/DescriptorSetBuilder.h"
 #include "render_engine/descriptors/DescriptorSetLayoutBuilder.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "render_engine/resources/shaders/ShaderResource.h"

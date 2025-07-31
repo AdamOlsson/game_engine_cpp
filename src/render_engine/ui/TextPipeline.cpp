@@ -5,6 +5,7 @@
 #include "render_engine/ShaderModule.h"
 #include "render_engine/Texture.h"
 #include "render_engine/descriptors/DescriptorSet.h"
+#include "render_engine/descriptors/DescriptorSetBuilder.h"
 #include "render_engine/descriptors/DescriptorSetLayoutBuilder.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "vulkan/vulkan_core.h"
