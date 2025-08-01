@@ -63,10 +63,6 @@ class TextPipeline {
     DescriptorSet m_descriptor_set;
     graphics_pipeline::GraphicsPipeline m_graphics_pipeline;
 
-    DescriptorSet create_descriptor_set(
-        SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
-        Sampler &sampler, Texture &texture);
-
   public:
     TextPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                  SwapChainManager &swap_chain,

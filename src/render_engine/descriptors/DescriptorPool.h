@@ -5,6 +5,7 @@
 class DescriptorPool {
   private:
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
+    VkDescriptorPool m_descriptor_pool;
 
     VkDescriptorPool create_descriptor_pool(const uint32_t capacity,
                                             const uint32_t num_storage_bufs,
@@ -12,8 +13,6 @@ class DescriptorPool {
                                             const uint32_t num_samplers);
 
   public:
-    VkDescriptorPool m_descriptor_pool;
-
     DescriptorPool() = default;
     DescriptorPool(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
                    const uint32_t capacity, const uint32_t num_storage_bufs,
@@ -25,4 +24,6 @@ class DescriptorPool {
 
     DescriptorPool &operator=(const DescriptorPool &other) = delete;
     DescriptorPool &operator=(DescriptorPool &&other) noexcept = default;
+
+    operator VkDescriptorPool() const { return m_descriptor_pool; }
 };

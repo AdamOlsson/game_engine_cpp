@@ -10,8 +10,6 @@
 
 class DescriptorSetBuilder {
   private:
-    DescriptorSetLayout m_descriptor_set_layout;
-
     DescriptorSetLayoutBuilder m_descriptor_set_layout_builder;
 
     DescriptorPool *m_descriptor_pool;
@@ -37,8 +35,7 @@ class DescriptorSetBuilder {
                                                 VkDescriptorImageInfo &image_info);
 
   public:
-    DescriptorSetBuilder(DescriptorSetLayout &&descriptor_set_layout,
-                         DescriptorPool &descriptor_pool, size_t capacity);
+    DescriptorSetBuilder(DescriptorPool &descriptor_pool, size_t capacity);
 
     DescriptorSetBuilder &add_gpu_buffer(size_t binding,
                                          std::vector<GpuBufferRef> &&buffers);

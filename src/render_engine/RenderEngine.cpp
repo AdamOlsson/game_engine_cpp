@@ -39,18 +39,6 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
     m_geometry_pipeline = std::make_unique<GeometryPipeline>(
         ctx, *swap_chain_manager, m_window_dimension_buffers, m_sampler, *m_texture);
 
-    // std::unique_ptr<GeometryPipeline> geometry_pipeline = PipelineBuilder()
-    // // If index buffer is set use index based drawing
-    // .set_vertex_shader(<vertex shader>)
-    // .set_fragment_shader(<fragment shader>)
-    // .set_vertex_buffer(<vertex buffer>)
-    // .set_index_buffer(<index buffer>)
-    // .set_push_constants(<push_constants>)
-    // .add_sampler(<sampler>)
-    // .add_texture(<texture>)
-    // .add_gpu_buffer(<gpu buffer>)
-    // .build(ctx, swap_chain_manager)
-
     switch (use_font) {
     case UseFont::Default: {
         auto default_font = resource_manager.get_resource<FontResource>("DefaultFont");

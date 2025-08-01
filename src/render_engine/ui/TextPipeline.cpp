@@ -5,7 +5,6 @@
 #include "render_engine/Texture.h"
 #include "render_engine/descriptors/DescriptorSet.h"
 #include "render_engine/descriptors/DescriptorSetBuilder.h"
-#include "render_engine/descriptors/DescriptorSetLayoutBuilder.h"
 #include "render_engine/graphics_pipeline/GraphicsPipeline.h"
 #include "render_engine/graphics_pipeline/GraphicsPipelineBuilder.h"
 #include "render_engine/resources/ResourceManager.h"
@@ -30,7 +29,13 @@ TextPipeline::TextPipeline(
       m_descriptor_pool(DescriptorPool(m_ctx, m_descriptor_pool_capacity,
                                        m_num_storage_buffers, m_num_uniform_buffers,
                                        m_num_samplers)),
-      m_descriptor_set(create_descriptor_set(uniform_buffers, sampler, texture)),
+      m_descriptor_set(
+          DescriptorSetBuilder(m_descriptor_pool, MAX_FRAMES_IN_FLIGHT)
+              .add_gpu_buffer(0, m_character_buffers.get_buffer_references())
+              .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
+              .set_texture_and_sampler(2, texture, sampler)
+              .add_gpu_buffer(3, m_text_segment_buffers.get_buffer_references())
+              .build(m_ctx)),
       m_graphics_pipeline(
           // clang-format off
         graphics_pipeline::GraphicsPipelineBuilder()
@@ -42,29 +47,6 @@ TextPipeline::TextPipeline(
       ) {}
 
 TextPipeline::~TextPipeline() {}
-
-DescriptorSet TextPipeline::create_descriptor_set(
-    SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers, Sampler &sampler,
-    Texture &texture) {
-    auto layout =
-        DescriptorSetLayoutBuilder()
-            .add(BufferDescriptor<
-                 GpuBufferType::Storage>::create_descriptor_set_layout_binding(0))
-            .add(BufferDescriptor<
-                 GpuBufferType::Uniform>::create_descriptor_set_layout_binding(1))
-            .add(Sampler::create_descriptor_set_layout_binding(2))
-            .add(BufferDescriptor<
-                 GpuBufferType::Storage>::create_descriptor_set_layout_binding(3))
-            .build(m_ctx);
-
-    return DescriptorSetBuilder(std::move(layout), m_descriptor_pool,
-                                MAX_FRAMES_IN_FLIGHT)
-        .add_gpu_buffer(0, m_character_buffers.get_buffer_references())
-        .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
-        .set_texture_and_sampler(2, texture, sampler)
-        .add_gpu_buffer(3, m_text_segment_buffers.get_buffer_references())
-        .build(m_ctx);
-}
 
 StorageBuffer<CharacterInstanceBufferObject> &TextPipeline::get_character_buffer() {
     return m_character_buffers.get_buffer();

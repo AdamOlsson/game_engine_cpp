@@ -1,11 +1,8 @@
 #include "DescriptorSetBuilder.h"
-#include "render_engine/descriptors/DescriptorSetLayout.h"
 
-DescriptorSetBuilder::DescriptorSetBuilder(DescriptorSetLayout &&descriptor_set_layout,
-                                           DescriptorPool &descriptor_pool,
+DescriptorSetBuilder::DescriptorSetBuilder(DescriptorPool &descriptor_pool,
                                            size_t capacity)
-    : m_descriptor_set_layout(std::move(descriptor_set_layout)),
-      m_descriptor_pool(&descriptor_pool), m_capacity(capacity), m_texture_binding(0),
+    : m_descriptor_pool(&descriptor_pool), m_capacity(capacity), m_texture_binding(0),
       m_texture(nullptr), m_sampler(nullptr) {}
 
 DescriptorSetBuilder &
@@ -21,7 +18,7 @@ DescriptorSetBuilder::add_gpu_buffer(size_t binding,
                          std::make_move_iterator(buffers.end()));
 
     // all buffers are of the same typer every invokation
-    switch (m_gpu_buffers[0].type) {
+    switch (m_gpu_buffers.back().type) {
     case GpuBufferType::Storage:
         m_descriptor_set_layout_builder.add(
             BufferDescriptor<
@@ -55,7 +52,7 @@ std::vector<VkDescriptorSet> DescriptorSetBuilder::allocate_descriptor_sets(
 
     VkDescriptorSetAllocateInfo alloc_info{};
     alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    alloc_info.descriptorPool = m_descriptor_pool->m_descriptor_pool;
+    alloc_info.descriptorPool = *m_descriptor_pool;
     alloc_info.descriptorSetCount = static_cast<uint32_t>(m_capacity);
     alloc_info.pSetLayouts = layouts.data();
 
@@ -97,9 +94,6 @@ VkWriteDescriptorSet DescriptorSetBuilder::create_texture_and_sampler_descriptor
 
 DescriptorSet
 DescriptorSetBuilder::build(std::shared_ptr<graphics_context::GraphicsContext> &ctx) {
-    if (m_descriptor_set_layout == nullptr) {
-        throw std::runtime_error("Descriptor set layout not set");
-    }
 
     if (m_descriptor_pool == nullptr) {
         throw std::runtime_error("Descriptor pool not set");
@@ -110,11 +104,11 @@ DescriptorSetBuilder::build(std::shared_ptr<graphics_context::GraphicsContext> &
             "Number of storage buffers needs to be a multiple of capacity");
     }
 
-    /*const DescriptorSetLayout descriptor_set_layout =*/
-    /*    m_descriptor_set_layout_builder.build(ctx);*/
+    DescriptorSetLayout descriptor_set_layout =
+        m_descriptor_set_layout_builder.build(ctx);
 
     std::vector<VkDescriptorSet> descriptor_sets =
-        allocate_descriptor_sets(ctx, m_descriptor_set_layout);
+        allocate_descriptor_sets(ctx, descriptor_set_layout);
 
     const size_t num_buffers_per_set = m_gpu_buffers.size() / m_capacity;
 
@@ -162,5 +156,5 @@ DescriptorSetBuilder::build(std::shared_ptr<graphics_context::GraphicsContext> &
                                descriptor_writes.data(), 0, nullptr);
     }
 
-    return DescriptorSet(ctx, descriptor_sets, std::move(m_descriptor_set_layout));
+    return DescriptorSet(ctx, descriptor_sets, std::move(descriptor_set_layout));
 }

@@ -23,8 +23,8 @@ class DescriptorSet {
     DescriptorSet() = default;
 
     DescriptorSet(DescriptorSet &&other) noexcept = default;
-    DescriptorSet(const DescriptorSet &other) = delete;
     DescriptorSet &operator=(DescriptorSet &&other) noexcept = default;
+    DescriptorSet(const DescriptorSet &other) = delete;
     DescriptorSet &operator=(const DescriptorSet &other) = delete;
 
     ~DescriptorSet() = default;

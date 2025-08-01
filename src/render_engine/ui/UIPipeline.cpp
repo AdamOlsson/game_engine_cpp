@@ -4,7 +4,6 @@
 #include "render_engine/ShaderModule.h"
 #include "render_engine/descriptors/DescriptorSet.h"
 #include "render_engine/descriptors/DescriptorSetBuilder.h"
-#include "render_engine/descriptors/DescriptorSetLayoutBuilder.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "render_engine/resources/shaders/ShaderResource.h"
 #include "vulkan/vulkan_core.h"
@@ -18,7 +17,9 @@ UIPipeline::UIPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
       m_descriptor_pool(DescriptorPool(m_ctx, m_descriptor_pool_capacity,
                                        m_num_storage_buffers, m_num_uniform_buffers,
                                        m_num_samplers)),
-      m_descriptor_set(create_descriptor_set(uniform_buffers)),
+      m_descriptor_set(DescriptorSetBuilder(m_descriptor_pool, MAX_FRAMES_IN_FLIGHT)
+                           .add_gpu_buffer(0, uniform_buffers.get_buffer_references())
+                           .build(m_ctx)),
       m_pipeline(create_pipeline(swap_chain_manager)),
       m_vertex_buffer(m_ctx, Geometry::rectangle_vertices, swap_chain_manager),
       m_index_buffer(IndexBuffer(ctx, Geometry::rectangle_indices, swap_chain_manager)) {}
@@ -44,21 +45,6 @@ void UIPipeline::render(const VkCommandBuffer &command_buffer,
                             m_pipeline.m_pipeline_layout, 0, 1, &descriptor, 0, nullptr);
 
     vkCmdDrawIndexed(command_buffer, m_index_buffer.num_indices, 1, 0, 0, 0);
-}
-
-DescriptorSet UIPipeline::create_descriptor_set(
-    SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers) {
-
-    auto layout =
-        DescriptorSetLayoutBuilder()
-            .add(BufferDescriptor<
-                 GpuBufferType::Uniform>::create_descriptor_set_layout_binding(0))
-            .build(m_ctx);
-
-    return DescriptorSetBuilder(std::move(layout), m_descriptor_pool,
-                                MAX_FRAMES_IN_FLIGHT)
-        .add_gpu_buffer(0, uniform_buffers.get_buffer_references())
-        .build(m_ctx);
 }
 
 Pipeline UIPipeline::create_pipeline(SwapChainManager &swap_chain_manager) {

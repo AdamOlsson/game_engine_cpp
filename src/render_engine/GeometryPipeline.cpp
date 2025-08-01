@@ -42,8 +42,7 @@ GeometryPipeline::GeometryPipeline(
       m_circle_index_buffer(
           IndexBuffer(ctx, Geometry::circle_indices, swap_chain_manager)),
       m_circle_descriptor_set(
-          DescriptorSetBuilder(std::move(create_descriptor_set_layout()),
-                               m_descriptor_pool, MAX_FRAMES_IN_FLIGHT)
+          DescriptorSetBuilder(m_descriptor_pool, MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_circle_instance_buffers.get_buffer_references())
               .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
@@ -54,8 +53,7 @@ GeometryPipeline::GeometryPipeline(
       m_triangle_index_buffer(
           IndexBuffer(ctx, Geometry::triangle_indices, swap_chain_manager)),
       m_triangle_descriptor_set(
-          DescriptorSetBuilder(std::move(create_descriptor_set_layout()),
-                               m_descriptor_pool, MAX_FRAMES_IN_FLIGHT)
+          DescriptorSetBuilder(m_descriptor_pool, MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_triangle_instance_buffers.get_buffer_references())
               .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
@@ -66,8 +64,7 @@ GeometryPipeline::GeometryPipeline(
       m_rectangle_index_buffer(
           IndexBuffer(ctx, Geometry::rectangle_indices, swap_chain_manager)),
       m_rectangle_descriptor_set(
-          DescriptorSetBuilder(std::move(create_descriptor_set_layout()),
-                               m_descriptor_pool, MAX_FRAMES_IN_FLIGHT)
+          DescriptorSetBuilder(m_descriptor_pool, MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_rectangle_instance_buffers.get_buffer_references())
               .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
@@ -78,8 +75,7 @@ GeometryPipeline::GeometryPipeline(
       m_hexagon_index_buffer(
           IndexBuffer(ctx, Geometry::hexagon_indices, swap_chain_manager)),
       m_hexagon_descriptor_set(
-          DescriptorSetBuilder(std::move(create_descriptor_set_layout()),
-                               m_descriptor_pool, MAX_FRAMES_IN_FLIGHT)
+          DescriptorSetBuilder(m_descriptor_pool, MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_hexagon_instance_buffers.get_buffer_references())
               .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)

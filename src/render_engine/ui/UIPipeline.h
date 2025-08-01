@@ -30,9 +30,6 @@ class UIPipeline {
     VertexBuffer m_vertex_buffer;
     IndexBuffer m_index_buffer;
 
-    DescriptorSet create_descriptor_set(
-        SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers);
-
     Pipeline create_pipeline(SwapChainManager &swap_chain_manager);
 
   public:
