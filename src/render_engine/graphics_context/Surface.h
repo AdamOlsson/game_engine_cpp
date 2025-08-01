@@ -17,8 +17,8 @@ class Surface {
     Surface(const graphics_context::Instance *instance, const window::Window *window);
     ~Surface();
 
-    Surface(Surface &&) noexcept = default;
-    Surface &operator=(Surface &&) noexcept = default;
+    Surface(Surface &&other) noexcept;
+    Surface &operator=(Surface &&other) noexcept;
     Surface(const Surface &) = delete;
     Surface &operator=(const Surface &) = delete;
 

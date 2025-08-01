@@ -3,6 +3,7 @@
 #include "render_engine/SingleTimeCommandBuffer.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/buffers/common.h"
+#include "vulkan/vulkan_core.h"
 
 TextureImage::TextureImage()
     : m_ctx(nullptr), m_image(nullptr), m_image_memory(nullptr), m_image_view(nullptr),
@@ -54,34 +55,41 @@ TextureImage::TextureImage(TextureImage &&other) noexcept
     : m_ctx(std::move(other.m_ctx)), m_image(other.m_image),
       m_image_memory(other.m_image_memory), m_image_view(other.m_image_view),
       m_dimension(other.m_dimension) {
-    other.m_image = nullptr;
-    other.m_image_memory = nullptr;
-    other.m_image_view = nullptr;
+    other.m_image = VK_NULL_HANDLE;
+    other.m_image_memory = VK_NULL_HANDLE;
+    other.m_image_view = VK_NULL_HANDLE;
     other.m_dimension = TextureImageDimension{0, 0};
 }
 
 TextureImage &TextureImage::operator=(TextureImage &&other) noexcept {
     if (this != &other) {
+        destroy();
+
         m_ctx = std::move(other.m_ctx);
         m_image = other.m_image;
         m_image_memory = other.m_image_memory;
         m_image_view = other.m_image_view;
         m_dimension = other.m_dimension;
 
-        other.m_image = nullptr;
-        other.m_image_memory = nullptr;
-        other.m_image_view = nullptr;
+        other.m_image = VK_NULL_HANDLE;
+        other.m_image_memory = VK_NULL_HANDLE;
+        other.m_image_view = VK_NULL_HANDLE;
         other.m_dimension = TextureImageDimension{0, 0};
     }
 
     return *this;
 }
 
-TextureImage::~TextureImage() {
-    vkDestroyImageView(m_ctx->logical_device, m_image_view, nullptr);
-    vkDestroyImage(m_ctx->logical_device, m_image, nullptr);
-    vkFreeMemory(m_ctx->logical_device, m_image_memory, nullptr);
+void TextureImage::destroy() {
+    if (m_image_view != VK_NULL_HANDLE || m_image != VK_NULL_HANDLE ||
+        m_image_memory != VK_NULL_HANDLE) {
+        vkDestroyImageView(m_ctx->logical_device, m_image_view, nullptr);
+        vkDestroyImage(m_ctx->logical_device, m_image, nullptr);
+        vkFreeMemory(m_ctx->logical_device, m_image_memory, nullptr);
+    }
 }
+
+TextureImage::~TextureImage() { destroy(); }
 
 void TextureImage::transition_image_layout(SwapChainManager &swap_chain_manager,
                                            const VkQueue &graphics_queue,

@@ -19,6 +19,8 @@ class TextureImage {
     const VkFormat m_format = VK_FORMAT_R8G8B8A8_SRGB;
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
 
+    void destroy();
+
   public:
     VkImage m_image;
     VkDeviceMemory m_image_memory;

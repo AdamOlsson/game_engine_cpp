@@ -17,9 +17,7 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
                            SwapChainManager *swap_chain_manager, const UseFont use_font)
     : m_window_dimension_buffers(SwapUniformBuffer<window::WindowDimension<float>>(
           ctx, MAX_FRAMES_IN_FLIGHT, 1)),
-      m_sampler(Sampler(ctx))
-
-{
+      m_sampler(Sampler(ctx)) {
 
     m_window_dimension_buffers.write(ctx->window->dimensions<float>());
 

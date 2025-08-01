@@ -78,29 +78,16 @@ std::unique_ptr<Texture> Texture::unique_from_image_resource(
 }
 
 Texture::Texture(Texture &&other) noexcept
-    : m_ctx(std::move(other.m_ctx)), m_texture_image(std::move(other.m_texture_image)) {
-    other.m_texture_image.m_image = nullptr;
-    other.m_texture_image.m_image_memory = nullptr;
-    other.m_texture_image.m_image_view = VK_NULL_HANDLE;
-}
+    : m_ctx(std::move(other.m_ctx)), m_texture_image(std::move(other.m_texture_image)) {}
 
 Texture &Texture::operator=(Texture &&other) noexcept {
     if (this != &other) {
         m_ctx = std::move(m_ctx);
         m_texture_image = std::move(other.m_texture_image);
-
-        /*other.m_texture_image = VK_NULL_HANDLE;*/
-        other.m_texture_image.m_image = nullptr;
-        other.m_texture_image.m_image_memory = nullptr;
-        other.m_texture_image.m_image_view = nullptr;
     }
     return *this;
 }
 
-Texture::~Texture() {
-    /*vkDestroyImageView(m_ctx->device, m_texture_image.image_view, nullptr);*/
-    /*vkDestroyImage(m_ctx->device, m_texture_image.image, nullptr);*/
-    /*vkFreeMemory(m_ctx->device, m_texture_image.image_memory, nullptr);*/
-}
+Texture::~Texture() {}
 
 VkImageView Texture::view() { return m_texture_image.m_image_view; }
