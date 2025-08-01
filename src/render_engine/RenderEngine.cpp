@@ -13,9 +13,6 @@
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
-// TODO: How can I create a proper render hierarchy? Preferably I would want my pipelines
-// to act on some state object for rendering
-
 RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                            SwapChainManager *swap_chain_manager, const UseFont use_font)
     : m_window_dimension_buffers(SwapUniformBuffer<window::WindowDimension<float>>(
@@ -26,16 +23,15 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
 
     m_window_dimension_buffers.write(ctx->window->dimensions<float>());
 
-    auto device_queues = ctx->get_device_queues();
-
     auto &resource_manager = ResourceManager::get_instance();
     auto dog_image = resource_manager.get_resource<ImageResource>("DogImage");
 
     // TODO: Move this into the GeometryPipeline temporarily so that I do not need to
     // think about it for now
-    m_texture = Texture::unique_from_image_resource(
-        ctx, *swap_chain_manager, device_queues.graphics_queue, dog_image);
+    m_texture = Texture::unique_from_image_resource(ctx, *swap_chain_manager, dog_image);
 
+    // CONTINUE: I do not want the sampler or texture to be part of the constructor
+    // interface, instead they should be optional to add
     m_geometry_pipeline = std::make_unique<GeometryPipeline>(
         ctx, *swap_chain_manager, m_window_dimension_buffers, m_sampler, *m_texture);
 
@@ -44,8 +40,7 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
         auto default_font = resource_manager.get_resource<FontResource>("DefaultFont");
         // TODO: This could be moved into the TextPipeline but the text kerning is
         // dependent on this the map
-        m_font = std::make_unique<Font>(ctx, *swap_chain_manager,
-                                        device_queues.graphics_queue, default_font);
+        m_font = std::make_unique<Font>(ctx, *swap_chain_manager, default_font);
         break;
     }
     default:
@@ -54,11 +49,15 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
     }
 
     if (m_font != nullptr) {
+        // CONTINUE: Text kerning should e more integrated with existing text classes
+        // CONTINUE: Font atlas sampler should be integrated with texture holding the font
+        // atlas
         m_text_pipeline = std::make_unique<ui::TextPipeline>(
             ctx, *swap_chain_manager, m_window_dimension_buffers, m_sampler,
             *m_font->font_atlas);
     }
 
+    // CONTINUE: UIPipeline is dependent on TextPipeline. Should it?...
     m_ui_pipeline = std::make_unique<ui::UIPipeline>(ctx, *swap_chain_manager,
                                                      m_window_dimension_buffers);
 }

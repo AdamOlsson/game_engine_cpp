@@ -17,37 +17,33 @@ class Texture {
     // As the make_unique needs to have access to the constructor it needs to be left
     // public
     Texture(std::shared_ptr<graphics_context::GraphicsContext> ctx,
-            SwapChainManager &swap_chain_manager, const VkQueue &graphics_queue,
-            const ImageData &image_data);
+            SwapChainManager &swap_chain_manager, const ImageData &image_data);
 
-    static Texture
-    from_filepath(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
-                  SwapChainManager &swap_chain_manager, const VkQueue &graphics_queue,
-                  const char *filepath);
+    static Texture from_filepath(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+                                 SwapChainManager &swap_chain_manager,
+                                 const char *filepath);
     static std::unique_ptr<Texture>
     unique_from_filepath(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
-                         SwapChainManager &swap_chain_manager,
-                         const VkQueue &graphics_queue, const char *filepath);
+                         SwapChainManager &swap_chain_manager, const char *filepath);
 
     static Texture from_bytes(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
-                              SwapChainManager &swap_chain_manager,
-                              const VkQueue &graphics_queue, const uint8_t *bytes,
+                              SwapChainManager &swap_chain_manager, const uint8_t *bytes,
                               const unsigned int length);
 
     static std::unique_ptr<Texture>
     unique_from_bytes(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
-                      SwapChainManager &swap_chain_manager, const VkQueue &graphics_queue,
-                      const uint8_t *bytes, const unsigned int length);
+                      SwapChainManager &swap_chain_manager, const uint8_t *bytes,
+                      const unsigned int length);
 
     static Texture
     from_image_resource(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
                         SwapChainManager &swap_chain_manager,
-                        const VkQueue &graphics_queue, const ImageResource *resource);
+                        const ImageResource *resource);
 
-    static std::unique_ptr<Texture> unique_from_image_resource(
-        std::shared_ptr<graphics_context::GraphicsContext> &ctx,
-        SwapChainManager &swap_chain_manager, const VkQueue &graphics_queue,
-        const ImageResource *resource);
+    static std::unique_ptr<Texture>
+    unique_from_image_resource(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+                               SwapChainManager &swap_chain_manager,
+                               const ImageResource *resource);
 
     ~Texture();
 

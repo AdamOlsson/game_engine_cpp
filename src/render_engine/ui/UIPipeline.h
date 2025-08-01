@@ -1,6 +1,5 @@
 #pragma once
 
-#include "render_engine/Pipeline.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/buffers/IndexBuffer.h"

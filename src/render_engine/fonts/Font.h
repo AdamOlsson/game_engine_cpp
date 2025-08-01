@@ -29,8 +29,7 @@ class Font {
           atlas_height_px(0), atlas_width(0), atlas_height(0) {}
 
     Font(std::shared_ptr<graphics_context::GraphicsContext> &g_ctx,
-         SwapChainManager &swap_chain_manager, const VkQueue &graphics_queue,
-         const FontResource *resource)
+         SwapChainManager &swap_chain_manager, const FontResource *resource)
 
         : char_width_px(resource->char_width_px),
           char_height_px(resource->char_height_px),
@@ -38,7 +37,7 @@ class Font {
           atlas_height_px(resource->atlas_height_px),
           atlas_width(atlas_width_px / char_width_px),
           atlas_height(atlas_height_px / char_height_px),
-          font_atlas(Texture::unique_from_bytes(g_ctx, swap_chain_manager, graphics_queue,
+          font_atlas(Texture::unique_from_bytes(g_ctx, swap_chain_manager,
                                                 resource->bytes(), resource->length())) {}
 
     ~Font() = default;

@@ -2,9 +2,6 @@
 #include "validation_layers.h"
 #include "vulkan/vulkan_core.h"
 
-// CONTINUE: Find function like get_device_queues() below and integrate them with their
-// specific class (i.e Instance, Surface, etc)
-// - TODO: Move swap chain into CoreGraphicsContext
 graphics_context::GraphicsContext::GraphicsContext(window::Window *window)
     : m_enable_validation_layers(true), window(window),
       instance(Instance(m_enable_validation_layers)), surface(Surface(&instance, window)),
