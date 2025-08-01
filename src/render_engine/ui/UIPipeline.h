@@ -8,6 +8,7 @@
 #include "render_engine/descriptors/DescriptorPool.h"
 #include "render_engine/descriptors/DescriptorSet.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
+#include "render_engine/graphics_pipeline/GraphicsPipeline.h"
 #include "render_engine/ui/ElementProperties.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
@@ -25,12 +26,10 @@ class UIPipeline {
 
     DescriptorPool m_descriptor_pool;
     DescriptorSet m_descriptor_set;
-    Pipeline m_pipeline;
+    graphics_pipeline::GraphicsPipeline m_graphics_pipeline;
 
     VertexBuffer m_vertex_buffer;
     IndexBuffer m_index_buffer;
-
-    Pipeline create_pipeline(SwapChainManager &swap_chain_manager);
 
   public:
     UIPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,

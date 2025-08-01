@@ -11,6 +11,7 @@
 #include "render_engine/descriptors/DescriptorSet.h"
 #include "render_engine/descriptors/DescriptorSetLayout.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
+#include "render_engine/graphics_pipeline/GraphicsPipeline.h"
 #include "shape.h"
 #include "vulkan/vulkan_core.h"
 #include <iostream>
@@ -102,15 +103,11 @@ class GeometryPipeline {
     VertexBuffer m_hexagon_vertex_buffer;
     IndexBuffer m_hexagon_index_buffer;
 
-    Pipeline m_pipeline;
+    graphics_pipeline::GraphicsPipeline m_graphics_pipeline;
 
     const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 
     bool framebufferResized = false;
-
-    DescriptorSetLayout create_descriptor_set_layout();
-
-    Pipeline create_pipeline(SwapChainManager &swap_chain_manager);
 
     void record_draw_command(const VkCommandBuffer &command_buffer,
                              DescriptorSet &descriptor_set,

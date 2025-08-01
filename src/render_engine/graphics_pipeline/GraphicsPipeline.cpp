@@ -3,8 +3,6 @@
 graphics_pipeline::GraphicsPipeline::GraphicsPipeline(Pipeline &&pipeline)
     : m_pipeline(std::move(pipeline)) {}
 
-// TODO: The descriptor set should be a class member
-// TODO: Use wrapped classes
 void graphics_pipeline::GraphicsPipeline::render(const VkCommandBuffer &command_buffer,
                                                  const VertexBuffer &vertex_buffer,
                                                  const IndexBuffer &index_buffer,

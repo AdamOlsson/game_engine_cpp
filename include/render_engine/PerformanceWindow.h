@@ -35,5 +35,5 @@ class PerformanceWindow {
     PerformanceWindow(const PerformanceWindow &other) = delete;
     PerformanceWindow &operator=(const PerformanceWindow &other) = delete;
 
-    void render(RenderEngine &render_engine);
+    void render(RenderEngine &render_engine, CommandBuffer &command_buffer);
 };

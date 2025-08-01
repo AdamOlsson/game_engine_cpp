@@ -8,6 +8,7 @@
 #include "render_engine/ui/Button.h"
 #include "render_engine/ui/ElementProperties.h"
 #include "render_engine/ui/UI.h"
+#include "render_engine/ui/UIPipeline.h"
 #include "render_engine/window/WindowConfig.h"
 #include <memory>
 
@@ -39,6 +40,8 @@ class UserInterfaceExample : public Game {
         m_device_queues; // TODO: Request from CoreGraphicsContext instead of storing
     std::unique_ptr<RenderEngine> m_render_engine; // TODO: Remove
     std::unique_ptr<SwapChainManager> m_swap_chain_manager;
+    /*std::unique_ptr<ui::UIPipeline> m_ui_pipeline;*/
+    /*std::unique_ptr<ui::TextPipeline> m_text_pipeline;*/
 
     const std::string VERSION_ID = "VERSION";
     const std::string NUMBER_ID = "NUMBER";
@@ -221,30 +224,49 @@ class UserInterfaceExample : public Game {
 
     void render() override {
 
-        bool success = m_render_engine->begin_render_pass(m_swap_chain_manager.get(),
-                                                          m_device_queues);
-        if (!success) {
-            return;
-        }
-
         if (m_in_settings) {
             m_ui.get_text_box(INCREMENT_ID).text = std::to_string(m_increment);
         } else {
             m_ui.get_text_box(INCREMENT_ID).text = "";
         }
 
+        auto command_buffer_ = m_swap_chain_manager->get_command_buffer();
+        if (!command_buffer_.has_value()) {
+            return;
+        }
+        CommandBuffer command_buffer = std::move(command_buffer_.value());
+
+        command_buffer.begin_render_pass();
+        command_buffer.set_viewport(
+            Dimension::from_extent2d(m_swap_chain_manager->m_swap_chain.m_extent));
+        command_buffer.set_scissor(m_swap_chain_manager->m_swap_chain.m_extent);
+
         m_ui.get_text_box(NUMBER_ID).text = std::to_string(m_number);
 
         auto ui_state = m_ui.get_state();
 
-        m_render_engine->render_ui(ui_state);
+        m_render_engine->render_ui(command_buffer, ui_state);
 
-        PerformanceWindow::get_instance().render(*m_render_engine);
+        PerformanceWindow::get_instance().render(*m_render_engine, command_buffer);
 
-        success =
-            m_render_engine->end_render_pass(m_swap_chain_manager.get(), m_device_queues);
-        if (!success) {
-            return;
+        command_buffer.end_render_pass();
+        command_buffer.submit_render_pass(m_device_queues.graphics_queue);
+        VkResult result =
+            command_buffer.present_render_pass(m_device_queues.present_queue);
+
+        // TODO: framebufferResized needs to be set from the window callback when the
+        // window is resized
+        bool framebuffer_resized = false;
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
+            framebuffer_resized) {
+            m_swap_chain_manager->recreate_swap_chain();
+
+            // It is important to do this after vkQueuePresentKHR to ensure that the
+            // semaphores are in a consistent state, otherwise a signaled semaphore
+            // may never be properly waited upon.
+            framebuffer_resized = false;
+        } else if (result != VK_SUCCESS) {
+            throw std::runtime_error("failed to present swap chain image!");
         }
     };
 
@@ -254,8 +276,7 @@ class UserInterfaceExample : public Game {
         register_all_shaders();
         m_device_queues = ctx->get_device_queues();
 
-        m_swap_chain_manager = std::make_unique<SwapChainManager>(
-            ctx); // Maybe associate with CoreGraphicsContext
+        m_swap_chain_manager = std::make_unique<SwapChainManager>(ctx);
 
         m_render_engine = std::make_unique<RenderEngine>(
             ctx, m_swap_chain_manager.get(), UseFont::Default); // TODO: remove

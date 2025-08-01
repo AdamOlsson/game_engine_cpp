@@ -66,6 +66,7 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
 RenderEngine::~RenderEngine() {}
 
 void RenderEngine::render(
+    CommandBuffer &command_buffer,
     const std::vector<std::reference_wrapper<const RenderBody>> &bodies) {
     auto &circle_instance_buffer = m_geometry_pipeline->get_circle_instance_buffer();
     auto &triangle_instance_buffer = m_geometry_pipeline->get_triangle_instance_buffer();
@@ -109,12 +110,10 @@ void RenderEngine::render(
     rectangle_instance_buffer.transfer();
     hexagon_instance_buffer.transfer();
 
-    auto &command_buffer = m_current_render_pass.command_buffer.m_command_buffer;
-
-    m_geometry_pipeline->render_circles(command_buffer);
-    m_geometry_pipeline->render_triangles(command_buffer);
-    m_geometry_pipeline->render_rectangles(command_buffer);
-    m_geometry_pipeline->render_hexagons(command_buffer);
+    m_geometry_pipeline->render_circles(command_buffer.m_command_buffer);
+    m_geometry_pipeline->render_triangles(command_buffer.m_command_buffer);
+    m_geometry_pipeline->render_rectangles(command_buffer.m_command_buffer);
+    m_geometry_pipeline->render_hexagons(command_buffer.m_command_buffer);
 }
 
 void RenderEngine::text_kerning(const font::KerningMap &kerning_map,
@@ -181,7 +180,7 @@ void RenderEngine::render_text(const ui::TextBox &text_box) {
 }
 
 // TODO: Should we instead simply pass the UI class instead of its state?
-void RenderEngine::render_ui(const ui::State &state) {
+void RenderEngine::render_ui(CommandBuffer &command_buffer, const ui::State &state) {
     auto &character_instance_buffer = m_text_pipeline->get_character_buffer();
     auto &text_segment_buffer = m_text_pipeline->get_text_segment_buffer();
     character_instance_buffer.clear();
@@ -190,7 +189,7 @@ void RenderEngine::render_ui(const ui::State &state) {
     const auto kerning_map = m_font->kerning_map;
     for (const auto button : state.buttons) {
 
-        m_ui_pipeline->render(m_current_render_pass.command_buffer.m_command_buffer,
+        m_ui_pipeline->render(command_buffer.m_command_buffer,
                               button->properties.container);
 
         text_kerning(font::get_default_kerning_map(), button->text, button->properties);
@@ -205,7 +204,7 @@ void RenderEngine::render_ui(const ui::State &state) {
     character_instance_buffer.transfer();
     text_segment_buffer.transfer();
 
-    m_text_pipeline->render_text(m_current_render_pass.command_buffer.m_command_buffer);
+    m_text_pipeline->render_text(command_buffer.m_command_buffer);
 }
 
 bool RenderEngine::begin_render_pass(SwapChainManager *swap_chain_manager,

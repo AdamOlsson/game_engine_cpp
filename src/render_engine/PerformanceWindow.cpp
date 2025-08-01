@@ -93,7 +93,8 @@ PerformanceWindow::PerformanceWindow() {
     m_last_frame_time = "0.16";
 }
 
-void PerformanceWindow::render(RenderEngine &render_engine) {
+void PerformanceWindow::render(RenderEngine &render_engine,
+                               CommandBuffer &command_buffer) {
     TimePoint now = Clock::now();
     Duration elapsed = now - m_last_update;
 
@@ -110,8 +111,8 @@ void PerformanceWindow::render(RenderEngine &render_engine) {
     m_ui.get_text_box(FRAME_TIME_VALUE_TAG).text = m_last_frame_time;
     m_ui.get_text_box(FPS_VALUE_TAG).text = m_last_fps;
 
-    render_engine.render(m_components);
+    render_engine.render(command_buffer, m_components);
 
     auto ui_state = m_ui.get_state();
-    render_engine.render_ui(ui_state);
+    render_engine.render_ui(command_buffer, ui_state);
 }

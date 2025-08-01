@@ -40,11 +40,12 @@ class RenderEngine {
                  SwapChainManager *swap_chain_manager, const UseFont use_font);
     ~RenderEngine();
 
-    void render(const std::vector<std::reference_wrapper<const RenderBody>> &bodies);
+    void render(CommandBuffer &command_buffer,
+                const std::vector<std::reference_wrapper<const RenderBody>> &bodies);
 
     void render_text(const ui::TextBox &text_box);
 
-    void render_ui(const ui::State &state);
+    void render_ui(CommandBuffer &command_buffer, const ui::State &state);
 
     bool begin_render_pass(SwapChainManager *swap_chain_manager,
                            graphics_context::DeviceQueues &m_device_queues);

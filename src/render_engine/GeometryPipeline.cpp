@@ -1,13 +1,13 @@
 #include "render_engine/GeometryPipeline.h"
 #include "render_engine/Geometry.h"
 #include "render_engine/Sampler.h"
-#include "render_engine/ShaderModule.h"
 #include "render_engine/Texture.h"
 #include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/descriptors/DescriptorPool.h"
 #include "render_engine/descriptors/DescriptorSet.h"
 #include "render_engine/descriptors/DescriptorSetBuilder.h"
 #include "render_engine/descriptors/DescriptorSetLayoutBuilder.h"
+#include "render_engine/graphics_pipeline/GraphicsPipelineBuilder.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "shape.h"
 #include "vulkan/vulkan_core.h"
@@ -80,51 +80,32 @@ GeometryPipeline::GeometryPipeline(
               .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
               .build(m_ctx, m_descriptor_pool)),
-
-      m_pipeline(create_pipeline(swap_chain_manager)) {}
+      m_graphics_pipeline(
+          // clang-format off
+        graphics_pipeline::GraphicsPipelineBuilder()
+            .set_vertex_shader(ResourceManager::get_instance().get_resource<ShaderResource>("GeometryVertex"))
+            .set_fragment_shader(ResourceManager::get_instance().get_resource<ShaderResource>("GeometryFragment"))
+            .set_descriptor_set_layout(&m_hexagon_descriptor_set.get_layout()) // All descriptors have same layout
+            .set_push_constants({
+                .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+                .offset = 0,
+                .size = sizeof(uint32_t)
+                })
+            .build(m_ctx, swap_chain_manager)
+          // clang-format on
+      ) {}
 
 GeometryPipeline::~GeometryPipeline() {}
-
-DescriptorSetLayout GeometryPipeline::create_descriptor_set_layout() {
-    return DescriptorSetLayoutBuilder()
-        .add(BufferDescriptor<
-             GpuBufferType::Storage>::create_descriptor_set_layout_binding(0))
-        .add(BufferDescriptor<
-             GpuBufferType::Uniform>::create_descriptor_set_layout_binding(1))
-        .add(Sampler::create_descriptor_set_layout_binding(2))
-        .build(m_ctx);
-}
-
-void GeometryPipeline::record_draw_command(const VkCommandBuffer &command_buffer,
-                                           DescriptorSet &descriptor_set,
-                                           const ShapeTypeEncoding shape_type_encoding,
-                                           const VertexBuffer &vertex_buffer,
-                                           const IndexBuffer &index_buffer,
-                                           const size_t num_instances) {
-    const VkDeviceSize vertex_buffers_offset = 0;
-    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                      m_pipeline.m_pipeline);
-
-    auto desc = descriptor_set.get();
-    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            m_pipeline.m_pipeline_layout, 0, 1, &desc, 0, nullptr);
-    vkCmdPushConstants(command_buffer, m_pipeline.m_pipeline_layout,
-                       VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(uint32_t),
-                       &shape_type_encoding);
-
-    vkCmdBindVertexBuffers(command_buffer, 0, 1, &vertex_buffer.buffer,
-                           &vertex_buffers_offset);
-    vkCmdBindIndexBuffer(command_buffer, index_buffer.buffer, 0, VK_INDEX_TYPE_UINT16);
-    vkCmdDrawIndexed(command_buffer, index_buffer.num_indices, num_instances, 0, 0, 0);
-}
 
 void GeometryPipeline::render_circles(const VkCommandBuffer &command_buffer) {
     const auto &instance_buffer = m_circle_instance_buffers.get_buffer();
     const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
-        record_draw_command(command_buffer, m_circle_descriptor_set,
-                            ShapeTypeEncoding::CircleShape, m_circle_vertex_buffer,
-                            m_circle_index_buffer, num_instances);
+        m_graphics_pipeline.bind_push_constants(
+            command_buffer, VK_SHADER_STAGE_VERTEX_BIT, ShapeTypeEncoding::CircleShape);
+        auto descriptor_set = m_circle_descriptor_set.get();
+        m_graphics_pipeline.render(command_buffer, m_circle_vertex_buffer,
+                                   m_circle_index_buffer, descriptor_set, num_instances);
     }
     m_circle_instance_buffers.rotate();
 }
@@ -133,9 +114,12 @@ void GeometryPipeline::render_triangles(const VkCommandBuffer &command_buffer) {
     const auto &instance_buffer = m_triangle_instance_buffers.get_buffer();
     const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
-        record_draw_command(command_buffer, m_triangle_descriptor_set,
-                            ShapeTypeEncoding::TriangleShape, m_triangle_vertex_buffer,
-                            m_triangle_index_buffer, num_instances);
+        m_graphics_pipeline.bind_push_constants(
+            command_buffer, VK_SHADER_STAGE_VERTEX_BIT, ShapeTypeEncoding::TriangleShape);
+        auto descriptor_set = m_triangle_descriptor_set.get();
+        m_graphics_pipeline.render(command_buffer, m_triangle_vertex_buffer,
+                                   m_triangle_index_buffer, descriptor_set,
+                                   num_instances);
     }
     m_triangle_instance_buffers.rotate();
 }
@@ -145,21 +129,26 @@ void GeometryPipeline::render_rectangles(const VkCommandBuffer &command_buffer) 
     const auto &instance_buffer = m_rectangle_instance_buffers.get_buffer();
     const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
-        record_draw_command(command_buffer, m_rectangle_descriptor_set,
-                            ShapeTypeEncoding::RectangleShape, m_rectangle_vertex_buffer,
-                            m_rectangle_index_buffer, num_instances);
+        m_graphics_pipeline.bind_push_constants(command_buffer,
+                                                VK_SHADER_STAGE_VERTEX_BIT,
+                                                ShapeTypeEncoding::RectangleShape);
+        auto descriptor_set = m_rectangle_descriptor_set.get();
+        m_graphics_pipeline.render(command_buffer, m_rectangle_vertex_buffer,
+                                   m_rectangle_index_buffer, descriptor_set,
+                                   num_instances);
     }
     m_rectangle_instance_buffers.rotate();
 }
 
 void GeometryPipeline::render_hexagons(const VkCommandBuffer &command_buffer) {
-
     const auto &instance_buffer = m_hexagon_instance_buffers.get_buffer();
     const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
-        record_draw_command(command_buffer, m_hexagon_descriptor_set,
-                            ShapeTypeEncoding::HexagonShape, m_hexagon_vertex_buffer,
-                            m_hexagon_index_buffer, num_instances);
+        m_graphics_pipeline.bind_push_constants(
+            command_buffer, VK_SHADER_STAGE_VERTEX_BIT, ShapeTypeEncoding::HexagonShape);
+        auto descriptor_set = m_hexagon_descriptor_set.get();
+        m_graphics_pipeline.render(command_buffer, m_hexagon_vertex_buffer,
+                                   m_hexagon_index_buffer, descriptor_set, num_instances);
     }
     m_hexagon_instance_buffers.rotate();
 }
@@ -189,28 +178,6 @@ VkDescriptorPool createDescriptorPool(VkDevice &device, const int capacity) {
         throw std::runtime_error("failed to create descriptor pool!");
     }
     return descriptorPool;
-}
-
-Pipeline GeometryPipeline::create_pipeline(SwapChainManager &swap_chain_manager) {
-    auto &resoure_manager = ResourceManager::get_instance();
-    auto vert_shader_code =
-        resoure_manager.get_resource<ShaderResource>("GeometryVertex");
-    auto frag_shader_code =
-        resoure_manager.get_resource<ShaderResource>("GeometryFragment");
-
-    ShaderModule vertex_shader = ShaderModule(m_ctx, *vert_shader_code);
-    ShaderModule fragment_shader = ShaderModule(m_ctx, *frag_shader_code);
-
-    VkPushConstantRange push_constant_range{};
-    push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    push_constant_range.offset = 0;
-    push_constant_range.size = sizeof(uint32_t);
-
-    Pipeline pipeline =
-        Pipeline(m_ctx, std::move(create_descriptor_set_layout()), {push_constant_range},
-                 vertex_shader, fragment_shader, swap_chain_manager);
-
-    return pipeline;
 }
 
 StorageBuffer<GeometryInstanceBufferObject> &
