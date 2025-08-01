@@ -42,44 +42,44 @@ GeometryPipeline::GeometryPipeline(
       m_circle_index_buffer(
           IndexBuffer(ctx, Geometry::circle_indices, swap_chain_manager)),
       m_circle_descriptor_set(
-          DescriptorSetBuilder(m_descriptor_pool, MAX_FRAMES_IN_FLIGHT)
+          DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_circle_instance_buffers.get_buffer_references())
               .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
-              .build(m_ctx)),
+              .build(m_ctx, m_descriptor_pool)),
 
       m_triangle_vertex_buffer(
           VertexBuffer(ctx, Geometry::triangle_vertices, swap_chain_manager)),
       m_triangle_index_buffer(
           IndexBuffer(ctx, Geometry::triangle_indices, swap_chain_manager)),
       m_triangle_descriptor_set(
-          DescriptorSetBuilder(m_descriptor_pool, MAX_FRAMES_IN_FLIGHT)
+          DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_triangle_instance_buffers.get_buffer_references())
               .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
-              .build(m_ctx)),
+              .build(m_ctx, m_descriptor_pool)),
 
       m_rectangle_vertex_buffer(
           VertexBuffer(ctx, Geometry::rectangle_vertices, swap_chain_manager)),
       m_rectangle_index_buffer(
           IndexBuffer(ctx, Geometry::rectangle_indices, swap_chain_manager)),
       m_rectangle_descriptor_set(
-          DescriptorSetBuilder(m_descriptor_pool, MAX_FRAMES_IN_FLIGHT)
+          DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_rectangle_instance_buffers.get_buffer_references())
               .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
-              .build(m_ctx)),
+              .build(m_ctx, m_descriptor_pool)),
 
       m_hexagon_vertex_buffer(
           VertexBuffer(ctx, Geometry::hexagon_vertices, swap_chain_manager)),
       m_hexagon_index_buffer(
           IndexBuffer(ctx, Geometry::hexagon_indices, swap_chain_manager)),
       m_hexagon_descriptor_set(
-          DescriptorSetBuilder(m_descriptor_pool, MAX_FRAMES_IN_FLIGHT)
+          DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_hexagon_instance_buffers.get_buffer_references())
               .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
-              .build(m_ctx)),
+              .build(m_ctx, m_descriptor_pool)),
 
       m_pipeline(create_pipeline(swap_chain_manager)) {}
 

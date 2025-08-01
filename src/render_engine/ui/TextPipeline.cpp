@@ -30,12 +30,12 @@ TextPipeline::TextPipeline(
                                        m_num_storage_buffers, m_num_uniform_buffers,
                                        m_num_samplers)),
       m_descriptor_set(
-          DescriptorSetBuilder(m_descriptor_pool, MAX_FRAMES_IN_FLIGHT)
+          DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_character_buffers.get_buffer_references())
               .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, texture, sampler)
               .add_gpu_buffer(3, m_text_segment_buffers.get_buffer_references())
-              .build(m_ctx)),
+              .build(m_ctx, m_descriptor_pool)),
       m_graphics_pipeline(
           // clang-format off
         graphics_pipeline::GraphicsPipelineBuilder()

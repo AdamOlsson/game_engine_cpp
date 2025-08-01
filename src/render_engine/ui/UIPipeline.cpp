@@ -17,9 +17,9 @@ UIPipeline::UIPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
       m_descriptor_pool(DescriptorPool(m_ctx, m_descriptor_pool_capacity,
                                        m_num_storage_buffers, m_num_uniform_buffers,
                                        m_num_samplers)),
-      m_descriptor_set(DescriptorSetBuilder(m_descriptor_pool, MAX_FRAMES_IN_FLIGHT)
+      m_descriptor_set(DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
                            .add_gpu_buffer(0, uniform_buffers.get_buffer_references())
-                           .build(m_ctx)),
+                           .build(m_ctx, m_descriptor_pool)),
       m_pipeline(create_pipeline(swap_chain_manager)),
       m_vertex_buffer(m_ctx, Geometry::rectangle_vertices, swap_chain_manager),
       m_index_buffer(IndexBuffer(ctx, Geometry::rectangle_indices, swap_chain_manager)) {}

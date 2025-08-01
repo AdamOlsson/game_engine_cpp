@@ -12,7 +12,6 @@ class DescriptorSetBuilder {
   private:
     DescriptorSetLayoutBuilder m_descriptor_set_layout_builder;
 
-    DescriptorPool *m_descriptor_pool;
     size_t m_capacity;
 
     std::vector<size_t> m_gpu_buffer_binding;
@@ -24,6 +23,7 @@ class DescriptorSetBuilder {
 
     std::vector<VkDescriptorSet>
     allocate_descriptor_sets(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+                             DescriptorPool &descriptor_pool,
                              const VkDescriptorSetLayout &descriptor_set_layout);
 
     VkWriteDescriptorSet create_buffer_descriptor_write(
@@ -35,7 +35,7 @@ class DescriptorSetBuilder {
                                                 VkDescriptorImageInfo &image_info);
 
   public:
-    DescriptorSetBuilder(DescriptorPool &descriptor_pool, size_t capacity);
+    DescriptorSetBuilder(size_t capacity);
 
     DescriptorSetBuilder &add_gpu_buffer(size_t binding,
                                          std::vector<GpuBufferRef> &&buffers);
@@ -43,5 +43,6 @@ class DescriptorSetBuilder {
     DescriptorSetBuilder &set_texture_and_sampler(size_t binding, Texture &texture,
                                                   Sampler &sampler);
 
-    DescriptorSet build(std::shared_ptr<graphics_context::GraphicsContext> &ctx);
+    DescriptorSet build(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+                        DescriptorPool &descriptor_pool);
 };
