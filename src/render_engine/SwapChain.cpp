@@ -1,5 +1,4 @@
 #include "SwapChain.h"
-#include "render_engine/buffers/common.h"
 #include "vulkan/vulkan_core.h"
 
 SwapChain::SwapChain(std::shared_ptr<graphics_context::GraphicsContext> ctx)
@@ -27,9 +26,6 @@ SwapChain::SwapChain(std::shared_ptr<graphics_context::GraphicsContext> ctx)
 
 SwapChain::~SwapChain() {
     vkDestroyRenderPass(m_ctx->logical_device, m_render_pass, nullptr);
-    for (size_t i = 0; i < m_image_views.size(); i++) {
-        vkDestroyImageView(m_ctx->logical_device, m_image_views[i], nullptr);
-    }
     vkDestroySwapchainKHR(m_ctx->logical_device, m_swap_chain, nullptr);
     for (size_t i = 0; i < m_frame_buffers.size(); i++) {
         vkDestroyFramebuffer(m_ctx->logical_device, m_frame_buffers[i], nullptr);
@@ -89,14 +85,13 @@ std::vector<VkImage> SwapChain::create_swap_chain_images(uint32_t image_count) {
     return images;
 }
 
-std::vector<VkImageView> SwapChain::create_image_views(VkFormat &image_format) {
-    std::vector<VkImageView> swapChainImageViews;
-    swapChainImageViews.resize(m_images.size());
+std::vector<ImageView> SwapChain::create_image_views(VkFormat &image_format) {
+    std::vector<ImageView> swap_chain_image_views;
+    swap_chain_image_views.reserve(m_images.size());
     for (size_t i = 0; i < m_images.size(); i++) {
-        swapChainImageViews[i] =
-            create_image_view(m_ctx.get(), m_images[i], image_format);
+        swap_chain_image_views.emplace_back(m_ctx, m_images[i], image_format);
     }
-    return swapChainImageViews;
+    return swap_chain_image_views;
 }
 
 std::vector<VkFramebuffer> SwapChain::create_framebuffers() {

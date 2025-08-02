@@ -1,5 +1,6 @@
 #pragma once
 
+#include "render_engine/ImageView.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
@@ -10,7 +11,7 @@ class SwapChain {
     size_t m_next_frame_buffer;
 
     std::vector<VkImage> m_images;
-    std::vector<VkImageView> m_image_views;
+    std::vector<ImageView> m_image_views;
     std::vector<VkFramebuffer> m_frame_buffers;
 
     VkSwapchainKHR create_swap_chain(
@@ -18,7 +19,7 @@ class SwapChain {
         graphics_context::device::SwapChainSupportDetails &swap_chain_support);
 
     std::vector<VkImage> create_swap_chain_images(uint32_t image_count);
-    std::vector<VkImageView> create_image_views(VkFormat &image_format);
+    std::vector<ImageView> create_image_views(VkFormat &image_format);
     std::vector<VkFramebuffer> create_framebuffers();
     VkRenderPass create_render_pass(VkFormat &image_format);
 

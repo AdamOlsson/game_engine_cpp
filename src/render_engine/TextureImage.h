@@ -24,7 +24,7 @@ class TextureImage {
   public:
     VkImage m_image;
     VkDeviceMemory m_image_memory;
-    VkImageView m_image_view;
+    ImageView m_image_view;
     TextureImageDimension m_dimension;
 
     TextureImage();

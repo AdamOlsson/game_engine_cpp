@@ -6,7 +6,7 @@
 #include "vulkan/vulkan_core.h"
 
 TextureImage::TextureImage()
-    : m_ctx(nullptr), m_image(nullptr), m_image_memory(nullptr), m_image_view(nullptr),
+    : m_ctx(nullptr), m_image(nullptr), m_image_memory(nullptr),
       m_dimension(TextureImageDimension{0, 0}) {}
 
 TextureImage::TextureImage(std::shared_ptr<graphics_context::GraphicsContext> ctx,
@@ -29,7 +29,7 @@ TextureImage::TextureImage(std::shared_ptr<graphics_context::GraphicsContext> ct
     image_info.samples = VK_SAMPLE_COUNT_1_BIT;
     image_info.flags = 0;
 
-    if (vkCreateImage(ctx->logical_device, &image_info, nullptr, &m_image) !=
+    if (vkCreateImage(m_ctx->logical_device, &image_info, nullptr, &m_image) !=
         VK_SUCCESS) {
         throw std::runtime_error("Failed to create texture image");
     }
@@ -40,24 +40,24 @@ TextureImage::TextureImage(std::shared_ptr<graphics_context::GraphicsContext> ct
     VkMemoryAllocateInfo alloc_info{};
     alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     alloc_info.allocationSize = mem_requirements.size;
-    alloc_info.memoryTypeIndex = find_memory_type(
-        ctx.get(), mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    if (vkAllocateMemory(ctx->logical_device, &alloc_info, nullptr, &m_image_memory) !=
+    alloc_info.memoryTypeIndex =
+        find_memory_type(m_ctx.get(), mem_requirements.memoryTypeBits,
+                         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    if (vkAllocateMemory(m_ctx->logical_device, &alloc_info, nullptr, &m_image_memory) !=
         VK_SUCCESS) {
         throw std::runtime_error("Failed to create texture image memory");
     }
 
-    vkBindImageMemory(ctx->logical_device, m_image, m_image_memory, 0);
-    m_image_view = create_image_view(ctx.get(), m_image, VK_FORMAT_R8G8B8A8_SRGB);
+    vkBindImageMemory(m_ctx->logical_device, m_image, m_image_memory, 0);
+    m_image_view = ImageView(m_ctx, m_image, VK_FORMAT_R8G8B8A8_SRGB);
 }
 
 TextureImage::TextureImage(TextureImage &&other) noexcept
     : m_ctx(std::move(other.m_ctx)), m_image(other.m_image),
-      m_image_memory(other.m_image_memory), m_image_view(other.m_image_view),
+      m_image_memory(other.m_image_memory), m_image_view(std::move(other.m_image_view)),
       m_dimension(other.m_dimension) {
     other.m_image = VK_NULL_HANDLE;
     other.m_image_memory = VK_NULL_HANDLE;
-    other.m_image_view = VK_NULL_HANDLE;
     other.m_dimension = TextureImageDimension{0, 0};
 }
 
@@ -68,12 +68,11 @@ TextureImage &TextureImage::operator=(TextureImage &&other) noexcept {
         m_ctx = std::move(other.m_ctx);
         m_image = other.m_image;
         m_image_memory = other.m_image_memory;
-        m_image_view = other.m_image_view;
+        m_image_view = std::move(other.m_image_view);
         m_dimension = other.m_dimension;
 
         other.m_image = VK_NULL_HANDLE;
         other.m_image_memory = VK_NULL_HANDLE;
-        other.m_image_view = VK_NULL_HANDLE;
         other.m_dimension = TextureImageDimension{0, 0};
     }
 
@@ -83,7 +82,6 @@ TextureImage &TextureImage::operator=(TextureImage &&other) noexcept {
 void TextureImage::destroy() {
     if (m_image_view != VK_NULL_HANDLE || m_image != VK_NULL_HANDLE ||
         m_image_memory != VK_NULL_HANDLE) {
-        vkDestroyImageView(m_ctx->logical_device, m_image_view, nullptr);
         vkDestroyImage(m_ctx->logical_device, m_image, nullptr);
         vkFreeMemory(m_ctx->logical_device, m_image_memory, nullptr);
     }

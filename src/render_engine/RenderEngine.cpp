@@ -25,7 +25,8 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
     // CONTINUE: I do not want the sampler or texture to be part of the constructor
     // interface, instead they should be optional to add
     // CONTINUE HERE: Move command buffer creation to CoreGraphicsContext
-    // - wrap VkImageView in a ImageView class
+    // TODO: Vertex and index buffer should use StagingBuffer class instead of common.h
+    // functions
     m_geometry_pipeline = std::make_unique<GeometryPipeline>(
         ctx, *swap_chain_manager, m_window_dimension_buffers, m_sampler, *m_texture);
 
