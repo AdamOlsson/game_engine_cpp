@@ -133,9 +133,8 @@ void TextureImage::transition_image_layout(SwapChainManager &swap_chain_manager,
         throw std::invalid_argument("Unsupported layout transition!");
     }
 
-    vkCmdPipelineBarrier(command_buffer.m_command_buffer, source_stage, destination_stage,
-                         0, 0, nullptr, 0, nullptr, 1, &barrier);
+    command_buffer.barrier(source_stage, destination_stage, barrier);
 
     command_buffer.end();
-    command_buffer.submit(graphics_queue);
+    command_buffer.submit();
 }

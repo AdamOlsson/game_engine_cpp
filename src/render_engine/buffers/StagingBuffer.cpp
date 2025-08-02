@@ -61,8 +61,8 @@ void StagingBuffer::copy_buffer_to_image(SwapChainManager &swap_chain_manager,
     region.imageOffset = {0, 0, 0};
     region.imageExtent = {dim.width, dim.height, 1};
 
-    vkCmdCopyBufferToImage(command_buffer.m_command_buffer, m_staging_buffer.buffer,
-                           image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+    command_buffer.copy_buffer_to_image(m_staging_buffer.buffer, image,
+                                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, region);
     command_buffer.end();
-    command_buffer.submit(graphics_queue);
+    command_buffer.submit();
 }
