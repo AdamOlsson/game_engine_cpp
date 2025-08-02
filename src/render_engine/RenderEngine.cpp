@@ -33,27 +33,22 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
     m_geometry_pipeline = std::make_unique<GeometryPipeline>(
         ctx, *swap_chain_manager, m_window_dimension_buffers, m_sampler, *m_texture);
 
-    switch (use_font) {
-    case UseFont::Default: {
-        // TODO: This could be moved into the TextPipeline but the text kerning is
-        // dependent on this the map
-        m_font = std::make_unique<Font>(ctx, *swap_chain_manager, "DefaultFont");
-        break;
-    }
-    default:
-        m_font = nullptr;
-        break;
-    }
+    /*switch (use_font) {*/
+    /*case UseFont::Default: {*/
+    /*    m_font = break;*/
+    /*}*/
+    /*default:*/
+    /*    m_font = nullptr;*/
+    /*    break;*/
+    /*}*/
 
-    if (m_font != nullptr) {
-        // CONTINUE: Text kerning should e more integrated with existing text classes
-        // CONTINUE: Font atlas sampler should be integrated with texture holding the font
-        // atlas
-        // CONTINUE HERE: Should not font be owned by the text pipeline?
-        m_text_pipeline = std::make_unique<ui::TextPipeline>(
-            ctx, *swap_chain_manager, m_window_dimension_buffers, m_sampler,
-            m_font->font_atlas);
-    }
+    // CONTINUE: Text kerning should e more integrated with existing text classes
+    // CONTINUE: Font atlas sampler should be integrated with texture holding the font
+    // atlas
+    auto font =
+        std::make_unique<Font>(ctx, *swap_chain_manager, "DefaultFont", &m_sampler);
+    m_text_pipeline = std::make_unique<ui::TextPipeline>(
+        ctx, *swap_chain_manager, m_window_dimension_buffers, std::move(font));
 
     // CONTINUE: UIPipeline is dependent on TextPipeline. Should it?...
     m_ui_pipeline = std::make_unique<ui::UIPipeline>(ctx, *swap_chain_manager,
@@ -113,53 +108,6 @@ void RenderEngine::render(
     m_geometry_pipeline->render_hexagons(command_buffer.m_command_buffer);
 }
 
-void RenderEngine::text_kerning(const font::KerningMap &kerning_map,
-                                const std::string_view text,
-                                const ui::ElementProperties properties) {
-    if (text.size() == 0) {
-        return;
-    }
-
-    const auto font_color = properties.font.color;
-    const auto font_size = properties.font.size;
-    const float font_rotation = properties.font.rotation;
-
-    auto &glyph_instance_buffer = m_text_pipeline->get_character_buffer();
-    auto &text_segment_buffer = m_text_pipeline->get_text_segment_buffer();
-    const size_t start_length = glyph_instance_buffer.num_elements();
-
-    const size_t num_char = text.size();
-    const auto text_center = properties.container.center;
-
-    text_segment_buffer.emplace_back(font_color, font_size, font_rotation);
-    const uint32_t text_segment_idx = text_segment_buffer.num_elements() - 1;
-
-    // First character has no offset
-    glyph_instance_buffer.emplace_back(
-        text_center, m_font->encode_ascii_char(std::toupper(text[0])), text_segment_idx);
-
-    float combined_offset = 0.0f;
-    for (auto i = 1; i < num_char; i++) {
-        const auto pair = text.substr(i - 1, 2);
-        float offset = font_size;
-        if (kerning_map.map.contains(pair)) {
-            offset -= font_size * kerning_map.map.find(pair)->second;
-        }
-        combined_offset += offset;
-        const glm::vec2 glyph_position = text_center + glm::vec2(combined_offset, 0.0f);
-        glyph_instance_buffer.emplace_back(
-            glyph_position, m_font->encode_ascii_char(std::toupper(text[i])),
-            text_segment_idx);
-    }
-
-    const size_t end_length = glyph_instance_buffer.num_elements();
-    const auto center_offset = glm::vec2(combined_offset / 2.0f, 0.0f);
-    for (auto i = start_length; i < end_length; i++) {
-        auto &glyph = glyph_instance_buffer[i];
-        glyph.position -= center_offset;
-    }
-}
-
 // TODO: This function is not compatible with render_ui. It is not possible to run them in
 // the same loop iteration as they overwrite their buffers
 void RenderEngine::render_text(const ui::TextBox &text_box) {
@@ -168,7 +116,7 @@ void RenderEngine::render_text(const ui::TextBox &text_box) {
     character_instance_buffer.clear();
     text_segment_buffer.clear();
 
-    text_kerning(font::get_default_kerning_map(), text_box.text, text_box.properties);
+    m_text_pipeline->text_kerning(text_box.text, text_box.properties);
 
     character_instance_buffer.transfer();
     text_segment_buffer.transfer();
@@ -183,19 +131,17 @@ void RenderEngine::render_ui(CommandBuffer &command_buffer, const ui::State &sta
     character_instance_buffer.clear();
     text_segment_buffer.clear();
 
-    const auto kerning_map = m_font->kerning_map;
     for (const auto button : state.buttons) {
 
         m_ui_pipeline->render(command_buffer.m_command_buffer,
                               button->properties.container);
 
-        text_kerning(font::get_default_kerning_map(), button->text, button->properties);
+        m_text_pipeline->text_kerning(button->text, button->properties);
     }
 
     for (const auto text_box : state.text_boxes) {
 
-        text_kerning(font::get_default_kerning_map(), text_box->text,
-                     text_box->properties);
+        m_text_pipeline->text_kerning(text_box->text, text_box->properties);
     }
 
     character_instance_buffer.transfer();

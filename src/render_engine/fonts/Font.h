@@ -1,5 +1,6 @@
 #pragma once
 
+#include "render_engine/Sampler.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/Texture.h"
 #include "render_engine/fonts/KerningMap.h"
@@ -23,12 +24,15 @@ class Font {
 
   public:
     Texture font_atlas;
-    const font::KerningMap kerning_map = font::get_default_kerning_map();
+    Sampler *sampler;
+    font::KerningMap kerning_map = font::get_default_kerning_map();
 
     Font() = default;
 
     Font(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
-         SwapChainManager &swap_chain_manager, const std::string &font_name) {
+         SwapChainManager &swap_chain_manager, const std::string &font_name,
+         Sampler *sampler)
+        : sampler(sampler) {
         auto resource =
             ResourceManager::get_instance().get_resource<FontResource>("DefaultFont");
         char_width_px = resource->char_width_px;
@@ -43,28 +47,11 @@ class Font {
 
     ~Font() = default;
 
-    Font &operator=(Font &&other) {
-        if (this != &other) {
-            char_width_px = other.char_width_px;
-            char_height_px = other.char_height_px;
-            atlas_width_px = other.atlas_width_px;
-            atlas_height_px = other.atlas_height_px;
-            atlas_width = other.atlas_width;
-            atlas_height = other.atlas_height;
-            font_atlas = std::move(other.font_atlas);
+    Font(Font &&other) noexcept = default;
+    Font &operator=(Font &&other) noexcept = default;
 
-            other.char_width_px = 0;
-            other.char_height_px = 0;
-            other.atlas_width_px = 0;
-            other.atlas_height_px = 0;
-            other.atlas_width = 0;
-            other.atlas_height = 0;
-        }
-        return *this;
-    };
-
-    Font &operator=(const Font &other) = delete;
     Font(const Font &other) = delete;
+    Font &operator=(const Font &other) = delete;
 
     /* Encode ascii characters to normalized uv coordinates.
      *

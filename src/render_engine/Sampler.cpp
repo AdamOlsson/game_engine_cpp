@@ -2,31 +2,31 @@
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
-VkSampler create_sampler(const graphics_context::GraphicsContext *ctx);
-
-Sampler::Sampler() : ctx(nullptr), sampler(VK_NULL_HANDLE) {}
-
-Sampler::Sampler(std::shared_ptr<graphics_context::GraphicsContext> ctx)
-    : ctx(ctx), sampler(create_sampler(ctx.get())) {}
+Sampler::Sampler(std::shared_ptr<graphics_context::GraphicsContext> m_ctx)
+    : m_ctx(m_ctx), m_sampler(create_sampler()) {}
 
 Sampler::~Sampler() {
-    if (sampler == VK_NULL_HANDLE) {
+    if (m_sampler == VK_NULL_HANDLE) {
         return;
     }
-    vkDestroySampler(ctx->logical_device, sampler, nullptr);
+    vkDestroySampler(m_ctx->logical_device, m_sampler, nullptr);
 }
 
 Sampler::Sampler(Sampler &&other) noexcept
-    : ctx(std::move(other.ctx)), sampler(other.sampler) {
-    other.sampler = VK_NULL_HANDLE;
+    : m_ctx(std::move(other.m_ctx)), m_sampler(other.m_sampler) {
+    other.m_sampler = VK_NULL_HANDLE;
 }
 
 Sampler &Sampler::operator=(Sampler &&other) noexcept {
     if (this != &other) {
-        ctx = std::move(other.ctx);
-        sampler = other.sampler;
+        if (m_sampler != VK_NULL_HANDLE) {
+            vkDestroySampler(m_ctx->logical_device, m_sampler, nullptr);
+        }
 
-        other.sampler = VK_NULL_HANDLE;
+        m_ctx = std::move(other.m_ctx);
+        m_sampler = other.m_sampler;
+
+        other.m_sampler = VK_NULL_HANDLE;
     }
 
     return *this;
@@ -43,9 +43,9 @@ Sampler::create_descriptor_set_layout_binding(const size_t binding_num) {
     return sampler_layout_binding;
 }
 
-VkSampler create_sampler(const graphics_context::GraphicsContext *ctx) {
+VkSampler Sampler::create_sampler() {
     VkPhysicalDeviceProperties properties{};
-    vkGetPhysicalDeviceProperties(ctx->physical_device, &properties);
+    vkGetPhysicalDeviceProperties(m_ctx->physical_device, &properties);
 
     VkSamplerCreateInfo sampler_info{};
     sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -66,7 +66,7 @@ VkSampler create_sampler(const graphics_context::GraphicsContext *ctx) {
     sampler_info.maxLod = 0.0f;
 
     VkSampler sampler;
-    if (vkCreateSampler(ctx->logical_device, &sampler_info, nullptr, &sampler) !=
+    if (vkCreateSampler(m_ctx->logical_device, &sampler_info, nullptr, &sampler) !=
         VK_SUCCESS) {
         throw std::runtime_error("Failed to create sampler");
     }

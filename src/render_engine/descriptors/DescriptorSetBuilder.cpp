@@ -141,7 +141,7 @@ DescriptorSetBuilder::build(std::shared_ptr<graphics_context::GraphicsContext> &
         if (m_texture != nullptr && m_sampler != nullptr) {
             image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             image_info.imageView = m_texture->view();
-            image_info.sampler = m_sampler->sampler;
+            image_info.sampler = *m_sampler;
 
             descriptor_writes.push_back(create_texture_and_sampler_descriptor_write(
                 descriptor_sets[i], image_info));

@@ -3,15 +3,16 @@
 #include "glm/fwd.hpp"
 #include "render_engine/Sampler.h"
 #include "render_engine/SwapChainManager.h"
-#include "render_engine/Texture.h"
 #include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/buffers/IndexBuffer.h"
 #include "render_engine/buffers/VertexBuffer.h"
 #include "render_engine/colors.h"
 #include "render_engine/descriptors/DescriptorPool.h"
 #include "render_engine/descriptors/DescriptorSet.h"
+#include "render_engine/fonts/Font.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/graphics_pipeline/GraphicsPipeline.h"
+#include "render_engine/ui/ElementProperties.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 #include <vulkan/vulkan.h>
@@ -54,6 +55,8 @@ class TextPipeline {
 
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
 
+    std::unique_ptr<Font> m_font;
+
     SwapStorageBuffer<CharacterInstanceBufferObject> m_character_buffers;
     SwapStorageBuffer<TextSegmentBufferObject> m_text_segment_buffers;
     VertexBuffer m_vertex_buffer;
@@ -67,12 +70,15 @@ class TextPipeline {
     TextPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                  SwapChainManager &swap_chain,
                  SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
-                 Sampler &sampler, Texture &texture);
+                 std::unique_ptr<Font> font);
     ~TextPipeline();
 
     StorageBuffer<CharacterInstanceBufferObject> &get_character_buffer();
     StorageBuffer<TextSegmentBufferObject> &get_text_segment_buffer();
 
     void render_text(const VkCommandBuffer &command_buffer);
+
+    void text_kerning(const std::string_view text,
+                      const ui::ElementProperties properties);
 };
 } // namespace ui

@@ -1,10 +1,9 @@
 #include "TextPipeline.h"
 #include "render_engine/Geometry.h"
 #include "render_engine/GeometryPipeline.h"
-#include "render_engine/Sampler.h"
-#include "render_engine/Texture.h"
 #include "render_engine/descriptors/DescriptorSet.h"
 #include "render_engine/descriptors/DescriptorSetBuilder.h"
+#include "render_engine/fonts/Font.h"
 #include "render_engine/graphics_pipeline/GraphicsPipeline.h"
 #include "render_engine/graphics_pipeline/GraphicsPipelineBuilder.h"
 #include "render_engine/resources/ResourceManager.h"
@@ -17,10 +16,11 @@ using namespace ui;
 TextPipeline::TextPipeline(
     std::shared_ptr<graphics_context::GraphicsContext> ctx,
     SwapChainManager &swap_chain_manager,
-    SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers, Sampler &sampler,
-    Texture &texture)
-    : m_ctx(ctx), m_character_buffers(SwapStorageBuffer<CharacterInstanceBufferObject>(
-                      ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
+    SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
+    std::unique_ptr<Font> font)
+    : m_ctx(ctx), m_font(std::move(font)),
+      m_character_buffers(SwapStorageBuffer<CharacterInstanceBufferObject>(
+          ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
       m_text_segment_buffers(
           SwapStorageBuffer<TextSegmentBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 16)),
       m_vertex_buffer(
@@ -33,7 +33,7 @@ TextPipeline::TextPipeline(
           DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_character_buffers.get_buffer_references())
               .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
-              .set_texture_and_sampler(2, texture, sampler)
+              .set_texture_and_sampler(2, m_font->font_atlas, *m_font->sampler)
               .add_gpu_buffer(3, m_text_segment_buffers.get_buffer_references())
               .build(m_ctx, m_descriptor_pool)),
       m_graphics_pipeline(
@@ -57,7 +57,6 @@ StorageBuffer<TextSegmentBufferObject> &TextPipeline::get_text_segment_buffer() 
 }
 
 void TextPipeline::render_text(const VkCommandBuffer &command_buffer) {
-
     const auto &instance_buffer = m_character_buffers.get_buffer();
     const auto num_instances = instance_buffer.num_elements();
     if (num_instances <= 0) {
@@ -73,6 +72,54 @@ void TextPipeline::render_text(const VkCommandBuffer &command_buffer) {
                                descriptor_set, num_instances);
     m_character_buffers.rotate();
     m_text_segment_buffers.rotate();
+}
+
+void TextPipeline::text_kerning(const std::string_view text,
+                                const ui::ElementProperties properties) {
+    if (text.size() == 0) {
+        return;
+    }
+
+    const auto kerning_map = m_font->kerning_map;
+
+    const auto font_color = properties.font.color;
+    const auto font_size = properties.font.size;
+    const float font_rotation = properties.font.rotation;
+
+    auto &glyph_instance_buffer = m_character_buffers.get_buffer();
+    auto &text_segment_buffer = m_text_segment_buffers.get_buffer();
+    const size_t start_length = glyph_instance_buffer.num_elements();
+
+    const size_t num_char = text.size();
+    const auto text_center = properties.container.center;
+
+    text_segment_buffer.emplace_back(font_color, font_size, font_rotation);
+    const uint32_t text_segment_idx = text_segment_buffer.num_elements() - 1;
+
+    // First character has no offset
+    glyph_instance_buffer.emplace_back(
+        text_center, m_font->encode_ascii_char(std::toupper(text[0])), text_segment_idx);
+
+    float combined_offset = 0.0f;
+    for (auto i = 1; i < num_char; i++) {
+        const auto pair = text.substr(i - 1, 2);
+        float offset = font_size;
+        if (kerning_map.map.contains(pair)) {
+            offset -= font_size * kerning_map.map.find(pair)->second;
+        }
+        combined_offset += offset;
+        const glm::vec2 glyph_position = text_center + glm::vec2(combined_offset, 0.0f);
+        glyph_instance_buffer.emplace_back(
+            glyph_position, m_font->encode_ascii_char(std::toupper(text[i])),
+            text_segment_idx);
+    }
+
+    const size_t end_length = glyph_instance_buffer.num_elements();
+    const auto center_offset = glm::vec2(combined_offset / 2.0f, 0.0f);
+    for (auto i = start_length; i < end_length; i++) {
+        auto &glyph = glyph_instance_buffer[i];
+        glyph.position -= center_offset;
+    }
 }
 
 std::string to_string(const TextSegmentBufferObject &obj) {

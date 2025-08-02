@@ -5,12 +5,13 @@
 
 class Sampler {
   private:
-    std::shared_ptr<graphics_context::GraphicsContext> ctx;
+    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
+    VkSampler m_sampler;
+
+    VkSampler create_sampler();
 
   public:
-    VkSampler sampler;
-
-    Sampler();
+    Sampler() = default;
     Sampler(std::shared_ptr<graphics_context::GraphicsContext> ctx);
     ~Sampler();
 
@@ -19,6 +20,8 @@ class Sampler {
 
     Sampler(const Sampler &other) = delete;
     Sampler &operator=(const Sampler &other) noexcept = delete;
+
+    operator VkSampler() const { return m_sampler; }
 
     static VkDescriptorSetLayoutBinding
     create_descriptor_set_layout_binding(const size_t binding_num);

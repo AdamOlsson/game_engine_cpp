@@ -5,7 +5,6 @@
 #include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/fonts/Font.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
-#include "render_engine/ui/ElementProperties.h"
 #include "render_engine/ui/State.h"
 #include "render_engine/ui/TextPipeline.h"
 #include "render_engine/ui/UIPipeline.h"
@@ -23,17 +22,12 @@ class RenderEngine {
 
     std::unique_ptr<GeometryPipeline> m_geometry_pipeline;
 
-    std::unique_ptr<Font> m_font;
-
     std::unique_ptr<ui::TextPipeline> m_text_pipeline;
     std::unique_ptr<ui::UIPipeline> m_ui_pipeline;
 
     struct {
         CommandBuffer command_buffer;
     } m_current_render_pass;
-
-    void text_kerning(const font::KerningMap &kerning_map, const std::string_view text,
-                      const ui::ElementProperties properties);
 
   public:
     RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ctx,
