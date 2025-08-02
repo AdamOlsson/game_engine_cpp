@@ -24,11 +24,10 @@ void StagingBuffer::map_memory(const ImageData &image) {
 
 void StagingBuffer::transfer_image_to_device_image(const ImageData &src,
                                                    const TextureImage &dst,
-                                                   SwapChainManager &swap_chain_manager,
-                                                   const VkQueue &graphics_queue) {
+                                                   SwapChainManager &swap_chain_manager) {
 
     map_memory(src);
-    copy_buffer_to_image(swap_chain_manager, graphics_queue, dst.m_image, src.dimension);
+    copy_buffer_to_image(swap_chain_manager, dst.m_image, src.dimension);
 }
 
 Buffer StagingBuffer::create_staging_buffer() {
@@ -41,7 +40,6 @@ Buffer StagingBuffer::create_staging_buffer() {
 }
 
 void StagingBuffer::copy_buffer_to_image(SwapChainManager &swap_chain_manager,
-                                         const VkQueue &graphics_queue,
                                          const VkImage &image,
                                          const ImageDimension &dim) {
     SingleTimeCommandBuffer command_buffer =

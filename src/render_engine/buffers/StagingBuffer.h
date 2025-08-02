@@ -18,8 +18,7 @@ class StagingBuffer {
 
     Buffer create_staging_buffer();
     void map_memory(const ImageData &image);
-    void copy_buffer_to_image(SwapChainManager &swap_chain_manager,
-                              const VkQueue &graphics_queue, const VkImage &image,
+    void copy_buffer_to_image(SwapChainManager &swap_chain_manager, const VkImage &image,
                               const ImageDimension &dim);
 
   public:
@@ -33,6 +32,5 @@ class StagingBuffer {
     ~StagingBuffer();
 
     void transfer_image_to_device_image(const ImageData &src, const TextureImage &dst,
-                                        SwapChainManager &swap_chain_manager,
-                                        const VkQueue &graphics_queue);
+                                        SwapChainManager &swap_chain_manager);
 };

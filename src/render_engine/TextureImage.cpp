@@ -92,7 +92,6 @@ void TextureImage::destroy() {
 TextureImage::~TextureImage() { destroy(); }
 
 void TextureImage::transition_image_layout(SwapChainManager &swap_chain_manager,
-                                           const VkQueue &graphics_queue,
                                            const VkImageLayout old_layout,
                                            const VkImageLayout new_layout) {
     SingleTimeCommandBuffer command_buffer =

@@ -38,7 +38,6 @@ class TextureImage {
     ~TextureImage();
 
     void transition_image_layout(SwapChainManager &swap_chain_manager,
-                                 const VkQueue &graphics_queue,
                                  const VkImageLayout old_layout,
                                  const VkImageLayout new_layout);
 };

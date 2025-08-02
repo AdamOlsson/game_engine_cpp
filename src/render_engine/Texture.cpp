@@ -14,17 +14,15 @@ Texture::Texture(std::shared_ptr<graphics_context::GraphicsContext> ctx,
 
     StagingBuffer staging_buffer = StagingBuffer(m_ctx, image_data.size);
 
-    auto device_queues = m_ctx->get_device_queues();
-    m_texture_image.transition_image_layout(
-        swap_chain_manager, device_queues.graphics_queue, VK_IMAGE_LAYOUT_UNDEFINED,
-        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    m_texture_image.transition_image_layout(swap_chain_manager, VK_IMAGE_LAYOUT_UNDEFINED,
+                                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-    staging_buffer.transfer_image_to_device_image(
-        image_data, m_texture_image, swap_chain_manager, device_queues.graphics_queue);
+    staging_buffer.transfer_image_to_device_image(image_data, m_texture_image,
+                                                  swap_chain_manager);
 
-    m_texture_image.transition_image_layout(
-        swap_chain_manager, device_queues.graphics_queue,
-        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_texture_image.transition_image_layout(swap_chain_manager,
+                                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
 Texture Texture::from_filepath(std::shared_ptr<graphics_context::GraphicsContext> &ctx,

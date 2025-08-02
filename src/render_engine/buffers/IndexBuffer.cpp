@@ -32,8 +32,7 @@ IndexBuffer::IndexBuffer(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                   VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
                   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer, bufferMemory);
 
-    copy_buffer(m_ctx.get(), staging_buffer, buffer, size, swap_chain_manager,
-                graphics_queue);
+    copy_buffer(m_ctx.get(), staging_buffer, buffer, size, swap_chain_manager);
 
     vkDestroyBuffer(m_ctx->logical_device, staging_buffer, nullptr);
     vkFreeMemory(m_ctx->logical_device, staging_buffer_memory, nullptr);
