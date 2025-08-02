@@ -3,6 +3,7 @@
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/Texture.h"
 #include "render_engine/fonts/KerningMap.h"
+#include "render_engine/resources/ResourceManager.h"
 #include "render_engine/resources/fonts/FontResource.h"
 #include <cstddef>
 
@@ -21,24 +22,24 @@ class Font {
     uint32_t atlas_height;
 
   public:
-    std::unique_ptr<Texture> font_atlas;
+    Texture font_atlas;
     const font::KerningMap kerning_map = font::get_default_kerning_map();
 
-    Font()
-        : char_width_px(0), char_height_px(0), font_atlas(nullptr), atlas_width_px(0),
-          atlas_height_px(0), atlas_width(0), atlas_height(0) {}
+    Font() = default;
 
-    Font(std::shared_ptr<graphics_context::GraphicsContext> &g_ctx,
-         SwapChainManager &swap_chain_manager, const FontResource *resource)
-
-        : char_width_px(resource->char_width_px),
-          char_height_px(resource->char_height_px),
-          atlas_width_px(resource->atlas_width_px),
-          atlas_height_px(resource->atlas_height_px),
-          atlas_width(atlas_width_px / char_width_px),
-          atlas_height(atlas_height_px / char_height_px),
-          font_atlas(Texture::unique_from_bytes(g_ctx, swap_chain_manager,
-                                                resource->bytes(), resource->length())) {}
+    Font(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+         SwapChainManager &swap_chain_manager, const std::string &font_name) {
+        auto resource =
+            ResourceManager::get_instance().get_resource<FontResource>("DefaultFont");
+        char_width_px = resource->char_width_px;
+        char_height_px = resource->char_height_px;
+        atlas_width_px = resource->atlas_width_px;
+        atlas_height_px = resource->atlas_height_px;
+        atlas_width = atlas_width_px / char_width_px;
+        atlas_height = atlas_height_px / char_height_px;
+        font_atlas = Texture::from_bytes(ctx, swap_chain_manager, resource->bytes(),
+                                         resource->length());
+    }
 
     ~Font() = default;
 
@@ -58,7 +59,6 @@ class Font {
             other.atlas_height_px = 0;
             other.atlas_width = 0;
             other.atlas_height = 0;
-            other.font_atlas = nullptr;
         }
         return *this;
     };

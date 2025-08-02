@@ -35,10 +35,9 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
 
     switch (use_font) {
     case UseFont::Default: {
-        auto default_font = resource_manager.get_resource<FontResource>("DefaultFont");
         // TODO: This could be moved into the TextPipeline but the text kerning is
         // dependent on this the map
-        m_font = std::make_unique<Font>(ctx, *swap_chain_manager, default_font);
+        m_font = std::make_unique<Font>(ctx, *swap_chain_manager, "DefaultFont");
         break;
     }
     default:
@@ -50,9 +49,10 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
         // CONTINUE: Text kerning should e more integrated with existing text classes
         // CONTINUE: Font atlas sampler should be integrated with texture holding the font
         // atlas
+        // CONTINUE HERE: Should not font be owned by the text pipeline?
         m_text_pipeline = std::make_unique<ui::TextPipeline>(
             ctx, *swap_chain_manager, m_window_dimension_buffers, m_sampler,
-            *m_font->font_atlas);
+            m_font->font_atlas);
     }
 
     // CONTINUE: UIPipeline is dependent on TextPipeline. Should it?...
