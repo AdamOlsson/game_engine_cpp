@@ -4,8 +4,6 @@
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/fonts/Font.h"
-#include "render_engine/resources/ResourceManager.h"
-#include "render_engine/resources/images/ImageResource.h"
 #include "render_engine/ui/TextBox.h"
 #include "render_engine/ui/TextPipeline.h"
 #include "render_engine/ui/UIPipeline.h"
@@ -21,12 +19,8 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
 
     m_window_dimension_buffers.write(ctx->window->dimensions<float>());
 
-    auto &resource_manager = ResourceManager::get_instance();
-    auto dog_image = resource_manager.get_resource<ImageResource>("DogImage");
-
-    // TODO: Move this into the GeometryPipeline temporarily so that I do not need to
-    // think about it for now
-    m_texture = Texture::unique_from_image_resource(ctx, *swap_chain_manager, dog_image);
+    m_texture =
+        Texture::unique_from_image_resource_name(ctx, *swap_chain_manager, "DogImage");
 
     // CONTINUE: I do not want the sampler or texture to be part of the constructor
     // interface, instead they should be optional to add
@@ -42,9 +36,6 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
     /*    break;*/
     /*}*/
 
-    // CONTINUE: Text kerning should e more integrated with existing text classes
-    // CONTINUE: Font atlas sampler should be integrated with texture holding the font
-    // atlas
     auto font =
         std::make_unique<Font>(ctx, *swap_chain_manager, "DefaultFont", &m_sampler);
     m_text_pipeline = std::make_unique<ui::TextPipeline>(

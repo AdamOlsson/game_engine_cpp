@@ -45,10 +45,14 @@ class Texture {
                                SwapChainManager &swap_chain_manager,
                                const ImageResource *resource);
 
-    ~Texture();
+    static std::unique_ptr<Texture> unique_from_image_resource_name(
+        std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+        SwapChainManager &swap_chain_manager, const std::string &resource_name);
 
-    Texture(Texture &&other) noexcept;
-    Texture &operator=(Texture &&other) noexcept;
+    ~Texture() = default;
+
+    Texture(Texture &&other) noexcept = default;
+    Texture &operator=(Texture &&other) noexcept = default;
 
     Texture(const Texture &other) = delete;
     Texture &operator=(const Texture &other) = delete;

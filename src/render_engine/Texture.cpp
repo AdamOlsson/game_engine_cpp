@@ -3,6 +3,7 @@
 #include "render_engine/ImageData.h"
 #include "render_engine/buffers/StagingBuffer.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
+#include "render_engine/resources/ResourceManager.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
@@ -77,17 +78,14 @@ std::unique_ptr<Texture> Texture::unique_from_image_resource(
     return std::move(std::make_unique<Texture>(ctx, swap_chain_manager, image_data));
 }
 
-Texture::Texture(Texture &&other) noexcept
-    : m_ctx(std::move(other.m_ctx)), m_texture_image(std::move(other.m_texture_image)) {}
-
-Texture &Texture::operator=(Texture &&other) noexcept {
-    if (this != &other) {
-        m_ctx = std::move(m_ctx);
-        m_texture_image = std::move(other.m_texture_image);
-    }
-    return *this;
+std::unique_ptr<Texture> Texture::unique_from_image_resource_name(
+    std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+    SwapChainManager &swap_chain_manager, const std::string &resource_name) {
+    auto resource =
+        ResourceManager::get_instance().get_resource<ImageResource>(resource_name);
+    const ImageData image_data =
+        ImageData::load_rgba_image(resource->bytes(), resource->length());
+    return std::move(std::make_unique<Texture>(ctx, swap_chain_manager, image_data));
 }
-
-Texture::~Texture() {}
 
 VkImageView Texture::view() { return m_texture_image.m_image_view; }
