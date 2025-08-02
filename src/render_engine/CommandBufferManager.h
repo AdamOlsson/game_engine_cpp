@@ -1,6 +1,7 @@
 #pragma once
 
 #include "render_engine/CommandBuffer.h"
+#include "render_engine/CommandPool.h"
 #include "render_engine/SingleTimeCommandBuffer.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
@@ -9,13 +10,12 @@
 class CommandBufferManager {
   private:
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
-    VkCommandPool m_command_pool;
+    CommandPool m_command_pool;
 
     size_t m_num_buffers;
     size_t m_next_buffer;
     std::vector<VkCommandBuffer> m_command_buffers;
 
-    VkCommandPool create_command_pool();
     std::vector<VkCommandBuffer> create_command_buffers();
 
   public:
