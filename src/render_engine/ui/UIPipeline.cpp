@@ -11,6 +11,7 @@
 using namespace ui;
 
 UIPipeline::UIPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+                       CommandBufferManager *command_buffer_manager,
                        SwapChainManager &swap_chain_manager,
                        SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers)
     : m_ctx(ctx),
@@ -32,8 +33,8 @@ UIPipeline::UIPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
               .set_descriptor_set_layout(&m_descriptor_set.get_layout())
               .build(m_ctx, swap_chain_manager)),
       // clang-format on 
-      m_vertex_buffer(m_ctx, Geometry::rectangle_vertices, swap_chain_manager),
-      m_index_buffer(IndexBuffer(ctx, Geometry::rectangle_indices, swap_chain_manager)) {}
+      m_vertex_buffer(m_ctx, Geometry::rectangle_vertices, command_buffer_manager),
+      m_index_buffer(IndexBuffer(ctx, Geometry::rectangle_indices, command_buffer_manager)) {}
 
 UIPipeline::~UIPipeline() {}
 

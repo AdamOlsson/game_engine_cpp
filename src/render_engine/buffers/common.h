@@ -1,6 +1,6 @@
 #pragma once
 
-#include "render_engine/SwapChainManager.h"
+#include "render_engine/CommandBufferManager.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 
@@ -14,4 +14,4 @@ uint32_t find_memory_type(const graphics_context::GraphicsContext *ctx,
 
 void copy_buffer(const graphics_context::GraphicsContext *ctx, const VkBuffer src_buffer,
                  const VkBuffer dst_buffer, const VkDeviceSize size,
-                 SwapChainManager &swap_chain_manager);
+                 CommandBufferManager *command_buffer_manager);

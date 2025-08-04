@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "GameEngine.h"
+#include "render_engine/GeometryPipeline.h"
 #include "render_engine/PerformanceWindow.h"
 #include "render_engine/colors.h"
 #include "render_engine/fonts/Font.h"
@@ -40,6 +41,7 @@ class UserInterfaceExample : public Game {
         m_device_queues; // TODO: Request from CoreGraphicsContext instead of storing
     std::unique_ptr<RenderEngine> m_render_engine; // TODO: Remove
     std::unique_ptr<SwapChainManager> m_swap_chain_manager;
+    std::unique_ptr<CommandBufferManager> m_command_buffer_manager;
     /*std::unique_ptr<ui::UIPipeline> m_ui_pipeline;*/
     /*std::unique_ptr<ui::TextPipeline> m_text_pipeline;*/
 
@@ -229,12 +231,11 @@ class UserInterfaceExample : public Game {
         } else {
             m_ui.get_text_box(INCREMENT_ID).text = "";
         }
-
-        auto command_buffer_ = m_swap_chain_manager->get_command_buffer();
-        if (!command_buffer_.has_value()) {
-            return;
-        }
-        CommandBuffer command_buffer = std::move(command_buffer_.value());
+        //
+        // RenderPass pass = RenderPass();
+        // m_command_buffer_manager.set_command_buffer(pass);
+        auto command_buffer = m_command_buffer_manager->get_command_buffer();
+        m_swap_chain_manager->set_image_index(command_buffer);
 
         command_buffer.begin_render_pass();
         command_buffer.set_viewport(
@@ -277,9 +278,12 @@ class UserInterfaceExample : public Game {
         m_device_queues = ctx->get_device_queues();
 
         m_swap_chain_manager = std::make_unique<SwapChainManager>(ctx);
+        m_command_buffer_manager =
+            std::make_unique<CommandBufferManager>(ctx, MAX_FRAMES_IN_FLIGHT);
 
         m_render_engine = std::make_unique<RenderEngine>(
-            ctx, m_swap_chain_manager.get(), UseFont::Default); // TODO: remove
+            ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
+            UseFont::Default); // TODO: remove
 
         ctx->window->register_mouse_event_callback(
             [this](window::MouseEvent e, window::ViewportPoint &p) {

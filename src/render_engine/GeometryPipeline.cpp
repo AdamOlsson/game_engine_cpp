@@ -19,7 +19,7 @@
 
 GeometryPipeline::GeometryPipeline(
     std::shared_ptr<graphics_context::GraphicsContext> ctx,
-    SwapChainManager &swap_chain_manager,
+    CommandBufferManager *command_buffer_manager, SwapChainManager &swap_chain_manager,
     SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers, Sampler &sampler,
     Texture &texture)
     : m_ctx(ctx),
@@ -37,9 +37,9 @@ GeometryPipeline::GeometryPipeline(
                                        m_num_samplers)),
 
       m_circle_vertex_buffer(
-          VertexBuffer(ctx, Geometry::circle_vertices, swap_chain_manager)),
+          VertexBuffer(ctx, Geometry::circle_vertices, command_buffer_manager)),
       m_circle_index_buffer(
-          IndexBuffer(ctx, Geometry::circle_indices, swap_chain_manager)),
+          IndexBuffer(ctx, Geometry::circle_indices, command_buffer_manager)),
       m_circle_descriptor_set(
           DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_circle_instance_buffers.get_buffer_references())
@@ -48,9 +48,9 @@ GeometryPipeline::GeometryPipeline(
               .build(m_ctx, m_descriptor_pool)),
 
       m_triangle_vertex_buffer(
-          VertexBuffer(ctx, Geometry::triangle_vertices, swap_chain_manager)),
+          VertexBuffer(ctx, Geometry::triangle_vertices, command_buffer_manager)),
       m_triangle_index_buffer(
-          IndexBuffer(ctx, Geometry::triangle_indices, swap_chain_manager)),
+          IndexBuffer(ctx, Geometry::triangle_indices, command_buffer_manager)),
       m_triangle_descriptor_set(
           DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_triangle_instance_buffers.get_buffer_references())
@@ -59,9 +59,9 @@ GeometryPipeline::GeometryPipeline(
               .build(m_ctx, m_descriptor_pool)),
 
       m_rectangle_vertex_buffer(
-          VertexBuffer(ctx, Geometry::rectangle_vertices, swap_chain_manager)),
+          VertexBuffer(ctx, Geometry::rectangle_vertices, command_buffer_manager)),
       m_rectangle_index_buffer(
-          IndexBuffer(ctx, Geometry::rectangle_indices, swap_chain_manager)),
+          IndexBuffer(ctx, Geometry::rectangle_indices, command_buffer_manager)),
       m_rectangle_descriptor_set(
           DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_rectangle_instance_buffers.get_buffer_references())
@@ -70,9 +70,9 @@ GeometryPipeline::GeometryPipeline(
               .build(m_ctx, m_descriptor_pool)),
 
       m_hexagon_vertex_buffer(
-          VertexBuffer(ctx, Geometry::hexagon_vertices, swap_chain_manager)),
+          VertexBuffer(ctx, Geometry::hexagon_vertices, command_buffer_manager)),
       m_hexagon_index_buffer(
-          IndexBuffer(ctx, Geometry::hexagon_indices, swap_chain_manager)),
+          IndexBuffer(ctx, Geometry::hexagon_indices, command_buffer_manager)),
       m_hexagon_descriptor_set(
           DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_hexagon_instance_buffers.get_buffer_references())

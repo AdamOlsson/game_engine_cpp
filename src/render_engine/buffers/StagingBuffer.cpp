@@ -1,6 +1,5 @@
 #include "StagingBuffer.h"
 #include "render_engine/ImageData.h"
-#include "render_engine/SwapChainManager.h"
 #include "render_engine/TextureImage.h"
 #include "render_engine/buffers/common.h"
 
@@ -22,12 +21,12 @@ void StagingBuffer::map_memory(const ImageData &image) {
     vkUnmapMemory(m_ctx->logical_device, m_staging_buffer.buffer_memory);
 }
 
-void StagingBuffer::transfer_image_to_device_image(const ImageData &src,
-                                                   const TextureImage &dst,
-                                                   SwapChainManager &swap_chain_manager) {
+void StagingBuffer::transfer_image_to_device_image(
+    const ImageData &src, const TextureImage &dst,
+    CommandBufferManager *command_buffer_manager) {
 
     map_memory(src);
-    copy_buffer_to_image(swap_chain_manager, dst.m_image, src.dimension);
+    copy_buffer_to_image(command_buffer_manager, dst.m_image, src.dimension);
 }
 
 Buffer StagingBuffer::create_staging_buffer() {
@@ -39,11 +38,11 @@ Buffer StagingBuffer::create_staging_buffer() {
     return buf;
 }
 
-void StagingBuffer::copy_buffer_to_image(SwapChainManager &swap_chain_manager,
+void StagingBuffer::copy_buffer_to_image(CommandBufferManager *command_buffer_manager,
                                          const VkImage &image,
                                          const ImageDimension &dim) {
     SingleTimeCommandBuffer command_buffer =
-        swap_chain_manager.get_single_time_command_buffer();
+        command_buffer_manager->get_single_time_command_buffer();
     command_buffer.begin();
 
     VkBufferImageCopy region{};

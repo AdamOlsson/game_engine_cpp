@@ -1,6 +1,6 @@
 #pragma once
 
-#include "render_engine/SwapChainManager.h"
+#include "render_engine/CommandBufferManager.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
@@ -18,7 +18,7 @@ class IndexBuffer {
     IndexBuffer();
     IndexBuffer(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                 const std::vector<uint16_t> &indices,
-                SwapChainManager &swap_chain_manager);
+                CommandBufferManager *command_buffer_manager);
     ~IndexBuffer();
 
     IndexBuffer &operator=(const IndexBuffer &) = delete;     // Copy assignment

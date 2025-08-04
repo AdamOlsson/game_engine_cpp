@@ -1,7 +1,6 @@
 #pragma once
 
 #include "glm/fwd.hpp"
-#include "render_engine/Sampler.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/buffers/IndexBuffer.h"
@@ -68,7 +67,8 @@ class TextPipeline {
 
   public:
     TextPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
-                 SwapChainManager &swap_chain,
+                 CommandBufferManager *command_buffer_manager,
+                 SwapChainManager &swap_chain_manager,
                  SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
                  std::unique_ptr<Font> font);
     ~TextPipeline();

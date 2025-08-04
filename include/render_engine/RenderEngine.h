@@ -31,6 +31,7 @@ class RenderEngine {
 
   public:
     RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+                 CommandBufferManager *command_buffer_manager,
                  SwapChainManager *swap_chain_manager, const UseFont use_font);
     ~RenderEngine();
 
@@ -41,9 +42,9 @@ class RenderEngine {
 
     void render_ui(CommandBuffer &command_buffer, const ui::State &state);
 
-    bool begin_render_pass(SwapChainManager *swap_chain_manager,
-                           graphics_context::DeviceQueues &m_device_queues);
+    /*bool begin_render_pass(SwapChainManager *swap_chain_manager,*/
+    /*                       graphics_context::DeviceQueues &m_device_queues);*/
 
-    bool end_render_pass(SwapChainManager *swap_chain_manager,
-                         graphics_context::DeviceQueues &m_device_queues);
+    /*bool end_render_pass(SwapChainManager *swap_chain_manager,*/
+    /*                     graphics_context::DeviceQueues &m_device_queues);*/
 };

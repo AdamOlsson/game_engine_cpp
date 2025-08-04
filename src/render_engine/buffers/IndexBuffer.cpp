@@ -10,7 +10,7 @@ IndexBuffer::IndexBuffer()
 
 IndexBuffer::IndexBuffer(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                          const std::vector<uint16_t> &indices,
-                         SwapChainManager &swap_chain_manager)
+                         CommandBufferManager *command_buffer_manager)
     : m_ctx(ctx), size(sizeof(uint16_t) * indices.size()),
       num_indices(size / sizeof(uint16_t)) {
 
@@ -32,7 +32,7 @@ IndexBuffer::IndexBuffer(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                   VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
                   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer, bufferMemory);
 
-    copy_buffer(m_ctx.get(), staging_buffer, buffer, size, swap_chain_manager);
+    copy_buffer(m_ctx.get(), staging_buffer, buffer, size, command_buffer_manager);
 
     vkDestroyBuffer(m_ctx->logical_device, staging_buffer, nullptr);
     vkFreeMemory(m_ctx->logical_device, staging_buffer_memory, nullptr);

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "render_engine/Sampler.h"
-#include "render_engine/SwapChainManager.h"
 #include "render_engine/Texture.h"
 #include "render_engine/fonts/KerningMap.h"
 #include "render_engine/resources/ResourceManager.h"
@@ -30,7 +29,7 @@ class Font {
     Font() = default;
 
     Font(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
-         SwapChainManager &swap_chain_manager, const std::string &font_name,
+         CommandBufferManager *command_buffer_manager, const std::string &font_name,
          Sampler *sampler)
         : sampler(sampler) {
         auto resource =
@@ -41,7 +40,7 @@ class Font {
         atlas_height_px = resource->atlas_height_px;
         atlas_width = atlas_width_px / char_width_px;
         atlas_height = atlas_height_px / char_height_px;
-        font_atlas = Texture::from_bytes(ctx, swap_chain_manager, resource->bytes(),
+        font_atlas = Texture::from_bytes(ctx, command_buffer_manager, resource->bytes(),
                                          resource->length());
     }
 

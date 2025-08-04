@@ -1,7 +1,6 @@
 #pragma once
 
-#include "render_engine/CommandBufferManager.h"
-
+#include "render_engine/CommandBuffer.h"
 #include "render_engine/Fence.h"
 #include "render_engine/Semaphore.h"
 #include "render_engine/SwapChain.h"
@@ -14,7 +13,6 @@ class SwapChainManager {
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
 
     size_t m_next_frame_buffer;
-    CommandBufferManager m_command_buffer_manager;
 
     Fence m_in_flight_fence;
     Semaphore m_image_available;
@@ -38,6 +36,5 @@ class SwapChainManager {
 
     void recreate_swap_chain();
 
-    SingleTimeCommandBuffer get_single_time_command_buffer();
-    std::optional<CommandBuffer> get_command_buffer();
+    void set_image_index(CommandBuffer &command_buffer);
 };

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "render_engine/SwapChainManager.h"
+#include "render_engine/CommandBufferManager.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/shapes/Vertex.h"
 #include "vulkan/vulkan_core.h"
@@ -19,7 +19,7 @@ class VertexBuffer {
     VertexBuffer();
     VertexBuffer(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                  const std::vector<Vertex> &vertices,
-                 SwapChainManager &swap_chain_manager);
+                 CommandBufferManager *command_buffer_manager);
 
     VertexBuffer &operator=(const VertexBuffer &) = delete;
     VertexBuffer &operator=(VertexBuffer &&) noexcept = delete;

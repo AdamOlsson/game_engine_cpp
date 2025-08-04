@@ -30,6 +30,7 @@ class CommandBufferManager {
     CommandBufferManager &operator=(const CommandBufferManager &) = delete;
     CommandBufferManager(const CommandBufferManager &) = delete;
 
+    /*void set_command_buffer(RenderPass &pass);*/
     CommandBuffer get_command_buffer();
     SingleTimeCommandBuffer get_single_time_command_buffer();
 };

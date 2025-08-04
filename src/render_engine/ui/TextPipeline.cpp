@@ -15,7 +15,7 @@ using namespace ui;
 
 TextPipeline::TextPipeline(
     std::shared_ptr<graphics_context::GraphicsContext> ctx,
-    SwapChainManager &swap_chain_manager,
+    CommandBufferManager *command_buffer_manager, SwapChainManager &swap_chain_manager,
     SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
     std::unique_ptr<Font> font)
     : m_ctx(ctx), m_font(std::move(font)),
@@ -24,8 +24,9 @@ TextPipeline::TextPipeline(
       m_text_segment_buffers(
           SwapStorageBuffer<TextSegmentBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 16)),
       m_vertex_buffer(
-          VertexBuffer(ctx, Geometry::rectangle_vertices, swap_chain_manager)),
-      m_index_buffer(IndexBuffer(ctx, Geometry::rectangle_indices, swap_chain_manager)),
+          VertexBuffer(ctx, Geometry::rectangle_vertices, command_buffer_manager)),
+      m_index_buffer(
+          IndexBuffer(ctx, Geometry::rectangle_indices, command_buffer_manager)),
       m_descriptor_pool(DescriptorPool(m_ctx, m_descriptor_pool_capacity,
                                        m_num_storage_buffers, m_num_uniform_buffers,
                                        m_num_samplers)),

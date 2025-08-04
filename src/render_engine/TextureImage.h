@@ -1,7 +1,8 @@
 #pragma once
 
+#include "render_engine/CommandBufferManager.h"
 #include "render_engine/ImageData.h"
-#include "render_engine/SwapChainManager.h"
+#include "render_engine/ImageView.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 
@@ -37,7 +38,7 @@ class TextureImage {
 
     ~TextureImage();
 
-    void transition_image_layout(SwapChainManager &swap_chain_manager,
+    void transition_image_layout(CommandBufferManager *command_buffer_manager,
                                  const VkImageLayout old_layout,
                                  const VkImageLayout new_layout);
 };

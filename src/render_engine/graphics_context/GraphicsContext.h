@@ -14,6 +14,7 @@ struct DeviceQueues {
 };
 
 class GraphicsContext {
+  private:
     bool m_enable_validation_layers;
 
   public:
@@ -31,6 +32,8 @@ class GraphicsContext {
     void wait_idle();
 
     DeviceQueues get_device_queues();
+
+  private:
 };
 
 } // namespace graphics_context

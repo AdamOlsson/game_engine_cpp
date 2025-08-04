@@ -1,7 +1,6 @@
 #include "TextureImage.h"
 #include "buffers/common.h"
 #include "render_engine/SingleTimeCommandBuffer.h"
-#include "render_engine/SwapChainManager.h"
 #include "render_engine/buffers/common.h"
 #include "vulkan/vulkan_core.h"
 
@@ -89,11 +88,11 @@ void TextureImage::destroy() {
 
 TextureImage::~TextureImage() { destroy(); }
 
-void TextureImage::transition_image_layout(SwapChainManager &swap_chain_manager,
+void TextureImage::transition_image_layout(CommandBufferManager *command_buffer_manager,
                                            const VkImageLayout old_layout,
                                            const VkImageLayout new_layout) {
     SingleTimeCommandBuffer command_buffer =
-        swap_chain_manager.get_single_time_command_buffer();
+        command_buffer_manager->get_single_time_command_buffer();
     command_buffer.begin();
 
     VkImageMemoryBarrier barrier{};

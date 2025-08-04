@@ -53,9 +53,9 @@ uint32_t find_memory_type(const graphics_context::GraphicsContext *ctx,
 
 void copy_buffer(const graphics_context::GraphicsContext *ctx, const VkBuffer src_buffer,
                  const VkBuffer dst_buffer, const VkDeviceSize size,
-                 SwapChainManager &swap_chain_manager) {
+                 CommandBufferManager *command_buffer_manager) {
     SingleTimeCommandBuffer command_buffer =
-        swap_chain_manager.get_single_time_command_buffer();
+        command_buffer_manager->get_single_time_command_buffer();
     command_buffer.begin();
 
     VkBufferCopy copy_region{};
