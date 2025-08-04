@@ -54,7 +54,6 @@ graphics_pipeline::GraphicsPipeline graphics_pipeline::GraphicsPipelineBuilder::
         push_constant_ranges.push_back(m_push_constant_range.value());
     }
 
-    // TODO
     DescriptorSetLayout *descriptor_set_layout = m_descriptor_set_layout;
 
     return GraphicsPipeline(Pipeline(ctx, *descriptor_set_layout, push_constant_ranges,

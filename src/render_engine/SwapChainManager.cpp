@@ -23,15 +23,35 @@ void SwapChainManager::recreate_swap_chain() {
     m_swap_chain = SwapChain(m_ctx);
 }
 
-VkFence SwapChainManager::wait_for_in_flight_fence() {
-    const VkFence &in_flight_fence = m_in_flight_fence.get();
+void SwapChainManager::wait_for_in_flight_fence() {
+    const VkFence &in_flight_fence = m_in_flight_fence.next();
     m_ctx->logical_device.wait_for_fence(in_flight_fence);
     m_ctx->logical_device.reset_fence(in_flight_fence);
-    return in_flight_fence;
 }
 
-void SwapChainManager::set_image_index(CommandBuffer &command_buffer) {
-    VkFence in_flight_fence = wait_for_in_flight_fence();
+RenderPass SwapChainManager::get_render_pass(CommandBuffer &command_buffer) {
+    wait_for_in_flight_fence();
+
+    command_buffer.begin();
+    auto render_pass = RenderPass(command_buffer);
+
+    render_pass.m_swap_chain = m_swap_chain.m_swap_chain;
+    render_pass.m_render_pass = m_swap_chain.m_render_pass;
+    render_pass.m_render_area_extent = m_swap_chain.m_extent;
+
+    render_pass.m_frame_buffer = m_swap_chain.get_frame_buffer();
+    render_pass.m_submit_completed = m_submit_completed.get();
+    render_pass.m_device_queues = m_ctx->get_device_queues();
+
+    render_pass.set_viewport(Dimension::from_extent2d(m_swap_chain.m_extent));
+    render_pass.set_scissor(m_swap_chain.m_extent);
+
+    set_image_index(render_pass);
+
+    return render_pass;
+}
+
+void SwapChainManager::set_image_index(RenderPass &render_pass) {
 
     VkSemaphore image_available = m_image_available.get();
     auto image_index = m_swap_chain.get_next_image_index(image_available);
@@ -41,14 +61,8 @@ void SwapChainManager::set_image_index(CommandBuffer &command_buffer) {
         return;
     }
 
-    command_buffer.m_image_index = image_index.value();
-    command_buffer.m_image_available = image_available;
-    command_buffer.m_in_flight_fence = in_flight_fence;
-
-    command_buffer.m_swap_chain = m_swap_chain.m_swap_chain;
-    command_buffer.m_render_pass = m_swap_chain.m_render_pass;
-    command_buffer.m_render_area_extent = m_swap_chain.m_extent;
-    command_buffer.m_frame_buffer = m_swap_chain.get_frame_buffer();
-
-    command_buffer.m_submit_completed = m_submit_completed.get();
+    VkFence in_flight_fence = m_in_flight_fence.current();
+    render_pass.m_image_index = image_index.value();
+    render_pass.m_image_available = image_available;
+    render_pass.m_in_flight_fence = in_flight_fence;
 }

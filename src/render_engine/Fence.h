@@ -10,6 +10,7 @@ class Fence {
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
     size_t m_size;
 
+    size_t m_current;
     size_t m_next;
     std::vector<VkFence> m_fences;
 
@@ -24,5 +25,6 @@ class Fence {
     Fence(const Fence &other) = delete;
     Fence &operator=(const Fence &other) = delete;
 
-    const VkFence &get();
+    const VkFence &next();
+    const VkFence &current();
 };

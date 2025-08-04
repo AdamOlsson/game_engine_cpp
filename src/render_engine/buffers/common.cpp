@@ -1,6 +1,5 @@
 #include "common.h"
 #include "render_engine/SingleTimeCommandBuffer.h"
-#include "render_engine/SwapChainManager.h"
 #include "vulkan/vulkan_core.h"
 
 #include <cstdint>

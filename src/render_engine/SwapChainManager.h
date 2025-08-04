@@ -2,10 +2,10 @@
 
 #include "render_engine/CommandBuffer.h"
 #include "render_engine/Fence.h"
+#include "render_engine/RenderPass.h"
 #include "render_engine/Semaphore.h"
 #include "render_engine/SwapChain.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
-#include "vulkan/vulkan_core.h"
 #include <memory>
 
 class SwapChainManager {
@@ -17,8 +17,6 @@ class SwapChainManager {
     Fence m_in_flight_fence;
     Semaphore m_image_available;
     Semaphore m_submit_completed;
-
-    VkFence wait_for_in_flight_fence();
 
   public:
     SwapChain m_swap_chain;
@@ -36,5 +34,8 @@ class SwapChainManager {
 
     void recreate_swap_chain();
 
-    void set_image_index(CommandBuffer &command_buffer);
+    void wait_for_in_flight_fence();
+    RenderPass get_render_pass(CommandBuffer &command_buffer);
+
+    void set_image_index(RenderPass &render_pass);
 };

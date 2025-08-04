@@ -2,6 +2,7 @@
 #include "GameEngine.h"
 #include "render_engine/GeometryPipeline.h"
 #include "render_engine/PerformanceWindow.h"
+#include "render_engine/RenderPass.h"
 #include "render_engine/colors.h"
 #include "render_engine/fonts/Font.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
@@ -231,29 +232,18 @@ class UserInterfaceExample : public Game {
         } else {
             m_ui.get_text_box(INCREMENT_ID).text = "";
         }
-        //
-        // RenderPass pass = RenderPass();
-        // m_command_buffer_manager.set_command_buffer(pass);
-        auto command_buffer = m_command_buffer_manager->get_command_buffer();
-        m_swap_chain_manager->set_image_index(command_buffer);
 
-        command_buffer.begin_render_pass();
-        command_buffer.set_viewport(
-            Dimension::from_extent2d(m_swap_chain_manager->m_swap_chain.m_extent));
-        command_buffer.set_scissor(m_swap_chain_manager->m_swap_chain.m_extent);
+        auto command_buffer = m_command_buffer_manager->get_command_buffer();
+        RenderPass render_pass = m_swap_chain_manager->get_render_pass(command_buffer);
+
+        render_pass.begin();
 
         m_ui.get_text_box(NUMBER_ID).text = std::to_string(m_number);
-
         auto ui_state = m_ui.get_state();
-
         m_render_engine->render_ui(command_buffer, ui_state);
-
         PerformanceWindow::get_instance().render(*m_render_engine, command_buffer);
 
-        command_buffer.end_render_pass();
-        command_buffer.submit_render_pass(m_device_queues.graphics_queue);
-        VkResult result =
-            command_buffer.present_render_pass(m_device_queues.present_queue);
+        VkResult result = render_pass.end_submit_present();
 
         // TODO: framebufferResized needs to be set from the window callback when the
         // window is resized

@@ -22,19 +22,20 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
     m_texture =
         Texture::unique_from_image_resource_name(ctx, command_buffer_manager, "DogImage");
 
-    // CONTINUE: I do not want the sampler or texture to be part of the constructor
-    // interface, instead they should be optional to add
-    // CONTINUE HERE: Move command buffer creation to CoreGraphicsContext
-    // - To continue this I need to refactor how the command buffer should be requests.
-    // Currently, it is requested from the SwapChainManager but should preferably be
-    // requested from the GraphicsContext
+    // TODO: I do not want the sampler, texture or uniform to be part of the constructor
+    // interface, instead they should be optional to add through a builder class
     // TODO: Vertex and index buffer should use StagingBuffer class instead of common.h
     // functions
     // TODO: Handle recreation of swap chain, like for resizing windows and moving window
     // between displays
+    // TODO: Make a single module for all pipelines (i.e Geometry, Text, and UI)
     m_geometry_pipeline = std::make_unique<GeometryPipeline>(
         ctx, command_buffer_manager, *swap_chain_manager, m_window_dimension_buffers,
         m_sampler, *m_texture);
+    /*m_geometry_pipeline = GeometryPipelineBuilder()*/
+    /*                          .set_texture_and_sampler(< texture and sampler >)*/
+    /*                          .build(ctx, command_buffer_manager, swap_chain_manager,*/
+    /*                                 m_window_dimension_buffers);*/
 
     auto font =
         std::make_unique<Font>(ctx, command_buffer_manager, "DefaultFont", &m_sampler);
@@ -42,7 +43,8 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
         ctx, command_buffer_manager, *swap_chain_manager, m_window_dimension_buffers,
         std::move(font));
 
-    // CONTINUE: UIPipeline is dependent on TextPipeline. Should it?...
+    // TODO: UIPipeline is dependent on TextPipeline. Should it?... Does mean we refactor
+    // the geometry and UI pipeline shaders to be the same?
     m_ui_pipeline = std::make_unique<ui::UIPipeline>(
         ctx, command_buffer_manager, *swap_chain_manager, m_window_dimension_buffers);
 }
@@ -94,10 +96,10 @@ void RenderEngine::render(
     rectangle_instance_buffer.transfer();
     hexagon_instance_buffer.transfer();
 
-    m_geometry_pipeline->render_circles(command_buffer.m_command_buffer);
-    m_geometry_pipeline->render_triangles(command_buffer.m_command_buffer);
-    m_geometry_pipeline->render_rectangles(command_buffer.m_command_buffer);
-    m_geometry_pipeline->render_hexagons(command_buffer.m_command_buffer);
+    m_geometry_pipeline->render_circles(command_buffer);
+    m_geometry_pipeline->render_triangles(command_buffer);
+    m_geometry_pipeline->render_rectangles(command_buffer);
+    m_geometry_pipeline->render_hexagons(command_buffer);
 }
 
 // TODO: This function is not compatible with render_ui. It is not possible to run them in
@@ -113,7 +115,7 @@ void RenderEngine::render_text(const ui::TextBox &text_box) {
     character_instance_buffer.transfer();
     text_segment_buffer.transfer();
 
-    m_text_pipeline->render_text(m_current_render_pass.command_buffer.m_command_buffer);
+    m_text_pipeline->render_text(m_current_render_pass.command_buffer);
 }
 
 // TODO: Should we instead simply pass the UI class instead of its state?
@@ -125,8 +127,7 @@ void RenderEngine::render_ui(CommandBuffer &command_buffer, const ui::State &sta
 
     for (const auto button : state.buttons) {
 
-        m_ui_pipeline->render(command_buffer.m_command_buffer,
-                              button->properties.container);
+        m_ui_pipeline->render(command_buffer, button->properties.container);
 
         m_text_pipeline->text_kerning(button->text, button->properties);
     }
@@ -139,51 +140,5 @@ void RenderEngine::render_ui(CommandBuffer &command_buffer, const ui::State &sta
     character_instance_buffer.transfer();
     text_segment_buffer.transfer();
 
-    m_text_pipeline->render_text(command_buffer.m_command_buffer);
+    m_text_pipeline->render_text(command_buffer);
 }
-
-/*bool RenderEngine::begin_render_pass(SwapChainManager *swap_chain_manager,*/
-/*                                     graphics_context::DeviceQueues &m_device_queues)
- * {*/
-/*    auto command_buffer_ = swap_chain_manager->get_command_buffer();*/
-/*    if (!command_buffer_.has_value()) {*/
-/*        return false;*/
-/*    }*/
-/*    CommandBuffer command_buffer = std::move(command_buffer_.value());*/
-/**/
-/*    command_buffer.begin_render_pass();*/
-/*    command_buffer.set_viewport(*/
-/*        Dimension::from_extent2d(swap_chain_manager->m_swap_chain.m_extent));*/
-/*    command_buffer.set_scissor(swap_chain_manager->m_swap_chain.m_extent);*/
-/**/
-/*    m_current_render_pass.command_buffer = std::move(command_buffer);*/
-/**/
-/*    return true;*/
-/*}*/
-
-/*bool RenderEngine::end_render_pass(SwapChainManager *swap_chain_manager,*/
-/*                                   graphics_context::DeviceQueues &m_device_queues) {*/
-/*    auto &command_buffer = m_current_render_pass.command_buffer;*/
-/**/
-/*    command_buffer.end_render_pass();*/
-/*    command_buffer.submit_render_pass(m_device_queues.graphics_queue);*/
-/*    VkResult result =
- * command_buffer.present_render_pass(m_device_queues.present_queue);*/
-/**/
-/*    // TODO: framebufferResized needs to be set from the window callback when the*/
-/*    // window is resized*/
-/*    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||*/
-/*        framebuffer_resized) {*/
-/*        swap_chain_manager->recreate_swap_chain();*/
-/**/
-/*        return false;*/
-/*        // It is important to do this after vkQueuePresentKHR to ensure that the*/
-/*        // semaphores are in a consistent state, otherwise a signaled semaphore*/
-/*        // may never be properly waited upon.*/
-/*        framebuffer_resized = false;*/
-/*    } else if (result != VK_SUCCESS) {*/
-/*        throw std::runtime_error("failed to present swap chain image!");*/
-/*    }*/
-/**/
-/*    return true;*/
-/*}*/
