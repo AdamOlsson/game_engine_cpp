@@ -37,8 +37,6 @@ void on_leave_callback(ui::Button &self) {
 class UserInterfaceExample : public Game {
   private:
     ui::UI m_ui;
-    graphics_context::DeviceQueues
-        m_device_queues; // TODO: Request from CoreGraphicsContext instead of storing
     std::unique_ptr<RenderEngine> m_render_engine; // TODO: Remove
     std::unique_ptr<SwapChainManager> m_swap_chain_manager;
     std::unique_ptr<CommandBufferManager> m_command_buffer_manager;
@@ -264,8 +262,6 @@ class UserInterfaceExample : public Game {
         register_all_fonts();
         register_all_images();
         register_all_shaders();
-        m_device_queues = ctx->get_device_queues();
-
         m_swap_chain_manager = std::make_unique<SwapChainManager>(ctx);
         m_command_buffer_manager = std::make_unique<CommandBufferManager>(
             ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
