@@ -19,8 +19,8 @@ Texture::Texture(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                                             VK_IMAGE_LAYOUT_UNDEFINED,
                                             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-    staging_buffer.transfer_image_to_device_image(image_data, m_texture_image,
-                                                  command_buffer_manager);
+    staging_buffer.transfer_image_to_device_image(command_buffer_manager, image_data,
+                                                  m_texture_image);
 
     m_texture_image.transition_image_layout(command_buffer_manager,
                                             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,

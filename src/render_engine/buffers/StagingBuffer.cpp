@@ -22,8 +22,8 @@ void StagingBuffer::map_memory(const ImageData &image) {
 }
 
 void StagingBuffer::transfer_image_to_device_image(
-    const ImageData &src, const TextureImage &dst,
-    CommandBufferManager *command_buffer_manager) {
+    CommandBufferManager *command_buffer_manager, const ImageData &src,
+    const TextureImage &dst) {
 
     map_memory(src);
     copy_buffer_to_image(command_buffer_manager, dst.m_image, src.dimension);
@@ -60,6 +60,22 @@ void StagingBuffer::copy_buffer_to_image(CommandBufferManager *command_buffer_ma
 
     command_buffer.copy_buffer_to_image(m_staging_buffer.buffer, image,
                                         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, region);
+    command_buffer.end();
+    command_buffer.submit();
+}
+
+void StagingBuffer::copy_buffer_to_buffer(CommandBufferManager *command_buffer_manager,
+                                          const VkBuffer &dst_buffer) {
+    SingleTimeCommandBuffer command_buffer =
+        command_buffer_manager->get_single_time_command_buffer();
+    command_buffer.begin();
+
+    VkBufferCopy copy_region{};
+    copy_region.srcOffset = 0; // Optional
+    copy_region.dstOffset = 0; // Optional
+    copy_region.size = m_staging_buffer_size;
+    command_buffer.copy_buffer(m_staging_buffer.buffer, dst_buffer, copy_region);
+
     command_buffer.end();
     command_buffer.submit();
 }

@@ -24,8 +24,6 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
 
     // TODO: I do not want the sampler, texture or uniform to be part of the constructor
     // interface, instead they should be optional to add through a builder class
-    // TODO: Vertex and index buffer should use StagingBuffer class instead of common.h
-    // functions
     // TODO: Handle recreation of swap chain, like for resizing windows and moving window
     // between displays
     // TODO: Make a single module for all pipelines (i.e Geometry, Text, and UI)

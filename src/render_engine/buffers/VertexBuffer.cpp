@@ -1,4 +1,5 @@
 #include "VertexBuffer.h"
+#include "render_engine/buffers/StagingBuffer.h"
 #include "render_engine/buffers/common.h"
 #include <vector>
 
@@ -12,25 +13,14 @@ VertexBuffer::VertexBuffer(std::shared_ptr<graphics_context::GraphicsContext> ct
 
     auto [graphics_queue, _] = m_ctx->get_device_queues();
 
-    VkBuffer staging_buffer;
-    VkDeviceMemory staging_buffer_memory;
-    create_buffer(m_ctx.get(), size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                  staging_buffer, staging_buffer_memory);
-
-    void *data;
-    vkMapMemory(m_ctx->logical_device, staging_buffer_memory, 0, size, 0, &data);
-    memcpy(data, vertices.data(), size);
-    vkUnmapMemory(m_ctx->logical_device, staging_buffer_memory);
+    StagingBuffer staging_buffer = StagingBuffer(m_ctx, size);
 
     create_buffer(m_ctx.get(), size,
                   VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer, bufferMemory);
 
-    copy_buffer(m_ctx.get(), staging_buffer, buffer, size, command_buffer_manager);
-    vkDestroyBuffer(m_ctx->logical_device, staging_buffer, nullptr);
-    vkFreeMemory(m_ctx->logical_device, staging_buffer_memory, nullptr);
+    staging_buffer.transfer_data_to_device_buffer(command_buffer_manager, vertices,
+                                                  buffer);
 }
 
 VertexBuffer::~VertexBuffer() {

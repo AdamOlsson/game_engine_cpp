@@ -22,6 +22,9 @@ class StagingBuffer {
     void copy_buffer_to_image(CommandBufferManager *command_buffer_manager,
                               const VkImage &image, const ImageDimension &dim);
 
+    void copy_buffer_to_buffer(CommandBufferManager *command_buffer_manager,
+                               const VkBuffer &dst_buffer);
+
   public:
     StagingBuffer() = delete;
     StagingBuffer(std::shared_ptr<graphics_context::GraphicsContext> ctx,
@@ -32,6 +35,27 @@ class StagingBuffer {
     StagingBuffer &operator=(const StagingBuffer &other) = delete;
     ~StagingBuffer();
 
-    void transfer_image_to_device_image(const ImageData &src, const TextureImage &dst,
-                                        CommandBufferManager *command_buffer_manager);
+    void transfer_image_to_device_image(CommandBufferManager *command_buffer_manager,
+                                        const ImageData &src, const TextureImage &dst);
+
+    template <typename T>
+    void transfer_data_to_device_buffer(CommandBufferManager *command_buffer_manager,
+                                        const std::vector<T> &src, const VkBuffer &dst) {
+
+        const size_t src_size = sizeof(T) * src.size();
+        if (m_staging_buffer_size < src_size) {
+            std::cout
+                << "StagingBuffer::Warning source buffer is smaller than the staging "
+                   "buffer, causing only partial transfer of data"
+                << std::endl;
+        }
+
+        void *data;
+        vkMapMemory(m_ctx->logical_device, m_staging_buffer.buffer_memory, 0,
+                    m_staging_buffer_size, 0, &data);
+        memcpy(data, src.data(), src_size);
+        vkUnmapMemory(m_ctx->logical_device, m_staging_buffer.buffer_memory);
+
+        copy_buffer_to_buffer(command_buffer_manager, dst);
+    }
 };
