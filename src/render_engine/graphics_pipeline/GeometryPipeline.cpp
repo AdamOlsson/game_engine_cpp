@@ -1,4 +1,4 @@
-#include "render_engine/GeometryPipeline.h"
+#include "render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "render_engine/Geometry.h"
 #include "render_engine/Sampler.h"
 #include "render_engine/Texture.h"
@@ -12,12 +12,9 @@
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
 #include <cstring>
-#include <fstream>
 #include <memory>
-#include <stdexcept>
-#include <vector>
 
-GeometryPipeline::GeometryPipeline(
+graphics_pipeline::GeometryPipeline::GeometryPipeline(
     std::shared_ptr<graphics_context::GraphicsContext> ctx,
     CommandBufferManager *command_buffer_manager, SwapChainManager &swap_chain_manager,
     SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers, Sampler &sampler,
@@ -94,9 +91,10 @@ GeometryPipeline::GeometryPipeline(
           // clang-format on
       ) {}
 
-GeometryPipeline::~GeometryPipeline() {}
+graphics_pipeline::GeometryPipeline::~GeometryPipeline() {}
 
-void GeometryPipeline::render_circles(const VkCommandBuffer &command_buffer) {
+void graphics_pipeline::GeometryPipeline::render_circles(
+    const VkCommandBuffer &command_buffer) {
     const auto &instance_buffer = m_circle_instance_buffers.get_buffer();
     const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
@@ -109,7 +107,8 @@ void GeometryPipeline::render_circles(const VkCommandBuffer &command_buffer) {
     m_circle_instance_buffers.rotate();
 }
 
-void GeometryPipeline::render_triangles(const VkCommandBuffer &command_buffer) {
+void graphics_pipeline::GeometryPipeline::render_triangles(
+    const VkCommandBuffer &command_buffer) {
     const auto &instance_buffer = m_triangle_instance_buffers.get_buffer();
     const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
@@ -123,7 +122,8 @@ void GeometryPipeline::render_triangles(const VkCommandBuffer &command_buffer) {
     m_triangle_instance_buffers.rotate();
 }
 
-void GeometryPipeline::render_rectangles(const VkCommandBuffer &command_buffer) {
+void graphics_pipeline::GeometryPipeline::render_rectangles(
+    const VkCommandBuffer &command_buffer) {
 
     const auto &instance_buffer = m_rectangle_instance_buffers.get_buffer();
     const auto num_instances = instance_buffer.num_elements();
@@ -139,7 +139,8 @@ void GeometryPipeline::render_rectangles(const VkCommandBuffer &command_buffer) 
     m_rectangle_instance_buffers.rotate();
 }
 
-void GeometryPipeline::render_hexagons(const VkCommandBuffer &command_buffer) {
+void graphics_pipeline::GeometryPipeline::render_hexagons(
+    const VkCommandBuffer &command_buffer) {
     const auto &instance_buffer = m_hexagon_instance_buffers.get_buffer();
     const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
@@ -152,65 +153,22 @@ void GeometryPipeline::render_hexagons(const VkCommandBuffer &command_buffer) {
     m_hexagon_instance_buffers.rotate();
 }
 
-VkDescriptorPool createDescriptorPool(VkDevice &device, const int capacity) {
-    std::array<VkDescriptorPoolSize, 3> poolSizes{};
-
-    poolSizes[0].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    poolSizes[0].descriptorCount = static_cast<uint32_t>(capacity);
-
-    poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSizes[1].descriptorCount = static_cast<uint32_t>(capacity);
-
-    // TODO: Do we really need this many samplers?
-    poolSizes[2].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSizes[2].descriptorCount = static_cast<uint32_t>(capacity);
-
-    VkDescriptorPoolCreateInfo poolInfo{};
-    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = poolSizes.size();
-    poolInfo.pPoolSizes = poolSizes.data();
-    poolInfo.maxSets = static_cast<uint32_t>(capacity);
-
-    VkDescriptorPool descriptorPool;
-    if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) !=
-        VK_SUCCESS) {
-        throw std::runtime_error("failed to create descriptor pool!");
-    }
-    return descriptorPool;
-}
-
-StorageBuffer<GeometryInstanceBufferObject> &
-GeometryPipeline::get_circle_instance_buffer() {
+StorageBuffer<graphics_pipeline::GeometryInstanceBufferObject> &
+graphics_pipeline::GeometryPipeline::get_circle_instance_buffer() {
     return m_circle_instance_buffers.get_buffer();
 }
 
-StorageBuffer<GeometryInstanceBufferObject> &
-GeometryPipeline::get_triangle_instance_buffer() {
+StorageBuffer<graphics_pipeline::GeometryInstanceBufferObject> &
+graphics_pipeline::GeometryPipeline::get_triangle_instance_buffer() {
     return m_triangle_instance_buffers.get_buffer();
 }
 
-StorageBuffer<GeometryInstanceBufferObject> &
-GeometryPipeline::get_rectangle_instance_buffer() {
+StorageBuffer<graphics_pipeline::GeometryInstanceBufferObject> &
+graphics_pipeline::GeometryPipeline::get_rectangle_instance_buffer() {
     return m_rectangle_instance_buffers.get_buffer();
 }
 
-StorageBuffer<GeometryInstanceBufferObject> &
-GeometryPipeline::get_hexagon_instance_buffer() {
+StorageBuffer<graphics_pipeline::GeometryInstanceBufferObject> &
+graphics_pipeline::GeometryPipeline::get_hexagon_instance_buffer() {
     return m_hexagon_instance_buffers.get_buffer();
-}
-
-std::vector<char> readFile(const std::string filename) {
-    std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-    if (!file.is_open()) {
-        throw std::runtime_error("failed to open file!");
-    }
-
-    size_t fileSize = (size_t)file.tellg();
-    std::vector<char> buffer(fileSize);
-
-    file.seekg(0);
-    file.read(buffer.data(), fileSize);
-    file.close();
-    return buffer;
 }

@@ -1,5 +1,4 @@
 #include "render_engine/RenderEngine.h"
-#include "render_engine/GeometryPipeline.h"
 #include "render_engine/RenderBody.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/buffers/GpuBuffer.h"
@@ -14,7 +13,7 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
                            CommandBufferManager *command_buffer_manager,
                            SwapChainManager *swap_chain_manager, const UseFont use_font)
     : m_window_dimension_buffers(SwapUniformBuffer<window::WindowDimension<float>>(
-          ctx, MAX_FRAMES_IN_FLIGHT, 1)),
+          ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1)),
       m_sampler(Sampler(ctx)) {
 
     m_window_dimension_buffers.write(ctx->window->dimensions<float>());
@@ -27,7 +26,7 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
     // TODO: Handle recreation of swap chain, like for resizing windows and moving window
     // between displays
     // TODO: Make a single module for all pipelines (i.e Geometry, Text, and UI)
-    m_geometry_pipeline = std::make_unique<GeometryPipeline>(
+    m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(
         ctx, command_buffer_manager, *swap_chain_manager, m_window_dimension_buffers,
         m_sampler, *m_texture);
     /*m_geometry_pipeline = GeometryPipelineBuilder()*/

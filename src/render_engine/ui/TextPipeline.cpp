@@ -1,9 +1,9 @@
 #include "TextPipeline.h"
 #include "render_engine/Geometry.h"
-#include "render_engine/GeometryPipeline.h"
 #include "render_engine/descriptors/DescriptorSet.h"
 #include "render_engine/descriptors/DescriptorSetBuilder.h"
 #include "render_engine/fonts/Font.h"
+#include "render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "render_engine/graphics_pipeline/GraphicsPipeline.h"
 #include "render_engine/graphics_pipeline/GraphicsPipelineBuilder.h"
 #include "render_engine/resources/ResourceManager.h"
@@ -20,9 +20,9 @@ TextPipeline::TextPipeline(
     std::unique_ptr<Font> font)
     : m_ctx(ctx), m_font(std::move(font)),
       m_character_buffers(SwapStorageBuffer<CharacterInstanceBufferObject>(
-          ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
-      m_text_segment_buffers(
-          SwapStorageBuffer<TextSegmentBufferObject>(ctx, MAX_FRAMES_IN_FLIGHT, 16)),
+          ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1024)),
+      m_text_segment_buffers(SwapStorageBuffer<TextSegmentBufferObject>(
+          ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 16)),
       m_vertex_buffer(
           VertexBuffer(ctx, Geometry::rectangle_vertices, command_buffer_manager)),
       m_index_buffer(
@@ -31,7 +31,7 @@ TextPipeline::TextPipeline(
                                        m_num_storage_buffers, m_num_uniform_buffers,
                                        m_num_samplers)),
       m_descriptor_set(
-          DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
+          DescriptorSetBuilder(graphics_pipeline::MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_character_buffers.get_buffer_references())
               .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
               .set_texture_and_sampler(2, m_font->font_atlas, *m_font->sampler)

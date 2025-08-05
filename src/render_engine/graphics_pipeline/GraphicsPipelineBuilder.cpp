@@ -1,5 +1,5 @@
 #include "GraphicsPipelineBuilder.h"
-#include "render_engine/Pipeline.h"
+#include "Pipeline.h"
 #include "render_engine/ShaderModule.h"
 #include <stdexcept>
 

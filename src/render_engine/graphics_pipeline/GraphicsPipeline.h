@@ -1,11 +1,14 @@
 #pragma once
 
-#include "render_engine/Pipeline.h"
 #include "render_engine/buffers/IndexBuffer.h"
 #include "render_engine/buffers/VertexBuffer.h"
+#include "render_engine/graphics_pipeline/Pipeline.h"
 #include "vulkan/vulkan_core.h"
 
 namespace graphics_pipeline {
+
+std::vector<char> readFile(const std::string filename);
+
 class GraphicsPipeline {
     friend class GraphicsPipelineBuilder;
 

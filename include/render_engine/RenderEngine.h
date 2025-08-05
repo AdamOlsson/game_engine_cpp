@@ -1,10 +1,10 @@
 #pragma once
-#include "render_engine/GeometryPipeline.h"
 #include "render_engine/RenderBody.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/fonts/Font.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
+#include "render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "render_engine/ui/State.h"
 #include "render_engine/ui/TextPipeline.h"
 #include "render_engine/ui/UIPipeline.h"
@@ -20,7 +20,7 @@ class RenderEngine {
     Sampler m_sampler;
     std::unique_ptr<Texture> m_texture; // Having this unique prevents a segfault
 
-    std::unique_ptr<GeometryPipeline> m_geometry_pipeline;
+    std::unique_ptr<graphics_pipeline::GeometryPipeline> m_geometry_pipeline;
 
     std::unique_ptr<ui::TextPipeline> m_text_pipeline;
     std::unique_ptr<ui::UIPipeline> m_ui_pipeline;

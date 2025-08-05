@@ -1,5 +1,9 @@
 #include "GraphicsPipeline.h"
 
+#include <fstream>
+#include <stdexcept>
+#include <vector>
+
 graphics_pipeline::GraphicsPipeline::GraphicsPipeline(Pipeline &&pipeline)
     : m_pipeline(std::move(pipeline)) {}
 
@@ -21,4 +25,20 @@ void graphics_pipeline::GraphicsPipeline::render(const VkCommandBuffer &command_
                            &vertex_buffers_offset);
     vkCmdBindIndexBuffer(command_buffer, index_buffer.buffer, 0, VK_INDEX_TYPE_UINT16);
     vkCmdDrawIndexed(command_buffer, index_buffer.num_indices, num_instances, 0, 0, 0);
+}
+
+std::vector<char> graphics_pipeline::readFile(const std::string filename) {
+    std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+    if (!file.is_open()) {
+        throw std::runtime_error("failed to open file!");
+    }
+
+    size_t fileSize = (size_t)file.tellg();
+    std::vector<char> buffer(fileSize);
+
+    file.seekg(0);
+    file.read(buffer.data(), fileSize);
+    file.close();
+    return buffer;
 }

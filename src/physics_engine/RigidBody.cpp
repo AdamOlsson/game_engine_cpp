@@ -45,7 +45,6 @@ std::vector<glm::vec3> RigidBody::vertices() const {
             }
             std::ostringstream oss;
             oss << "Shape::" << this->shape << " not implemented (vertices())";
-            logger::error(oss.str());
             throw std::runtime_error(oss.str());
         },
         shape.params);

@@ -1,11 +1,11 @@
 #include "Game.h"
 #include "GameEngine.h"
-#include "render_engine/GeometryPipeline.h"
 #include "render_engine/PerformanceWindow.h"
 #include "render_engine/RenderPass.h"
 #include "render_engine/colors.h"
 #include "render_engine/fonts/Font.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
+#include "render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "render_engine/ui/Button.h"
 #include "render_engine/ui/ElementProperties.h"
@@ -268,8 +268,8 @@ class UserInterfaceExample : public Game {
         m_device_queues = ctx->get_device_queues();
 
         m_swap_chain_manager = std::make_unique<SwapChainManager>(ctx);
-        m_command_buffer_manager =
-            std::make_unique<CommandBufferManager>(ctx, MAX_FRAMES_IN_FLIGHT);
+        m_command_buffer_manager = std::make_unique<CommandBufferManager>(
+            ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
 
         m_render_engine = std::make_unique<RenderEngine>(
             ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),

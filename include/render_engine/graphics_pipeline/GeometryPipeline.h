@@ -21,6 +21,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+namespace graphics_pipeline {
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
 VKAPI_ATTR inline VkBool32 VKAPI_CALL debugCallback(
@@ -32,9 +33,6 @@ VKAPI_ATTR inline VkBool32 VKAPI_CALL debugCallback(
 
     return VK_FALSE;
 }
-
-std::vector<char> readFile(const std::string filename);
-VkDescriptorPool createDescriptorPool(VkDevice &device, const int capacity);
 
 struct GeometryInstanceBufferObject {
     alignas(16) glm::vec3 position;
@@ -133,3 +131,5 @@ class GeometryPipeline {
     void render_rectangles(const VkCommandBuffer &command_buffer);
     void render_hexagons(const VkCommandBuffer &command_buffer);
 };
+
+} // namespace graphics_pipeline

@@ -5,6 +5,7 @@
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
+namespace graphics_pipeline {
 class Pipeline {
   private:
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
@@ -37,3 +38,4 @@ class Pipeline {
     Pipeline &operator=(const Pipeline &other) = delete;
     Pipeline(const Pipeline &other) = delete;
 };
+} // namespace graphics_pipeline
