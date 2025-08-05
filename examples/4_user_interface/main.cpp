@@ -10,7 +10,6 @@
 #include "render_engine/ui/Button.h"
 #include "render_engine/ui/ElementProperties.h"
 #include "render_engine/ui/UI.h"
-#include "render_engine/ui/UIPipeline.h"
 #include "render_engine/window/WindowConfig.h"
 #include <memory>
 

@@ -20,7 +20,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-namespace ui {
+namespace graphics_pipeline {
 
 struct TextSegmentBufferObject {
     alignas(16) glm::vec4 font_color = colors::WHITE;
@@ -81,4 +81,4 @@ class TextPipeline {
     void text_kerning(const std::string_view text,
                       const ui::ElementProperties properties);
 };
-} // namespace ui
+} // namespace graphics_pipeline

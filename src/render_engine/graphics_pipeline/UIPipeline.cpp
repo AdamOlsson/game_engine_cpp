@@ -8,12 +8,10 @@
 #include "render_engine/resources/shaders/ShaderResource.h"
 #include "vulkan/vulkan_core.h"
 
-using namespace ui;
-
-UIPipeline::UIPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
-                       CommandBufferManager *command_buffer_manager,
-                       SwapChainManager &swap_chain_manager,
-                       SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers)
+graphics_pipeline::UIPipeline::UIPipeline(
+    std::shared_ptr<graphics_context::GraphicsContext> ctx,
+    CommandBufferManager *command_buffer_manager, SwapChainManager &swap_chain_manager,
+    SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers)
     : m_ctx(ctx),
       m_descriptor_pool(DescriptorPool(m_ctx, m_descriptor_pool_capacity,
                                        m_num_storage_buffers, m_num_uniform_buffers,
@@ -29,17 +27,17 @@ UIPipeline::UIPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
               .set_push_constants({
                   .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                   .offset = 0,
-                  .size = sizeof(ElementProperties)})
+                  .size = sizeof(ui::ElementProperties)})
               .set_descriptor_set_layout(&m_descriptor_set.get_layout())
               .build(m_ctx, swap_chain_manager)),
       // clang-format on 
       m_vertex_buffer(m_ctx, Geometry::rectangle_vertices, command_buffer_manager),
       m_index_buffer(IndexBuffer(ctx, Geometry::rectangle_indices, command_buffer_manager)) {}
 
-UIPipeline::~UIPipeline() {}
+graphics_pipeline::UIPipeline::~UIPipeline() {}
 
-void UIPipeline::render(const VkCommandBuffer &command_buffer,
-                        const ElementProperties::ContainerProperties &ui_element) {
+void graphics_pipeline::UIPipeline::render(const VkCommandBuffer &command_buffer,
+                        const ui::ElementProperties::ContainerProperties &ui_element) {
 
     auto descriptor_set = m_descriptor_set.get();
     

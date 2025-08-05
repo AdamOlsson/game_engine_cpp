@@ -4,8 +4,6 @@
 #include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/fonts/Font.h"
 #include "render_engine/ui/TextBox.h"
-#include "render_engine/ui/TextPipeline.h"
-#include "render_engine/ui/UIPipeline.h"
 #include "render_engine/window/Window.h"
 #include <memory>
 
@@ -22,27 +20,28 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
         Texture::unique_from_image_resource_name(ctx, command_buffer_manager, "DogImage");
 
     // TODO: I do not want the sampler, texture or uniform to be part of the constructor
-    // interface, instead they should be optional to add through a builder class
-    // TODO: Handle recreation of swap chain, like for resizing windows and moving window
-    // between displays
-    // TODO: Make a single module for all pipelines (i.e Geometry, Text, and UI)
-    m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(
-        ctx, command_buffer_manager, *swap_chain_manager, m_window_dimension_buffers,
-        m_sampler, *m_texture);
+    // interface, instead they should be optional to add through a builder class like
+    // below
     /*m_geometry_pipeline = GeometryPipelineBuilder()*/
     /*                          .set_texture_and_sampler(< texture and sampler >)*/
     /*                          .build(ctx, command_buffer_manager, swap_chain_manager,*/
     /*                                 m_window_dimension_buffers);*/
 
+    // TODO: Handle recreation of swap chain, like for resizing windows and moving window
+    // between displays
+    m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(
+        ctx, command_buffer_manager, *swap_chain_manager, m_window_dimension_buffers,
+        m_sampler, *m_texture);
+
     auto font =
         std::make_unique<Font>(ctx, command_buffer_manager, "DefaultFont", &m_sampler);
-    m_text_pipeline = std::make_unique<ui::TextPipeline>(
+    m_text_pipeline = std::make_unique<graphics_pipeline::TextPipeline>(
         ctx, command_buffer_manager, *swap_chain_manager, m_window_dimension_buffers,
         std::move(font));
 
     // TODO: UIPipeline is dependent on TextPipeline. Should it?... Does mean we refactor
     // the geometry and UI pipeline shaders to be the same?
-    m_ui_pipeline = std::make_unique<ui::UIPipeline>(
+    m_ui_pipeline = std::make_unique<graphics_pipeline::UIPipeline>(
         ctx, command_buffer_manager, *swap_chain_manager, m_window_dimension_buffers);
 }
 

@@ -12,7 +12,7 @@
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
-namespace ui {
+namespace graphics_pipeline {
 
 class UIPipeline {
   private:
@@ -40,4 +40,4 @@ class UIPipeline {
     void render(const VkCommandBuffer &command_buffer,
                 const ui::ElementProperties::ContainerProperties &ui_element);
 };
-} // namespace ui
+} // namespace graphics_pipeline

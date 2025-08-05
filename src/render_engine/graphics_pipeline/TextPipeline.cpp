@@ -11,9 +11,7 @@
 #include <cstring>
 #include <memory>
 
-using namespace ui;
-
-TextPipeline::TextPipeline(
+graphics_pipeline::TextPipeline::TextPipeline(
     std::shared_ptr<graphics_context::GraphicsContext> ctx,
     CommandBufferManager *command_buffer_manager, SwapChainManager &swap_chain_manager,
     SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
@@ -47,17 +45,19 @@ TextPipeline::TextPipeline(
           // clang-format on
       ) {}
 
-TextPipeline::~TextPipeline() {}
+graphics_pipeline::TextPipeline::~TextPipeline() {}
 
-StorageBuffer<CharacterInstanceBufferObject> &TextPipeline::get_character_buffer() {
+StorageBuffer<graphics_pipeline::CharacterInstanceBufferObject> &
+graphics_pipeline::TextPipeline::get_character_buffer() {
     return m_character_buffers.get_buffer();
 }
 
-StorageBuffer<TextSegmentBufferObject> &TextPipeline::get_text_segment_buffer() {
+StorageBuffer<graphics_pipeline::TextSegmentBufferObject> &
+graphics_pipeline::TextPipeline::get_text_segment_buffer() {
     return m_text_segment_buffers.get_buffer();
 }
 
-void TextPipeline::render_text(const VkCommandBuffer &command_buffer) {
+void graphics_pipeline::TextPipeline::render_text(const VkCommandBuffer &command_buffer) {
     const auto &instance_buffer = m_character_buffers.get_buffer();
     const auto num_instances = instance_buffer.num_elements();
     if (num_instances <= 0) {
@@ -75,8 +75,8 @@ void TextPipeline::render_text(const VkCommandBuffer &command_buffer) {
     m_text_segment_buffers.rotate();
 }
 
-void TextPipeline::text_kerning(const std::string_view text,
-                                const ui::ElementProperties properties) {
+void graphics_pipeline::TextPipeline::text_kerning(
+    const std::string_view text, const ui::ElementProperties properties) {
     if (text.size() == 0) {
         return;
     }
@@ -123,7 +123,7 @@ void TextPipeline::text_kerning(const std::string_view text,
     }
 }
 
-std::string to_string(const TextSegmentBufferObject &obj) {
+std::string to_string(const graphics_pipeline::TextSegmentBufferObject &obj) {
     return std::format("TextSegmentBufferObject {{\n"
                        "  font_color:     ({:.3f}, {:.3f}, {:.3f})\n"
                        "  font_rotation:  {:.3f}\n"
@@ -136,11 +136,12 @@ std::string to_string(const TextSegmentBufferObject &obj) {
                        obj.font_sharpness);
 }
 
-std::ostream &operator<<(std::ostream &os, const TextSegmentBufferObject &obj) {
+std::ostream &operator<<(std::ostream &os,
+                         const graphics_pipeline::TextSegmentBufferObject &obj) {
     return os << to_string(obj);
 }
 
-std::string to_string(const CharacterInstanceBufferObject &obj) {
+std::string to_string(const graphics_pipeline::CharacterInstanceBufferObject &obj) {
     return std::format("CharacterInstanceBufferObject {{\n"
                        "  position:            ({:.3f}, {:.3f})\n"
                        "  uvwt:                ({:.3f}, {:.3f}, {:.3f}, {:.3f})\n"
@@ -150,6 +151,7 @@ std::string to_string(const CharacterInstanceBufferObject &obj) {
                        obj.uvwt.w, obj.text_segment_idx);
 }
 
-std::ostream &operator<<(std::ostream &os, const CharacterInstanceBufferObject &obj) {
+std::ostream &operator<<(std::ostream &os,
+                         const graphics_pipeline::CharacterInstanceBufferObject &obj) {
     return os << to_string(obj);
 }

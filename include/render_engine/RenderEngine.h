@@ -5,9 +5,9 @@
 #include "render_engine/fonts/Font.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/graphics_pipeline/GeometryPipeline.h"
+#include "render_engine/graphics_pipeline/TextPipeline.h"
+#include "render_engine/graphics_pipeline/UIPipeline.h"
 #include "render_engine/ui/State.h"
-#include "render_engine/ui/TextPipeline.h"
-#include "render_engine/ui/UIPipeline.h"
 #include <GLFW/glfw3.h>
 #include <memory>
 
@@ -22,8 +22,8 @@ class RenderEngine {
 
     std::unique_ptr<graphics_pipeline::GeometryPipeline> m_geometry_pipeline;
 
-    std::unique_ptr<ui::TextPipeline> m_text_pipeline;
-    std::unique_ptr<ui::UIPipeline> m_ui_pipeline;
+    std::unique_ptr<graphics_pipeline::TextPipeline> m_text_pipeline;
+    std::unique_ptr<graphics_pipeline::UIPipeline> m_ui_pipeline;
 
     struct {
         CommandBuffer command_buffer;
