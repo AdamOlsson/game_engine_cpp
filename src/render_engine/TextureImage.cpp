@@ -39,9 +39,8 @@ TextureImage::TextureImage(std::shared_ptr<graphics_context::GraphicsContext> ct
     VkMemoryAllocateInfo alloc_info{};
     alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     alloc_info.allocationSize = mem_requirements.size;
-    alloc_info.memoryTypeIndex =
-        find_memory_type(m_ctx.get(), mem_requirements.memoryTypeBits,
-                         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    alloc_info.memoryTypeIndex = m_ctx->physical_device.find_memory_type(
+        mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     if (vkAllocateMemory(m_ctx->logical_device, &alloc_info, nullptr, &m_image_memory) !=
         VK_SUCCESS) {
         throw std::runtime_error("Failed to create texture image memory");

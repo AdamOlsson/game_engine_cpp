@@ -25,8 +25,8 @@ void create_buffer(const graphics_context::GraphicsContext *ctx, const VkDeviceS
     VkMemoryAllocateInfo alloc_info{};
     alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     alloc_info.allocationSize = mem_requirements.size;
-    alloc_info.memoryTypeIndex =
-        find_memory_type(ctx, mem_requirements.memoryTypeBits, properties);
+    alloc_info.memoryTypeIndex = ctx->physical_device.find_memory_type(
+        mem_requirements.memoryTypeBits, properties);
 
     if (vkAllocateMemory(ctx->logical_device, &alloc_info, nullptr, &buffer_memory) !=
         VK_SUCCESS) {
@@ -34,18 +34,4 @@ void create_buffer(const graphics_context::GraphicsContext *ctx, const VkDeviceS
     }
 
     vkBindBufferMemory(ctx->logical_device, buffer, buffer_memory, 0);
-}
-
-uint32_t find_memory_type(const graphics_context::GraphicsContext *ctx,
-                          const uint32_t type_filter,
-                          const VkMemoryPropertyFlags properties) {
-    VkPhysicalDeviceMemoryProperties memProperties;
-    vkGetPhysicalDeviceMemoryProperties(ctx->physical_device, &memProperties);
-    for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
-        if ((type_filter & (1 << i)) &&
-            (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
-            return i;
-        }
-    }
-    throw std::runtime_error("failed to find suitable memory type!");
 }

@@ -106,6 +106,9 @@ class PhysicalDevice {
     static SwapChainSupportDetails
     query_swap_chain_support(const VkPhysicalDevice &physical_device,
                              const Surface &surface);
+
+    uint32_t find_memory_type(const uint32_t type_filter,
+                              const VkMemoryPropertyFlags properties) const;
 };
 
 class LogicalDevice {

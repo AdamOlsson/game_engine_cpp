@@ -163,6 +163,19 @@ graphics_context::device::PhysicalDevice::query_swap_chain_support(
     return details;
 }
 
+uint32_t graphics_context::device::PhysicalDevice::find_memory_type(
+    const uint32_t type_filter, const VkMemoryPropertyFlags properties) const {
+    VkPhysicalDeviceMemoryProperties mem_properties;
+    vkGetPhysicalDeviceMemoryProperties(m_physical_device, &mem_properties);
+    for (uint32_t i = 0; i < mem_properties.memoryTypeCount; i++) {
+        if ((type_filter & (1 << i)) &&
+            (mem_properties.memoryTypes[i].propertyFlags & properties) == properties) {
+            return i;
+        }
+    }
+    throw std::runtime_error("failed to find suitable memory type!");
+}
+
 graphics_context::device::LogicalDevice::LogicalDevice(
     const bool enable_validation_layers, const Surface &surface,
     const PhysicalDevice &physical_device)
