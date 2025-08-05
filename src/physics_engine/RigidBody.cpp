@@ -6,6 +6,7 @@
 #include "triangle_equations.h"
 #include <ostream>
 #include <sstream>
+#include <stdexcept>
 
 std::vector<glm::vec3> RigidBody::edges() const {
     return std::visit(
@@ -13,9 +14,9 @@ std::vector<glm::vec3> RigidBody::edges() const {
             using T = std::decay_t<decltype(arg)>;
             if constexpr (std::is_same_v<T, Circle>) {
                 // We should not use the circle edges on physics calculations
-                std::cout << "You are calling edges() on a circle rigid body. Are you "
-                             "sure this is correct?";
-                assert(false);
+                std::runtime_error(
+                    "You are calling edges() on a circle rigid body. Are you "
+                    "sure this is correct?");
             } else if constexpr (std::is_same_v<T, Triangle>) {
                 return get_triangle_edges(*this);
             } else if constexpr (std::is_same_v<T, Rectangle>) {
@@ -34,9 +35,9 @@ std::vector<glm::vec3> RigidBody::vertices() const {
             using T = std::decay_t<decltype(arg)>;
             if constexpr (std::is_same_v<T, Circle>) {
                 // We should not use the circle vertices on physics calculations
-                std::cout << "You are calling vertices() on a circle rigid body. Are you "
-                             "sure this is correct?";
-                assert(false);
+                std::runtime_error(
+                    "You are calling vertices() on a circle rigid body. Are you "
+                    "sure this is correct?");
             } else if constexpr (std::is_same_v<T, Triangle>) {
                 return get_triangle_vertices(*this);
             } else if constexpr (std::is_same_v<T, Rectangle>) {
@@ -44,6 +45,7 @@ std::vector<glm::vec3> RigidBody::vertices() const {
             }
             std::ostringstream oss;
             oss << "Shape::" << this->shape << " not implemented (vertices())";
+            logger::error(oss.str());
             throw std::runtime_error(oss.str());
         },
         shape.params);
@@ -55,9 +57,9 @@ std::vector<glm::vec3> RigidBody::normals() const {
             using T = std::decay_t<decltype(arg)>;
             if constexpr (std::is_same_v<T, Circle>) {
                 // We should not use the circle normals on physics calculations
-                std::cout << "You are calling normals() on a circle rigid body. Are you "
-                             "sure this is correct?";
-                assert(false);
+                std::runtime_error(
+                    "You are calling normals() on a circle rigid body. Are you "
+                    "sure this is correct?");
             } else if constexpr (std::is_same_v<T, Triangle>) {
                 return get_triangle_normals(*this);
             } else if constexpr (std::is_same_v<T, Rectangle>) {

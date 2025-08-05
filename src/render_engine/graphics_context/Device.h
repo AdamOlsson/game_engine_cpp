@@ -2,6 +2,7 @@
 
 #include "Instance.h"
 #include "Surface.h"
+#include "logger.h"
 #include "render_engine/graphics_context/Instance.h"
 
 namespace graphics_context {
@@ -28,9 +29,8 @@ struct SwapChainSupportDetails {
                 return available_format;
             }
         }
-        std::cout << "SwapChainSupportDetails::Warning requested format not found, "
-                     "returning first available"
-                  << std::endl;
+        logger::warning("Requested format not found, "
+                        "returning first available");
         return formats[0];
     }
 
@@ -41,9 +41,8 @@ struct SwapChainSupportDetails {
                 return available_present_mode;
             }
         }
-        std::cout << "SwapChainSupportDetails::Warning requested present mode not found, "
-                     "returning VK_PRESENT_MODE_FIFO_KHR"
-                  << std::endl;
+        logger::warning("Requested present mode not found, "
+                        "returning VK_PRESENT_MODE_FIFO_KHR");
 
         return VK_PRESENT_MODE_FIFO_KHR;
     }

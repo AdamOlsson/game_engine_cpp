@@ -1,8 +1,8 @@
 #include "render_engine/ui/Menu.h"
+#include "logger.h"
 #include "render_engine/ui/Button.h"
 #include "render_engine/ui/ElementProperties.h"
 #include "render_engine/ui/UI.h"
-#include <iostream>
 #include <optional>
 #include <vector>
 
@@ -24,26 +24,24 @@ void Menu::setup_navigation_callback() {
         if (this->m_ui != nullptr) {
             this->m_ui->push_new_menu(this);
         } else {
-            std::cout << "WARNING! Clicking menu button without linking. Call link() "
-                         "from the UI constructor."
-                      << std::endl;
+            logger::warning("Clicking menu button without linking. Call link() "
+                            "from the UI constructor");
         }
     });
 
     // Setup navigation to parent menu
     if (m_back_button.has_value()) {
         auto user_on_click_back = m_back_button->on_click;
-        m_back_button = m_back_button->set_on_click([this, user_on_click_back](
-                                                        ui::Button &self) {
-            user_on_click_back(self);
-            if (this->m_ui != nullptr) {
-                this->m_ui->pop_menu();
-            } else {
-                std::cout << "WARNING! Clicking menu button without linking. Call link() "
-                             "from the UI constructor."
-                          << std::endl;
-            }
-        });
+        m_back_button =
+            m_back_button->set_on_click([this, user_on_click_back](ui::Button &self) {
+                user_on_click_back(self);
+                if (this->m_ui != nullptr) {
+                    this->m_ui->pop_menu();
+                } else {
+                    logger::warning("Clicking menu button without linking. Call link() "
+                                    "from the UI constructor");
+                }
+            });
     }
 }
 

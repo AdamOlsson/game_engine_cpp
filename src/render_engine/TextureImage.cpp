@@ -1,7 +1,5 @@
 #include "TextureImage.h"
-#include "buffers/common.h"
 #include "render_engine/SingleTimeCommandBuffer.h"
-#include "render_engine/buffers/common.h"
 #include "vulkan/vulkan_core.h"
 
 TextureImage::TextureImage()

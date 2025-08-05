@@ -1,4 +1,5 @@
 #include "Instance.h"
+#include "logger.h"
 #include "validation_layers.h"
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -91,8 +92,8 @@ void graphics_context::Instance::print_enabled_extensions() {
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
 
     // Print all supported extensions
-    std::cout << "Available m_instance extensions:" << std::endl;
+    logger::info("Available m_instance extensions:");
     for (const auto &ext : extensions) {
-        std::cout << ext.extensionName << std::endl;
+        logger::info(ext.extensionName);
     }
 }

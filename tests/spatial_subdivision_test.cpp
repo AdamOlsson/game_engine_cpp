@@ -33,7 +33,7 @@ TEST(SpatialSubdivisionTest, TestNoCollisionCandidatesShouldExist) {
 
     SpatialSubdivision broadphase = SpatialSubdivision();
     auto collision_candidates = broadphase.collision_detection(bodies);
-    std::cout << collision_candidates << std::endl;
+
     EXPECT_EQ(0, collision_candidates.pass1.size());
     EXPECT_EQ(0, collision_candidates.pass2.size());
     EXPECT_EQ(0, collision_candidates.pass3.size());

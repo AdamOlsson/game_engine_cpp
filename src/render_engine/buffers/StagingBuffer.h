@@ -1,5 +1,6 @@
 #pragma once
 
+#include "logger.h"
 #include "render_engine/CommandBufferManager.h"
 #include "render_engine/ImageData.h"
 #include "render_engine/TextureImage.h"
@@ -44,10 +45,9 @@ class StagingBuffer {
 
         const size_t src_size = sizeof(T) * src.size();
         if (m_staging_buffer_size < src_size) {
-            std::cout
-                << "StagingBuffer::Warning source buffer is smaller than the staging "
-                   "buffer, causing only partial transfer of data"
-                << std::endl;
+            logger::warning(
+                "StagingBuffer::Warning source buffer is smaller than the staging "
+                "buffer, causing only partial transfer of data");
         }
 
         void *data;
