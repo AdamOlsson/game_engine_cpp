@@ -40,8 +40,8 @@ class DescriptorSetBuilder {
     DescriptorSetBuilder &add_gpu_buffer(size_t binding,
                                          std::vector<GpuBufferRef> &&buffers);
 
-    DescriptorSetBuilder &set_texture_and_sampler(size_t binding, Texture &texture,
-                                                  Sampler &sampler);
+    DescriptorSetBuilder &set_texture_and_sampler(size_t binding, Texture *texture,
+                                                  Sampler *sampler);
 
     DescriptorSet build(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
                         DescriptorPool &descriptor_pool);

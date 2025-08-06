@@ -13,13 +13,25 @@
 #include <cstdint>
 #include <cstring>
 #include <memory>
+#include <optional>
 
 graphics_pipeline::GeometryPipeline::GeometryPipeline(
     std::shared_ptr<graphics_context::GraphicsContext> ctx,
     CommandBufferManager *command_buffer_manager, SwapChainManager &swap_chain_manager,
-    SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers, Sampler &sampler,
-    Texture &texture)
+    SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers, Sampler *sampler,
+    Texture *texture)
     : m_ctx(ctx),
+
+      m_empty_texture(
+          texture == nullptr && sampler == nullptr
+              ? std::make_optional(Texture::empty(m_ctx, command_buffer_manager))
+              : std::nullopt),
+      m_empty_sampler(texture == nullptr && sampler == nullptr
+                          ? std::make_optional(Sampler(m_ctx))
+                          : std::nullopt),
+      m_texture_ptr(texture == nullptr ? &m_empty_texture.value() : texture),
+      m_sampler_ptr(sampler == nullptr ? &m_empty_sampler.value() : sampler),
+
       m_circle_instance_buffers(SwapStorageBuffer<GeometryInstanceBufferObject>(
           ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
       m_triangle_instance_buffers(SwapStorageBuffer<GeometryInstanceBufferObject>(
@@ -41,7 +53,7 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
           DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_circle_instance_buffers.get_buffer_references())
               .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
-              .set_texture_and_sampler(2, texture, sampler)
+              .set_texture_and_sampler(2, m_texture_ptr, m_sampler_ptr)
               .build(m_ctx, m_descriptor_pool)),
 
       m_triangle_vertex_buffer(
@@ -52,7 +64,7 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
           DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_triangle_instance_buffers.get_buffer_references())
               .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
-              .set_texture_and_sampler(2, texture, sampler)
+              .set_texture_and_sampler(2, m_texture_ptr, m_sampler_ptr)
               .build(m_ctx, m_descriptor_pool)),
 
       m_rectangle_vertex_buffer(
@@ -63,7 +75,7 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
           DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_rectangle_instance_buffers.get_buffer_references())
               .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
-              .set_texture_and_sampler(2, texture, sampler)
+              .set_texture_and_sampler(2, m_texture_ptr, m_sampler_ptr)
               .build(m_ctx, m_descriptor_pool)),
 
       m_hexagon_vertex_buffer(
@@ -74,7 +86,7 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
           DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_hexagon_instance_buffers.get_buffer_references())
               .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
-              .set_texture_and_sampler(2, texture, sampler)
+              .set_texture_and_sampler(2, m_texture_ptr, m_sampler_ptr)
               .build(m_ctx, m_descriptor_pool)),
       m_graphics_pipeline(
           // clang-format off

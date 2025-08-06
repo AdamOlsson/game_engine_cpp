@@ -33,13 +33,13 @@ DescriptorSetBuilder::add_gpu_buffer(size_t binding,
 }
 
 DescriptorSetBuilder &DescriptorSetBuilder::set_texture_and_sampler(size_t binding,
-                                                                    Texture &texture,
-                                                                    Sampler &sampler) {
+                                                                    Texture *texture,
+                                                                    Sampler *sampler) {
     m_texture_binding = binding;
-    m_texture = &texture;
-    m_sampler = &sampler;
+    m_texture = texture;
+    m_sampler = sampler;
     m_descriptor_set_layout_builder.add(
-        sampler.create_descriptor_set_layout_binding(binding));
+        sampler->create_descriptor_set_layout_binding(binding));
     return *this;
 }
 

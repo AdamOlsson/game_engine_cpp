@@ -16,21 +16,19 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
 
     m_window_dimension_buffers.write(ctx->window->dimensions<float>());
 
-    m_texture = Texture::unique_empty(ctx, command_buffer_manager);
-
-    // TODO: I do not want the sampler, texture or uniform to be part of the constructor
-    // interface, instead they should be optional to add through a builder class like
-    // below
-    /*m_geometry_pipeline = GeometryPipelineBuilder()*/
-    /*                          .set_texture_and_sampler(< texture and sampler >)*/
-    /*                          .build(ctx, command_buffer_manager, swap_chain_manager,*/
-    /*                                 m_window_dimension_buffers);*/
+    /*m_texture = Texture::unique_empty(ctx, command_buffer_manager);*/
+    m_texture = nullptr;
+    /*Sampler *sampler = &m_sampler;*/
+    Sampler *sampler = nullptr;
+    // CONINUE: I do not want the sampler, texture or uniform to be part of the
+    // constructor interface, instead they should be optional to add through a builder
+    // class like below
 
     // TODO: Handle recreation of swap chain, like for resizing windows and moving window
     // between displays
     m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(
         ctx, command_buffer_manager, *swap_chain_manager, m_window_dimension_buffers,
-        m_sampler, *m_texture);
+        sampler, m_texture.get());
 
     auto font =
         std::make_unique<Font>(ctx, command_buffer_manager, "DefaultFont", &m_sampler);

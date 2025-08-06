@@ -32,7 +32,7 @@ graphics_pipeline::TextPipeline::TextPipeline(
           DescriptorSetBuilder(graphics_pipeline::MAX_FRAMES_IN_FLIGHT)
               .add_gpu_buffer(0, m_character_buffers.get_buffer_references())
               .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
-              .set_texture_and_sampler(2, m_font->font_atlas, *m_font->sampler)
+              .set_texture_and_sampler(2, &m_font->font_atlas, m_font->sampler)
               .add_gpu_buffer(3, m_text_segment_buffers.get_buffer_references())
               .build(m_ctx, m_descriptor_pool)),
       m_graphics_pipeline(

@@ -76,6 +76,10 @@ class GeometryPipeline {
     const uint32_t m_descriptor_pool_capacity = MAX_FRAMES_IN_FLIGHT * 4;
 
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
+    std::optional<Texture> m_empty_texture;
+    std::optional<Sampler> m_empty_sampler;
+    Texture *m_texture_ptr;
+    Sampler *m_sampler_ptr;
 
     DescriptorPool m_descriptor_pool;
 
@@ -116,7 +120,7 @@ class GeometryPipeline {
                      CommandBufferManager *command_buffer_manager,
                      SwapChainManager &swap_chain_manager,
                      SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
-                     Sampler &sampler, Texture &texture);
+                     Sampler *sampler, Texture *texture);
 
     ~GeometryPipeline();
 
