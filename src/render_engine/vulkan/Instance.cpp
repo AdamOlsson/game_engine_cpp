@@ -1,18 +1,18 @@
 #include "Instance.h"
 #include "logger.h"
-#include "validation_layers.h"
+#include "render_engine/graphics_context/validation_layers.h"
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-graphics_context::Instance::Instance(bool enable_validation_layers)
+vulkan::Instance::Instance(bool enable_validation_layers)
     : m_enable_validation_layers(enable_validation_layers),
       m_instance(create_instance()) {}
 
-graphics_context::Instance::~Instance() { vkDestroyInstance(m_instance, nullptr); }
+vulkan::Instance::~Instance() { vkDestroyInstance(m_instance, nullptr); }
 
-VkInstance graphics_context::Instance::create_instance() {
+VkInstance vulkan::Instance::create_instance() {
     if (m_enable_validation_layers &&
-        !validation_layers::check_validation_layer_support()) {
+        !graphics_context::validation_layers::check_validation_layer_support()) {
         throw std::runtime_error("validation layers requested, but not available!");
     }
 
@@ -31,10 +31,11 @@ VkInstance graphics_context::Instance::create_instance() {
 
     VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
     if (m_enable_validation_layers) {
-        createInfo.enabledLayerCount =
-            static_cast<uint32_t>(validation_layers::validation_layers.size());
-        createInfo.ppEnabledLayerNames = validation_layers::validation_layers.data();
-        validation_layers::messenger::DebugMessenger::
+        createInfo.enabledLayerCount = static_cast<uint32_t>(
+            graphics_context::validation_layers::validation_layers.size());
+        createInfo.ppEnabledLayerNames =
+            graphics_context::validation_layers::validation_layers.data();
+        graphics_context::validation_layers::messenger::DebugMessenger::
             populate_debug_messenger_create_info(debugCreateInfo);
         createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT *)&debugCreateInfo;
     } else {
@@ -65,7 +66,7 @@ VkInstance graphics_context::Instance::create_instance() {
     return instance;
 }
 
-std::vector<const char *> graphics_context::Instance::get_required_extensions() {
+std::vector<const char *> vulkan::Instance::get_required_extensions() {
     uint32_t glfwExtensionCount = 0;
     const char **glfwExtensions;
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
@@ -84,7 +85,7 @@ std::vector<const char *> graphics_context::Instance::get_required_extensions() 
     return extensions;
 }
 
-void graphics_context::Instance::print_enabled_extensions() {
+void vulkan::Instance::print_enabled_extensions() {
     uint32_t extensionCount = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 

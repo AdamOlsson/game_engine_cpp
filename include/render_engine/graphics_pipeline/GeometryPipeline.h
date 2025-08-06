@@ -1,6 +1,5 @@
 #pragma once
 
-#include "render_engine/Sampler.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/Texture.h"
 #include "render_engine/buffers/GpuBuffer.h"
@@ -10,6 +9,7 @@
 #include "render_engine/descriptors/DescriptorSet.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/graphics_pipeline/GraphicsPipeline.h"
+#include "render_engine/vulkan/Sampler.h"
 #include "shape.h"
 #include "vulkan/vulkan_core.h"
 #include <iostream>
@@ -77,9 +77,9 @@ class GeometryPipeline {
 
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
     std::optional<Texture> m_empty_texture;
-    std::optional<Sampler> m_empty_sampler;
+    std::optional<vulkan::Sampler> m_empty_sampler;
     Texture *m_texture_ptr;
-    Sampler *m_sampler_ptr;
+    vulkan::Sampler *m_sampler_ptr;
 
     DescriptorPool m_descriptor_pool;
 
@@ -120,7 +120,7 @@ class GeometryPipeline {
                      CommandBufferManager *command_buffer_manager,
                      SwapChainManager &swap_chain_manager,
                      SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
-                     Sampler *sampler, Texture *texture);
+                     vulkan::Sampler *sampler, Texture *texture);
 
     ~GeometryPipeline();
 

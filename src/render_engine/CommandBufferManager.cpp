@@ -4,13 +4,13 @@
 
 CommandBufferManager::CommandBufferManager(
     std::shared_ptr<graphics_context::GraphicsContext> ctx, const size_t num_buffers)
-    : m_ctx(ctx), m_num_buffers(num_buffers), m_command_pool(CommandPool(m_ctx)),
+    : m_ctx(ctx), m_num_buffers(num_buffers), m_command_pool(vulkan::CommandPool(m_ctx)),
       m_command_buffers(create_command_buffers()) {}
 
 CommandBufferManager::~CommandBufferManager() {}
 
-CommandBuffer CommandBufferManager::get_command_buffer() {
-    CommandBuffer buf = CommandBuffer(m_command_buffers[m_next_buffer]);
+vulkan::CommandBuffer CommandBufferManager::get_command_buffer() {
+    vulkan::CommandBuffer buf = vulkan::CommandBuffer(m_command_buffers[m_next_buffer]);
     m_next_buffer = ++m_next_buffer % m_num_buffers;
     return buf;
 }

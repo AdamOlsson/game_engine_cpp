@@ -4,17 +4,16 @@
 #include "render_engine/window/Window.h"
 #include "vulkan/vulkan_core.h"
 
-namespace graphics_context {
+namespace vulkan {
 class Surface {
   private:
-    const graphics_context::Instance *m_instance;
+    const Instance *m_instance;
     VkSurfaceKHR m_surface;
 
-    VkSurfaceKHR create_surface(const graphics_context::Instance *instance,
-                                const window::Window *window);
+    VkSurfaceKHR create_surface(const Instance *instance, const window::Window *window);
 
   public:
-    Surface(const graphics_context::Instance *instance, const window::Window *window);
+    Surface(const Instance *instance, const window::Window *window);
     ~Surface();
 
     Surface(Surface &&other) noexcept;
@@ -24,4 +23,4 @@ class Surface {
 
     operator VkSurfaceKHR() const { return m_surface; }
 };
-} // namespace graphics_context
+} // namespace vulkan

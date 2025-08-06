@@ -2,6 +2,7 @@
 
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include <memory>
+namespace vulkan {
 class ImageView {
   private:
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
@@ -22,3 +23,4 @@ class ImageView {
 
     operator VkImageView() const { return m_image_view; }
 };
+} // namespace vulkan

@@ -32,9 +32,9 @@ DescriptorSetBuilder::add_gpu_buffer(size_t binding,
     return *this;
 }
 
-DescriptorSetBuilder &DescriptorSetBuilder::set_texture_and_sampler(size_t binding,
-                                                                    Texture *texture,
-                                                                    Sampler *sampler) {
+DescriptorSetBuilder &
+DescriptorSetBuilder::set_texture_and_sampler(size_t binding, Texture *texture,
+                                              vulkan::Sampler *sampler) {
     m_texture_binding = binding;
     m_texture = texture;
     m_sampler = sampler;

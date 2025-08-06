@@ -1,22 +1,22 @@
 #include "CommandPool.h"
 #include "vulkan/vulkan_core.h"
 
-CommandPool::CommandPool(std::shared_ptr<graphics_context::GraphicsContext> ctx)
+vulkan::CommandPool::CommandPool(std::shared_ptr<graphics_context::GraphicsContext> ctx)
     : m_ctx(ctx), m_command_pool(create_command_pool()) {}
 
-CommandPool::~CommandPool() {
+vulkan::CommandPool::~CommandPool() {
     if (m_command_pool == VK_NULL_HANDLE) {
         return;
     }
     vkDestroyCommandPool(m_ctx->logical_device, m_command_pool, nullptr);
 }
 
-CommandPool::CommandPool(CommandPool &&other) noexcept
+vulkan::CommandPool::CommandPool(CommandPool &&other) noexcept
     : m_ctx(std::move(other.m_ctx)), m_command_pool(other.m_command_pool) {
     other.m_command_pool = VK_NULL_HANDLE;
 }
 
-CommandPool &CommandPool::operator=(CommandPool &&other) noexcept {
+vulkan::CommandPool &vulkan::CommandPool::operator=(CommandPool &&other) noexcept {
     if (this != &other) {
         if (m_command_pool != VK_NULL_HANDLE) {
             vkDestroyCommandPool(m_ctx->logical_device, m_command_pool, nullptr);
@@ -30,12 +30,12 @@ CommandPool &CommandPool::operator=(CommandPool &&other) noexcept {
     return *this;
 }
 
-SingleTimeCommandBuffer CommandPool::get_single_time_command_buffer() {
+SingleTimeCommandBuffer vulkan::CommandPool::get_single_time_command_buffer() {
     return SingleTimeCommandBuffer(m_ctx, m_command_pool);
 }
 
-VkCommandPool CommandPool::create_command_pool() {
-    graphics_context::device::QueueFamilyIndices queue_family_indices =
+VkCommandPool vulkan::CommandPool::create_command_pool() {
+    device::QueueFamilyIndices queue_family_indices =
         m_ctx->physical_device.find_queue_families(m_ctx->surface);
 
     VkCommandPoolCreateInfo pool_info{};

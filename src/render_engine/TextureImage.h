@@ -2,8 +2,8 @@
 
 #include "render_engine/CommandBufferManager.h"
 #include "render_engine/ImageData.h"
-#include "render_engine/ImageView.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
+#include "render_engine/vulkan/ImageView.h"
 #include "vulkan/vulkan_core.h"
 
 struct TextureImageDimension {
@@ -25,7 +25,7 @@ class TextureImage {
   public:
     VkImage m_image;
     VkDeviceMemory m_image_memory;
-    ImageView m_image_view;
+    vulkan::ImageView m_image_view;
     TextureImageDimension m_dimension;
 
     TextureImage();

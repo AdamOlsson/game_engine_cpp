@@ -2,22 +2,22 @@
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
-Sampler::Sampler(std::shared_ptr<graphics_context::GraphicsContext> m_ctx)
+vulkan::Sampler::Sampler(std::shared_ptr<graphics_context::GraphicsContext> m_ctx)
     : m_ctx(m_ctx), m_sampler(create_sampler()) {}
 
-Sampler::~Sampler() {
+vulkan::Sampler::~Sampler() {
     if (m_sampler == VK_NULL_HANDLE) {
         return;
     }
     vkDestroySampler(m_ctx->logical_device, m_sampler, nullptr);
 }
 
-Sampler::Sampler(Sampler &&other) noexcept
+vulkan::Sampler::Sampler(Sampler &&other) noexcept
     : m_ctx(std::move(other.m_ctx)), m_sampler(other.m_sampler) {
     other.m_sampler = VK_NULL_HANDLE;
 }
 
-Sampler &Sampler::operator=(Sampler &&other) noexcept {
+vulkan::Sampler &vulkan::Sampler::operator=(Sampler &&other) noexcept {
     if (this != &other) {
         if (m_sampler != VK_NULL_HANDLE) {
             vkDestroySampler(m_ctx->logical_device, m_sampler, nullptr);
@@ -33,7 +33,7 @@ Sampler &Sampler::operator=(Sampler &&other) noexcept {
 }
 
 VkDescriptorSetLayoutBinding
-Sampler::create_descriptor_set_layout_binding(const size_t binding_num) {
+vulkan::Sampler::create_descriptor_set_layout_binding(const size_t binding_num) {
     VkDescriptorSetLayoutBinding sampler_layout_binding{};
     sampler_layout_binding.binding = binding_num;
     sampler_layout_binding.descriptorCount = 1;
@@ -43,7 +43,7 @@ Sampler::create_descriptor_set_layout_binding(const size_t binding_num) {
     return sampler_layout_binding;
 }
 
-VkSampler Sampler::create_sampler() {
+VkSampler vulkan::Sampler::create_sampler() {
     VkPhysicalDeviceProperties properties{};
     vkGetPhysicalDeviceProperties(m_ctx->physical_device, &properties);
 

@@ -1,5 +1,5 @@
 #include "Device.h"
-#include "validation_layers.h"
+#include "render_engine/graphics_context/validation_layers.h"
 #include "vulkan/vulkan_beta.h"
 #include "vulkan/vulkan_core.h"
 #include <set>
@@ -12,12 +12,13 @@ const std::vector<const char *> device_extensions = {
 
 }
 
-graphics_context::device::PhysicalDevice::PhysicalDevice(const Instance &instance,
-                                                         const Surface &surface)
+vulkan::device::PhysicalDevice::PhysicalDevice(const Instance &instance,
+                                               const Surface &surface)
     : m_physical_device(pick_physical_device(instance, surface)) {}
 
-VkPhysicalDevice graphics_context::device::PhysicalDevice::pick_physical_device(
-    const graphics_context::Instance &instance, const Surface &surface) const {
+VkPhysicalDevice
+vulkan::device::PhysicalDevice::pick_physical_device(const vulkan::Instance &instance,
+                                                     const Surface &surface) const {
     uint32_t device_count = 0;
     vkEnumeratePhysicalDevices(instance, &device_count, nullptr);
 
@@ -42,7 +43,7 @@ VkPhysicalDevice graphics_context::device::PhysicalDevice::pick_physical_device(
     return physical_device;
 }
 
-bool graphics_context::device::PhysicalDevice::is_device_suitable(
+bool vulkan::device::PhysicalDevice::is_device_suitable(
     const VkPhysicalDevice &physical_device, const Surface &surface) const {
     // NOTE: For mor info check:
     // https://vulkan-tutorial.com/en/Drawing_a_triangle/Setup/Physical_devices_and_queue_families
@@ -58,7 +59,7 @@ bool graphics_context::device::PhysicalDevice::is_device_suitable(
 
     bool swapChainAdequate = false;
     if (extensionsSupported) {
-        graphics_context::device::SwapChainSupportDetails swap_chain_support =
+        device::SwapChainSupportDetails swap_chain_support =
             query_swap_chain_support(physical_device, surface);
 
         swapChainAdequate = !swap_chain_support.formats.empty() &&
@@ -69,7 +70,7 @@ bool graphics_context::device::PhysicalDevice::is_device_suitable(
            device_features.samplerAnisotropy;
 }
 
-bool graphics_context::device::PhysicalDevice::check_device_extension_support(
+bool vulkan::device::PhysicalDevice::check_device_extension_support(
     const VkPhysicalDevice &physical_device) const {
     uint32_t extensionCount;
     vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extensionCount,
@@ -89,14 +90,12 @@ bool graphics_context::device::PhysicalDevice::check_device_extension_support(
     return requiredExtensions.empty();
 }
 
-graphics_context::device::QueueFamilyIndices
-graphics_context::device::PhysicalDevice::find_queue_families(
-    const Surface &surface) const {
+vulkan::device::QueueFamilyIndices
+vulkan::device::PhysicalDevice::find_queue_families(const Surface &surface) const {
     return find_queue_families(m_physical_device, surface);
 }
 
-graphics_context::device::QueueFamilyIndices
-graphics_context::device::PhysicalDevice::find_queue_families(
+vulkan::device::QueueFamilyIndices vulkan::device::PhysicalDevice::find_queue_families(
     const VkPhysicalDevice &physical_device, const Surface &surface) {
     QueueFamilyIndices indices;
 
@@ -129,14 +128,14 @@ graphics_context::device::PhysicalDevice::find_queue_families(
 
     return indices;
 }
-graphics_context::device::SwapChainSupportDetails
-graphics_context::device::PhysicalDevice::query_swap_chain_support(
-    const Surface &surface) const {
+
+vulkan::device::SwapChainSupportDetails
+vulkan::device::PhysicalDevice::query_swap_chain_support(const Surface &surface) const {
     return query_swap_chain_support(m_physical_device, surface);
 }
 
-graphics_context::device::SwapChainSupportDetails
-graphics_context::device::PhysicalDevice::query_swap_chain_support(
+vulkan::device::SwapChainSupportDetails
+vulkan::device::PhysicalDevice::query_swap_chain_support(
     const VkPhysicalDevice &physical_device, const Surface &surface) {
     SwapChainSupportDetails details;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, surface,
@@ -163,7 +162,7 @@ graphics_context::device::PhysicalDevice::query_swap_chain_support(
     return details;
 }
 
-uint32_t graphics_context::device::PhysicalDevice::find_memory_type(
+uint32_t vulkan::device::PhysicalDevice::find_memory_type(
     const uint32_t type_filter, const VkMemoryPropertyFlags properties) const {
     VkPhysicalDeviceMemoryProperties mem_properties;
     vkGetPhysicalDeviceMemoryProperties(m_physical_device, &mem_properties);
@@ -176,21 +175,21 @@ uint32_t graphics_context::device::PhysicalDevice::find_memory_type(
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
-graphics_context::device::LogicalDevice::LogicalDevice(
-    const bool enable_validation_layers, const Surface &surface,
-    const PhysicalDevice &physical_device)
+vulkan::device::LogicalDevice::LogicalDevice(const bool enable_validation_layers,
+                                             const Surface &surface,
+                                             const PhysicalDevice &physical_device)
     : m_enable_validation_layers(enable_validation_layers),
       m_logical_device(
           create_logical_device(surface, physical_device, device_extensions)) {}
 
-graphics_context::device::LogicalDevice::~LogicalDevice() {
+vulkan::device::LogicalDevice::~LogicalDevice() {
     if (m_logical_device == VK_NULL_HANDLE) {
         return;
     }
     vkDestroyDevice(m_logical_device, nullptr);
 }
 
-VkDevice graphics_context::device::LogicalDevice::create_logical_device(
+VkDevice vulkan::device::LogicalDevice::create_logical_device(
     const Surface &surface, const PhysicalDevice &physical_device,
     const std::vector<const char *> &device_extensions) {
     QueueFamilyIndices indices = physical_device.find_queue_families(surface);
@@ -231,9 +230,10 @@ VkDevice graphics_context::device::LogicalDevice::create_logical_device(
     if (m_enable_validation_layers) {
         // Deprecated on new versions of vulkan, set them here for backwards
         // compatability
-        createInfo.enabledLayerCount =
-            static_cast<uint32_t>(validation_layers::validation_layers.size());
-        createInfo.ppEnabledLayerNames = validation_layers::validation_layers.data();
+        createInfo.enabledLayerCount = static_cast<uint32_t>(
+            graphics_context::validation_layers::validation_layers.size());
+        createInfo.ppEnabledLayerNames =
+            graphics_context::validation_layers::validation_layers.data();
     } else {
         createInfo.enabledLayerCount = 0;
     }
@@ -246,14 +246,12 @@ VkDevice graphics_context::device::LogicalDevice::create_logical_device(
     return device;
 }
 
-void graphics_context::device::LogicalDevice::wait_idle() {
-    vkDeviceWaitIdle(m_logical_device);
-}
+void vulkan::device::LogicalDevice::wait_idle() { vkDeviceWaitIdle(m_logical_device); }
 
-void graphics_context::device::LogicalDevice::wait_for_fence(const VkFence &fence) const {
+void vulkan::device::LogicalDevice::wait_for_fence(const VkFence &fence) const {
     vkWaitForFences(m_logical_device, 1, &fence, VK_TRUE, UINT64_MAX);
 }
 
-void graphics_context::device::LogicalDevice::reset_fence(const VkFence &fence) const {
+void vulkan::device::LogicalDevice::reset_fence(const VkFence &fence) const {
     vkResetFences(m_logical_device, 1, &fence);
 }

@@ -3,10 +3,10 @@
 #include "DescriptorPool.h"
 #include "DescriptorSet.h"
 #include "DescriptorSetLayoutBuilder.h"
-#include "render_engine/Sampler.h"
 #include "render_engine/Texture.h"
 #include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
+#include "render_engine/vulkan/Sampler.h"
 
 class DescriptorSetBuilder {
   private:
@@ -19,7 +19,7 @@ class DescriptorSetBuilder {
 
     size_t m_texture_binding;
     Texture *m_texture;
-    Sampler *m_sampler;
+    vulkan::Sampler *m_sampler;
 
     std::vector<VkDescriptorSet>
     allocate_descriptor_sets(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
@@ -41,7 +41,7 @@ class DescriptorSetBuilder {
                                          std::vector<GpuBufferRef> &&buffers);
 
     DescriptorSetBuilder &set_texture_and_sampler(size_t binding, Texture *texture,
-                                                  Sampler *sampler);
+                                                  vulkan::Sampler *sampler);
 
     DescriptorSet build(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
                         DescriptorPool &descriptor_pool);

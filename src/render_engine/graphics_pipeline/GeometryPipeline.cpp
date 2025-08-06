@@ -1,6 +1,5 @@
 #include "render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "render_engine/Geometry.h"
-#include "render_engine/Sampler.h"
 #include "render_engine/Texture.h"
 #include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/descriptors/DescriptorPool.h"
@@ -8,6 +7,7 @@
 #include "render_engine/descriptors/DescriptorSetBuilder.h"
 #include "render_engine/graphics_pipeline/GraphicsPipelineBuilder.h"
 #include "render_engine/resources/ResourceManager.h"
+#include "render_engine/vulkan/Sampler.h"
 #include "shape.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
@@ -18,8 +18,8 @@
 graphics_pipeline::GeometryPipeline::GeometryPipeline(
     std::shared_ptr<graphics_context::GraphicsContext> ctx,
     CommandBufferManager *command_buffer_manager, SwapChainManager &swap_chain_manager,
-    SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers, Sampler *sampler,
-    Texture *texture)
+    SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
+    vulkan::Sampler *sampler, Texture *texture)
     : m_ctx(ctx),
 
       m_empty_texture(
@@ -27,7 +27,7 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
               ? std::make_optional(Texture::empty(m_ctx, command_buffer_manager))
               : std::nullopt),
       m_empty_sampler(texture == nullptr && sampler == nullptr
-                          ? std::make_optional(Sampler(m_ctx))
+                          ? std::make_optional(vulkan::Sampler(m_ctx))
                           : std::nullopt),
       m_texture_ptr(texture == nullptr ? &m_empty_texture.value() : texture),
       m_sampler_ptr(sampler == nullptr ? &m_empty_sampler.value() : sampler),

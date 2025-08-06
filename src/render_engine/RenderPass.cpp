@@ -1,7 +1,7 @@
 #include "RenderPass.h"
 #include <stdexcept>
 
-RenderPass::RenderPass(CommandBuffer &command_buffer)
+RenderPass::RenderPass(vulkan::CommandBuffer &command_buffer)
     : m_command_buffer(command_buffer) {}
 
 void RenderPass::begin() {

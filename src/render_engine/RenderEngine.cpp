@@ -12,14 +12,14 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
                            SwapChainManager *swap_chain_manager, const UseFont use_font)
     : m_window_dimension_buffers(SwapUniformBuffer<window::WindowDimension<float>>(
           ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1)),
-      m_sampler(Sampler(ctx)) {
+      m_sampler(vulkan::Sampler(ctx)) {
 
     m_window_dimension_buffers.write(ctx->window->dimensions<float>());
 
     /*m_texture = Texture::unique_empty(ctx, command_buffer_manager);*/
     m_texture = nullptr;
     /*Sampler *sampler = &m_sampler;*/
-    Sampler *sampler = nullptr;
+    vulkan::Sampler *sampler = nullptr;
     // CONINUE: I do not want the sampler, texture or uniform to be part of the
     // constructor interface, instead they should be optional to add through a builder
     // class like below
@@ -45,7 +45,7 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
 RenderEngine::~RenderEngine() {}
 
 void RenderEngine::render(
-    CommandBuffer &command_buffer,
+    vulkan::CommandBuffer &command_buffer,
     const std::vector<std::reference_wrapper<const RenderBody>> &bodies) {
     auto &circle_instance_buffer = m_geometry_pipeline->get_circle_instance_buffer();
     auto &triangle_instance_buffer = m_geometry_pipeline->get_triangle_instance_buffer();
@@ -112,7 +112,8 @@ void RenderEngine::render_text(const ui::TextBox &text_box) {
 }
 
 // TODO: Should we instead simply pass the UI class instead of its state?
-void RenderEngine::render_ui(CommandBuffer &command_buffer, const ui::State &state) {
+void RenderEngine::render_ui(vulkan::CommandBuffer &command_buffer,
+                             const ui::State &state) {
     auto &character_instance_buffer = m_text_pipeline->get_character_buffer();
     auto &text_segment_buffer = m_text_pipeline->get_text_segment_buffer();
     character_instance_buffer.clear();

@@ -27,7 +27,7 @@ bool graphics_context::validation_layers::check_validation_layer_support() {
 }
 
 graphics_context::validation_layers::messenger::DebugMessenger::DebugMessenger(
-    Instance *instance)
+    vulkan::Instance *instance)
     : m_instance(instance), m_debug_messenger(setup_debug_messenger()) {}
 
 graphics_context::validation_layers::messenger::DebugMessenger::~DebugMessenger() {

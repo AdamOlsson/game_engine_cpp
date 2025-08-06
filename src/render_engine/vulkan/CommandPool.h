@@ -3,6 +3,7 @@
 #include "render_engine/SingleTimeCommandBuffer.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include <memory>
+namespace vulkan {
 class CommandPool {
   private:
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
@@ -25,3 +26,5 @@ class CommandPool {
 
     SingleTimeCommandBuffer get_single_time_command_buffer();
 };
+
+}; // namespace vulkan

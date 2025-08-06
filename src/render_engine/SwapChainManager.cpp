@@ -31,7 +31,7 @@ void SwapChainManager::wait_for_in_flight_fence() {
     m_ctx->logical_device.reset_fence(in_flight_fence);
 }
 
-RenderPass SwapChainManager::get_render_pass(CommandBuffer &command_buffer) {
+RenderPass SwapChainManager::get_render_pass(vulkan::CommandBuffer &command_buffer) {
     wait_for_in_flight_fence();
 
     command_buffer.begin();

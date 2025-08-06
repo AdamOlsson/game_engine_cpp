@@ -94,7 +94,7 @@ PerformanceWindow::PerformanceWindow() {
 }
 
 void PerformanceWindow::render(RenderEngine &render_engine,
-                               CommandBuffer &command_buffer) {
+                               vulkan::CommandBuffer &command_buffer) {
     TimePoint now = Clock::now();
     Duration elapsed = now - m_last_update;
 

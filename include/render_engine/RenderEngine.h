@@ -17,7 +17,7 @@ class RenderEngine {
 
     SwapUniformBuffer<window::WindowDimension<float>> m_window_dimension_buffers;
 
-    Sampler m_sampler;
+    vulkan::Sampler m_sampler;
     std::unique_ptr<Texture> m_texture; // Having this unique prevents a segfault
 
     std::unique_ptr<graphics_pipeline::GeometryPipeline> m_geometry_pipeline;
@@ -26,7 +26,7 @@ class RenderEngine {
     std::unique_ptr<graphics_pipeline::UIPipeline> m_ui_pipeline;
 
     struct {
-        CommandBuffer command_buffer;
+        vulkan::CommandBuffer command_buffer;
     } m_current_render_pass;
 
   public:
@@ -35,12 +35,12 @@ class RenderEngine {
                  SwapChainManager *swap_chain_manager, const UseFont use_font);
     ~RenderEngine();
 
-    void render(CommandBuffer &command_buffer,
+    void render(vulkan::CommandBuffer &command_buffer,
                 const std::vector<std::reference_wrapper<const RenderBody>> &bodies);
 
     void render_text(const ui::TextBox &text_box);
 
-    void render_ui(CommandBuffer &command_buffer, const ui::State &state);
+    void render_ui(vulkan::CommandBuffer &command_buffer, const ui::State &state);
 
     /*bool begin_render_pass(SwapChainManager *swap_chain_manager,*/
     /*                       graphics_context::DeviceQueues &m_device_queues);*/

@@ -45,7 +45,7 @@ TextureImage::TextureImage(std::shared_ptr<graphics_context::GraphicsContext> ct
     }
 
     vkBindImageMemory(m_ctx->logical_device, m_image, m_image_memory, 0);
-    m_image_view = ImageView(m_ctx, m_image, VK_FORMAT_R8G8B8A8_SRGB);
+    m_image_view = vulkan::ImageView(m_ctx, m_image, VK_FORMAT_R8G8B8A8_SRGB);
 }
 
 TextureImage::TextureImage(TextureImage &&other) noexcept

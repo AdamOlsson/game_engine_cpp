@@ -1,9 +1,9 @@
 #pragma once
 
-#include "render_engine/CommandBuffer.h"
 #include "render_engine/RenderPass.h"
 #include "render_engine/SwapChain.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
+#include "render_engine/vulkan/CommandBuffer.h"
 #include "render_engine/vulkan/Fence.h"
 #include "render_engine/vulkan/Semaphore.h"
 #include <memory>
@@ -35,7 +35,7 @@ class SwapChainManager {
     void recreate_swap_chain();
 
     void wait_for_in_flight_fence();
-    RenderPass get_render_pass(CommandBuffer &command_buffer);
+    RenderPass get_render_pass(vulkan::CommandBuffer &command_buffer);
 
     void set_image_index(RenderPass &render_pass);
 };

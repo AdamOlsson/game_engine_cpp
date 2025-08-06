@@ -1,16 +1,16 @@
 #pragma once
 
-#include "render_engine/CommandBuffer.h"
-#include "render_engine/CommandPool.h"
 #include "render_engine/SingleTimeCommandBuffer.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
+#include "render_engine/vulkan/CommandBuffer.h"
+#include "render_engine/vulkan/CommandPool.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
 class CommandBufferManager {
   private:
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
-    CommandPool m_command_pool;
+    vulkan::CommandPool m_command_pool;
 
     size_t m_num_buffers;
     size_t m_next_buffer;
@@ -31,6 +31,6 @@ class CommandBufferManager {
     CommandBufferManager(const CommandBufferManager &) = delete;
 
     /*void set_command_buffer(RenderPass &pass);*/
-    CommandBuffer get_command_buffer();
+    vulkan::CommandBuffer get_command_buffer();
     SingleTimeCommandBuffer get_single_time_command_buffer();
 };

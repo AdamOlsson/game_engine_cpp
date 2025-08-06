@@ -4,10 +4,11 @@
 
 graphics_context::GraphicsContext::GraphicsContext(window::Window *window)
     : m_enable_validation_layers(true), window(window),
-      instance(Instance(m_enable_validation_layers)), surface(Surface(&instance, window)),
-      physical_device(device::PhysicalDevice(instance, surface)),
-      logical_device(
-          device::LogicalDevice(m_enable_validation_layers, surface, physical_device)) {
+      instance(vulkan::Instance(m_enable_validation_layers)),
+      surface(vulkan::Surface(&instance, window)),
+      physical_device(vulkan::device::PhysicalDevice(instance, surface)),
+      logical_device(vulkan::device::LogicalDevice(m_enable_validation_layers, surface,
+                                                   physical_device)) {
 
     if (m_enable_validation_layers) {
         m_debug_messenger = validation_layers::messenger::DebugMessenger(&instance);
@@ -25,7 +26,8 @@ graphics_context::GraphicsContext::~GraphicsContext() {
 void graphics_context::GraphicsContext::wait_idle() { logical_device.wait_idle(); }
 
 graphics_context::DeviceQueues graphics_context::GraphicsContext::get_device_queues() {
-    device::QueueFamilyIndices indices_ = physical_device.find_queue_families(surface);
+    vulkan::device::QueueFamilyIndices indices_ =
+        physical_device.find_queue_families(surface);
     VkQueue graphics_queue;
     VkQueue present_queue;
     uint32_t index = 0;

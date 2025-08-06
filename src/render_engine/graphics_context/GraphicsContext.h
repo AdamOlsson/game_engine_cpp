@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Device.h"
-#include "Instance.h"
-#include "Surface.h"
+#include "render_engine/vulkan/Device.h"
+#include "render_engine/vulkan/Instance.h"
+#include "render_engine/vulkan/Surface.h"
 #include "render_engine/window/Window.h"
 #include "validation_layers.h"
 #include "vulkan/vulkan_core.h"
@@ -19,10 +19,10 @@ class GraphicsContext {
 
   public:
     window::Window *window;
-    Instance instance;
-    Surface surface;
-    device::PhysicalDevice physical_device;
-    device::LogicalDevice logical_device;
+    vulkan::Instance instance;
+    vulkan::Surface surface;
+    vulkan::device::PhysicalDevice physical_device;
+    vulkan::device::LogicalDevice logical_device;
 
     std::optional<validation_layers::messenger::DebugMessenger> m_debug_messenger;
 

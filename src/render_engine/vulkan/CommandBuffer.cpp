@@ -1,10 +1,10 @@
 #include "CommandBuffer.h"
 #include <stdexcept>
 
-CommandBuffer::CommandBuffer(VkCommandBuffer &command_buffer)
+vulkan::CommandBuffer::CommandBuffer(VkCommandBuffer &command_buffer)
     : m_command_buffer(command_buffer) {}
 
-void CommandBuffer::begin() {
+void vulkan::CommandBuffer::begin() {
     vkResetCommandBuffer(m_command_buffer, 0);
 
     VkCommandBufferBeginInfo beginInfo{};
@@ -16,7 +16,7 @@ void CommandBuffer::begin() {
     }
 }
 
-void CommandBuffer::end() {
+void vulkan::CommandBuffer::end() {
     if (vkEndCommandBuffer(m_command_buffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to record command buffer!");
     }

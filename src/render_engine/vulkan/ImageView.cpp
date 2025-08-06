@@ -1,25 +1,25 @@
 #include "ImageView.h"
 #include "vulkan/vulkan_core.h"
 
-ImageView::ImageView() : m_image_view(VK_NULL_HANDLE) {}
+vulkan::ImageView::ImageView() : m_image_view(VK_NULL_HANDLE) {}
 
-ImageView::ImageView(std::shared_ptr<graphics_context::GraphicsContext> ctx,
-                     const VkImage &image, const VkFormat format)
+vulkan::ImageView::ImageView(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+                             const VkImage &image, const VkFormat format)
     : m_ctx(ctx), m_image_view(create_image_view(image, format)) {}
 
-ImageView::~ImageView() {
+vulkan::ImageView::~ImageView() {
     if (m_image_view == VK_NULL_HANDLE) {
         return;
     }
     vkDestroyImageView(m_ctx->logical_device, m_image_view, nullptr);
 }
 
-ImageView::ImageView(ImageView &&other) noexcept
+vulkan::ImageView::ImageView(ImageView &&other) noexcept
     : m_ctx(std::move(other.m_ctx)), m_image_view(other.m_image_view) {
     other.m_image_view = VK_NULL_HANDLE;
 }
 
-ImageView &ImageView::operator=(ImageView &&other) noexcept {
+vulkan::ImageView &vulkan::ImageView::operator=(ImageView &&other) noexcept {
     if (this != &other) {
         if (m_image_view != VK_NULL_HANDLE) {
             vkDestroyImageView(m_ctx->logical_device, m_image_view, nullptr);
@@ -32,7 +32,8 @@ ImageView &ImageView::operator=(ImageView &&other) noexcept {
     return *this;
 }
 
-VkImageView ImageView::create_image_view(const VkImage &image, const VkFormat &format) {
+VkImageView vulkan::ImageView::create_image_view(const VkImage &image,
+                                                 const VkFormat &format) {
     VkImageViewCreateInfo create_info{};
     create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     create_info.image = image;

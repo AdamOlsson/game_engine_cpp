@@ -3,6 +3,7 @@
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include <memory>
 
+namespace vulkan {
 class Sampler {
   private:
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
@@ -26,3 +27,4 @@ class Sampler {
     static VkDescriptorSetLayoutBinding
     create_descriptor_set_layout_binding(const size_t binding_num);
 };
+} // namespace vulkan

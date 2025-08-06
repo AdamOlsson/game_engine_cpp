@@ -1,11 +1,11 @@
 #pragma once
 
-#include "render_engine/CommandBuffer.h"
 #include "render_engine/Dimension.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
+#include "render_engine/vulkan/CommandBuffer.h"
 class RenderPass {
   private:
-    CommandBuffer m_command_buffer;
+    vulkan::CommandBuffer m_command_buffer;
 
   public:
     VkSwapchainKHR m_swap_chain;
@@ -18,7 +18,7 @@ class RenderPass {
     uint32_t m_image_index;
     graphics_context::DeviceQueues m_device_queues;
 
-    RenderPass(CommandBuffer &command_buffer);
+    RenderPass(vulkan::CommandBuffer &command_buffer);
     ~RenderPass() = default;
 
     RenderPass(RenderPass &&other) noexcept = default;

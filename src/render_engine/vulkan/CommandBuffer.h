@@ -2,6 +2,7 @@
 
 #include "vulkan/vulkan_core.h"
 
+namespace vulkan {
 class CommandBuffer {
   private:
     VkCommandBuffer m_command_buffer;
@@ -22,3 +23,4 @@ class CommandBuffer {
 
     operator VkCommandBuffer() const { return m_command_buffer; }
 };
+} // namespace vulkan

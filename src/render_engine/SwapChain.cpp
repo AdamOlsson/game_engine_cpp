@@ -4,7 +4,7 @@
 SwapChain::SwapChain(std::shared_ptr<graphics_context::GraphicsContext> ctx)
     : m_ctx(ctx), m_next_frame_buffer(0) {
 
-    graphics_context::device::SwapChainSupportDetails swap_chain_support =
+    vulkan::device::SwapChainSupportDetails swap_chain_support =
         m_ctx->physical_device.query_swap_chain_support(m_ctx->surface);
 
     uint32_t image_count = swap_chain_support.get_image_count();
@@ -34,7 +34,7 @@ SwapChain::~SwapChain() {
 
 VkSwapchainKHR SwapChain::create_swap_chain(
     uint32_t image_count, VkSurfaceFormatKHR &surface_format,
-    graphics_context::device::SwapChainSupportDetails &swap_chain_support) {
+    vulkan::device::SwapChainSupportDetails &swap_chain_support) {
     VkPresentModeKHR present_mode =
         swap_chain_support.choose_swap_present_mode(VK_PRESENT_MODE_MAILBOX_KHR);
 
@@ -48,7 +48,7 @@ VkSwapchainKHR SwapChain::create_swap_chain(
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    graphics_context::device::QueueFamilyIndices indices =
+    vulkan::device::QueueFamilyIndices indices =
         m_ctx->physical_device.find_queue_families(m_ctx->surface);
 
     uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(),
@@ -85,8 +85,8 @@ std::vector<VkImage> SwapChain::create_swap_chain_images(uint32_t image_count) {
     return images;
 }
 
-std::vector<ImageView> SwapChain::create_image_views(VkFormat &image_format) {
-    std::vector<ImageView> swap_chain_image_views;
+std::vector<vulkan::ImageView> SwapChain::create_image_views(VkFormat &image_format) {
+    std::vector<vulkan::ImageView> swap_chain_image_views;
     swap_chain_image_views.reserve(m_images.size());
     for (size_t i = 0; i < m_images.size(); i++) {
         swap_chain_image_views.emplace_back(m_ctx, m_images[i], image_format);

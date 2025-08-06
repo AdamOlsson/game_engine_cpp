@@ -1,10 +1,10 @@
 #pragma once
 
-#include "render_engine/Sampler.h"
 #include "render_engine/Texture.h"
 #include "render_engine/fonts/KerningMap.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "render_engine/resources/fonts/FontResource.h"
+#include "render_engine/vulkan/Sampler.h"
 #include <cstddef>
 
 enum class UseFont {
@@ -23,14 +23,14 @@ class Font {
 
   public:
     Texture font_atlas;
-    Sampler *sampler;
+    vulkan::Sampler *sampler;
     font::KerningMap kerning_map = font::get_default_kerning_map();
 
     Font() = default;
 
     Font(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
          CommandBufferManager *command_buffer_manager, const std::string &font_name,
-         Sampler *sampler)
+         vulkan::Sampler *sampler)
         : sampler(sampler) {
         auto resource =
             ResourceManager::get_instance().get_resource<FontResource>("DefaultFont");

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Instance.h"
+#include "render_engine/vulkan/Instance.h"
 #include "vulkan/vulkan_core.h"
 #include <iostream>
 #include <vector>
@@ -23,7 +23,7 @@ namespace messenger {
 
 class DebugMessenger {
   private:
-    graphics_context::Instance *m_instance;
+    vulkan::Instance *m_instance;
     VkDebugUtilsMessengerEXT m_debug_messenger;
 
     VkDebugUtilsMessengerEXT setup_debug_messenger();
@@ -35,7 +35,7 @@ class DebugMessenger {
     void destroy_debug_messenger_ext();
 
   public:
-    DebugMessenger(graphics_context::Instance *instance);
+    DebugMessenger(vulkan::Instance *instance);
     ~DebugMessenger();
 
     DebugMessenger(DebugMessenger &&other) noexcept
