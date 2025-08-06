@@ -1,7 +1,6 @@
 #include "Texture.h"
 #include "render_engine/ImageData.h"
 #include "render_engine/buffers/StagingBuffer.h"
-#include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/graphics_pipeline/GraphicsPipeline.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "vulkan/vulkan_core.h"
@@ -10,8 +9,8 @@
 Texture::Texture(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                  CommandBufferManager *command_buffer_manager,
                  const ImageData &image_data)
-    : m_ctx(ctx), m_texture_image(TextureImage(
-                      m_ctx, TextureImageDimension::from(image_data.dimension))) {
+    : m_ctx(ctx), m_texture_image(vulkan::TextureImage(
+                      m_ctx, vulkan::TextureImageDimension::from(image_data.dimension))) {
 
     StagingBuffer staging_buffer = StagingBuffer(m_ctx, image_data.size);
 

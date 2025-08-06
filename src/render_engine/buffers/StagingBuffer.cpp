@@ -1,6 +1,4 @@
 #include "StagingBuffer.h"
-#include "render_engine/ImageData.h"
-#include "render_engine/TextureImage.h"
 #include "render_engine/buffers/common.h"
 
 StagingBuffer::StagingBuffer(std::shared_ptr<graphics_context::GraphicsContext> ctx,
@@ -23,7 +21,7 @@ void StagingBuffer::map_memory(const ImageData &image) {
 
 void StagingBuffer::transfer_image_to_device_image(
     CommandBufferManager *command_buffer_manager, const ImageData &src,
-    const TextureImage &dst) {
+    const vulkan::TextureImage &dst) {
 
     map_memory(src);
     copy_buffer_to_image(command_buffer_manager, dst.m_image, src.dimension);

@@ -6,6 +6,7 @@
 #include "render_engine/vulkan/ImageView.h"
 #include "vulkan/vulkan_core.h"
 
+namespace vulkan {
 struct TextureImageDimension {
     unsigned int width;
     unsigned int height;
@@ -42,3 +43,5 @@ class TextureImage {
                                  const VkImageLayout old_layout,
                                  const VkImageLayout new_layout);
 };
+
+} // namespace vulkan

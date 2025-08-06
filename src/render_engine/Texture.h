@@ -1,16 +1,17 @@
 #pragma once
 
 #include "render_engine/CommandBufferManager.h"
-#include "render_engine/TextureImage.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/resources/images/ImageResource.h"
+#include "render_engine/vulkan/TextureImage.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
 class Texture {
   private:
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
-    TextureImage m_texture_image;
+    vulkan::TextureImage m_texture_image;
+    /*vulkan::ImageView m_texture_image_view;*/
 
   public:
     Texture() = default;

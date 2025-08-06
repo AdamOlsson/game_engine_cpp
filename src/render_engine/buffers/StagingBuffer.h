@@ -3,8 +3,8 @@
 #include "logger.h"
 #include "render_engine/CommandBufferManager.h"
 #include "render_engine/ImageData.h"
-#include "render_engine/TextureImage.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
+#include "render_engine/vulkan/TextureImage.h"
 #include <memory>
 
 struct Buffer {
@@ -37,7 +37,8 @@ class StagingBuffer {
     ~StagingBuffer();
 
     void transfer_image_to_device_image(CommandBufferManager *command_buffer_manager,
-                                        const ImageData &src, const TextureImage &dst);
+                                        const ImageData &src,
+                                        const vulkan::TextureImage &dst);
 
     template <typename T>
     void transfer_data_to_device_buffer(CommandBufferManager *command_buffer_manager,

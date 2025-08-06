@@ -2,12 +2,12 @@
 #include "render_engine/SingleTimeCommandBuffer.h"
 #include "vulkan/vulkan_core.h"
 
-TextureImage::TextureImage()
+vulkan::TextureImage::TextureImage()
     : m_ctx(nullptr), m_image(nullptr), m_image_memory(nullptr),
       m_dimension(TextureImageDimension{0, 0}) {}
 
-TextureImage::TextureImage(std::shared_ptr<graphics_context::GraphicsContext> ctx,
-                           const TextureImageDimension &dim)
+vulkan::TextureImage::TextureImage(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+                                   const TextureImageDimension &dim)
     : m_ctx(ctx), m_dimension(dim) {
 
     VkImageCreateInfo image_info{};
@@ -48,7 +48,7 @@ TextureImage::TextureImage(std::shared_ptr<graphics_context::GraphicsContext> ct
     m_image_view = vulkan::ImageView(m_ctx, m_image, VK_FORMAT_R8G8B8A8_SRGB);
 }
 
-TextureImage::TextureImage(TextureImage &&other) noexcept
+vulkan::TextureImage::TextureImage(TextureImage &&other) noexcept
     : m_ctx(std::move(other.m_ctx)), m_image(other.m_image),
       m_image_memory(other.m_image_memory), m_image_view(std::move(other.m_image_view)),
       m_dimension(other.m_dimension) {
@@ -57,7 +57,7 @@ TextureImage::TextureImage(TextureImage &&other) noexcept
     other.m_dimension = TextureImageDimension{0, 0};
 }
 
-TextureImage &TextureImage::operator=(TextureImage &&other) noexcept {
+vulkan::TextureImage &vulkan::TextureImage::operator=(TextureImage &&other) noexcept {
     if (this != &other) {
         destroy();
 
@@ -75,19 +75,18 @@ TextureImage &TextureImage::operator=(TextureImage &&other) noexcept {
     return *this;
 }
 
-void TextureImage::destroy() {
-    if (m_image_view != VK_NULL_HANDLE || m_image != VK_NULL_HANDLE ||
-        m_image_memory != VK_NULL_HANDLE) {
+void vulkan::TextureImage::destroy() {
+    if (m_image != VK_NULL_HANDLE || m_image_memory != VK_NULL_HANDLE) {
         vkDestroyImage(m_ctx->logical_device, m_image, nullptr);
         vkFreeMemory(m_ctx->logical_device, m_image_memory, nullptr);
     }
 }
 
-TextureImage::~TextureImage() { destroy(); }
+vulkan::TextureImage::~TextureImage() { destroy(); }
 
-void TextureImage::transition_image_layout(CommandBufferManager *command_buffer_manager,
-                                           const VkImageLayout old_layout,
-                                           const VkImageLayout new_layout) {
+void vulkan::TextureImage::transition_image_layout(
+    CommandBufferManager *command_buffer_manager, const VkImageLayout old_layout,
+    const VkImageLayout new_layout) {
     SingleTimeCommandBuffer command_buffer =
         command_buffer_manager->get_single_time_command_buffer();
     command_buffer.begin();
