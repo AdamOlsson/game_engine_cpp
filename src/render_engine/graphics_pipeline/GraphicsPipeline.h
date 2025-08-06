@@ -3,6 +3,7 @@
 #include "render_engine/buffers/IndexBuffer.h"
 #include "render_engine/buffers/VertexBuffer.h"
 #include "render_engine/graphics_pipeline/Pipeline.h"
+#include "render_engine/graphics_pipeline/PipelineLayout.h"
 #include "vulkan/vulkan_core.h"
 
 namespace graphics_pipeline {
@@ -14,8 +15,9 @@ class GraphicsPipeline {
 
   private:
     Pipeline m_pipeline;
+    PipelineLayout m_pipeline_layout;
 
-    GraphicsPipeline(Pipeline &&pipeline);
+    GraphicsPipeline(PipelineLayout &&layout, Pipeline &&pipeline);
 
   public:
     GraphicsPipeline(GraphicsPipeline &&other) noexcept = default;
@@ -26,7 +28,7 @@ class GraphicsPipeline {
     template <typename T>
     void bind_push_constants(const VkCommandBuffer &command_buffer,
                              VkShaderStageFlags stage_flags, T values) {
-        vkCmdPushConstants(command_buffer, m_pipeline.m_pipeline_layout, stage_flags, 0,
+        vkCmdPushConstants(command_buffer, m_pipeline_layout, stage_flags, 0,
                            sizeof(values), &values);
     }
 

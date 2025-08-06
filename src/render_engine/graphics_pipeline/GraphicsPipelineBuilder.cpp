@@ -1,5 +1,4 @@
 #include "GraphicsPipelineBuilder.h"
-#include "Pipeline.h"
 #include "render_engine/ShaderModule.h"
 #include <stdexcept>
 
@@ -55,7 +54,9 @@ graphics_pipeline::GraphicsPipeline graphics_pipeline::GraphicsPipelineBuilder::
     }
 
     DescriptorSetLayout *descriptor_set_layout = m_descriptor_set_layout;
-
-    return GraphicsPipeline(Pipeline(ctx, *descriptor_set_layout, push_constant_ranges,
-                                     vertex_shader, fragment_shader, swap_chain_manager));
+    PipelineLayout layout =
+        PipelineLayout(ctx, *descriptor_set_layout, push_constant_ranges);
+    Pipeline pipeline =
+        Pipeline(ctx, &layout, vertex_shader, fragment_shader, swap_chain_manager);
+    return GraphicsPipeline(std::move(layout), std::move(pipeline));
 }

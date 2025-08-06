@@ -3,15 +3,12 @@
 #include "vulkan/vulkan_core.h"
 
 graphics_pipeline::Pipeline::Pipeline(
-    std::shared_ptr<graphics_context::GraphicsContext> ctx,
-    const VkDescriptorSetLayout &descriptor_set_layout,
-    const std::vector<VkPushConstantRange> &push_constant_range,
+    std::shared_ptr<graphics_context::GraphicsContext> ctx, PipelineLayout *layout,
     const VkShaderModule vertex_shader_module,
     const VkShaderModule fragment_shader_module, SwapChainManager &swap_chain_manager)
-    : m_ctx(ctx), m_pipeline_layout(
-                      PipelineLayout(m_ctx, descriptor_set_layout, push_constant_range)),
-      m_pipeline(create_graphics_pipeline(vertex_shader_module, fragment_shader_module,
-                                          swap_chain_manager)) {}
+    : m_ctx(ctx),
+      m_pipeline(create_graphics_pipeline(layout, vertex_shader_module,
+                                          fragment_shader_module, swap_chain_manager)) {}
 
 graphics_pipeline::Pipeline::~Pipeline() {
     if (m_pipeline == VK_NULL_HANDLE) {
@@ -22,9 +19,7 @@ graphics_pipeline::Pipeline::~Pipeline() {
 }
 
 graphics_pipeline::Pipeline::Pipeline(Pipeline &&other) noexcept
-    : m_ctx(std::move(other.m_ctx)),
-      m_pipeline_layout(std::move(other.m_pipeline_layout)),
-      m_pipeline(other.m_pipeline) {
+    : m_ctx(std::move(other.m_ctx)), m_pipeline(other.m_pipeline) {
     other.m_pipeline = VK_NULL_HANDLE;
 }
 
@@ -35,7 +30,6 @@ graphics_pipeline::Pipeline::operator=(Pipeline &&other) noexcept {
             vkDestroyPipeline(m_ctx->logical_device, m_pipeline, nullptr);
         }
         m_ctx = std::move(other.m_ctx);
-        m_pipeline_layout = std::move(other.m_pipeline_layout);
         m_pipeline = other.m_pipeline;
 
         other.m_pipeline = VK_NULL_HANDLE;
@@ -44,7 +38,7 @@ graphics_pipeline::Pipeline::operator=(Pipeline &&other) noexcept {
 }
 
 VkPipeline graphics_pipeline::Pipeline::create_graphics_pipeline(
-    const VkShaderModule vertex_shader_module,
+    PipelineLayout *layout, const VkShaderModule vertex_shader_module,
     const VkShaderModule fragment_shader_module, SwapChainManager &swap_chain_manager) {
     // Note from tutorial:
     // There is one more (optional) member, pSpecializationInfo, which we won't
@@ -169,7 +163,7 @@ VkPipeline graphics_pipeline::Pipeline::create_graphics_pipeline(
     pipelineInfo.pDepthStencilState = nullptr; // Optional
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &dynamicState;
-    pipelineInfo.layout = m_pipeline_layout;
+    pipelineInfo.layout = *layout;
     pipelineInfo.subpass = 0;
 
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional

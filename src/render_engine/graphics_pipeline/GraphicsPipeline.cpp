@@ -4,8 +4,9 @@
 #include <stdexcept>
 #include <vector>
 
-graphics_pipeline::GraphicsPipeline::GraphicsPipeline(Pipeline &&pipeline)
-    : m_pipeline(std::move(pipeline)) {}
+graphics_pipeline::GraphicsPipeline::GraphicsPipeline(PipelineLayout &&layout,
+                                                      Pipeline &&pipeline)
+    : m_pipeline(std::move(pipeline)), m_pipeline_layout(std::move(layout)) {}
 
 void graphics_pipeline::GraphicsPipeline::render(const VkCommandBuffer &command_buffer,
                                                  const VertexBuffer &vertex_buffer,
@@ -14,12 +15,10 @@ void graphics_pipeline::GraphicsPipeline::render(const VkCommandBuffer &command_
                                                  const size_t num_instances) {
 
     const VkDeviceSize vertex_buffers_offset = 0;
-    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                      m_pipeline.m_pipeline);
+    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 
     vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            m_pipeline.m_pipeline_layout, 0, 1, &descriptor_set, 0,
-                            nullptr);
+                            m_pipeline_layout, 0, 1, &descriptor_set, 0, nullptr);
 
     vkCmdBindVertexBuffers(command_buffer, 0, 1, &vertex_buffer.buffer,
                            &vertex_buffers_offset);
