@@ -3,6 +3,8 @@
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/resources/shaders/ShaderResource.h"
 #include "vulkan/vulkan_core.h"
+
+namespace vulkan {
 class ShaderModule {
   private:
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
@@ -23,3 +25,4 @@ class ShaderModule {
 
     operator VkShaderModule() const { return m_shader_module; }
 };
+} // namespace vulkan

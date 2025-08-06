@@ -1,6 +1,6 @@
 #include "GraphicsPipelineBuilder.h"
-#include "render_engine/ShaderModule.h"
 #include "render_engine/vulkan/Pipeline.h"
+#include "render_engine/vulkan/ShaderModule.h"
 #include <stdexcept>
 
 graphics_pipeline::GraphicsPipelineBuilder &
@@ -46,8 +46,10 @@ graphics_pipeline::GraphicsPipeline graphics_pipeline::GraphicsPipelineBuilder::
             "GraphicsPipelineBuilder::Descriptor set layout needs to be set");
     }
 
-    ShaderModule vertex_shader = ShaderModule(ctx, *m_vertex_shader_resource);
-    ShaderModule fragment_shader = ShaderModule(ctx, *m_fragment_shader_resource);
+    vulkan::ShaderModule vertex_shader =
+        vulkan::ShaderModule(ctx, *m_vertex_shader_resource);
+    vulkan::ShaderModule fragment_shader =
+        vulkan::ShaderModule(ctx, *m_fragment_shader_resource);
 
     std::vector<VkPushConstantRange> push_constant_ranges = {};
     if (m_push_constant_range.has_value()) {

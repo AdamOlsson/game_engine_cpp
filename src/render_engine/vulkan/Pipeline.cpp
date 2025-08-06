@@ -4,8 +4,8 @@
 
 vulkan::Pipeline::Pipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                            PipelineLayout *layout,
-                           const VkShaderModule vertex_shader_module,
-                           const VkShaderModule fragment_shader_module,
+                           const ShaderModule &vertex_shader_module,
+                           const ShaderModule &fragment_shader_module,
                            SwapChainManager &swap_chain_manager)
     : m_ctx(ctx),
       m_pipeline(create_graphics_pipeline(layout, vertex_shader_module,
@@ -38,8 +38,8 @@ vulkan::Pipeline &vulkan::Pipeline::operator=(Pipeline &&other) noexcept {
 }
 
 VkPipeline vulkan::Pipeline::create_graphics_pipeline(
-    PipelineLayout *layout, const VkShaderModule vertex_shader_module,
-    const VkShaderModule fragment_shader_module, SwapChainManager &swap_chain_manager) {
+    PipelineLayout *layout, const ShaderModule &vertex_shader_module,
+    const ShaderModule &fragment_shader_module, SwapChainManager &swap_chain_manager) {
     // Note from tutorial:
     // There is one more (optional) member, pSpecializationInfo, which we won't
     // be using here, but is worth discussing. It allows you to specify values

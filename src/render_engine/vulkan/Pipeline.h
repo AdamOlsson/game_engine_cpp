@@ -3,6 +3,7 @@
 #include "PipelineLayout.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
+#include "render_engine/vulkan/ShaderModule.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
@@ -14,15 +15,15 @@ class Pipeline {
     VkPipeline m_pipeline;
 
     VkPipeline create_graphics_pipeline(PipelineLayout *layout,
-                                        const VkShaderModule vertex_shader_module,
-                                        const VkShaderModule fragment_shader_module,
+                                        const ShaderModule &vertex_shader_module,
+                                        const ShaderModule &fragment_shader_module,
                                         SwapChainManager &swap_chain_manager);
 
   public:
     Pipeline() = default;
     Pipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
-             PipelineLayout *layout, const VkShaderModule vertex_shader_module,
-             const VkShaderModule fragment_shader_module,
+             PipelineLayout *layout, const ShaderModule &vertex_shader_module,
+             const ShaderModule &fragment_shader_module,
              SwapChainManager &swap_chain_manager);
 
     ~Pipeline();

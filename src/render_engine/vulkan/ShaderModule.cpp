@@ -1,15 +1,16 @@
-#include "render_engine/ShaderModule.h"
+#include "ShaderModule.h"
 
-ShaderModule::ShaderModule(std::shared_ptr<graphics_context::GraphicsContext> ctx,
-                           const ShaderResource &shader)
+vulkan::ShaderModule::ShaderModule(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+                                   const ShaderResource &shader)
     : m_ctx(ctx), m_shader_module(create_shader_module(shader.bytes(), shader.length())) {
 }
 
-ShaderModule::~ShaderModule() {
+vulkan::ShaderModule::~ShaderModule() {
     vkDestroyShaderModule(m_ctx->logical_device, m_shader_module, nullptr);
 }
 
-VkShaderModule ShaderModule::create_shader_module(const uint8_t *data, const size_t len) {
+VkShaderModule vulkan::ShaderModule::create_shader_module(const uint8_t *data,
+                                                          const size_t len) {
     VkShaderModuleCreateInfo create_info{};
     create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     create_info.codeSize = len;
