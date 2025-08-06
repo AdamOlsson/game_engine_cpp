@@ -21,10 +21,10 @@ class VertexBuffer {
                  const std::vector<Vertex> &vertices,
                  CommandBufferManager *command_buffer_manager);
 
-    VertexBuffer &operator=(const VertexBuffer &) = delete;
-    VertexBuffer &operator=(VertexBuffer &&) noexcept = delete;
-    VertexBuffer(const VertexBuffer &) = delete;
-    VertexBuffer(VertexBuffer &&) noexcept = delete;
+    VertexBuffer(VertexBuffer &&other) noexcept;
+    VertexBuffer &operator=(VertexBuffer &&other) noexcept;
+    VertexBuffer(const VertexBuffer &other) = delete;
+    VertexBuffer &operator=(const VertexBuffer &other) = delete;
 
     ~VertexBuffer();
 };

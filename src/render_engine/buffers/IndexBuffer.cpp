@@ -27,7 +27,41 @@ IndexBuffer::IndexBuffer(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                                                   buffer);
 }
 
+IndexBuffer::IndexBuffer(IndexBuffer &&other) noexcept
+    : m_ctx(std::move(other.m_ctx)), buffer(other.buffer),
+      bufferMemory(other.bufferMemory), size(other.size), num_indices(other.num_indices) {
+    other.buffer = VK_NULL_HANDLE;
+    other.bufferMemory = VK_NULL_HANDLE;
+    other.size = 0;
+    other.num_indices = 0;
+}
+
+IndexBuffer &IndexBuffer::operator=(IndexBuffer &&other) noexcept {
+    if (this != &other) {
+        if (buffer != VK_NULL_HANDLE) {
+            vkDestroyBuffer(m_ctx->logical_device, buffer, nullptr);
+            vkFreeMemory(m_ctx->logical_device, bufferMemory, nullptr);
+        }
+
+        m_ctx = std::move(other.m_ctx);
+        buffer = other.buffer;
+        bufferMemory = other.bufferMemory;
+        size = other.size;
+        num_indices = other.num_indices;
+
+        other.buffer = VK_NULL_HANDLE;
+        other.bufferMemory = VK_NULL_HANDLE;
+        other.size = 0;
+        other.num_indices = 0;
+    }
+    return *this;
+}
+
 IndexBuffer::~IndexBuffer() {
+    if (buffer == VK_NULL_HANDLE) {
+        return;
+    }
+
     vkDestroyBuffer(m_ctx->logical_device, buffer, nullptr);
     vkFreeMemory(m_ctx->logical_device, bufferMemory, nullptr);
 }

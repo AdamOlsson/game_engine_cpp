@@ -21,8 +21,8 @@ class IndexBuffer {
                 CommandBufferManager *command_buffer_manager);
     ~IndexBuffer();
 
-    IndexBuffer &operator=(const IndexBuffer &) = delete;     // Copy assignment
-    IndexBuffer &operator=(IndexBuffer &&) noexcept = delete; // Move assignment
-    IndexBuffer(const IndexBuffer &) = delete;                // Copy
-    IndexBuffer(IndexBuffer &&) noexcept = delete;            // Move
+    IndexBuffer(IndexBuffer &&other) noexcept;
+    IndexBuffer &operator=(IndexBuffer &&other) noexcept;
+    IndexBuffer(const IndexBuffer &other) = delete;
+    IndexBuffer &operator=(const IndexBuffer &other) = delete;
 };

@@ -68,6 +68,11 @@ struct GeometryInstanceBufferObject {
     }
 };
 
+struct GeometryPipelineOptions {
+    Texture *texture_ptr = nullptr;
+    vulkan::Sampler *sampler_ptr = nullptr;
+};
+
 class GeometryPipeline {
   private:
     const uint32_t m_num_storage_buffers = MAX_FRAMES_IN_FLIGHT * 4;
@@ -76,10 +81,10 @@ class GeometryPipeline {
     const uint32_t m_descriptor_pool_capacity = MAX_FRAMES_IN_FLIGHT * 4;
 
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
+
+    GeometryPipelineOptions m_opts;
     std::optional<Texture> m_empty_texture;
     std::optional<vulkan::Sampler> m_empty_sampler;
-    Texture *m_texture_ptr;
-    vulkan::Sampler *m_sampler_ptr;
 
     DescriptorPool m_descriptor_pool;
 
@@ -105,10 +110,6 @@ class GeometryPipeline {
 
     graphics_pipeline::GraphicsPipeline m_graphics_pipeline;
 
-    const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
-
-    bool framebufferResized = false;
-
     void record_draw_command(const VkCommandBuffer &command_buffer,
                              DescriptorSet &descriptor_set,
                              const ShapeTypeEncoding shape_type_encoding,
@@ -120,7 +121,7 @@ class GeometryPipeline {
                      CommandBufferManager *command_buffer_manager,
                      SwapChainManager &swap_chain_manager,
                      SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
-                     vulkan::Sampler *sampler, Texture *texture);
+                     std::optional<GeometryPipelineOptions> opts);
 
     ~GeometryPipeline();
 

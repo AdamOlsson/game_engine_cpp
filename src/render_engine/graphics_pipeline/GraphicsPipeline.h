@@ -20,6 +20,7 @@ class GraphicsPipeline {
     GraphicsPipeline(vulkan::PipelineLayout &&layout, vulkan::Pipeline &&pipeline);
 
   public:
+    GraphicsPipeline() = default;
     GraphicsPipeline(GraphicsPipeline &&other) noexcept = default;
     GraphicsPipeline &operator=(GraphicsPipeline &&other) noexcept = default;
     GraphicsPipeline(const GraphicsPipeline &other) = delete;

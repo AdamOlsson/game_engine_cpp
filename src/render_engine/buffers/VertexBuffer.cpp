@@ -23,7 +23,41 @@ VertexBuffer::VertexBuffer(std::shared_ptr<graphics_context::GraphicsContext> ct
                                                   buffer);
 }
 
+VertexBuffer::VertexBuffer(VertexBuffer &&other) noexcept
+    : m_ctx(std::move(other.m_ctx)), buffer(other.buffer),
+      bufferMemory(other.bufferMemory), size(other.size),
+      num_vertices(other.num_vertices) {
+    other.buffer = VK_NULL_HANDLE;
+    other.bufferMemory = VK_NULL_HANDLE;
+    other.size = 0;
+    other.num_vertices = 0;
+}
+
+VertexBuffer &VertexBuffer::operator=(VertexBuffer &&other) noexcept {
+    if (this != &other) {
+        if (buffer != VK_NULL_HANDLE) {
+            vkDestroyBuffer(m_ctx->logical_device, buffer, nullptr);
+            vkFreeMemory(m_ctx->logical_device, bufferMemory, nullptr);
+        }
+
+        m_ctx = std::move(other.m_ctx);
+        buffer = other.buffer;
+        bufferMemory = other.bufferMemory;
+        size = other.size;
+        num_vertices = other.num_vertices;
+
+        other.buffer = VK_NULL_HANDLE;
+        other.bufferMemory = VK_NULL_HANDLE;
+        other.size = 0;
+        other.num_vertices = 0;
+    }
+    return *this;
+}
+
 VertexBuffer::~VertexBuffer() {
+    if (buffer == VK_NULL_HANDLE) {
+        return;
+    }
     vkDestroyBuffer(m_ctx->logical_device, buffer, nullptr);
     vkFreeMemory(m_ctx->logical_device, bufferMemory, nullptr);
 }

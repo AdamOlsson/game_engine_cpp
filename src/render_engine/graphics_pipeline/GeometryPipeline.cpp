@@ -19,18 +19,8 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
     std::shared_ptr<graphics_context::GraphicsContext> ctx,
     CommandBufferManager *command_buffer_manager, SwapChainManager &swap_chain_manager,
     SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
-    vulkan::Sampler *sampler, Texture *texture)
-    : m_ctx(ctx),
-
-      m_empty_texture(
-          texture == nullptr && sampler == nullptr
-              ? std::make_optional(Texture::empty(m_ctx, command_buffer_manager))
-              : std::nullopt),
-      m_empty_sampler(texture == nullptr && sampler == nullptr
-                          ? std::make_optional(vulkan::Sampler(m_ctx))
-                          : std::nullopt),
-      m_texture_ptr(texture == nullptr ? &m_empty_texture.value() : texture),
-      m_sampler_ptr(sampler == nullptr ? &m_empty_sampler.value() : sampler),
+    std::optional<GeometryPipelineOptions> opts)
+    : m_ctx(ctx), m_opts(opts.has_value() ? opts.value() : GeometryPipelineOptions{}),
 
       m_circle_instance_buffers(SwapStorageBuffer<GeometryInstanceBufferObject>(
           ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
@@ -43,65 +33,76 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
 
       m_descriptor_pool(DescriptorPool(m_ctx, m_descriptor_pool_capacity,
                                        m_num_storage_buffers, m_num_uniform_buffers,
-                                       m_num_samplers)),
+                                       m_num_samplers))
 
-      m_circle_vertex_buffer(
-          VertexBuffer(ctx, Geometry::circle_vertices, command_buffer_manager)),
-      m_circle_index_buffer(
-          IndexBuffer(ctx, Geometry::circle_indices, command_buffer_manager)),
-      m_circle_descriptor_set(
-          DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
-              .add_gpu_buffer(0, m_circle_instance_buffers.get_buffer_references())
-              .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
-              .set_texture_and_sampler(2, m_texture_ptr, m_sampler_ptr)
-              .build(m_ctx, m_descriptor_pool)),
+{
+    // Handle options
+    if (m_opts.texture_ptr == nullptr && opts->sampler_ptr == nullptr) {
+        m_empty_texture =
+            std::make_optional(Texture::empty(m_ctx, command_buffer_manager));
+        m_empty_sampler = std::make_optional(vulkan::Sampler(m_ctx));
+        m_opts.texture_ptr = &m_empty_texture.value();
+        m_opts.sampler_ptr = &m_empty_sampler.value();
+    }
 
-      m_triangle_vertex_buffer(
-          VertexBuffer(ctx, Geometry::triangle_vertices, command_buffer_manager)),
-      m_triangle_index_buffer(
-          IndexBuffer(ctx, Geometry::triangle_indices, command_buffer_manager)),
-      m_triangle_descriptor_set(
-          DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
-              .add_gpu_buffer(0, m_triangle_instance_buffers.get_buffer_references())
-              .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
-              .set_texture_and_sampler(2, m_texture_ptr, m_sampler_ptr)
-              .build(m_ctx, m_descriptor_pool)),
+    m_circle_vertex_buffer =
+        VertexBuffer(ctx, Geometry::circle_vertices, command_buffer_manager);
+    m_circle_index_buffer =
+        IndexBuffer(ctx, Geometry::circle_indices, command_buffer_manager);
+    m_circle_descriptor_set =
+        DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
+            .add_gpu_buffer(0, m_circle_instance_buffers.get_buffer_references())
+            .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
+            .set_texture_and_sampler(2, m_opts.texture_ptr, m_opts.sampler_ptr)
+            .build(m_ctx, m_descriptor_pool);
 
-      m_rectangle_vertex_buffer(
-          VertexBuffer(ctx, Geometry::rectangle_vertices, command_buffer_manager)),
-      m_rectangle_index_buffer(
-          IndexBuffer(ctx, Geometry::rectangle_indices, command_buffer_manager)),
-      m_rectangle_descriptor_set(
-          DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
-              .add_gpu_buffer(0, m_rectangle_instance_buffers.get_buffer_references())
-              .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
-              .set_texture_and_sampler(2, m_texture_ptr, m_sampler_ptr)
-              .build(m_ctx, m_descriptor_pool)),
+    m_triangle_vertex_buffer =
+        VertexBuffer(ctx, Geometry::triangle_vertices, command_buffer_manager);
+    m_triangle_index_buffer =
+        IndexBuffer(ctx, Geometry::triangle_indices, command_buffer_manager);
+    m_triangle_descriptor_set =
+        DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
+            .add_gpu_buffer(0, m_triangle_instance_buffers.get_buffer_references())
+            .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
+            .set_texture_and_sampler(2, m_opts.texture_ptr, m_opts.sampler_ptr)
+            .build(m_ctx, m_descriptor_pool);
 
-      m_hexagon_vertex_buffer(
-          VertexBuffer(ctx, Geometry::hexagon_vertices, command_buffer_manager)),
-      m_hexagon_index_buffer(
-          IndexBuffer(ctx, Geometry::hexagon_indices, command_buffer_manager)),
-      m_hexagon_descriptor_set(
-          DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
-              .add_gpu_buffer(0, m_hexagon_instance_buffers.get_buffer_references())
-              .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
-              .set_texture_and_sampler(2, m_texture_ptr, m_sampler_ptr)
-              .build(m_ctx, m_descriptor_pool)),
-      m_graphics_pipeline(
-          // clang-format off
-        graphics_pipeline::GraphicsPipelineBuilder()
-            .set_vertex_shader(ResourceManager::get_instance().get_resource<ShaderResource>("GeometryVertex"))
-            .set_fragment_shader(ResourceManager::get_instance().get_resource<ShaderResource>("GeometryFragment"))
-            .set_descriptor_set_layout(&m_hexagon_descriptor_set.get_layout()) // All descriptors have same layout
-            .set_push_constants({
-                .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-                .offset = 0,
-                .size = sizeof(uint32_t)
-                })
-            .build(m_ctx, swap_chain_manager)
-          // clang-format on
-      ) {}
+    m_rectangle_vertex_buffer =
+        VertexBuffer(ctx, Geometry::rectangle_vertices, command_buffer_manager);
+    m_rectangle_index_buffer =
+        IndexBuffer(ctx, Geometry::rectangle_indices, command_buffer_manager);
+    m_rectangle_descriptor_set =
+        DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
+            .add_gpu_buffer(0, m_rectangle_instance_buffers.get_buffer_references())
+            .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
+            .set_texture_and_sampler(2, m_opts.texture_ptr, m_opts.sampler_ptr)
+            .build(m_ctx, m_descriptor_pool);
+
+    m_hexagon_vertex_buffer =
+        std::move(VertexBuffer(ctx, Geometry::hexagon_vertices, command_buffer_manager));
+    m_hexagon_index_buffer =
+        IndexBuffer(ctx, Geometry::hexagon_indices, command_buffer_manager);
+    m_hexagon_descriptor_set =
+        DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
+            .add_gpu_buffer(0, m_hexagon_instance_buffers.get_buffer_references())
+            .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
+            .set_texture_and_sampler(2, m_opts.texture_ptr, m_opts.sampler_ptr)
+            .build(m_ctx, m_descriptor_pool);
+
+    m_graphics_pipeline =
+        // clang-format off
+            graphics_pipeline::GraphicsPipelineBuilder()
+                .set_vertex_shader(ResourceManager::get_instance().get_resource<ShaderResource>("GeometryVertex"))
+                .set_fragment_shader(ResourceManager::get_instance().get_resource<ShaderResource>("GeometryFragment"))
+                .set_descriptor_set_layout(&m_hexagon_descriptor_set.get_layout()) // All descriptors have same layout
+                .set_push_constants({
+                    .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+                    .offset = 0,
+                    .size = sizeof(uint32_t)
+                    })
+                .build(m_ctx, swap_chain_manager);
+    // clang-format on
+}
 
 graphics_pipeline::GeometryPipeline::~GeometryPipeline() {}
 
