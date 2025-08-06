@@ -6,7 +6,7 @@
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
-namespace graphics_pipeline {
+namespace vulkan {
 class Pipeline {
   private:
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
@@ -35,4 +35,4 @@ class Pipeline {
 
     operator VkPipeline() const { return m_pipeline; }
 };
-} // namespace graphics_pipeline
+} // namespace vulkan

@@ -1,13 +1,13 @@
 #include "PipelineLayout.h"
 
-graphics_pipeline::PipelineLayout::PipelineLayout(
+vulkan::PipelineLayout::PipelineLayout(
     std::shared_ptr<graphics_context::GraphicsContext> ctx,
     const VkDescriptorSetLayout &descriptor_set_layout,
     const std::vector<VkPushConstantRange> &push_constant_range)
     : m_ctx(ctx), m_pipeline_layout(create_graphics_pipeline_layout(
                       descriptor_set_layout, push_constant_range)) {}
 
-graphics_pipeline::PipelineLayout::~PipelineLayout() {
+vulkan::PipelineLayout::~PipelineLayout() {
     if (m_pipeline_layout == VK_NULL_HANDLE) {
         return;
     }
@@ -16,13 +16,13 @@ graphics_pipeline::PipelineLayout::~PipelineLayout() {
     m_pipeline_layout = VK_NULL_HANDLE;
 }
 
-graphics_pipeline::PipelineLayout::PipelineLayout(PipelineLayout &&other) noexcept
+vulkan::PipelineLayout::PipelineLayout(PipelineLayout &&other) noexcept
     : m_ctx(std::move(other.m_ctx)), m_pipeline_layout(other.m_pipeline_layout) {
     other.m_pipeline_layout = VK_NULL_HANDLE;
 }
 
-graphics_pipeline::PipelineLayout &
-graphics_pipeline::PipelineLayout::operator=(PipelineLayout &&other) noexcept {
+vulkan::PipelineLayout &
+vulkan::PipelineLayout::operator=(PipelineLayout &&other) noexcept {
     if (this != &other) {
         if (m_pipeline_layout != VK_NULL_HANDLE) {
             vkDestroyPipelineLayout(m_ctx->logical_device, m_pipeline_layout, nullptr);
@@ -35,7 +35,7 @@ graphics_pipeline::PipelineLayout::operator=(PipelineLayout &&other) noexcept {
     return *this;
 }
 
-VkPipelineLayout graphics_pipeline::PipelineLayout::create_graphics_pipeline_layout(
+VkPipelineLayout vulkan::PipelineLayout::create_graphics_pipeline_layout(
     const VkDescriptorSetLayout &descriptor_set_layout,
     const std::vector<VkPushConstantRange> &push_constant_range) {
 

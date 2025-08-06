@@ -2,8 +2,8 @@
 
 #include "render_engine/buffers/IndexBuffer.h"
 #include "render_engine/buffers/VertexBuffer.h"
-#include "render_engine/graphics_pipeline/Pipeline.h"
-#include "render_engine/graphics_pipeline/PipelineLayout.h"
+#include "render_engine/vulkan/Pipeline.h"
+#include "render_engine/vulkan/PipelineLayout.h"
 #include "vulkan/vulkan_core.h"
 
 namespace graphics_pipeline {
@@ -14,10 +14,10 @@ class GraphicsPipeline {
     friend class GraphicsPipelineBuilder;
 
   private:
-    Pipeline m_pipeline;
-    PipelineLayout m_pipeline_layout;
+    vulkan::Pipeline m_pipeline;
+    vulkan::PipelineLayout m_pipeline_layout;
 
-    GraphicsPipeline(PipelineLayout &&layout, Pipeline &&pipeline);
+    GraphicsPipeline(vulkan::PipelineLayout &&layout, vulkan::Pipeline &&pipeline);
 
   public:
     GraphicsPipeline(GraphicsPipeline &&other) noexcept = default;

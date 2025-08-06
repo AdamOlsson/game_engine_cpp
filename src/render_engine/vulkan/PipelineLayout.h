@@ -3,7 +3,7 @@
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <vector>
-namespace graphics_pipeline {
+namespace vulkan {
 class PipelineLayout {
   private:
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
@@ -29,4 +29,4 @@ class PipelineLayout {
 
     operator VkPipelineLayout() const { return m_pipeline_layout; }
 };
-} // namespace graphics_pipeline
+} // namespace vulkan

@@ -4,8 +4,8 @@
 #include <stdexcept>
 #include <vector>
 
-graphics_pipeline::GraphicsPipeline::GraphicsPipeline(PipelineLayout &&layout,
-                                                      Pipeline &&pipeline)
+graphics_pipeline::GraphicsPipeline::GraphicsPipeline(vulkan::PipelineLayout &&layout,
+                                                      vulkan::Pipeline &&pipeline)
     : m_pipeline(std::move(pipeline)), m_pipeline_layout(std::move(layout)) {}
 
 void graphics_pipeline::GraphicsPipeline::render(const VkCommandBuffer &command_buffer,

@@ -1,5 +1,6 @@
 #include "GraphicsPipelineBuilder.h"
 #include "render_engine/ShaderModule.h"
+#include "render_engine/vulkan/Pipeline.h"
 #include <stdexcept>
 
 graphics_pipeline::GraphicsPipelineBuilder &
@@ -54,9 +55,9 @@ graphics_pipeline::GraphicsPipeline graphics_pipeline::GraphicsPipelineBuilder::
     }
 
     DescriptorSetLayout *descriptor_set_layout = m_descriptor_set_layout;
-    PipelineLayout layout =
-        PipelineLayout(ctx, *descriptor_set_layout, push_constant_ranges);
-    Pipeline pipeline =
-        Pipeline(ctx, &layout, vertex_shader, fragment_shader, swap_chain_manager);
+    vulkan::PipelineLayout layout =
+        vulkan::PipelineLayout(ctx, *descriptor_set_layout, push_constant_ranges);
+    vulkan::Pipeline pipeline = vulkan::Pipeline(ctx, &layout, vertex_shader,
+                                                 fragment_shader, swap_chain_manager);
     return GraphicsPipeline(std::move(layout), std::move(pipeline));
 }

@@ -2,15 +2,16 @@
 #include "render_engine/shapes/Vertex.h"
 #include "vulkan/vulkan_core.h"
 
-graphics_pipeline::Pipeline::Pipeline(
-    std::shared_ptr<graphics_context::GraphicsContext> ctx, PipelineLayout *layout,
-    const VkShaderModule vertex_shader_module,
-    const VkShaderModule fragment_shader_module, SwapChainManager &swap_chain_manager)
+vulkan::Pipeline::Pipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+                           PipelineLayout *layout,
+                           const VkShaderModule vertex_shader_module,
+                           const VkShaderModule fragment_shader_module,
+                           SwapChainManager &swap_chain_manager)
     : m_ctx(ctx),
       m_pipeline(create_graphics_pipeline(layout, vertex_shader_module,
                                           fragment_shader_module, swap_chain_manager)) {}
 
-graphics_pipeline::Pipeline::~Pipeline() {
+vulkan::Pipeline::~Pipeline() {
     if (m_pipeline == VK_NULL_HANDLE) {
         return;
     }
@@ -18,13 +19,12 @@ graphics_pipeline::Pipeline::~Pipeline() {
     m_pipeline = VK_NULL_HANDLE;
 }
 
-graphics_pipeline::Pipeline::Pipeline(Pipeline &&other) noexcept
+vulkan::Pipeline::Pipeline(Pipeline &&other) noexcept
     : m_ctx(std::move(other.m_ctx)), m_pipeline(other.m_pipeline) {
     other.m_pipeline = VK_NULL_HANDLE;
 }
 
-graphics_pipeline::Pipeline &
-graphics_pipeline::Pipeline::operator=(Pipeline &&other) noexcept {
+vulkan::Pipeline &vulkan::Pipeline::operator=(Pipeline &&other) noexcept {
     if (this != &other) {
         if (m_pipeline != VK_NULL_HANDLE) {
             vkDestroyPipeline(m_ctx->logical_device, m_pipeline, nullptr);
@@ -37,7 +37,7 @@ graphics_pipeline::Pipeline::operator=(Pipeline &&other) noexcept {
     return *this;
 }
 
-VkPipeline graphics_pipeline::Pipeline::create_graphics_pipeline(
+VkPipeline vulkan::Pipeline::create_graphics_pipeline(
     PipelineLayout *layout, const VkShaderModule vertex_shader_module,
     const VkShaderModule fragment_shader_module, SwapChainManager &swap_chain_manager) {
     // Note from tutorial:
