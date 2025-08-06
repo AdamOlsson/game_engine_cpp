@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <memory>
 
+namespace vulkan {
 class Semaphore {
   private:
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
@@ -15,8 +16,7 @@ class Semaphore {
 
   public:
     Semaphore() = default;
-    Semaphore(std::shared_ptr<graphics_context::GraphicsContext> ctx,
-              const size_t size);
+    Semaphore(std::shared_ptr<graphics_context::GraphicsContext> ctx, const size_t size);
     ~Semaphore();
 
     Semaphore(Semaphore &&other) noexcept = default;
@@ -27,3 +27,4 @@ class Semaphore {
 
     const VkSemaphore get();
 };
+} // namespace vulkan

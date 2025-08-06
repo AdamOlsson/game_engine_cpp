@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <memory>
 
+namespace vulkan {
 class Fence {
   private:
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
@@ -28,3 +29,5 @@ class Fence {
     const VkFence &next();
     const VkFence &current();
 };
+
+} // namespace vulkan

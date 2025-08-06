@@ -5,9 +5,11 @@
 
 SwapChainManager::SwapChainManager(std::shared_ptr<graphics_context::GraphicsContext> ctx)
     : m_ctx(ctx), m_next_frame_buffer(0), m_swap_chain(SwapChain(ctx)),
-      m_image_available(Semaphore(m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT)),
-      m_submit_completed(Semaphore(m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT)),
-      m_in_flight_fence(Fence(m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT)) {}
+      m_image_available(
+          vulkan::Semaphore(m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT)),
+      m_submit_completed(
+          vulkan::Semaphore(m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT)),
+      m_in_flight_fence(vulkan::Fence(m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT)) {}
 
 SwapChainManager::~SwapChainManager() {}
 

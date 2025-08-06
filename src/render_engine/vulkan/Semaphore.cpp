@@ -1,8 +1,8 @@
 #include "Semaphore.h"
 #include <memory>
 
-Semaphore::Semaphore(std::shared_ptr<graphics_context::GraphicsContext> ctx,
-                     const size_t size)
+vulkan::Semaphore::Semaphore(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+                             const size_t size)
     : m_ctx(ctx), m_size(size), m_next(0) {
     m_semaphores.resize(size);
 
@@ -17,7 +17,7 @@ Semaphore::Semaphore(std::shared_ptr<graphics_context::GraphicsContext> ctx,
     }
 }
 
-Semaphore::~Semaphore() {
+vulkan::Semaphore::~Semaphore() {
     if (m_ctx == nullptr) {
         return;
     }
@@ -27,7 +27,7 @@ Semaphore::~Semaphore() {
     }
 }
 
-const VkSemaphore Semaphore::get() {
+const VkSemaphore vulkan::Semaphore::get() {
     auto &sem = m_semaphores[m_next];
     m_next = ++m_next % m_size;
     return sem;

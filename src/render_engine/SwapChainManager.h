@@ -1,11 +1,11 @@
 #pragma once
 
 #include "render_engine/CommandBuffer.h"
-#include "render_engine/Fence.h"
 #include "render_engine/RenderPass.h"
-#include "render_engine/Semaphore.h"
 #include "render_engine/SwapChain.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
+#include "render_engine/vulkan/Fence.h"
+#include "render_engine/vulkan/Semaphore.h"
 #include <memory>
 
 class SwapChainManager {
@@ -14,9 +14,9 @@ class SwapChainManager {
 
     size_t m_next_frame_buffer;
 
-    Fence m_in_flight_fence;
-    Semaphore m_image_available;
-    Semaphore m_submit_completed;
+    vulkan::Fence m_in_flight_fence;
+    vulkan::Semaphore m_image_available;
+    vulkan::Semaphore m_submit_completed;
 
   public:
     SwapChain m_swap_chain;
