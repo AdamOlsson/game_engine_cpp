@@ -23,7 +23,7 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
     // CONINUE: I do not want the sampler, texture or uniform to be part of the
     // constructor interface, instead they should be optional to add through a builder
     // class like below
-
+    // TODO: Move all vulkan wrappers to a module called vulkan
     // TODO: Handle recreation of swap chain, like for resizing windows and moving window
     // between displays
     m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(

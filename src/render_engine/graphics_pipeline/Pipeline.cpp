@@ -8,24 +8,23 @@ graphics_pipeline::Pipeline::Pipeline(
     const std::vector<VkPushConstantRange> &push_constant_range,
     const VkShaderModule vertex_shader_module,
     const VkShaderModule fragment_shader_module, SwapChainManager &swap_chain_manager)
-    : m_ctx(ctx), m_pipeline_layout(create_graphics_pipeline_layout(descriptor_set_layout,
-                                                                    push_constant_range)),
+    : m_ctx(ctx), m_pipeline_layout(
+                      PipelineLayout(m_ctx, descriptor_set_layout, push_constant_range)),
       m_pipeline(create_graphics_pipeline(vertex_shader_module, fragment_shader_module,
                                           swap_chain_manager)) {}
 
 graphics_pipeline::Pipeline::~Pipeline() {
-    if (m_pipeline != VK_NULL_HANDLE) {
-        vkDestroyPipeline(m_ctx->logical_device, m_pipeline, nullptr);
+    if (m_pipeline == VK_NULL_HANDLE) {
+        return;
     }
-    if (m_pipeline_layout != VK_NULL_HANDLE) {
-        vkDestroyPipelineLayout(m_ctx->logical_device, m_pipeline_layout, nullptr);
-    }
+    vkDestroyPipeline(m_ctx->logical_device, m_pipeline, nullptr);
+    m_pipeline = VK_NULL_HANDLE;
 }
 
 graphics_pipeline::Pipeline::Pipeline(Pipeline &&other) noexcept
-    : m_ctx(std::move(other.m_ctx)), m_pipeline_layout(other.m_pipeline_layout),
+    : m_ctx(std::move(other.m_ctx)),
+      m_pipeline_layout(std::move(other.m_pipeline_layout)),
       m_pipeline(other.m_pipeline) {
-    other.m_pipeline_layout = VK_NULL_HANDLE;
     other.m_pipeline = VK_NULL_HANDLE;
 }
 
@@ -35,36 +34,13 @@ graphics_pipeline::Pipeline::operator=(Pipeline &&other) noexcept {
         if (m_pipeline != VK_NULL_HANDLE) {
             vkDestroyPipeline(m_ctx->logical_device, m_pipeline, nullptr);
         }
-        if (m_pipeline_layout != VK_NULL_HANDLE) {
-            vkDestroyPipelineLayout(m_ctx->logical_device, m_pipeline_layout, nullptr);
-        }
         m_ctx = std::move(other.m_ctx);
-        m_pipeline_layout = other.m_pipeline_layout;
+        m_pipeline_layout = std::move(other.m_pipeline_layout);
         m_pipeline = other.m_pipeline;
 
-        other.m_pipeline_layout = VK_NULL_HANDLE;
         other.m_pipeline = VK_NULL_HANDLE;
     }
     return *this;
-}
-
-VkPipelineLayout graphics_pipeline::Pipeline::create_graphics_pipeline_layout(
-    const VkDescriptorSetLayout &descriptor_set_layout,
-    const std::vector<VkPushConstantRange> &push_constant_range) {
-
-    VkPipelineLayoutCreateInfo pipeline_layout_into{};
-    pipeline_layout_into.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipeline_layout_into.setLayoutCount = 1;
-    pipeline_layout_into.pSetLayouts = &descriptor_set_layout;
-    pipeline_layout_into.pushConstantRangeCount = push_constant_range.size();
-    pipeline_layout_into.pPushConstantRanges = push_constant_range.data();
-
-    VkPipelineLayout pipeline_layout;
-    if (vkCreatePipelineLayout(m_ctx->logical_device, &pipeline_layout_into, nullptr,
-                               &pipeline_layout) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create pipeline layout!");
-    }
-    return pipeline_layout;
 }
 
 VkPipeline graphics_pipeline::Pipeline::create_graphics_pipeline(
