@@ -49,11 +49,14 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
         VertexBuffer(ctx, Geometry::circle_vertices, command_buffer_manager);
     m_circle_index_buffer =
         IndexBuffer(ctx, Geometry::circle_indices, command_buffer_manager);
+    // m_descriptor_set_layout(DescriptorSetLayout().add(sampler->create_descriptor_set_layout_binding().build(m_ctx))
     m_circle_descriptor_set =
         DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
+            //.set_descriptor_image_info(m_opts.texture_ptr->create_descriptor_image_info())
             .add_gpu_buffer(0, m_circle_instance_buffers.get_buffer_references())
             .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
-            .set_texture_and_sampler(2, m_opts.texture_ptr, m_opts.sampler_ptr)
+            .set_texture_and_sampler(2, m_opts.texture_ptr,
+                                     m_opts.sampler_ptr) // Would be removed
             .build(m_ctx, m_descriptor_pool);
 
     m_triangle_vertex_buffer =

@@ -10,7 +10,8 @@ Texture::Texture(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                  CommandBufferManager *command_buffer_manager,
                  const ImageData &image_data)
     : m_ctx(ctx), m_texture_image(vulkan::TextureImage(
-                      m_ctx, vulkan::TextureImageDimension::from(image_data.dimension))) {
+                      m_ctx, vulkan::TextureImageDimension::from(image_data.dimension))),
+      m_texture_image_view(m_texture_image.create_view()) {
 
     StagingBuffer staging_buffer = StagingBuffer(m_ctx, image_data.size);
 
@@ -99,4 +100,5 @@ Texture Texture::empty(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
     const ImageData image_data = ImageData::empty();
     return std::move(Texture(ctx, command_buffer_manager, image_data));
 }
-VkImageView Texture::view() { return m_texture_image.m_image_view; }
+
+VkImageView Texture::view() { return m_texture_image_view; }

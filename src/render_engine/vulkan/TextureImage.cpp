@@ -45,13 +45,11 @@ vulkan::TextureImage::TextureImage(std::shared_ptr<graphics_context::GraphicsCon
     }
 
     vkBindImageMemory(m_ctx->logical_device, m_image, m_image_memory, 0);
-    m_image_view = vulkan::ImageView(m_ctx, m_image, VK_FORMAT_R8G8B8A8_SRGB);
 }
 
 vulkan::TextureImage::TextureImage(TextureImage &&other) noexcept
     : m_ctx(std::move(other.m_ctx)), m_image(other.m_image),
-      m_image_memory(other.m_image_memory), m_image_view(std::move(other.m_image_view)),
-      m_dimension(other.m_dimension) {
+      m_image_memory(other.m_image_memory), m_dimension(other.m_dimension) {
     other.m_image = VK_NULL_HANDLE;
     other.m_image_memory = VK_NULL_HANDLE;
     other.m_dimension = TextureImageDimension{0, 0};
@@ -64,7 +62,6 @@ vulkan::TextureImage &vulkan::TextureImage::operator=(TextureImage &&other) noex
         m_ctx = std::move(other.m_ctx);
         m_image = other.m_image;
         m_image_memory = other.m_image_memory;
-        m_image_view = std::move(other.m_image_view);
         m_dimension = other.m_dimension;
 
         other.m_image = VK_NULL_HANDLE;
@@ -129,4 +126,8 @@ void vulkan::TextureImage::transition_image_layout(
 
     command_buffer.end();
     command_buffer.submit();
+}
+
+vulkan::ImageView vulkan::TextureImage::create_view() {
+    return ImageView(m_ctx, m_image, VK_FORMAT_R8G8B8A8_SRGB);
 }

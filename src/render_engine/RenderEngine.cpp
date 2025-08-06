@@ -22,9 +22,11 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
     /*Sampler *sampler = &m_sampler;*/
     vulkan::Sampler *sampler = nullptr;
 
-    // TODO: Handle recreation of swap chain, like for resizing windows and moving window
-    // between displays
-    // TODO: What should I do about the window dimension buffer?
+    // VkDescriptorImageInfo image_info =
+    // m_texture->create_descriptor_image_info(&sampler);
+    //  TODO: Handle recreation of swap chain, like for resizing windows and moving window
+    //  between displays
+    //  TODO: What should I do about the window dimension buffer?
     m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(
         ctx, command_buffer_manager, *swap_chain_manager, m_window_dimension_buffers,
         graphics_pipeline::GeometryPipelineOptions{});

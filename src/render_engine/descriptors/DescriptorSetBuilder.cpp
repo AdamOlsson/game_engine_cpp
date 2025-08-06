@@ -18,14 +18,10 @@ DescriptorSetBuilder::add_gpu_buffer(size_t binding,
     // all buffers are of the same typer every invokation
     switch (m_gpu_buffers.back().type) {
     case GpuBufferType::Storage:
-        m_descriptor_set_layout_builder.add(
-            BufferDescriptor<
-                GpuBufferType::Storage>::create_descriptor_set_layout_binding(binding));
+        m_descriptor_set_layout_builder.add_storage_buffer_binding(binding);
         break;
     case GpuBufferType::Uniform:
-        m_descriptor_set_layout_builder.add(
-            BufferDescriptor<
-                GpuBufferType::Uniform>::create_descriptor_set_layout_binding(binding));
+        m_descriptor_set_layout_builder.add_uniform_buffer_binding(binding);
         break;
     }
 
@@ -38,8 +34,7 @@ DescriptorSetBuilder::set_texture_and_sampler(size_t binding, Texture *texture,
     m_texture_binding = binding;
     m_texture = texture;
     m_sampler = sampler;
-    m_descriptor_set_layout_builder.add(
-        sampler->create_descriptor_set_layout_binding(binding));
+    m_descriptor_set_layout_builder.add_combined_image_sampler_binding(binding);
     return *this;
 }
 

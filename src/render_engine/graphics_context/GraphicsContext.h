@@ -32,8 +32,6 @@ class GraphicsContext {
     void wait_idle();
 
     DeviceQueues get_device_queues();
-
-  private:
 };
 
 } // namespace graphics_context

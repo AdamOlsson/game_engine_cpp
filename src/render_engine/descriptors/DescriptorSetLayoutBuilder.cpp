@@ -21,3 +21,41 @@ DescriptorSetLayout DescriptorSetLayoutBuilder::build(
     }
     return DescriptorSetLayout(ctx, layout);
 }
+
+DescriptorSetLayoutBuilder &
+DescriptorSetLayoutBuilder::add_combined_image_sampler_binding(uint32_t binding) {
+    VkDescriptorSetLayoutBinding sampler_layout_binding{};
+    sampler_layout_binding.binding = binding;
+    sampler_layout_binding.descriptorCount = 1;
+    sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    sampler_layout_binding.pImmutableSamplers = nullptr;
+    sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    m_bindings.push_back(sampler_layout_binding);
+    return *this;
+}
+
+DescriptorSetLayoutBuilder &
+DescriptorSetLayoutBuilder::add_storage_buffer_binding(uint32_t binding) {
+    VkDescriptorSetLayoutBinding layout_binding{};
+    layout_binding.binding = binding;
+    layout_binding.descriptorCount = 1;
+    layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    layout_binding.pImmutableSamplers = nullptr;
+    layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+    m_bindings.push_back(layout_binding);
+    return *this;
+}
+
+DescriptorSetLayoutBuilder &
+DescriptorSetLayoutBuilder::add_uniform_buffer_binding(uint32_t binding) {
+    VkDescriptorSetLayoutBinding layout_binding{};
+    layout_binding.binding = binding;
+    layout_binding.descriptorCount = 1;
+    layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    layout_binding.pImmutableSamplers = nullptr;
+    layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+    m_bindings.push_back(layout_binding);
+    return *this;
+}

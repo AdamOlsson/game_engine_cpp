@@ -26,7 +26,6 @@ class TextureImage {
   public:
     VkImage m_image;
     VkDeviceMemory m_image_memory;
-    vulkan::ImageView m_image_view;
     TextureImageDimension m_dimension;
 
     TextureImage();
@@ -42,6 +41,7 @@ class TextureImage {
     void transition_image_layout(CommandBufferManager *command_buffer_manager,
                                  const VkImageLayout old_layout,
                                  const VkImageLayout new_layout);
-};
 
+    ImageView create_view();
+};
 } // namespace vulkan

@@ -11,7 +11,7 @@ class Texture {
   private:
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
     vulkan::TextureImage m_texture_image;
-    /*vulkan::ImageView m_texture_image_view;*/
+    vulkan::ImageView m_texture_image_view;
 
   public:
     Texture() = default;
