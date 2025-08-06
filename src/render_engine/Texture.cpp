@@ -88,4 +88,11 @@ std::unique_ptr<Texture> Texture::unique_from_image_resource_name(
     return std::move(std::make_unique<Texture>(ctx, command_buffer_manager, image_data));
 }
 
+std::unique_ptr<Texture>
+Texture::unique_empty(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+                      CommandBufferManager *command_buffer_manager) {
+    const ImageData image_data = ImageData::empty();
+    return std::move(std::make_unique<Texture>(ctx, command_buffer_manager, image_data));
+}
+
 VkImageView Texture::view() { return m_texture_image.m_image_view; }

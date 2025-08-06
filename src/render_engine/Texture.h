@@ -51,6 +51,10 @@ class Texture {
         std::shared_ptr<graphics_context::GraphicsContext> &ctx,
         CommandBufferManager *command_buffer_manager, const std::string &resource_name);
 
+    static std::unique_ptr<Texture>
+    unique_empty(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+                 CommandBufferManager *command_buffer_manager);
+
     ~Texture() = default;
 
     Texture(Texture &&other) noexcept = default;

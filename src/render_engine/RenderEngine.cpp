@@ -16,8 +16,7 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
 
     m_window_dimension_buffers.write(ctx->window->dimensions<float>());
 
-    m_texture =
-        Texture::unique_from_image_resource_name(ctx, command_buffer_manager, "DogImage");
+    m_texture = Texture::unique_empty(ctx, command_buffer_manager);
 
     // TODO: I do not want the sampler, texture or uniform to be part of the constructor
     // interface, instead they should be optional to add through a builder class like

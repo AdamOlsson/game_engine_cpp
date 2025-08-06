@@ -6,10 +6,22 @@
 #include <iostream>
 #include <sstream>
 
-ImageData::ImageData(ImageDimension &dim, unsigned char *pixels, size_t size)
-    : dimension(dim), pixels(pixels), size(size) {}
+ImageData::ImageData(ImageDimension &dim, unsigned char *pixels, size_t size,
+                     bool use_stbi_free)
+    : dimension(dim), pixels(pixels), size(size), m_use_stbi_free(use_stbi_free) {}
 
-ImageData::~ImageData() { stbi_image_free(pixels); }
+ImageData::~ImageData() {
+    if (pixels == nullptr) {
+        return;
+    }
+
+    if (m_use_stbi_free) {
+        stbi_image_free(pixels);
+    } else {
+        delete[] pixels;
+    }
+    pixels = nullptr;
+}
 
 ImageData ImageData::load_rgba_image(const uint8_t *bytes, const size_t num_bytes) {
     int width;
@@ -31,5 +43,11 @@ ImageData ImageData::load_rgba_image(const uint8_t *bytes, const size_t num_byte
                                         static_cast<unsigned int>(height),
                                         static_cast<unsigned int>(channels)};
 
-    return ImageData(dim, pixels, size);
+    return ImageData(dim, pixels, size, true);
+}
+
+ImageData ImageData::empty() {
+    ImageDimension dim = ImageDimension{1, 1, 4};
+    unsigned char *pixels = new unsigned char[4];
+    return ImageData(dim, pixels, 4, false);
 }
