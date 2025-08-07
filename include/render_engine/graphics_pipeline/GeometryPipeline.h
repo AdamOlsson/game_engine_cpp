@@ -9,12 +9,12 @@
 #include "render_engine/descriptors/DescriptorSet.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/graphics_pipeline/GraphicsPipeline.h"
+#include "render_engine/vulkan/DescriptorImageInfo.h"
 #include "render_engine/vulkan/Sampler.h"
 #include "shape.h"
 #include "vulkan/vulkan_core.h"
 #include <iostream>
 #include <memory>
-#include <vector>
 #include <vulkan/vulkan.h>
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #define GLM_FORCE_RADIANS
@@ -69,8 +69,7 @@ struct GeometryInstanceBufferObject {
 };
 
 struct GeometryPipelineOptions {
-    Texture *texture_ptr = nullptr;
-    vulkan::Sampler *sampler_ptr = nullptr;
+    std::optional<vulkan::DescriptorImageInfo> combined_image_sampler;
 };
 
 class GeometryPipeline {

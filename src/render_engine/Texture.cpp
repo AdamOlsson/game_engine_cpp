@@ -101,4 +101,4 @@ Texture Texture::empty(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
     return std::move(Texture(ctx, command_buffer_manager, image_data));
 }
 
-VkImageView Texture::view() { return m_texture_image_view; }
+vulkan::ImageView *Texture::view() { return &m_texture_image_view; }

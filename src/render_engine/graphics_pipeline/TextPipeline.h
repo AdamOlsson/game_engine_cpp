@@ -12,6 +12,7 @@
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/graphics_pipeline/GraphicsPipeline.h"
 #include "render_engine/ui/ElementProperties.h"
+#include "render_engine/vulkan/DescriptorImageInfo.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 #include <vulkan/vulkan.h>
@@ -44,6 +45,10 @@ static_assert(sizeof(CharacterInstanceBufferObject) % 16 == 0,
 std::ostream &operator<<(std::ostream &os, const TextSegmentBufferObject &obj);
 std::ostream &operator<<(std::ostream &os, const CharacterInstanceBufferObject &obj);
 
+struct TextPipelineOptions {
+    vulkan::DescriptorImageInfo combined_image_sampler;
+};
+
 class TextPipeline {
   private:
     // 2 x num resources per frame
@@ -55,6 +60,7 @@ class TextPipeline {
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
 
     std::unique_ptr<Font> m_font;
+    TextPipelineOptions m_opts;
 
     SwapStorageBuffer<CharacterInstanceBufferObject> m_character_buffers;
     SwapStorageBuffer<TextSegmentBufferObject> m_text_segment_buffers;

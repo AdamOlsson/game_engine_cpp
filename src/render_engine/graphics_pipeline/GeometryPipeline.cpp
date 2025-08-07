@@ -7,6 +7,7 @@
 #include "render_engine/descriptors/DescriptorSetBuilder.h"
 #include "render_engine/graphics_pipeline/GraphicsPipelineBuilder.h"
 #include "render_engine/resources/ResourceManager.h"
+#include "render_engine/vulkan/DescriptorImageInfo.h"
 #include "render_engine/vulkan/Sampler.h"
 #include "shape.h"
 #include "vulkan/vulkan_core.h"
@@ -37,26 +38,25 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
 
 {
     // Handle options
-    if (m_opts.texture_ptr == nullptr && opts->sampler_ptr == nullptr) {
+    if (!m_opts.combined_image_sampler.has_value()) {
         m_empty_texture =
             std::make_optional(Texture::empty(m_ctx, command_buffer_manager));
         m_empty_sampler = std::make_optional(vulkan::Sampler(m_ctx));
-        m_opts.texture_ptr = &m_empty_texture.value();
-        m_opts.sampler_ptr = &m_empty_sampler.value();
+        m_opts.combined_image_sampler = vulkan::DescriptorImageInfo(
+            m_empty_texture.value().view(), &m_empty_sampler.value());
     }
 
     m_circle_vertex_buffer =
         VertexBuffer(ctx, Geometry::circle_vertices, command_buffer_manager);
     m_circle_index_buffer =
         IndexBuffer(ctx, Geometry::circle_indices, command_buffer_manager);
-    // m_descriptor_set_layout(DescriptorSetLayout().add(sampler->create_descriptor_set_layout_binding().build(m_ctx))
     m_circle_descriptor_set =
         DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
-            //.set_descriptor_image_info(m_opts.texture_ptr->create_descriptor_image_info())
-            .add_gpu_buffer(0, m_circle_instance_buffers.get_buffer_references())
-            .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
-            .set_texture_and_sampler(2, m_opts.texture_ptr,
-                                     m_opts.sampler_ptr) // Would be removed
+            .add_storage_buffer(0, vulkan::DescriptorBufferInfo::from_vector(
+                                       m_circle_instance_buffers.get_buffer_references()))
+            .add_uniform_buffer(1, vulkan::DescriptorBufferInfo::from_vector(
+                                       uniform_buffers.get_buffer_references()))
+            .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())
             .build(m_ctx, m_descriptor_pool);
 
     m_triangle_vertex_buffer =
@@ -65,9 +65,12 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
         IndexBuffer(ctx, Geometry::triangle_indices, command_buffer_manager);
     m_triangle_descriptor_set =
         DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
-            .add_gpu_buffer(0, m_triangle_instance_buffers.get_buffer_references())
-            .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
-            .set_texture_and_sampler(2, m_opts.texture_ptr, m_opts.sampler_ptr)
+            .add_storage_buffer(0,
+                                vulkan::DescriptorBufferInfo::from_vector(
+                                    m_triangle_instance_buffers.get_buffer_references()))
+            .add_uniform_buffer(1, vulkan::DescriptorBufferInfo::from_vector(
+                                       uniform_buffers.get_buffer_references()))
+            .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())
             .build(m_ctx, m_descriptor_pool);
 
     m_rectangle_vertex_buffer =
@@ -76,9 +79,12 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
         IndexBuffer(ctx, Geometry::rectangle_indices, command_buffer_manager);
     m_rectangle_descriptor_set =
         DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
-            .add_gpu_buffer(0, m_rectangle_instance_buffers.get_buffer_references())
-            .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
-            .set_texture_and_sampler(2, m_opts.texture_ptr, m_opts.sampler_ptr)
+            .add_storage_buffer(0,
+                                vulkan::DescriptorBufferInfo::from_vector(
+                                    m_rectangle_instance_buffers.get_buffer_references()))
+            .add_uniform_buffer(1, vulkan::DescriptorBufferInfo::from_vector(
+                                       uniform_buffers.get_buffer_references()))
+            .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())
             .build(m_ctx, m_descriptor_pool);
 
     m_hexagon_vertex_buffer =
@@ -87,14 +93,17 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
         IndexBuffer(ctx, Geometry::hexagon_indices, command_buffer_manager);
     m_hexagon_descriptor_set =
         DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
-            .add_gpu_buffer(0, m_hexagon_instance_buffers.get_buffer_references())
-            .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
-            .set_texture_and_sampler(2, m_opts.texture_ptr, m_opts.sampler_ptr)
+            .add_storage_buffer(0,
+                                vulkan::DescriptorBufferInfo::from_vector(
+                                    m_hexagon_instance_buffers.get_buffer_references()))
+            .add_uniform_buffer(1, vulkan::DescriptorBufferInfo::from_vector(
+                                       uniform_buffers.get_buffer_references()))
+            .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())
             .build(m_ctx, m_descriptor_pool);
 
     m_graphics_pipeline =
-        // clang-format off
-            graphics_pipeline::GraphicsPipelineBuilder()
+        graphics_pipeline::GraphicsPipelineBuilder()
+            // clang-format off
                 .set_vertex_shader(ResourceManager::get_instance().get_resource<ShaderResource>("GeometryVertex"))
                 .set_fragment_shader(ResourceManager::get_instance().get_resource<ShaderResource>("GeometryFragment"))
                 .set_descriptor_set_layout(&m_hexagon_descriptor_set.get_layout()) // All descriptors have same layout

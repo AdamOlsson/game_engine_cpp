@@ -3,10 +3,9 @@
 #include "DescriptorPool.h"
 #include "DescriptorSet.h"
 #include "DescriptorSetLayoutBuilder.h"
-#include "render_engine/Texture.h"
-#include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
-#include "render_engine/vulkan/Sampler.h"
+#include "render_engine/vulkan/DescriptorBufferInfo.h"
+#include "render_engine/vulkan/DescriptorImageInfo.h"
 
 class DescriptorSetBuilder {
   private:
@@ -14,12 +13,14 @@ class DescriptorSetBuilder {
 
     size_t m_capacity;
 
-    std::vector<size_t> m_gpu_buffer_binding;
-    std::vector<GpuBufferRef> m_gpu_buffers;
+    std::vector<size_t> m_storage_buffer_bindings;
+    std::vector<vulkan::DescriptorBufferInfo> m_storage_buffers_infos;
 
-    size_t m_texture_binding;
-    Texture *m_texture;
-    vulkan::Sampler *m_sampler;
+    std::vector<size_t> m_uniform_buffer_bindings;
+    std::vector<vulkan::DescriptorBufferInfo> m_uniform_buffers_infos;
+
+    std::optional<vulkan::DescriptorImageInfo> m_combined_image_sampler_info;
+    std::optional<size_t> m_combined_image_sampler_binding;
 
     std::vector<VkDescriptorSet>
     allocate_descriptor_sets(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
@@ -28,20 +29,26 @@ class DescriptorSetBuilder {
 
     VkWriteDescriptorSet create_buffer_descriptor_write(
         const VkDescriptorType type, const VkDescriptorSet &dst_descriptor_set,
-        const VkDescriptorBufferInfo &buffer_info, const size_t binding_num);
+        const VkDescriptorBufferInfo *buffer_info, const size_t binding_num);
 
     VkWriteDescriptorSet
     create_texture_and_sampler_descriptor_write(const VkDescriptorSet &dst_descriptor_set,
-                                                VkDescriptorImageInfo &image_info);
+                                                const VkDescriptorImageInfo *image_info,
+                                                const size_t binding_num);
 
   public:
     DescriptorSetBuilder(size_t capacity);
 
-    DescriptorSetBuilder &add_gpu_buffer(size_t binding,
-                                         std::vector<GpuBufferRef> &&buffers);
+    DescriptorSetBuilder &
+    add_combined_image_sampler(size_t binding, vulkan::DescriptorImageInfo &image_info);
 
-    DescriptorSetBuilder &set_texture_and_sampler(size_t binding, Texture *texture,
-                                                  vulkan::Sampler *sampler);
+    DescriptorSetBuilder &
+    add_storage_buffer(size_t binding,
+                       std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos);
+
+    DescriptorSetBuilder &
+    add_uniform_buffer(size_t binding,
+                       std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos);
 
     DescriptorSet build(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
                         DescriptorPool &descriptor_pool);

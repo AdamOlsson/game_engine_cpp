@@ -4,7 +4,6 @@
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/resources/images/ImageResource.h"
 #include "render_engine/vulkan/TextureImage.h"
-#include "vulkan/vulkan_core.h"
 #include <memory>
 
 class Texture {
@@ -67,5 +66,5 @@ class Texture {
     Texture(const Texture &other) = delete;
     Texture &operator=(const Texture &other) = delete;
 
-    VkImageView view();
+    vulkan::ImageView *view();
 };

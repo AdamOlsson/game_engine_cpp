@@ -27,23 +27,30 @@ graphics_pipeline::TextPipeline::TextPipeline(
           IndexBuffer(ctx, Geometry::rectangle_indices, command_buffer_manager)),
       m_descriptor_pool(DescriptorPool(m_ctx, m_descriptor_pool_capacity,
                                        m_num_storage_buffers, m_num_uniform_buffers,
-                                       m_num_samplers)),
-      m_descriptor_set(
-          DescriptorSetBuilder(graphics_pipeline::MAX_FRAMES_IN_FLIGHT)
-              .add_gpu_buffer(0, m_character_buffers.get_buffer_references())
-              .add_gpu_buffer(1, uniform_buffers.get_buffer_references())
-              .set_texture_and_sampler(2, &m_font->font_atlas, m_font->sampler)
-              .add_gpu_buffer(3, m_text_segment_buffers.get_buffer_references())
-              .build(m_ctx, m_descriptor_pool)),
-      m_graphics_pipeline(
-          // clang-format off
+                                       m_num_samplers)) {
+
+    m_opts.combined_image_sampler =
+        vulkan::DescriptorImageInfo(m_font->font_atlas.view(), m_font->sampler);
+
+    m_descriptor_set =
+        DescriptorSetBuilder(graphics_pipeline::MAX_FRAMES_IN_FLIGHT)
+            .add_storage_buffer(0, vulkan::DescriptorBufferInfo::from_vector(
+                                       m_character_buffers.get_buffer_references()))
+            .add_uniform_buffer(1, vulkan::DescriptorBufferInfo::from_vector(
+                                       uniform_buffers.get_buffer_references()))
+            .add_combined_image_sampler(2, m_opts.combined_image_sampler)
+            .add_storage_buffer(3, vulkan::DescriptorBufferInfo::from_vector(
+                                       m_text_segment_buffers.get_buffer_references()))
+            .build(m_ctx, m_descriptor_pool);
+    m_graphics_pipeline =
+        // clang-format off
         graphics_pipeline::GraphicsPipelineBuilder()
             .set_vertex_shader(ResourceManager::get_instance().get_resource<ShaderResource>("TextVertex"))
             .set_fragment_shader(ResourceManager::get_instance().get_resource<ShaderResource>("TextFragment"))
             .set_descriptor_set_layout(&m_descriptor_set.get_layout())
-            .build(m_ctx, swap_chain_manager)
-          // clang-format on
-      ) {}
+            .build(m_ctx, swap_chain_manager);
+    // clang-format on
+}
 
 graphics_pipeline::TextPipeline::~TextPipeline() {}
 
