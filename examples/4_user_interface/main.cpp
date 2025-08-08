@@ -241,21 +241,6 @@ class UserInterfaceExample : public Game {
         PerformanceWindow::get_instance().render(*m_render_engine, command_buffer);
 
         VkResult result = render_pass.end_submit_present();
-
-        // TODO: framebufferResized needs to be set from the window callback when the
-        // window is resized
-        bool framebuffer_resized = false;
-        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
-            framebuffer_resized) {
-            m_swap_chain_manager->recreate_swap_chain();
-
-            // It is important to do this after vkQueuePresentKHR to ensure that the
-            // semaphores are in a consistent state, otherwise a signaled semaphore
-            // may never be properly waited upon.
-            framebuffer_resized = false;
-        } else if (result != VK_SUCCESS) {
-            throw std::runtime_error("failed to present swap chain image!");
-        }
     };
 
     void setup(std::shared_ptr<graphics_context::GraphicsContext> &ctx) override {

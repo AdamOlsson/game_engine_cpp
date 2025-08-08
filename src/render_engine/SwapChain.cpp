@@ -1,9 +1,43 @@
 #include "SwapChain.h"
 #include "vulkan/vulkan_core.h"
 
+SwapChain::SwapChain() : m_swap_chain(VK_NULL_HANDLE), m_render_pass(VK_NULL_HANDLE) {}
+
 SwapChain::SwapChain(std::shared_ptr<graphics_context::GraphicsContext> ctx)
     : m_ctx(ctx), m_next_frame_buffer(0) {
 
+    VkSwapchainKHR old_swap_chain = VK_NULL_HANDLE;
+    setup(old_swap_chain);
+}
+
+SwapChain::SwapChain(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+                     SwapChain &old)
+    : m_ctx(ctx), m_next_frame_buffer(old.m_next_frame_buffer) {
+    VkSwapchainKHR old_swap_chain = old.m_swap_chain;
+    setup(old_swap_chain);
+}
+
+void SwapChain::recreate_swap_chain() {
+    // All execution is paused when the window is minimized
+    // clang-format off
+    while (m_ctx->window->is_minimized()) {}
+    // clang-format on 
+
+    m_ctx->wait_idle();
+
+    VkRenderPass old_render_pass = m_render_pass;
+    VkSwapchainKHR old_swap_chain = m_swap_chain;
+    std::vector<VkFramebuffer> old_frame_buffers = m_frame_buffers;
+    setup(old_swap_chain);
+
+    vkDestroyRenderPass(m_ctx->logical_device, old_render_pass, nullptr);
+    vkDestroySwapchainKHR(m_ctx->logical_device, old_swap_chain, nullptr);
+    for (size_t i = 0; i < m_frame_buffers.size(); i++) {
+        vkDestroyFramebuffer(m_ctx->logical_device, old_frame_buffers[i], nullptr);
+    }
+}
+
+void SwapChain::setup(VkSwapchainKHR &old_swap_chain) {
     vulkan::device::SwapChainSupportDetails swap_chain_support =
         m_ctx->physical_device.query_swap_chain_support(m_ctx->surface);
 
@@ -16,7 +50,8 @@ SwapChain::SwapChain(std::shared_ptr<graphics_context::GraphicsContext> ctx)
     auto window_framebuffer_size = m_ctx->window->get_framebuffer_size<uint32_t>();
     m_extent = swap_chain_support.choose_swap_extent(window_framebuffer_size);
 
-    m_swap_chain = create_swap_chain(image_count, surface_format, swap_chain_support);
+    m_swap_chain = create_swap_chain(image_count, surface_format, swap_chain_support,
+                                     old_swap_chain);
 
     m_images = create_swap_chain_images(image_count);
     m_image_views = create_image_views(surface_format.format);
@@ -24,7 +59,7 @@ SwapChain::SwapChain(std::shared_ptr<graphics_context::GraphicsContext> ctx)
     m_frame_buffers = create_framebuffers();
 }
 
-SwapChain::~SwapChain() {
+void SwapChain::destroy() {
     vkDestroyRenderPass(m_ctx->logical_device, m_render_pass, nullptr);
     vkDestroySwapchainKHR(m_ctx->logical_device, m_swap_chain, nullptr);
     for (size_t i = 0; i < m_frame_buffers.size(); i++) {
@@ -32,21 +67,60 @@ SwapChain::~SwapChain() {
     }
 }
 
-VkSwapchainKHR SwapChain::create_swap_chain(
-    uint32_t image_count, VkSurfaceFormatKHR &surface_format,
-    vulkan::device::SwapChainSupportDetails &swap_chain_support) {
+SwapChain::~SwapChain() {
+    if (m_swap_chain == VK_NULL_HANDLE) {
+        return;
+    }
+    destroy();
+    m_swap_chain = VK_NULL_HANDLE;
+}
+
+SwapChain::SwapChain(SwapChain &&other) noexcept
+    : m_ctx(std::move(other.m_ctx)), m_next_frame_buffer(other.m_next_frame_buffer),
+      m_images(std::move(other.m_images)), m_image_views(std::move(other.m_image_views)),
+      m_frame_buffers(std::move(other.m_frame_buffers)), m_swap_chain(other.m_swap_chain),
+      m_extent(other.m_extent), m_render_pass(other.m_render_pass) {
+    other.m_swap_chain = VK_NULL_HANDLE;
+    other.m_render_pass = VK_NULL_HANDLE;
+}
+
+SwapChain &SwapChain::operator=(SwapChain &&other) noexcept {
+    if (this != &other) {
+        if (m_swap_chain != VK_NULL_HANDLE) {
+            destroy();
+        }
+
+        m_ctx = std::move(other.m_ctx);
+        m_next_frame_buffer = other.m_next_frame_buffer;
+        m_images = std::move(other.m_images);
+        m_image_views = std::move(other.m_image_views);
+        m_frame_buffers = std::move(other.m_frame_buffers);
+        m_swap_chain = other.m_swap_chain;
+        m_extent = other.m_extent;
+        m_render_pass = other.m_render_pass;
+
+        other.m_swap_chain = VK_NULL_HANDLE;
+        other.m_render_pass = VK_NULL_HANDLE;
+    }
+    return *this;
+}
+
+VkSwapchainKHR
+SwapChain::create_swap_chain(uint32_t image_count, VkSurfaceFormatKHR &surface_format,
+                             vulkan::device::SwapChainSupportDetails &swap_chain_support,
+                             VkSwapchainKHR &old_swap_chain) {
     VkPresentModeKHR present_mode =
         swap_chain_support.choose_swap_present_mode(VK_PRESENT_MODE_MAILBOX_KHR);
 
-    VkSwapchainCreateInfoKHR createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = m_ctx->surface;
-    createInfo.minImageCount = image_count;
-    createInfo.imageFormat = surface_format.format;
-    createInfo.imageColorSpace = surface_format.colorSpace;
-    createInfo.imageExtent = m_extent;
-    createInfo.imageArrayLayers = 1;
-    createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    VkSwapchainCreateInfoKHR create_info{};
+    create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    create_info.surface = m_ctx->surface;
+    create_info.minImageCount = image_count;
+    create_info.imageFormat = surface_format.format;
+    create_info.imageColorSpace = surface_format.colorSpace;
+    create_info.imageExtent = m_extent;
+    create_info.imageArrayLayers = 1;
+    create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
     vulkan::device::QueueFamilyIndices indices =
         m_ctx->physical_device.find_queue_families(m_ctx->surface);
@@ -55,22 +129,22 @@ VkSwapchainKHR SwapChain::create_swap_chain(
                                      indices.presentFamily.value()};
 
     if (indices.graphicsFamily != indices.presentFamily) {
-        createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-        createInfo.queueFamilyIndexCount = 2;
-        createInfo.pQueueFamilyIndices = queueFamilyIndices;
+        create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+        create_info.queueFamilyIndexCount = 2;
+        create_info.pQueueFamilyIndices = queueFamilyIndices;
     } else {
-        createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        createInfo.queueFamilyIndexCount = 0;     // Optional
-        createInfo.pQueueFamilyIndices = nullptr; // Optional
+        create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        create_info.queueFamilyIndexCount = 0;     // Optional
+        create_info.pQueueFamilyIndices = nullptr; // Optional
     }
 
-    createInfo.preTransform = swap_chain_support.capabilities.currentTransform;
-    createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-    createInfo.presentMode = present_mode;
-    createInfo.clipped = VK_TRUE;
-    createInfo.oldSwapchain = VK_NULL_HANDLE;
+    create_info.preTransform = swap_chain_support.capabilities.currentTransform;
+    create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    create_info.presentMode = present_mode;
+    create_info.clipped = VK_TRUE;
+    create_info.oldSwapchain = old_swap_chain;
     VkSwapchainKHR swap_chain;
-    if (vkCreateSwapchainKHR(m_ctx->logical_device, &createInfo, nullptr, &swap_chain) !=
+    if (vkCreateSwapchainKHR(m_ctx->logical_device, &create_info, nullptr, &swap_chain) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create swap chain!");
     }
@@ -165,14 +239,22 @@ VkRenderPass SwapChain::create_render_pass(VkFormat &image_format) {
     return render_pass;
 }
 
-VkFramebuffer SwapChain::get_frame_buffer() {
-    auto &buf = m_frame_buffers[m_next_frame_buffer];
-    m_next_frame_buffer = ++m_next_frame_buffer % m_frame_buffers.size();
-    return buf;
+/*VkFramebuffer SwapChain::get_frame_buffer() {*/
+/*    auto &buf = m_frame_buffers[m_next_frame_buffer];*/
+/*    m_next_frame_buffer = ++m_next_frame_buffer % m_frame_buffers.size();*/
+/*    return buf;*/
+/*}*/
+
+VkFramebuffer SwapChain::get_frame_buffer(uint32_t image_index) {
+    if (image_index >= m_frame_buffers.size()) {
+        throw std::runtime_error("Image index out of range for framebuffers");
+    }
+    return m_frame_buffers[image_index];
 }
 
 std::optional<uint32_t> SwapChain::get_next_image_index(VkSemaphore &image_available) {
     uint32_t image_index;
+
     VkResult result =
         vkAcquireNextImageKHR(m_ctx->logical_device, m_swap_chain, UINT64_MAX,
                               image_available, VK_NULL_HANDLE, &image_index);

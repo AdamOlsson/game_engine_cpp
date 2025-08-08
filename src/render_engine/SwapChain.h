@@ -14,30 +14,38 @@ class SwapChain {
     std::vector<vulkan::ImageView> m_image_views;
     std::vector<VkFramebuffer> m_frame_buffers;
 
+    void setup(VkSwapchainKHR &old_swap_chain);
+
     VkSwapchainKHR
     create_swap_chain(uint32_t image_count, VkSurfaceFormatKHR &surface_format,
-                      vulkan::device::SwapChainSupportDetails &swap_chain_support);
+                      vulkan::device::SwapChainSupportDetails &swap_chain_support,
+                      VkSwapchainKHR &old_swap_chain);
 
     std::vector<VkImage> create_swap_chain_images(uint32_t image_count);
     std::vector<vulkan::ImageView> create_image_views(VkFormat &image_format);
     std::vector<VkFramebuffer> create_framebuffers();
     VkRenderPass create_render_pass(VkFormat &image_format);
 
+    void destroy();
+
   public:
     VkSwapchainKHR m_swap_chain;
     VkExtent2D m_extent;
     VkRenderPass m_render_pass;
 
-    SwapChain() = default;
+    SwapChain();
     SwapChain(std::shared_ptr<graphics_context::GraphicsContext> ctx);
+    SwapChain(std::shared_ptr<graphics_context::GraphicsContext> ctx, SwapChain &old);
     ~SwapChain();
 
+    SwapChain(SwapChain &&other) noexcept;
+    SwapChain &operator=(SwapChain &&other) noexcept;
+
     SwapChain(const SwapChain &other) = delete;
-    SwapChain(SwapChain &&other) noexcept = default;
-
     SwapChain &operator=(const SwapChain &other) = delete;
-    SwapChain &operator=(SwapChain &&other) noexcept = default;
 
-    VkFramebuffer get_frame_buffer();
+    void recreate_swap_chain();
+
+    VkFramebuffer get_frame_buffer(uint32_t image_index);
     std::optional<uint32_t> get_next_image_index(VkSemaphore &image_available);
 };

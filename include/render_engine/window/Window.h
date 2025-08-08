@@ -29,6 +29,8 @@ class Window {
     void process_window_events();
     bool should_window_close();
 
+    bool is_minimized();
+
     /**
      * @brief Register a callback function for mouse input events.
      * @param cb The callback function which is triggered after a mouse input event.

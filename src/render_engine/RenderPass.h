@@ -1,14 +1,15 @@
 #pragma once
 
 #include "render_engine/Dimension.h"
+#include "render_engine/SwapChain.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/vulkan/CommandBuffer.h"
 class RenderPass {
   private:
     vulkan::CommandBuffer m_command_buffer;
+    SwapChain *m_swap_chain;
 
   public:
-    VkSwapchainKHR m_swap_chain;
     VkRenderPass m_render_pass;
     VkExtent2D m_render_area_extent;
     VkFramebuffer m_frame_buffer;
@@ -18,7 +19,7 @@ class RenderPass {
     uint32_t m_image_index;
     graphics_context::DeviceQueues m_device_queues;
 
-    RenderPass(vulkan::CommandBuffer &command_buffer);
+    RenderPass(vulkan::CommandBuffer &command_buffer, SwapChain *swap_chain);
     ~RenderPass() = default;
 
     RenderPass(RenderPass &&other) noexcept = default;
@@ -32,7 +33,7 @@ class RenderPass {
     void set_scissor(const VkExtent2D &extent);
     void end();
     void submit();
-    VkResult present();
+    void present();
 
-    VkResult end_submit_present();
+    void end_submit_present();
 };

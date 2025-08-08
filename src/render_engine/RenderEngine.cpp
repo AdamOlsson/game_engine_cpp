@@ -16,9 +16,7 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
 
     m_window_dimension_buffers.write(ctx->window->dimensions<float>());
 
-    //  1. TODO: Handle recreation of swap chain, like for resizing windows and moving
-    //  window between displays
-    //  2. TODO: What should I do about the window dimension buffer?
+    //  1. TODO: What should I do about the window dimension buffer?
     m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(
         ctx, command_buffer_manager, *swap_chain_manager, m_window_dimension_buffers,
         graphics_pipeline::GeometryPipelineOptions{});
@@ -29,7 +27,7 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
         ctx, command_buffer_manager, *swap_chain_manager, m_window_dimension_buffers,
         std::move(font));
 
-    // 3. TODO: UIPipeline is dependent on TextPipeline. Should it?... Does mean we
+    // 2. TODO: UIPipeline is dependent on TextPipeline. Should it?... Does mean we
     // refactor the geometry and UI pipeline shaders to be the same?
     m_ui_pipeline = std::make_unique<graphics_pipeline::UIPipeline>(
         ctx, command_buffer_manager, *swap_chain_manager, m_window_dimension_buffers);

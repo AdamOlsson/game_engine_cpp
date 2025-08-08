@@ -19,6 +19,12 @@ bool Window::should_window_close() { return glfwWindowShouldClose(m_window); }
 
 void Window::process_window_events() { glfwPollEvents(); }
 
+bool Window::is_minimized() {
+    int width = 0, height = 0;
+    glfwGetFramebufferSize(m_window, &width, &height);
+    glfwWaitEvents();
+    return width == 0 || height == 0;
+}
 void Window::register_mouse_event_callback(MouseEventCallbackFn cb) {
     this->mouse_event_cb = cb;
     glfwSetMouseButtonCallback(m_window, this->mouse_button_callback);
