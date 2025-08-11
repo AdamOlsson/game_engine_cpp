@@ -1,7 +1,9 @@
 #pragma once
 
 #include "render_engine/graphics_context/GraphicsContext.h"
+#include "render_engine/vulkan/Framebuffer.h"
 #include "render_engine/vulkan/ImageView.h"
+#include "render_engine/vulkan/SwapChainImage.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
 
@@ -10,9 +12,9 @@ class SwapChain {
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
     size_t m_next_frame_buffer;
 
-    std::vector<VkImage> m_images;
+    std::vector<vulkan::SwapChainImage> m_images;
     std::vector<vulkan::ImageView> m_image_views;
-    std::vector<VkFramebuffer> m_frame_buffers;
+    std::vector<vulkan::Framebuffer> m_framebuffers;
 
     void setup(VkSwapchainKHR &old_swap_chain);
 
@@ -21,9 +23,9 @@ class SwapChain {
                       vulkan::device::SwapChainSupportDetails &swap_chain_support,
                       VkSwapchainKHR &old_swap_chain);
 
-    std::vector<VkImage> create_swap_chain_images(uint32_t image_count);
+    std::vector<vulkan::SwapChainImage> create_swap_chain_images(uint32_t image_count);
     std::vector<vulkan::ImageView> create_image_views(VkFormat &image_format);
-    std::vector<VkFramebuffer> create_framebuffers();
+    std::vector<vulkan::Framebuffer> create_framebuffers();
     VkRenderPass create_render_pass(VkFormat &image_format);
 
     void destroy();
@@ -46,6 +48,6 @@ class SwapChain {
 
     void recreate_swap_chain();
 
-    VkFramebuffer get_frame_buffer(uint32_t image_index);
+    VkFramebuffer get_framebuffer(uint32_t image_index);
     std::optional<uint32_t> get_next_image_index(VkSemaphore &image_available);
 };

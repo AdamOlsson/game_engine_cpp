@@ -36,7 +36,7 @@ RenderPass SwapChainManager::get_render_pass(vulkan::CommandBuffer &command_buff
     render_pass.m_render_pass = m_swap_chain.m_render_pass;
     render_pass.m_render_area_extent = m_swap_chain.m_extent;
 
-    render_pass.m_frame_buffer = m_swap_chain.get_frame_buffer(render_pass.m_image_index);
+    render_pass.m_frame_buffer = m_swap_chain.get_framebuffer(render_pass.m_image_index);
     render_pass.m_submit_completed = m_submit_completed.get();
     render_pass.m_device_queues = m_ctx->get_device_queues();
 

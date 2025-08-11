@@ -27,14 +27,14 @@ void SwapChain::recreate_swap_chain() {
 
     VkRenderPass old_render_pass = m_render_pass;
     VkSwapchainKHR old_swap_chain = m_swap_chain;
-    std::vector<VkFramebuffer> old_frame_buffers = m_frame_buffers;
+    /*std::vector<VkFramebuffer> old_frame_buffers = m_frame_buffers;*/
     setup(old_swap_chain);
 
     vkDestroyRenderPass(m_ctx->logical_device, old_render_pass, nullptr);
     vkDestroySwapchainKHR(m_ctx->logical_device, old_swap_chain, nullptr);
-    for (size_t i = 0; i < m_frame_buffers.size(); i++) {
-        vkDestroyFramebuffer(m_ctx->logical_device, old_frame_buffers[i], nullptr);
-    }
+    /*for (size_t i = 0; i < m_frame_buffers.size(); i++) {*/
+    /*    vkDestroyFramebuffer(m_ctx->logical_device, old_frame_buffers[i], nullptr);*/
+    /*}*/
 }
 
 void SwapChain::setup(VkSwapchainKHR &old_swap_chain) {
@@ -56,15 +56,12 @@ void SwapChain::setup(VkSwapchainKHR &old_swap_chain) {
     m_images = create_swap_chain_images(image_count);
     m_image_views = create_image_views(surface_format.format);
     m_render_pass = create_render_pass(surface_format.format);
-    m_frame_buffers = create_framebuffers();
+    m_framebuffers = create_framebuffers();
 }
 
 void SwapChain::destroy() {
     vkDestroyRenderPass(m_ctx->logical_device, m_render_pass, nullptr);
     vkDestroySwapchainKHR(m_ctx->logical_device, m_swap_chain, nullptr);
-    for (size_t i = 0; i < m_frame_buffers.size(); i++) {
-        vkDestroyFramebuffer(m_ctx->logical_device, m_frame_buffers[i], nullptr);
-    }
 }
 
 SwapChain::~SwapChain() {
@@ -78,7 +75,7 @@ SwapChain::~SwapChain() {
 SwapChain::SwapChain(SwapChain &&other) noexcept
     : m_ctx(std::move(other.m_ctx)), m_next_frame_buffer(other.m_next_frame_buffer),
       m_images(std::move(other.m_images)), m_image_views(std::move(other.m_image_views)),
-      m_frame_buffers(std::move(other.m_frame_buffers)), m_swap_chain(other.m_swap_chain),
+      m_framebuffers(std::move(other.m_framebuffers)), m_swap_chain(other.m_swap_chain),
       m_extent(other.m_extent), m_render_pass(other.m_render_pass) {
     other.m_swap_chain = VK_NULL_HANDLE;
     other.m_render_pass = VK_NULL_HANDLE;
@@ -94,7 +91,7 @@ SwapChain &SwapChain::operator=(SwapChain &&other) noexcept {
         m_next_frame_buffer = other.m_next_frame_buffer;
         m_images = std::move(other.m_images);
         m_image_views = std::move(other.m_image_views);
-        m_frame_buffers = std::move(other.m_frame_buffers);
+        m_framebuffers = std::move(other.m_framebuffers);
         m_swap_chain = other.m_swap_chain;
         m_extent = other.m_extent;
         m_render_pass = other.m_render_pass;
@@ -168,30 +165,16 @@ std::vector<vulkan::ImageView> SwapChain::create_image_views(VkFormat &image_for
     return swap_chain_image_views;
 }
 
-std::vector<VkFramebuffer> SwapChain::create_framebuffers() {
+std::vector<vulkan::Framebuffer> SwapChain::create_framebuffers() {
 
     const size_t capacity = m_image_views.size();
-    std::vector<VkFramebuffer> swapChainFramebuffers;
-    swapChainFramebuffers.resize(capacity);
+    std::vector<vulkan::Framebuffer> swap_chain_framebuffers;
+    swap_chain_framebuffers.reserve(capacity);
 
     for (size_t i = 0; i < capacity; i++) {
-        VkImageView attachments[] = {m_image_views[i]};
-
-        VkFramebufferCreateInfo framebufferInfo{};
-        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebufferInfo.renderPass = m_render_pass;
-        framebufferInfo.attachmentCount = 1;
-        framebufferInfo.pAttachments = attachments;
-        framebufferInfo.width = m_extent.width;
-        framebufferInfo.height = m_extent.height;
-        framebufferInfo.layers = 1;
-
-        if (vkCreateFramebuffer(m_ctx->logical_device, &framebufferInfo, nullptr,
-                                &swapChainFramebuffers[i]) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create framebuffer!");
-        }
+        swap_chain_framebuffers.emplace_back(m_ctx, m_image_views[i], m_render_pass, m_extent);
     }
-    return swapChainFramebuffers;
+    return swap_chain_framebuffers;
 }
 
 VkRenderPass SwapChain::create_render_pass(VkFormat &image_format) {
@@ -239,13 +222,11 @@ VkRenderPass SwapChain::create_render_pass(VkFormat &image_format) {
     return render_pass;
 }
 
-
-
-VkFramebuffer SwapChain::get_frame_buffer(uint32_t image_index) {
-    if (image_index >= m_frame_buffers.size()) {
+VkFramebuffer SwapChain::get_framebuffer(uint32_t image_index) {
+    if (image_index >= m_framebuffers.size()) {
         throw std::runtime_error("Image index out of range for framebuffers");
     }
-    return m_frame_buffers[image_index];
+    return m_framebuffers[image_index];
 }
 
 std::optional<uint32_t> SwapChain::get_next_image_index(VkSemaphore &image_available) {

@@ -6,12 +6,12 @@
 #include "render_engine/ui/TextBox.h"
 #include <memory>
 
+// TODO: 0. TODO: Remove RenderEngine class
 RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                            CommandBufferManager *command_buffer_manager,
                            SwapChainManager *swap_chain_manager, const UseFont use_font)
     : m_sampler(vulkan::Sampler(ctx)) {
 
-    //  1. TODO: What should I do about the window dimension buffer?
     m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(
         ctx, command_buffer_manager, *swap_chain_manager,
         graphics_pipeline::GeometryPipelineOptions{});
@@ -21,7 +21,7 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
     m_text_pipeline = std::make_unique<graphics_pipeline::TextPipeline>(
         ctx, command_buffer_manager, *swap_chain_manager, std::move(font));
 
-    // 2. TODO: UIPipeline is dependent on TextPipeline. Should it?... Does mean we
+    // 1. TODO: UIPipeline is dependent on TextPipeline. Should it?... Does mean we
     // refactor the geometry and UI pipeline shaders to be the same?
     m_ui_pipeline = std::make_unique<graphics_pipeline::UIPipeline>(
         ctx, command_buffer_manager, *swap_chain_manager);
