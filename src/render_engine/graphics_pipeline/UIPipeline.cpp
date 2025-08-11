@@ -1,6 +1,5 @@
 #include "UIPipeline.h"
 #include "render_engine/Geometry.h"
-#include "render_engine/descriptors/DescriptorSet.h"
 #include "render_engine/descriptors/DescriptorSetBuilder.h"
 #include "render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "render_engine/graphics_pipeline/GraphicsPipelineBuilder.h"
@@ -10,16 +9,16 @@
 
 graphics_pipeline::UIPipeline::UIPipeline(
     std::shared_ptr<graphics_context::GraphicsContext> ctx,
-    CommandBufferManager *command_buffer_manager, SwapChainManager &swap_chain_manager,
-    SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers)
+    CommandBufferManager *command_buffer_manager, SwapChainManager &swap_chain_manager)
     : m_ctx(ctx),
       m_descriptor_pool(DescriptorPool(m_ctx, m_descriptor_pool_capacity,
                                        m_num_storage_buffers, m_num_uniform_buffers,
                                        m_num_samplers)),
       m_descriptor_set(
           DescriptorSetBuilder(graphics_pipeline::MAX_FRAMES_IN_FLIGHT)
-              .add_uniform_buffer(0, vulkan::DescriptorBufferInfo::from_vector(
-                                         uniform_buffers.get_buffer_references()))
+              .add_uniform_buffer(
+                  0, vulkan::DescriptorBufferInfo::from_vector(
+                         swap_chain_manager.get_window_size_swap_buffer_ref()))
               .build(m_ctx, m_descriptor_pool)),
       m_graphics_pipeline(
           // clang-format off

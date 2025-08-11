@@ -1,7 +1,6 @@
 #pragma once
 
 #include "render_engine/SwapChainManager.h"
-#include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/buffers/IndexBuffer.h"
 #include "render_engine/buffers/VertexBuffer.h"
 #include "render_engine/descriptors/DescriptorPool.h"
@@ -33,8 +32,7 @@ class UIPipeline {
   public:
     UIPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                CommandBufferManager *command_buffer_manager,
-               SwapChainManager &swap_chain_manager,
-               SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers);
+               SwapChainManager &swap_chain_manager);
     ~UIPipeline();
 
     void render(const VkCommandBuffer &command_buffer,

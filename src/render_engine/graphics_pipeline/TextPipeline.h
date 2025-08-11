@@ -74,9 +74,7 @@ class TextPipeline {
   public:
     TextPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                  CommandBufferManager *command_buffer_manager,
-                 SwapChainManager &swap_chain_manager,
-                 SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
-                 std::unique_ptr<Font> font);
+                 SwapChainManager &swap_chain_manager, std::unique_ptr<Font> font);
     ~TextPipeline();
 
     StorageBuffer<CharacterInstanceBufferObject> &get_character_buffer();

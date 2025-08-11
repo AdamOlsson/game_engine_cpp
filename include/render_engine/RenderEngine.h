@@ -1,7 +1,6 @@
 #pragma once
 #include "render_engine/RenderBody.h"
 #include "render_engine/SwapChainManager.h"
-#include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/fonts/Font.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/graphics_pipeline/GeometryPipeline.h"
@@ -13,10 +12,6 @@
 
 class RenderEngine {
   private:
-    bool framebuffer_resized = false;
-
-    SwapUniformBuffer<window::WindowDimension<float>> m_window_dimension_buffers;
-
     vulkan::Sampler m_sampler;
     std::unique_ptr<Texture> m_texture; // Having this unique prevents a segfault
 

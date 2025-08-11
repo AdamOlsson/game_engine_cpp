@@ -1,14 +1,8 @@
 #include "render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "render_engine/Geometry.h"
-#include "render_engine/Texture.h"
-#include "render_engine/buffers/GpuBuffer.h"
-#include "render_engine/descriptors/DescriptorPool.h"
-#include "render_engine/descriptors/DescriptorSet.h"
 #include "render_engine/descriptors/DescriptorSetBuilder.h"
 #include "render_engine/graphics_pipeline/GraphicsPipelineBuilder.h"
 #include "render_engine/resources/ResourceManager.h"
-#include "render_engine/vulkan/DescriptorImageInfo.h"
-#include "render_engine/vulkan/Sampler.h"
 #include "shape.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
@@ -19,7 +13,6 @@
 graphics_pipeline::GeometryPipeline::GeometryPipeline(
     std::shared_ptr<graphics_context::GraphicsContext> ctx,
     CommandBufferManager *command_buffer_manager, SwapChainManager &swap_chain_manager,
-    SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
     std::optional<GeometryPipelineOptions> opts)
     : m_ctx(ctx), m_opts(opts.has_value() ? opts.value() : GeometryPipelineOptions{}),
 
@@ -54,8 +47,9 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
         DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
             .add_storage_buffer(0, vulkan::DescriptorBufferInfo::from_vector(
                                        m_circle_instance_buffers.get_buffer_references()))
-            .add_uniform_buffer(1, vulkan::DescriptorBufferInfo::from_vector(
-                                       uniform_buffers.get_buffer_references()))
+            .add_uniform_buffer(1,
+                                vulkan::DescriptorBufferInfo::from_vector(
+                                    swap_chain_manager.get_window_size_swap_buffer_ref()))
             .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())
             .build(m_ctx, m_descriptor_pool);
 
@@ -68,8 +62,9 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
             .add_storage_buffer(0,
                                 vulkan::DescriptorBufferInfo::from_vector(
                                     m_triangle_instance_buffers.get_buffer_references()))
-            .add_uniform_buffer(1, vulkan::DescriptorBufferInfo::from_vector(
-                                       uniform_buffers.get_buffer_references()))
+            .add_uniform_buffer(1,
+                                vulkan::DescriptorBufferInfo::from_vector(
+                                    swap_chain_manager.get_window_size_swap_buffer_ref()))
             .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())
             .build(m_ctx, m_descriptor_pool);
 
@@ -82,8 +77,9 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
             .add_storage_buffer(0,
                                 vulkan::DescriptorBufferInfo::from_vector(
                                     m_rectangle_instance_buffers.get_buffer_references()))
-            .add_uniform_buffer(1, vulkan::DescriptorBufferInfo::from_vector(
-                                       uniform_buffers.get_buffer_references()))
+            .add_uniform_buffer(1,
+                                vulkan::DescriptorBufferInfo::from_vector(
+                                    swap_chain_manager.get_window_size_swap_buffer_ref()))
             .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())
             .build(m_ctx, m_descriptor_pool);
 
@@ -96,8 +92,9 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
             .add_storage_buffer(0,
                                 vulkan::DescriptorBufferInfo::from_vector(
                                     m_hexagon_instance_buffers.get_buffer_references()))
-            .add_uniform_buffer(1, vulkan::DescriptorBufferInfo::from_vector(
-                                       uniform_buffers.get_buffer_references()))
+            .add_uniform_buffer(1,
+                                vulkan::DescriptorBufferInfo::from_vector(
+                                    swap_chain_manager.get_window_size_swap_buffer_ref()))
             .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())
             .build(m_ctx, m_descriptor_pool);
 

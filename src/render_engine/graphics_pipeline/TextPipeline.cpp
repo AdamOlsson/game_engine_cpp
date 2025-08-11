@@ -1,20 +1,14 @@
 #include "TextPipeline.h"
 #include "render_engine/Geometry.h"
-#include "render_engine/descriptors/DescriptorSet.h"
 #include "render_engine/descriptors/DescriptorSetBuilder.h"
-#include "render_engine/fonts/Font.h"
 #include "render_engine/graphics_pipeline/GeometryPipeline.h"
-#include "render_engine/graphics_pipeline/GraphicsPipeline.h"
 #include "render_engine/graphics_pipeline/GraphicsPipelineBuilder.h"
 #include "render_engine/resources/ResourceManager.h"
-#include "vulkan/vulkan_core.h"
 #include <cstring>
-#include <memory>
 
 graphics_pipeline::TextPipeline::TextPipeline(
     std::shared_ptr<graphics_context::GraphicsContext> ctx,
     CommandBufferManager *command_buffer_manager, SwapChainManager &swap_chain_manager,
-    SwapUniformBuffer<window::WindowDimension<float>> &uniform_buffers,
     std::unique_ptr<Font> font)
     : m_ctx(ctx), m_font(std::move(font)),
       m_character_buffers(SwapStorageBuffer<CharacterInstanceBufferObject>(
@@ -36,8 +30,9 @@ graphics_pipeline::TextPipeline::TextPipeline(
         DescriptorSetBuilder(graphics_pipeline::MAX_FRAMES_IN_FLIGHT)
             .add_storage_buffer(0, vulkan::DescriptorBufferInfo::from_vector(
                                        m_character_buffers.get_buffer_references()))
-            .add_uniform_buffer(1, vulkan::DescriptorBufferInfo::from_vector(
-                                       uniform_buffers.get_buffer_references()))
+            .add_uniform_buffer(1,
+                                vulkan::DescriptorBufferInfo::from_vector(
+                                    swap_chain_manager.get_window_size_swap_buffer_ref()))
             .add_combined_image_sampler(2, m_opts.combined_image_sampler)
             .add_storage_buffer(3, vulkan::DescriptorBufferInfo::from_vector(
                                        m_text_segment_buffers.get_buffer_references()))

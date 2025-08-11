@@ -4,33 +4,27 @@
 #include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/fonts/Font.h"
 #include "render_engine/ui/TextBox.h"
-#include "render_engine/window/Window.h"
 #include <memory>
 
 RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                            CommandBufferManager *command_buffer_manager,
                            SwapChainManager *swap_chain_manager, const UseFont use_font)
-    : m_window_dimension_buffers(SwapUniformBuffer<window::WindowDimension<float>>(
-          ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1)),
-      m_sampler(vulkan::Sampler(ctx)) {
-
-    m_window_dimension_buffers.write(ctx->window->dimensions<float>());
+    : m_sampler(vulkan::Sampler(ctx)) {
 
     //  1. TODO: What should I do about the window dimension buffer?
     m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(
-        ctx, command_buffer_manager, *swap_chain_manager, m_window_dimension_buffers,
+        ctx, command_buffer_manager, *swap_chain_manager,
         graphics_pipeline::GeometryPipelineOptions{});
 
     auto font =
         std::make_unique<Font>(ctx, command_buffer_manager, "DefaultFont", &m_sampler);
     m_text_pipeline = std::make_unique<graphics_pipeline::TextPipeline>(
-        ctx, command_buffer_manager, *swap_chain_manager, m_window_dimension_buffers,
-        std::move(font));
+        ctx, command_buffer_manager, *swap_chain_manager, std::move(font));
 
     // 2. TODO: UIPipeline is dependent on TextPipeline. Should it?... Does mean we
     // refactor the geometry and UI pipeline shaders to be the same?
     m_ui_pipeline = std::make_unique<graphics_pipeline::UIPipeline>(
-        ctx, command_buffer_manager, *swap_chain_manager, m_window_dimension_buffers);
+        ctx, command_buffer_manager, *swap_chain_manager);
 }
 
 RenderEngine::~RenderEngine() {}

@@ -9,7 +9,11 @@ SwapChainManager::SwapChainManager(std::shared_ptr<graphics_context::GraphicsCon
           vulkan::Semaphore(m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT)),
       m_submit_completed(
           vulkan::Semaphore(m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT)),
-      m_in_flight_fence(vulkan::Fence(m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT)) {}
+      m_in_flight_fence(vulkan::Fence(m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT)),
+      m_window_size_swap_buffer(SwapUniformBuffer<window::WindowDimension<float>>(
+          m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1)) {
+    m_window_size_swap_buffer.write(m_ctx->window->dimensions<float>());
+}
 
 SwapChainManager::~SwapChainManager() {}
 
@@ -58,4 +62,8 @@ void SwapChainManager::set_image_index(RenderPass &render_pass) {
     render_pass.m_image_index = image_index.value();
     render_pass.m_image_available = image_available;
     render_pass.m_in_flight_fence = in_flight_fence;
+}
+
+std::vector<GpuBufferRef> SwapChainManager::get_window_size_swap_buffer_ref() {
+    return m_window_size_swap_buffer.get_buffer_references();
 }

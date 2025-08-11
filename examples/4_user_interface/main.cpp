@@ -240,7 +240,7 @@ class UserInterfaceExample : public Game {
         m_render_engine->render_ui(command_buffer, ui_state);
         PerformanceWindow::get_instance().render(*m_render_engine, command_buffer);
 
-        VkResult result = render_pass.end_submit_present();
+        render_pass.end_submit_present();
     };
 
     void setup(std::shared_ptr<graphics_context::GraphicsContext> &ctx) override {
@@ -266,9 +266,7 @@ int main() {
 
     GameEngineConfig config{
         .window_config = window::WindowConfig{.dims = window::WindowDimension(800, 800),
-                                              .title = "4_user_interface"},
-        .use_font = UseFont::Default,
-    };
+                                              .title = "4_user_interface"}};
 
     auto game = std::make_unique<UserInterfaceExample>();
     auto game_engine = std::make_unique<GameEngine>(std::move(game), config);

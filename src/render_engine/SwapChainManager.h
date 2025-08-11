@@ -2,6 +2,7 @@
 
 #include "render_engine/RenderPass.h"
 #include "render_engine/SwapChain.h"
+#include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/vulkan/CommandBuffer.h"
 #include "render_engine/vulkan/Fence.h"
@@ -17,6 +18,8 @@ class SwapChainManager {
     vulkan::Fence m_in_flight_fence;
     vulkan::Semaphore m_image_available;
     vulkan::Semaphore m_submit_completed;
+
+    SwapUniformBuffer<window::WindowDimension<float>> m_window_size_swap_buffer;
 
   public:
     SwapChain m_swap_chain;
@@ -38,4 +41,6 @@ class SwapChainManager {
     RenderPass get_render_pass(vulkan::CommandBuffer &command_buffer);
 
     void set_image_index(RenderPass &render_pass);
+
+    std::vector<GpuBufferRef> get_window_size_swap_buffer_ref();
 };

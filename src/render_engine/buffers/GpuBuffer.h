@@ -200,6 +200,8 @@ template <typename T, GpuBufferType BufferType> class SwapGpuBuffer {
     std::vector<GpuBufferRef> m_refs;
 
   public:
+    SwapGpuBuffer() = default;
+
     SwapGpuBuffer(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
                   size_t num_bufs, size_t capacity)
         : m_idx(0) {

@@ -239,11 +239,7 @@ VkRenderPass SwapChain::create_render_pass(VkFormat &image_format) {
     return render_pass;
 }
 
-/*VkFramebuffer SwapChain::get_frame_buffer() {*/
-/*    auto &buf = m_frame_buffers[m_next_frame_buffer];*/
-/*    m_next_frame_buffer = ++m_next_frame_buffer % m_frame_buffers.size();*/
-/*    return buf;*/
-/*}*/
+
 
 VkFramebuffer SwapChain::get_frame_buffer(uint32_t image_index) {
     if (image_index >= m_frame_buffers.size()) {
