@@ -40,9 +40,9 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
     }
 
     m_circle_vertex_buffer =
-        VertexBuffer(ctx, Geometry::circle_vertices, command_buffer_manager);
+        VertexBuffer(m_ctx, Geometry::circle_vertices, command_buffer_manager);
     m_circle_index_buffer =
-        IndexBuffer(ctx, Geometry::circle_indices, command_buffer_manager);
+        IndexBuffer(m_ctx, Geometry::circle_indices, command_buffer_manager);
     m_circle_descriptor_set =
         DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
             .add_storage_buffer(0, vulkan::DescriptorBufferInfo::from_vector(

@@ -4,6 +4,7 @@
 #include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/fonts/Font.h"
 #include "render_engine/ui/TextBox.h"
+#include "render_engine/vulkan/DescriptorImageInfo.h"
 #include <memory>
 
 // TODO: 0. TODO: Remove RenderEngine class
@@ -12,9 +13,13 @@ RenderEngine::RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ct
                            SwapChainManager *swap_chain_manager, const UseFont use_font)
     : m_sampler(vulkan::Sampler(ctx)) {
 
+    m_dog_image =
+        Texture::unique_from_image_resource_name(ctx, command_buffer_manager, "DogImage");
     m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(
         ctx, command_buffer_manager, *swap_chain_manager,
-        graphics_pipeline::GeometryPipelineOptions{});
+        graphics_pipeline::GeometryPipelineOptions{
+            .combined_image_sampler =
+                vulkan::DescriptorImageInfo(m_dog_image->view(), &m_sampler)});
 
     auto font =
         std::make_unique<Font>(ctx, command_buffer_manager, "DefaultFont", &m_sampler);
@@ -82,7 +87,8 @@ void RenderEngine::render(
 
 // TODO: This function is not compatible with render_ui. It is not possible to run them in
 // the same loop iteration as they overwrite their buffers
-void RenderEngine::render_text(const ui::TextBox &text_box) {
+void RenderEngine::render_text(vulkan::CommandBuffer &command_buffer,
+                               const ui::TextBox &text_box) {
     auto &character_instance_buffer = m_text_pipeline->get_character_buffer();
     auto &text_segment_buffer = m_text_pipeline->get_text_segment_buffer();
     character_instance_buffer.clear();
@@ -93,7 +99,7 @@ void RenderEngine::render_text(const ui::TextBox &text_box) {
     character_instance_buffer.transfer();
     text_segment_buffer.transfer();
 
-    m_text_pipeline->render_text(m_current_render_pass.command_buffer);
+    m_text_pipeline->render_text(command_buffer);
 }
 
 // TODO: Should we instead simply pass the UI class instead of its state?

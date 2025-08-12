@@ -15,7 +15,7 @@ const std::string &ImageResource::name() const { return name_; }
 const unsigned int ImageResource::length() const { return length_; }
 
 std::vector<std::unique_ptr<ImageResource>> fetch_all_images() {
-    std::vector<std ::unique_ptr<ImageResource>> fonts{};
-    fonts.push_back(DogImage::create_resource());
-    return fonts;
+    std::vector<std ::unique_ptr<ImageResource>> images{};
+    images.push_back(DogImage::create_resource());
+    return images;
 }

@@ -39,7 +39,7 @@ layout(location = 0) in vec3 inPosition;
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out vec2 uv;
 
-mat3 rotationMatrixZ(float theta) {
+mat3 create_rotation_matrix_z(float theta) {
     float c = cos(theta);
     float s = sin(theta);
     return mat3(c, -s, 0.0,
@@ -110,7 +110,7 @@ void main() {
                 scaled_vertex_pos = inPosition;  // Fallback to original position
         }
         
-        mat3 rotation_matrix = rotationMatrixZ(-instance.rotation);
+        mat3 rotation_matrix = create_rotation_matrix_z(-instance.rotation);
         vec3 rotated_vertex_pos = rotation_matrix * scaled_vertex_pos;
         
         vec2 viewport_position = positions_to_viewport(instance.position.xy, window.dims);

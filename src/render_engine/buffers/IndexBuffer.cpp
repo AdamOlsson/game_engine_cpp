@@ -38,7 +38,7 @@ IndexBuffer::IndexBuffer(IndexBuffer &&other) noexcept
 
 IndexBuffer &IndexBuffer::operator=(IndexBuffer &&other) noexcept {
     if (this != &other) {
-        if (buffer != VK_NULL_HANDLE) {
+        if (m_ctx && buffer != VK_NULL_HANDLE) {
             vkDestroyBuffer(m_ctx->logical_device, buffer, nullptr);
             vkFreeMemory(m_ctx->logical_device, bufferMemory, nullptr);
         }

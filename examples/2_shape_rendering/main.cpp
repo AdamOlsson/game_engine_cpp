@@ -4,6 +4,7 @@
 #include "entity_component_storage/ComponentStore.h"
 #include "entity_component_storage/EntityComponentStorage.h"
 #include "render_engine/RenderBody.h"
+#include "render_engine/RenderEngine.h"
 #include "render_engine/fonts/Font.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "render_engine/ui/ElementProperties.h"
@@ -14,6 +15,12 @@
 #include <optional>
 
 class ShapeRendering : public Game {
+  private:
+    std::unique_ptr<RenderEngine> m_render_engine; // TODO: Remove
+    std::unique_ptr<SwapChainManager> m_swap_chain_manager;
+    std::unique_ptr<CommandBufferManager> m_command_buffer_manager;
+    /*std::unique_ptr<ui::UIPipeline> m_ui_pipeline;*/
+
   public:
     EntityComponentStorage ecs;
 
@@ -87,32 +94,36 @@ class ShapeRendering : public Game {
         register_all_shaders();
         register_all_fonts();
         register_all_images();
+        m_swap_chain_manager = std::make_unique<SwapChainManager>(ctx);
+        m_command_buffer_manager = std::make_unique<CommandBufferManager>(
+            ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
+
+        m_render_engine = std::make_unique<RenderEngine>(
+            ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
+            UseFont::Default); // TODO: remove
     }
 
     void render() override {
-        /*std::vector<std::reference_wrapper<const RenderBody>> render_bodies = {};*/
-        /*for (auto it = ecs.begin<RenderBody>(); it != ecs.end<RenderBody>(); it++) {*/
-        /*    render_bodies.push_back(ecs.get_component<RenderBody>(it.id()).value());*/
-        /*}*/
-        /**/
-        /*bool success = render_engine.begin_render_pass();*/
-        /*if (!success) {*/
-        /*    return;*/
-        /*}*/
-        /**/
-        /*render_engine.render(render_bodies);*/
-        /**/
-        /*render_engine.render_text(*/
-        /*    ui::TextBox("ADAM", ui::ElementProperties{.font.size = 128}));*/
-        /*render_engine.render_text(ui::TextBox(*/
-        /*    "LINDA", ui::ElementProperties{.container.center = glm::vec2(0.0f,
-           100.0f),*/
-        /*                                   .font.size = 64}));*/
-        /**/
-        /*success = render_engine.end_render_pass();*/
-        /*if (!success) {*/
-        /*    return;*/
-        /*}*/
+        std::vector<std::reference_wrapper<const RenderBody>> render_bodies = {};
+        for (auto it = ecs.begin<RenderBody>(); it != ecs.end<RenderBody>(); it++) {
+            render_bodies.push_back(ecs.get_component<RenderBody>(it.id()).value());
+        }
+
+        auto command_buffer = m_command_buffer_manager->get_command_buffer();
+        RenderPass render_pass = m_swap_chain_manager->get_render_pass(command_buffer);
+        render_pass.begin();
+
+        m_render_engine->render(command_buffer, render_bodies);
+
+        m_render_engine->render_text(
+            command_buffer, ui::TextBox("ADAM", ui::ElementProperties{.font.size = 128}));
+        m_render_engine->render_text(
+            command_buffer,
+            ui::TextBox("LINDA",
+                        ui::ElementProperties{.container.center = glm::vec2(0.0f, 100.0f),
+                                              .font.size = 64}));
+
+        render_pass.end_submit_present();
     };
 };
 

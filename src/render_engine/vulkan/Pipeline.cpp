@@ -26,7 +26,7 @@ vulkan::Pipeline::Pipeline(Pipeline &&other) noexcept
 
 vulkan::Pipeline &vulkan::Pipeline::operator=(Pipeline &&other) noexcept {
     if (this != &other) {
-        if (m_pipeline != VK_NULL_HANDLE) {
+        if (m_ctx && m_pipeline != VK_NULL_HANDLE) {
             vkDestroyPipeline(m_ctx->logical_device, m_pipeline, nullptr);
         }
         m_ctx = std::move(other.m_ctx);

@@ -3,7 +3,6 @@
 #include "GameEngine.h"
 #include "entity_component_storage/ComponentStore.h"
 #include "entity_component_storage/EntityComponentStorage.h"
-#include "glm/geometric.hpp"
 #include "physics_engine/RigidBody.h"
 #include "physics_engine/SAT.h"
 #include "physics_engine/collision_resolver.h"

@@ -13,16 +13,11 @@
 class RenderEngine {
   private:
     vulkan::Sampler m_sampler;
-    std::unique_ptr<Texture> m_texture; // Having this unique prevents a segfault
 
+    std::unique_ptr<Texture> m_dog_image;
     std::unique_ptr<graphics_pipeline::GeometryPipeline> m_geometry_pipeline;
-
     std::unique_ptr<graphics_pipeline::TextPipeline> m_text_pipeline;
     std::unique_ptr<graphics_pipeline::UIPipeline> m_ui_pipeline;
-
-    struct {
-        vulkan::CommandBuffer command_buffer;
-    } m_current_render_pass;
 
   public:
     RenderEngine(std::shared_ptr<graphics_context::GraphicsContext> ctx,
@@ -33,13 +28,7 @@ class RenderEngine {
     void render(vulkan::CommandBuffer &command_buffer,
                 const std::vector<std::reference_wrapper<const RenderBody>> &bodies);
 
-    void render_text(const ui::TextBox &text_box);
+    void render_text(vulkan::CommandBuffer &command_buffer, const ui::TextBox &text_box);
 
     void render_ui(vulkan::CommandBuffer &command_buffer, const ui::State &state);
-
-    /*bool begin_render_pass(SwapChainManager *swap_chain_manager,*/
-    /*                       graphics_context::DeviceQueues &m_device_queues);*/
-
-    /*bool end_render_pass(SwapChainManager *swap_chain_manager,*/
-    /*                     graphics_context::DeviceQueues &m_device_queues);*/
 };
