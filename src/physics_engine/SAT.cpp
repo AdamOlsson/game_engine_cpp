@@ -266,8 +266,8 @@ CollisionInformation find_clipping_points(const CollisionEdge &edge_a,
 
 inline std::optional<MTV> find_mtv_circle(const RigidBody &body_a,
                                           const RigidBody &body_b) {
-    const auto radius_a = body_a.shape.get<Circle>().radius;
-    const auto radius_b = body_b.shape.get<Circle>().radius;
+    const auto radius_a = body_a.shape.get<Circle>().diameter / 2.0f;
+    const auto radius_b = body_b.shape.get<Circle>().diameter / 2.0f;
     const float distance2 = Equations::distance2(body_b.position, body_a.position);
     if (distance2 >= pow(radius_a + radius_b, 2)) {
         return std::nullopt;
@@ -358,7 +358,7 @@ SAT::collision_detection_circle(const RigidBody &body_a, const RigidBody &body_b
     if (!mtv.has_value()) {
         return std::nullopt;
     }
-    const auto radius_a = body_a.shape.get<Circle>().radius;
+    const auto radius_a = body_a.shape.get<Circle>().diameter / 2.0f;
     return CollisionInformation{
         .penetration_depth = mtv->magnitude,
         .normal = mtv->direction,
@@ -375,7 +375,7 @@ SAT::collision_detection_circle_polygon(const RigidBody &circle,
     if (!mtv.has_value()) {
         return std::nullopt;
     }
-    const float radius = circle.shape.get<Circle>().radius;
+    const float radius = circle.shape.get<Circle>().diameter / 2.0f;
     return CollisionInformation{
         .penetration_depth = mtv->magnitude,
         .normal = mtv->direction,

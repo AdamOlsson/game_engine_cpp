@@ -97,7 +97,7 @@ void main() {
         
         switch(instance.shape_type) {
             case CIRCLE:
-                scaled_vertex_pos = scale_vertex(inPosition, instance.shape.param1 * 2.0, instance.shape.param1 * 2.0);
+                scaled_vertex_pos = scale_vertex(inPosition, instance.shape.param1, instance.shape.param1);
                 break;
             case TRIANGLE:
             case HEXAGON:

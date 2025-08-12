@@ -3,12 +3,13 @@
 
 float get_circle_bounding_volume_radius(const RigidBody &body) {
     const auto circle = body.shape.get<Circle>();
-    return circle.radius / 2.0f;
+    return circle.diameter;
 }
 
 bool is_point_inside_circle(const RigidBody &body, const WorldPoint &point) {
     const auto circle = body.shape.get<Circle>();
-    return Equations::length2(point - body.position) <= circle.radius * circle.radius;
+    const auto radius = circle.diameter / 2.0f;
+    return Equations::length2(point - body.position) <= radius * radius;
 }
 
 /// For a given point, calculate the closest point on the rigid body. If the
@@ -16,17 +17,19 @@ bool is_point_inside_circle(const RigidBody &body, const WorldPoint &point) {
 WorldPoint closest_point_on_circle(const RigidBody &body, const WorldPoint &point) {
     const auto circle = body.shape.get<Circle>();
     const glm::vec3 diff = point - body.position;
+    const auto radius = circle.diameter / 2.0f;
 
-    if (Equations::length2(diff) <= circle.radius * circle.radius) {
+    if (Equations::length2(diff) <= radius * radius) {
         // Inside body
         return point;
     } else {
         // Outside body
-        return static_cast<WorldPoint>(glm::normalize(diff) * circle.radius);
+        return static_cast<WorldPoint>(glm::normalize(diff) * radius);
     }
 }
 
 float circle_inertia(const RigidBody &body) {
     const auto circle = body.shape.get<Circle>();
-    return 0.5f * body.mass * circle.radius * circle.radius;
+    const auto radius = circle.diameter / 2.0f;
+    return 0.5f * body.mass * radius * radius;
 }

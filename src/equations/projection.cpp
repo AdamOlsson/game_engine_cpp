@@ -31,7 +31,7 @@ Projection Projection::project_polygon_on_axis(const RigidBody &polygon,
 
 Projection Projection::project_circle_on_axis(const RigidBody &circle,
                                               const glm::vec3 &axis) {
-    const float radius = circle.shape.get<Circle>().radius;
+    const float radius = circle.shape.get<Circle>().diameter / 2.0f;
     const glm::vec3 axis_norm = glm::normalize(axis);
     const WorldPoint extent = static_cast<WorldPoint>(axis_norm * radius);
     const glm::vec3 lower = circle.position - extent;

@@ -6,11 +6,11 @@
 #include <variant>
 
 struct Circle {
-    alignas(4) glm::float32 radius;
+    alignas(4) glm::float32 diameter;
 
     // Pretty print member function
     std::string to_string() const {
-        return std::format("Circle {{ radius: {:.3f} }}", radius);
+        return std::format("Circle {{ diameter: {:.3f} }}", diameter);
     }
 
     // Stream operator
