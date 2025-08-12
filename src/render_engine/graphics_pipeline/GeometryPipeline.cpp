@@ -104,11 +104,6 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
                 .set_vertex_shader(ResourceManager::get_instance().get_resource<ShaderResource>("GeometryVertex"))
                 .set_fragment_shader(ResourceManager::get_instance().get_resource<ShaderResource>("GeometryFragment"))
                 .set_descriptor_set_layout(&m_hexagon_descriptor_set.get_layout()) // All descriptors have same layout
-                .set_push_constants({
-                    .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-                    .offset = 0,
-                    .size = sizeof(uint32_t)
-                    })
                 .build(m_ctx, swap_chain_manager);
     // clang-format on
 }
@@ -120,8 +115,6 @@ void graphics_pipeline::GeometryPipeline::render_circles(
     const auto &instance_buffer = m_circle_instance_buffers.get_buffer();
     const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
-        m_graphics_pipeline.bind_push_constants(
-            command_buffer, VK_SHADER_STAGE_VERTEX_BIT, ShapeTypeEncoding::CircleShape);
         auto descriptor_set = m_circle_descriptor_set.get();
         m_graphics_pipeline.render(command_buffer, m_circle_vertex_buffer,
                                    m_circle_index_buffer, descriptor_set, num_instances);
@@ -134,8 +127,6 @@ void graphics_pipeline::GeometryPipeline::render_triangles(
     const auto &instance_buffer = m_triangle_instance_buffers.get_buffer();
     const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
-        m_graphics_pipeline.bind_push_constants(
-            command_buffer, VK_SHADER_STAGE_VERTEX_BIT, ShapeTypeEncoding::TriangleShape);
         auto descriptor_set = m_triangle_descriptor_set.get();
         m_graphics_pipeline.render(command_buffer, m_triangle_vertex_buffer,
                                    m_triangle_index_buffer, descriptor_set,
@@ -150,9 +141,6 @@ void graphics_pipeline::GeometryPipeline::render_rectangles(
     const auto &instance_buffer = m_rectangle_instance_buffers.get_buffer();
     const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
-        m_graphics_pipeline.bind_push_constants(command_buffer,
-                                                VK_SHADER_STAGE_VERTEX_BIT,
-                                                ShapeTypeEncoding::RectangleShape);
         auto descriptor_set = m_rectangle_descriptor_set.get();
         m_graphics_pipeline.render(command_buffer, m_rectangle_vertex_buffer,
                                    m_rectangle_index_buffer, descriptor_set,
@@ -166,8 +154,6 @@ void graphics_pipeline::GeometryPipeline::render_hexagons(
     const auto &instance_buffer = m_hexagon_instance_buffers.get_buffer();
     const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
-        m_graphics_pipeline.bind_push_constants(
-            command_buffer, VK_SHADER_STAGE_VERTEX_BIT, ShapeTypeEncoding::HexagonShape);
         auto descriptor_set = m_hexagon_descriptor_set.get();
         m_graphics_pipeline.render(command_buffer, m_hexagon_vertex_buffer,
                                    m_hexagon_index_buffer, descriptor_set, num_instances);

@@ -30,14 +30,10 @@ layout(binding = 1) readonly uniform WindowDimensions {
         vec2 dims;
 } window;
 
-layout(push_constant) uniform ShapeType {
-    uint id;
-} target_shape_type; 
+layout(location = 0) in vec3 in_position;
 
-layout(location = 0) in vec3 inPosition;
-
-layout(location = 0) out vec4 fragColor;
-layout(location = 1) out vec2 uv;
+layout(location = 0) out vec4 out_frag_color;
+layout(location = 1) out vec2 out_uv;
 
 mat3 create_rotation_matrix_z(float theta) {
     float c = cos(theta);
@@ -88,39 +84,16 @@ vec2 compute_uv(vec2 vertex, vec4 bbox) {
 
 void main() {
     InstanceData instance = instance_data_block.instances[gl_InstanceIndex];
+       
+    vec3 scaled_vertex_pos = scale_vertex(in_position, instance.shape.param1, instance.shape.param2);
+        
+    mat3 rotation_matrix = create_rotation_matrix_z(-instance.rotation);
+    vec3 rotated_vertex_pos = rotation_matrix * scaled_vertex_pos;
+        
+    vec2 viewport_position = positions_to_viewport(instance.position.xy, window.dims);
+    vec2 vertex_in_viewport = rotated_vertex_pos.xy / vec2(window.dims.x, window.dims.y) * 2.0;
     
-    vec4 position = vec4(2.0, 2.0, 0.0, 1.0);  // Position far outside visible area
-    vec4 color = vec4(0.0);
-    
-    if (instance.shape_type == target_shape_type.id) {
-        vec3 scaled_vertex_pos;
-        
-        switch(instance.shape_type) {
-            case CIRCLE:
-                scaled_vertex_pos = scale_vertex(inPosition, instance.shape.param1, instance.shape.param1);
-                break;
-            case TRIANGLE:
-            case HEXAGON:
-                scaled_vertex_pos = scale_vertex(inPosition, instance.shape.param1, instance.shape.param1);
-                break;
-            case RECTANGLE:
-                scaled_vertex_pos = scale_vertex(inPosition, instance.shape.param1, instance.shape.param2);
-                break;
-            default:
-                scaled_vertex_pos = inPosition;  // Fallback to original position
-        }
-        
-        mat3 rotation_matrix = create_rotation_matrix_z(-instance.rotation);
-        vec3 rotated_vertex_pos = rotation_matrix * scaled_vertex_pos;
-        
-        vec2 viewport_position = positions_to_viewport(instance.position.xy, window.dims);
-        vec2 vertex_in_viewport = rotated_vertex_pos.xy / vec2(window.dims.x, window.dims.y) * 2.0;
-        
-        position = vec4(viewport_position + vertex_in_viewport, instance.position.z, 1.0);
-        color = instance.color;
-    }
-    
-    gl_Position = position;
-    fragColor = color;
-    uv = compute_uv(inPosition.xy, instance.uvwt);
+    gl_Position = vec4(viewport_position + vertex_in_viewport, instance.position.z, 1.0);
+    out_frag_color = instance.color;
+    out_uv = compute_uv(in_position.xy, instance.uvwt);
 }

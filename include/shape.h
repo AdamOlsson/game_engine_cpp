@@ -7,6 +7,7 @@
 
 struct Circle {
     alignas(4) glm::float32 diameter;
+    alignas(4) glm::float32 height;
 
     // Pretty print member function
     std::string to_string() const {
@@ -21,6 +22,7 @@ struct Circle {
 
 struct Triangle {
     alignas(4) glm::float32 side;
+    alignas(4) glm::float32 _dummy;
 
     std::string to_string() const {
         return std::format("Triangle {{ side: {:.3f} }}", side);
@@ -47,9 +49,10 @@ struct Rectangle {
 
 struct Hexagon {
     alignas(4) glm::float32 width;
+    alignas(4) glm::float32 height;
 
     std::string to_string() const {
-        return std::format("Hexagon {{ width: {:.3f} }}", width);
+        return std::format("Hexagon {{ width: {:.3f}, height: {:.3f} }}", width, height);
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Hexagon &hexagon) {

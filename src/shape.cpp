@@ -1,12 +1,14 @@
 #include "shape.h"
 #include <stdexcept>
 
-Shape Shape::create_circle_data(float diameter) { return Shape{Circle{diameter}}; }
-Shape Shape::create_triangle_data(float side) { return Shape{Triangle{side}}; }
+Shape Shape::create_circle_data(float diameter) {
+    return Shape{Circle{diameter, diameter}};
+}
+Shape Shape::create_triangle_data(float side) { return Shape{Triangle{side, side}}; }
 Shape Shape::create_rectangle_data(float width, float height) {
     return Shape{Rectangle{width, height}};
 }
-Shape Shape::create_hexagon_data(float width) { return Shape{Hexagon{width}}; }
+Shape Shape::create_hexagon_data(float width) { return Shape{Hexagon{width, width}}; }
 
 uint32_t Shape::encode_shape_type() const {
     return std::visit(
