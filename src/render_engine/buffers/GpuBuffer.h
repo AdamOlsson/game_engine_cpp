@@ -106,6 +106,7 @@ template <Printable T, GpuBufferType BufferType> class GpuBuffer {
     void transfer() { memcpy(m_buffer_mapped, m_staging_buffer.data(), m_size); }
 
     void push_back(T &t) { return m_staging_buffer.push_back(t); }
+    void push_back(const T &t) { return m_staging_buffer.push_back(t); }
 
     decltype(auto) push_back(T &&t) {
         return m_staging_buffer.push_back(std::forward(t));
@@ -230,6 +231,13 @@ template <typename T, GpuBufferType BufferType> class SwapGpuBuffer {
     }
 
     void write(T &&val) {
+        for (auto &buf : m_buffers) {
+            buf.push_back(val);
+            buf.transfer();
+        }
+    }
+
+    void write(const T &val) {
         for (auto &buf : m_buffers) {
             buf.push_back(val);
             buf.transfer();

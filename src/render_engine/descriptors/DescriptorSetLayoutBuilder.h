@@ -21,7 +21,9 @@ class DescriptorSetLayoutBuilder {
     DescriptorSetLayoutBuilder &add(const VkDescriptorSetLayoutBinding &&binding);
 
     DescriptorSetLayoutBuilder &add_combined_image_sampler_binding(uint32_t binding);
-    DescriptorSetLayoutBuilder &add_storage_buffer_binding(uint32_t binding);
-    DescriptorSetLayoutBuilder &add_uniform_buffer_binding(uint32_t binding);
+    DescriptorSetLayoutBuilder &
+    add_storage_buffer_binding(uint32_t binding, VkShaderStageFlags stage_flags);
+    DescriptorSetLayoutBuilder &
+    add_uniform_buffer_binding(uint32_t binding, VkShaderStageFlags stage_flags);
     DescriptorSetLayout build(std::shared_ptr<graphics_context::GraphicsContext> &ctx);
 };

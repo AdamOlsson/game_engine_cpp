@@ -7,7 +7,6 @@
 #include "vulkan/vulkan_core.h"
 
 namespace graphics_pipeline {
-
 std::vector<char> readFile(const std::string filename);
 
 class GraphicsPipeline {

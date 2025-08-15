@@ -29,10 +29,7 @@ void main() {
 
     const vec2 ui_element_corner = in_vertex * push_ui_element.dimension;
     const vec2 vertex_offset_viewport = (ui_element_corner * 2.0) / window.dims;
-
-    // Let the GPU interpolate between (0,0) and (push_ui_element.dimension)
-    const vec2 positive_quad_offset = push_ui_element.dimension / 2.0;
-    out_ui_element_vertex = ui_element_corner + positive_quad_offset;
-
+    
+    out_ui_element_vertex = ui_element_corner;
     gl_Position = vec4(viewport_position + vertex_offset_viewport, 0.0, 1.0);
 }

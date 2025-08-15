@@ -35,26 +35,27 @@ DescriptorSetLayoutBuilder::add_combined_image_sampler_binding(uint32_t binding)
 }
 
 DescriptorSetLayoutBuilder &
-DescriptorSetLayoutBuilder::add_storage_buffer_binding(uint32_t binding) {
+DescriptorSetLayoutBuilder::add_storage_buffer_binding(uint32_t binding,
+                                                       VkShaderStageFlags stage_flags) {
     VkDescriptorSetLayoutBinding layout_binding{};
     layout_binding.binding = binding;
     layout_binding.descriptorCount = 1;
     layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     layout_binding.pImmutableSamplers = nullptr;
-    layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
+    layout_binding.stageFlags = stage_flags;
     m_bindings.push_back(layout_binding);
     return *this;
 }
 
 DescriptorSetLayoutBuilder &
-DescriptorSetLayoutBuilder::add_uniform_buffer_binding(uint32_t binding) {
+DescriptorSetLayoutBuilder::add_uniform_buffer_binding(uint32_t binding,
+                                                       VkShaderStageFlags stage_flags) {
     VkDescriptorSetLayoutBinding layout_binding{};
     layout_binding.binding = binding;
     layout_binding.descriptorCount = 1;
     layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     layout_binding.pImmutableSamplers = nullptr;
-    layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    layout_binding.stageFlags = stage_flags;
 
     m_bindings.push_back(layout_binding);
     return *this;

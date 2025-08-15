@@ -37,52 +37,54 @@ RenderEngine::~RenderEngine() {}
 void RenderEngine::render(
     vulkan::CommandBuffer &command_buffer,
     const std::vector<std::reference_wrapper<const RenderBody>> &bodies) {
-    auto &circle_instance_buffer = m_geometry_pipeline->get_circle_instance_buffer();
-    auto &triangle_instance_buffer = m_geometry_pipeline->get_triangle_instance_buffer();
+    /*auto &circle_instance_buffer = m_geometry_pipeline->get_circle_instance_buffer();*/
+    /*auto &triangle_instance_buffer =
+     * m_geometry_pipeline->get_triangle_instance_buffer();*/
     auto &rectangle_instance_buffer =
         m_geometry_pipeline->get_rectangle_instance_buffer();
-    auto &hexagon_instance_buffer = m_geometry_pipeline->get_hexagon_instance_buffer();
+    /*auto &hexagon_instance_buffer =
+     * m_geometry_pipeline->get_hexagon_instance_buffer();*/
 
-    circle_instance_buffer.clear();
-    triangle_instance_buffer.clear();
+    /*circle_instance_buffer.clear();*/
+    /*triangle_instance_buffer.clear();*/
     rectangle_instance_buffer.clear();
-    hexagon_instance_buffer.clear();
+    /*hexagon_instance_buffer.clear();*/
 
     for (auto b : bodies) {
         auto deref_b = b.get();
         switch (deref_b.shape.encode_shape_type()) {
         case ShapeTypeEncoding::CircleShape:
-            circle_instance_buffer.emplace_back(deref_b.position, deref_b.color,
-                                                deref_b.rotation, deref_b.shape,
-                                                deref_b.uvwt);
+            /*circle_instance_buffer.emplace_back(*/
+            /*    deref_b.position, deref_b.color, deref_b.rotation,*/
+            /*    deref_b.shape.get<Circle>(), deref_b.uvwt);*/
             break;
         case ShapeTypeEncoding::TriangleShape:
-            triangle_instance_buffer.emplace_back(deref_b.position, deref_b.color,
-                                                  deref_b.rotation, deref_b.shape,
-                                                  deref_b.uvwt);
+            /*triangle_instance_buffer.emplace_back(deref_b.position, deref_b.color,*/
+            /*                                      deref_b.rotation, deref_b.shape,*/
+            /*                                      deref_b.uvwt);*/
             break;
         case ShapeTypeEncoding::RectangleShape:
-            rectangle_instance_buffer.emplace_back(deref_b.position, deref_b.color,
-                                                   deref_b.rotation, deref_b.shape,
-                                                   deref_b.uvwt);
+            rectangle_instance_buffer.emplace_back(
+                deref_b.position, deref_b.color, deref_b.rotation,
+                deref_b.shape.get<Rectangle>(), deref_b.uvwt);
             break;
         case ShapeTypeEncoding::HexagonShape:
-            hexagon_instance_buffer.emplace_back(deref_b.position, deref_b.color,
-                                                 deref_b.rotation, deref_b.shape,
-                                                 deref_b.uvwt);
+            /*hexagon_instance_buffer.emplace_back(deref_b.position, deref_b.color,*/
+            /*                                     deref_b.rotation, deref_b.shape,*/
+            /*                                     deref_b.uvwt);*/
             break;
         };
     }
 
-    circle_instance_buffer.transfer();
-    triangle_instance_buffer.transfer();
+    /*circle_instance_buffer.transfer();*/
+    /*triangle_instance_buffer.transfer();*/
     rectangle_instance_buffer.transfer();
-    hexagon_instance_buffer.transfer();
+    /*hexagon_instance_buffer.transfer();*/
 
-    m_geometry_pipeline->render_circles(command_buffer);
-    m_geometry_pipeline->render_triangles(command_buffer);
+    /*m_geometry_pipeline->render_circles(command_buffer);*/
+    /*m_geometry_pipeline->render_triangles(command_buffer);*/
     m_geometry_pipeline->render_rectangles(command_buffer);
-    m_geometry_pipeline->render_hexagons(command_buffer);
+    /*m_geometry_pipeline->render_hexagons(command_buffer);*/
 }
 
 // TODO: This function is not compatible with render_ui. It is not possible to run them in

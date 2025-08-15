@@ -8,18 +8,19 @@
 #define ARROW 5 
 #define LINE 6 
 
-struct Shape {
-    float param1;
-    float param2;
+struct BorderData{
+    vec4 color;
+    float thickness;
+    float radius;
 };
 
 struct InstanceData {
-    vec3 position;
-    vec4 color;
+    vec3 center;
+    vec2 dimension;
     float rotation;
-    uint shape_type;
-    Shape shape;
-    vec4 uvwt; // bbox for texture
+    vec4 color;
+    vec4 uvwt; 
+    BorderData border;
 };
 
 layout(std140, binding = 0) readonly buffer InstanceDataBlock {
@@ -29,6 +30,13 @@ layout(std140, binding = 0) readonly buffer InstanceDataBlock {
 layout(binding = 1) readonly uniform WindowDimensions {
         vec2 dims;
 } window;
+
+layout(binding = 3) readonly uniform VertexData {
+        vec3 vertices[];
+        int num_vertices;
+        int max_vertices;
+} vertices;
+
 
 layout(location = 0) in vec3 in_position;
 
@@ -85,15 +93,15 @@ vec2 compute_uv(vec2 vertex, vec4 bbox) {
 void main() {
     InstanceData instance = instance_data_block.instances[gl_InstanceIndex];
        
-    vec3 scaled_vertex_pos = scale_vertex(in_position, instance.shape.param1, instance.shape.param2);
+    vec3 scaled_vertex_pos = scale_vertex(in_position, instance.dimension.x, instance.dimension.y);
         
     mat3 rotation_matrix = create_rotation_matrix_z(-instance.rotation);
     vec3 rotated_vertex_pos = rotation_matrix * scaled_vertex_pos;
         
-    vec2 viewport_position = positions_to_viewport(instance.position.xy, window.dims);
+    vec2 viewport_position = positions_to_viewport(instance.center.xy, window.dims);
     vec2 vertex_in_viewport = rotated_vertex_pos.xy / vec2(window.dims.x, window.dims.y) * 2.0;
     
-    gl_Position = vec4(viewport_position + vertex_in_viewport, instance.position.z, 1.0);
+    gl_Position = vec4(viewport_position + vertex_in_viewport, instance.center.z, 1.0);
     out_frag_color = instance.color;
     out_uv = compute_uv(in_position.xy, instance.uvwt);
 }

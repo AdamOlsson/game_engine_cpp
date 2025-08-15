@@ -1,40 +1,65 @@
 #include "DescriptorSetBuilder.h"
 #include "vulkan/vulkan_core.h"
+#include <optional>
 
 DescriptorSetBuilder::DescriptorSetBuilder(size_t capacity) : m_capacity(capacity) {}
 
 DescriptorSetBuilder &DescriptorSetBuilder::add_storage_buffer(
-    size_t binding, std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos) {
-
+    size_t binding, std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos,
+    std::optional<DescriptorSetBuilderOptions> opts) {
     if (buffer_infos.size() != m_capacity) {
         throw std::runtime_error(
             "size of storage buffer reference needs to be equal to capacity");
     }
+
+    DescriptorSetBuilderOptions options{};
+    if (opts.has_value()) {
+        options = opts.value();
+    }
+
     m_storage_buffer_bindings.insert(m_storage_buffer_bindings.end(), buffer_infos.size(),
                                      binding);
     m_storage_buffers_infos.insert(m_storage_buffers_infos.end(),
                                    std::make_move_iterator(buffer_infos.begin()),
                                    std::make_move_iterator(buffer_infos.end()));
 
-    m_descriptor_set_layout_builder.add_storage_buffer_binding(binding);
+    m_descriptor_set_layout_builder.add_storage_buffer_binding(binding,
+                                                               options.stage_flags);
     return *this;
 }
 
-DescriptorSetBuilder &DescriptorSetBuilder::add_uniform_buffer(
+DescriptorSetBuilder &DescriptorSetBuilder::add_storage_buffer(
     size_t binding, std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos) {
+    return add_storage_buffer(binding, std::move(buffer_infos), std::nullopt);
+}
 
+DescriptorSetBuilder &DescriptorSetBuilder::add_uniform_buffer(
+    size_t binding, std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos,
+    std::optional<DescriptorSetBuilderOptions> opts) {
     if (buffer_infos.size() != m_capacity) {
         throw std::runtime_error(
             "size of uniform buffer reference needs to be equal to capacity");
     }
+
+    DescriptorSetBuilderOptions options{};
+    if (opts.has_value()) {
+        options = opts.value();
+    }
+
     m_uniform_buffer_bindings.insert(m_uniform_buffer_bindings.end(), buffer_infos.size(),
                                      binding);
     m_uniform_buffers_infos.insert(m_uniform_buffers_infos.end(),
                                    std::make_move_iterator(buffer_infos.begin()),
                                    std::make_move_iterator(buffer_infos.end()));
 
-    m_descriptor_set_layout_builder.add_uniform_buffer_binding(binding);
+    m_descriptor_set_layout_builder.add_uniform_buffer_binding(binding,
+                                                               options.stage_flags);
     return *this;
+}
+
+DescriptorSetBuilder &DescriptorSetBuilder::add_uniform_buffer(
+    size_t binding, std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos) {
+    return add_uniform_buffer(binding, std::move(buffer_infos), std::nullopt);
 }
 
 DescriptorSetBuilder &DescriptorSetBuilder::add_combined_image_sampler(

@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <format>
 #include <glm/glm.hpp>
+#include <stdexcept>
 #include <string>
 #include <variant>
 
@@ -18,6 +19,8 @@ struct Circle {
     friend std::ostream &operator<<(std::ostream &os, const Circle &circle) {
         return os << circle.to_string();
     }
+
+    operator glm::vec2() const { return glm::vec2(diameter, height); }
 };
 
 struct Triangle {
@@ -31,6 +34,8 @@ struct Triangle {
     friend std::ostream &operator<<(std::ostream &os, const Triangle &triangle) {
         return os << triangle.to_string();
     }
+
+    operator glm::vec2() const { return glm::vec2(side, _dummy); }
 };
 
 struct Rectangle {
@@ -45,6 +50,8 @@ struct Rectangle {
     friend std::ostream &operator<<(std::ostream &os, const Rectangle &rect) {
         return os << rect.to_string();
     }
+
+    operator glm::vec2() const { return glm::vec2(width, height); }
 };
 
 struct Hexagon {
@@ -58,6 +65,8 @@ struct Hexagon {
     friend std::ostream &operator<<(std::ostream &os, const Hexagon &hexagon) {
         return os << hexagon.to_string();
     }
+
+    operator glm::vec2() const { return glm::vec2(width, height); }
 };
 
 enum ShapeTypeEncoding {
@@ -100,4 +109,19 @@ struct Shape {
     friend std::ostream &operator<<(std::ostream &os, const Shape &shape) {
         return os << shape.to_string();
     }
+
+    operator glm::vec2() const {
+        return std::visit(
+            [](const auto &param) -> glm::vec2 {
+                using T = std::decay_t<decltype(param)>;
+                if constexpr (std::is_same_v<T, std::monostate>) {
+                    throw std::runtime_error("Assigning invalid shape");
+                } else {
+                    return param;
+                }
+            },
+
+            params);
+        ;
+    };
 };

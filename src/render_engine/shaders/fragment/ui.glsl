@@ -26,7 +26,7 @@ bool is_on_border(
 // ############# Main #############
 // ################################
 void main() {
-    const vec2 origo_centered_vertex = in_fragment - (push_ui_element.dimension / 2.0);
+    const vec2 origo_centered_vertex = in_fragment;
     const vec2 abs_fragment_position = abs(origo_centered_vertex);
    
     // corner of a origo centered ui element

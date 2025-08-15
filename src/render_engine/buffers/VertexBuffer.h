@@ -1,8 +1,8 @@
 #pragma once
 
 #include "render_engine/CommandBufferManager.h"
+#include "render_engine/Vertex.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
-#include "render_engine/shapes/Vertex.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 

@@ -2,9 +2,11 @@
 
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/Texture.h"
+#include "render_engine/Vertex.h"
 #include "render_engine/buffers/GpuBuffer.h"
 #include "render_engine/buffers/IndexBuffer.h"
 #include "render_engine/buffers/VertexBuffer.h"
+#include "render_engine/colors.h"
 #include "render_engine/descriptors/DescriptorPool.h"
 #include "render_engine/descriptors/DescriptorSet.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
@@ -35,31 +37,34 @@ VKAPI_ATTR inline VkBool32 VKAPI_CALL debugCallback(
 }
 
 struct GeometryInstanceBufferObject {
-    alignas(16) glm::vec3 position;
-    alignas(16) glm::vec4 color;
-    alignas(4) glm::float32_t rotation;
-    alignas(4) glm::uint32 shape_type;
-    alignas(16) Shape shape;
-    alignas(16) glm::vec4 uvwt;
+    alignas(16) glm::vec3 center = glm::vec3(0.0f);
+    alignas(8) glm::vec2 dimension = glm::vec2(0.0f);
+    alignas(4) glm::float32_t rotation = 0.0f;
+    alignas(16) glm::vec4 color = colors::TRANSPARENT;
+    alignas(16) glm::vec4 uvwt = glm::vec4(-1.0f);
+    struct BorderProperties {
+        alignas(16) glm::vec4 color = colors::TRANSPARENT;
+        alignas(4) glm::float32_t rotation = 0.0f;
+        alignas(4) glm::float32_t radius = 0.0f;
+    } border;
 
-    GeometryInstanceBufferObject(glm::vec3 position, glm::vec4 color,
-                                 glm::float32_t rotation, Shape shape, glm::vec4 uvwt)
-        : position(position), color(color), rotation(rotation),
-          shape_type(shape.encode_shape_type()), shape(shape), uvwt(uvwt) {}
+    GeometryInstanceBufferObject(glm::vec3 center, glm::vec4 color,
+                                 glm::float32_t rotation, glm::vec2 dimension,
+                                 glm::vec4 uvwt)
+        : center(center), color(color), rotation(rotation), dimension(dimension),
+          uvwt(uvwt) {}
 
     std::string to_string() const {
         return std::format("GeometryInstanceBufferObject {{\n"
-                           "  position:   ({:.3f}, {:.3f}, {:.3f})\n"
-                           "  color:      ({:.3f}, {:.3f}, {:.3f}, {:.3f})\n"
+                           "  center:     ({:.3f}, {:.3f}, {:.3f})\n"
+                           "  dimension:  ({:.3f}, {:.3f})\n"
                            "  rotation:   {:.3f}°\n"
-                           "  shape_type: {}\n"
-                           "  shape:      {}\n"
+                           "  color:      ({:.3f}, {:.3f}, {:.3f}, {:.3f})\n"
                            "  uvwt:       ({:.3f}, {:.3f}, {:.3f}, {:.3f})\n"
                            "}}",
-                           position.x, position.y, position.z, color.r, color.g, color.b,
-                           color.a, rotation, shape_type,
-                           shape.to_string(), // Assuming Shape has a to_string() method
-                           uvwt.x, uvwt.y, uvwt.z, uvwt.w);
+                           center.x, center.y, center.z, dimension.x, dimension.y,
+                           rotation, color.r, color.g, color.b, color.a, uvwt.x, uvwt.y,
+                           uvwt.z, uvwt.w);
     }
 
     friend std::ostream &operator<<(std::ostream &os,
@@ -86,6 +91,8 @@ class GeometryPipeline {
     std::optional<vulkan::Sampler> m_empty_sampler;
 
     DescriptorPool m_descriptor_pool;
+    VertexBuffer m_quad_vertex_buffer;
+    IndexBuffer m_quad_index_buffer;
 
     SwapStorageBuffer<GeometryInstanceBufferObject> m_circle_instance_buffers;
     DescriptorSet m_circle_descriptor_set;
@@ -98,9 +105,10 @@ class GeometryPipeline {
     IndexBuffer m_triangle_index_buffer;
 
     SwapStorageBuffer<GeometryInstanceBufferObject> m_rectangle_instance_buffers;
+    SwapUniformBuffer<VertexUBO> m_rectangle_vertices_ubo;
     DescriptorSet m_rectangle_descriptor_set;
-    VertexBuffer m_rectangle_vertex_buffer;
-    IndexBuffer m_rectangle_index_buffer;
+    /*VertexBuffer m_rectangle_vertex_buffer;*/
+    /*IndexBuffer m_rectangle_index_buffer;*/
 
     SwapStorageBuffer<GeometryInstanceBufferObject> m_hexagon_instance_buffers;
     DescriptorSet m_hexagon_descriptor_set;

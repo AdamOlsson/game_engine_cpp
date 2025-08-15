@@ -6,6 +6,11 @@
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/vulkan/DescriptorBufferInfo.h"
 #include "render_engine/vulkan/DescriptorImageInfo.h"
+#include "vulkan/vulkan_core.h"
+
+struct DescriptorSetBuilderOptions {
+    VkShaderStageFlags stage_flags = VK_SHADER_STAGE_VERTEX_BIT;
+};
 
 class DescriptorSetBuilder {
   private:
@@ -47,8 +52,18 @@ class DescriptorSetBuilder {
                        std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos);
 
     DescriptorSetBuilder &
+    add_storage_buffer(size_t binding,
+                       std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos,
+                       std::optional<DescriptorSetBuilderOptions> opts);
+
+    DescriptorSetBuilder &
     add_uniform_buffer(size_t binding,
                        std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos);
+
+    DescriptorSetBuilder &
+    add_uniform_buffer(size_t binding,
+                       std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos,
+                       std::optional<DescriptorSetBuilderOptions> opts);
 
     DescriptorSet build(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
                         DescriptorPool &descriptor_pool);
