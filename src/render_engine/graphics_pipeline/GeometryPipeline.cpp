@@ -98,7 +98,7 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
             .add_uniform_buffer(3,
                                 vulkan::DescriptorBufferInfo::from_vector(
                                     m_rectangle_vertices_ubo.get_buffer_references()),
-                                {.stage_flags = VK_SHADER_STAGE_VERTEX_BIT})
+                                {.stage_flags = VK_SHADER_STAGE_FRAGMENT_BIT})
             .build(m_ctx, m_descriptor_pool);
 
     /*m_hexagon_vertex_buffer =*/
