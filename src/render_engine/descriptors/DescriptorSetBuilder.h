@@ -54,7 +54,7 @@ class DescriptorSetBuilder {
     DescriptorSetBuilder &
     add_storage_buffer(size_t binding,
                        std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos,
-                       std::optional<DescriptorSetBuilderOptions> opts);
+                       DescriptorSetBuilderOptions &&options);
 
     DescriptorSetBuilder &
     add_uniform_buffer(size_t binding,
@@ -63,7 +63,7 @@ class DescriptorSetBuilder {
     DescriptorSetBuilder &
     add_uniform_buffer(size_t binding,
                        std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos,
-                       std::optional<DescriptorSetBuilderOptions> opts);
+                       DescriptorSetBuilderOptions &&options);
 
     DescriptorSet build(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
                         DescriptorPool &descriptor_pool);

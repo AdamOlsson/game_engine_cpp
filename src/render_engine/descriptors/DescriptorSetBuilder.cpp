@@ -6,15 +6,10 @@ DescriptorSetBuilder::DescriptorSetBuilder(size_t capacity) : m_capacity(capacit
 
 DescriptorSetBuilder &DescriptorSetBuilder::add_storage_buffer(
     size_t binding, std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos,
-    std::optional<DescriptorSetBuilderOptions> opts) {
+    DescriptorSetBuilderOptions &&options) {
     if (buffer_infos.size() != m_capacity) {
         throw std::runtime_error(
             "size of storage buffer reference needs to be equal to capacity");
-    }
-
-    DescriptorSetBuilderOptions options{};
-    if (opts.has_value()) {
-        options = opts.value();
     }
 
     m_storage_buffer_bindings.insert(m_storage_buffer_bindings.end(), buffer_infos.size(),
@@ -30,20 +25,16 @@ DescriptorSetBuilder &DescriptorSetBuilder::add_storage_buffer(
 
 DescriptorSetBuilder &DescriptorSetBuilder::add_storage_buffer(
     size_t binding, std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos) {
-    return add_storage_buffer(binding, std::move(buffer_infos), std::nullopt);
+    return add_storage_buffer(binding, std::move(buffer_infos),
+                              DescriptorSetBuilderOptions{});
 }
 
 DescriptorSetBuilder &DescriptorSetBuilder::add_uniform_buffer(
     size_t binding, std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos,
-    std::optional<DescriptorSetBuilderOptions> opts) {
+    DescriptorSetBuilderOptions &&options) {
     if (buffer_infos.size() != m_capacity) {
         throw std::runtime_error(
             "size of uniform buffer reference needs to be equal to capacity");
-    }
-
-    DescriptorSetBuilderOptions options{};
-    if (opts.has_value()) {
-        options = opts.value();
     }
 
     m_uniform_buffer_bindings.insert(m_uniform_buffer_bindings.end(), buffer_infos.size(),
@@ -59,7 +50,8 @@ DescriptorSetBuilder &DescriptorSetBuilder::add_uniform_buffer(
 
 DescriptorSetBuilder &DescriptorSetBuilder::add_uniform_buffer(
     size_t binding, std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos) {
-    return add_uniform_buffer(binding, std::move(buffer_infos), std::nullopt);
+    return add_uniform_buffer(binding, std::move(buffer_infos),
+                              DescriptorSetBuilderOptions{});
 }
 
 DescriptorSetBuilder &DescriptorSetBuilder::add_combined_image_sampler(

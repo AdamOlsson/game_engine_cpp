@@ -31,11 +31,6 @@ layout(binding = 1) readonly uniform WindowDimensions {
         vec2 dims;
 } window;
 
-layout(binding = 3) readonly uniform VertexData {
-        vec3 vertices[];
-        int num_vertices;
-        int max_vertices;
-} vertices;
 
 
 layout(location = 0) in vec3 in_position;

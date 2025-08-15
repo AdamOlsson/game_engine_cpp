@@ -95,8 +95,10 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
                                 vulkan::DescriptorBufferInfo::from_vector(
                                     swap_chain_manager.get_window_size_swap_buffer_ref()))
             .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())
-            .add_uniform_buffer(3, vulkan::DescriptorBufferInfo::from_vector(
-                                       m_rectangle_vertices_ubo.get_buffer_references()))
+            .add_uniform_buffer(3,
+                                vulkan::DescriptorBufferInfo::from_vector(
+                                    m_rectangle_vertices_ubo.get_buffer_references()),
+                                {.stage_flags = VK_SHADER_STAGE_VERTEX_BIT})
             .build(m_ctx, m_descriptor_pool);
 
     /*m_hexagon_vertex_buffer =*/
