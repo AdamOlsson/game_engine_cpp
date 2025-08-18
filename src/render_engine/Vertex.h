@@ -10,9 +10,10 @@
 
 namespace vertex {
 constexpr uint32_t MAX_VERTICES = 64;
-}
+enum class VertexShape : uint32_t { Circle = 0, Rectangle = 1, Polygon = 2 };
+} // namespace vertex
 
-struct Vertex : public glm::vec3 {
+struct alignas(16) Vertex : public glm::vec3 {
     using glm::vec3::vec3;
 
     constexpr Vertex() : glm::vec3(0.0f) {}
@@ -50,10 +51,12 @@ struct Vertex : public glm::vec3 {
     }
 };
 
-struct VertexUBO {
+struct alignas(16) VertexUBO {
     Vertex vertices[vertex::MAX_VERTICES]{};
     uint32_t num_vertices{};
     uint32_t max_vertices = vertex::MAX_VERTICES;
+    uint32_t shape = static_cast<uint32_t>(vertex::VertexShape::Polygon);
+    uint32_t _pad = 0;
 
     std::string to_string() const {
         std::ostringstream oss;

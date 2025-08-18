@@ -1,5 +1,9 @@
 #version 450
 
+#define CIRCLE 0
+#define RECTANGLE 1
+#define POLYGON 2
+
 layout(location = 0) in vec4 in_frag_color;
 layout(location = 1) in vec2 in_uv;
 layout(location = 2) in vec3 in_position;
@@ -8,9 +12,10 @@ layout(binding = 2) uniform sampler2D texture_sampler;
 
 const int MAX_VERTICES = 64;
 layout(binding = 3) readonly uniform VertexData {
-        vec3 vertices[];
+        vec3 vertices[MAX_VERTICES];
         int num_vertices;
-        int max_vertices;
+        int max_vertices; // TODO: Not used, maybe use for shape ID
+        int shape;
 } vertices;
 
 layout(location = 0) out vec4 out_color;
@@ -18,17 +23,17 @@ layout(location = 0) out vec4 out_color;
 float unsigned_distance_to_segment(
     const vec2 point, const vec2 a, const vec2 b
 ) {
-    vec2 ap = p - a;
+    vec2 ap = point - a;
     vec2 ab = b - a;
-    float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
-    return length(ap - ba * h);
+    float h = clamp(dot(ap, ab) / dot(ab, ab), 0.0, 1.0);
+    return length(ap - ab * h);
 }
 
 float signed_distance_polygon(
     vec3 point, const vec3 vertices[MAX_VERTICES], const int num_vertices
 ) {
     float distance = 1e9;
-    float winding += 0.0;
+    float winding = 0.0;
 
     for(int i = 0; i < MAX_VERTICES; i++){
         if(i >= num_vertices) {
@@ -36,13 +41,13 @@ float signed_distance_polygon(
         }
         
         vec2 a  = vertices[i].xy;
-        vec2 b  = vertices[(i + 1) & num_vertices].xy;
+        vec2 b  = vertices[(i + 1) % num_vertices].xy;
         
         distance = min(distance, unsigned_distance_to_segment(point.xy, a, b));
         
         // Accumulate winding (signed angle)
-        vec2 pa = a - p;
-        vec2 pb = b - p;
+        vec2 pa = a - point.xy;
+        vec2 pb = b - point.xy;
         float cross = pa.x * pb.y - pa.y * pb.x;
         float dot_product = dot(pa, pb);
         winding += atan(cross, dot_product);
@@ -53,10 +58,52 @@ float signed_distance_polygon(
     return distance * sign; // negative inside, positive outside
 }
 
-void main() {
-    if (in_uv.x >= 0.0 && in_uv.y >= 0.0) {
-        out_color = texture(texture_sampler, in_uv); 
-    } else {
-        out_color = in_frag_color;
+float signed_distance(vec3 point) {
+    // return signed_distance_polygon(point, vertices.vertices, vertices.num_vertices);
+    if(vertices.shape == CIRCLE) {
+        // TODO: Circle specific
+        return signed_distance_polygon(point, vertices.vertices, vertices.num_vertices);
+    } else if(vertices.shape == RECTANGLE) {
+        // TODO: Rectangle specific
+        return signed_distance_polygon(point, vertices.vertices, vertices.num_vertices);
+    } else if(vertices.shape == POLYGON) {
+        return signed_distance_polygon(point, vertices.vertices, vertices.num_vertices);
     }
+}
+
+void main() {
+    
+    float distance = signed_distance(in_position);
+    float aa = fwidth(distance);
+    float fill = 1.0 - smoothstep(0.0, aa, distance); // ~1 inside, 0 outside, AA on edge
+    out_color = vec4(in_frag_color.rgb, fill);
+    return;
+
+    // float border_radius = 0.0; // TODO
+    // float edge = abs(distance) - border_radius;
+    //
+    // float aa = fwidth(edge);
+    // float background_cover = 1.0 - smoothstep(0.0, aa, distance);
+    //
+    // float border_width = 0.0; // TODO
+    // float half_b_width = max(border_width * 0.5, 0.0);
+    // float stroke_outer = smoothstep(half_b_width - aa, half_b_width + aa ,edge);
+    // float stroke_inner = smoothstep(-half_b_width - aa, -half_b_width + aa ,edge);
+    // float stroke_cover = clamp(stroke_outer - stroke_inner, 0.0, 1.0);
+    //
+    // vec4 background_color = in_frag_color; // TODO
+    // vec4 border_color = in_frag_color; // TODO
+    // vec4 color = mix(vec4(0.0), background_color, background_cover); 
+    // color = mix(color, border_color, stroke_cover);
+    //
+    // if (color.a <= 0.001){
+    //     discard;
+    // }
+    //
+    // out_color = color;
+    // if (in_uv.x >= 0.0 && in_uv.y >= 0.0) {
+    //     out_color = texture(texture_sampler, in_uv); 
+    // } else {
+    //     out_color = in_frag_color;
+    // }
 }

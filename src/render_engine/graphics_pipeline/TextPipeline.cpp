@@ -15,10 +15,8 @@ graphics_pipeline::TextPipeline::TextPipeline(
           ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1024)),
       m_text_segment_buffers(SwapStorageBuffer<TextSegmentBufferObject>(
           ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 16)),
-      m_vertex_buffer(
-          VertexBuffer(ctx, Geometry::rectangle_vertices, command_buffer_manager)),
-      m_index_buffer(
-          IndexBuffer(ctx, Geometry::rectangle_indices, command_buffer_manager)),
+      m_vertex_buffer(VertexBuffer(ctx, Geometry::quad_vertices, command_buffer_manager)),
+      m_index_buffer(IndexBuffer(ctx, Geometry::quad_indices, command_buffer_manager)),
       m_descriptor_pool(DescriptorPool(m_ctx, m_descriptor_pool_capacity,
                                        m_num_storage_buffers, m_num_uniform_buffers,
                                        m_num_samplers)) {

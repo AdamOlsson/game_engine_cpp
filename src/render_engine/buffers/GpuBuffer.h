@@ -244,6 +244,12 @@ template <typename T, GpuBufferType BufferType> class SwapGpuBuffer {
         }
     }
 
+    void dump_data() {
+        for (auto &buf : m_buffers) {
+            buf.dump_data();
+        }
+    }
+
     std::vector<GpuBufferRef> get_buffer_references() { return m_refs; }
 };
 

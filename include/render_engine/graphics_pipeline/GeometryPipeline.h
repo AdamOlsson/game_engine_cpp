@@ -80,7 +80,7 @@ struct GeometryPipelineOptions {
 class GeometryPipeline {
   private:
     const uint32_t m_num_storage_buffers = MAX_FRAMES_IN_FLIGHT * 4;
-    const uint32_t m_num_uniform_buffers = MAX_FRAMES_IN_FLIGHT * 4;
+    const uint32_t m_num_uniform_buffers = MAX_FRAMES_IN_FLIGHT * 4 * 2;
     const uint32_t m_num_samplers = MAX_FRAMES_IN_FLIGHT * 4;
     const uint32_t m_descriptor_pool_capacity = MAX_FRAMES_IN_FLIGHT * 4;
 
@@ -96,13 +96,14 @@ class GeometryPipeline {
 
     SwapStorageBuffer<GeometryInstanceBufferObject> m_circle_instance_buffers;
     DescriptorSet m_circle_descriptor_set;
-    VertexBuffer m_circle_vertex_buffer;
-    IndexBuffer m_circle_index_buffer;
+    /*VertexBuffer m_circle_vertex_buffer;*/
+    /*IndexBuffer m_circle_index_buffer;*/
 
     SwapStorageBuffer<GeometryInstanceBufferObject> m_triangle_instance_buffers;
+    SwapUniformBuffer<VertexUBO> m_triangle_vertices_ubo;
     DescriptorSet m_triangle_descriptor_set;
-    VertexBuffer m_triangle_vertex_buffer;
-    IndexBuffer m_triangle_index_buffer;
+    /*VertexBuffer m_triangle_vertex_buffer;*/
+    /*IndexBuffer m_triangle_index_buffer;*/
 
     SwapStorageBuffer<GeometryInstanceBufferObject> m_rectangle_instance_buffers;
     SwapUniformBuffer<VertexUBO> m_rectangle_vertices_ubo;
@@ -111,9 +112,10 @@ class GeometryPipeline {
     /*IndexBuffer m_rectangle_index_buffer;*/
 
     SwapStorageBuffer<GeometryInstanceBufferObject> m_hexagon_instance_buffers;
+    SwapUniformBuffer<VertexUBO> m_hexagon_vertices_ubo;
     DescriptorSet m_hexagon_descriptor_set;
-    VertexBuffer m_hexagon_vertex_buffer;
-    IndexBuffer m_hexagon_index_buffer;
+    /*VertexBuffer m_hexagon_vertex_buffer;*/
+    /*IndexBuffer m_hexagon_index_buffer;*/
 
     graphics_pipeline::GraphicsPipeline m_graphics_pipeline;
 

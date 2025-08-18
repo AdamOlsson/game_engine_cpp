@@ -66,26 +66,31 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
     /*    VertexBuffer(ctx, Geometry::triangle_vertices, command_buffer_manager);*/
     /*m_triangle_index_buffer =*/
     /*    IndexBuffer(ctx, Geometry::triangle_indices, command_buffer_manager);*/
-    /*m_triangle_descriptor_set =*/
-    /*    DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)*/
-    /*        .add_storage_buffer(0,*/
-    /*                            vulkan::DescriptorBufferInfo::from_vector(*/
-    /*                                m_triangle_instance_buffers.get_buffer_references()))*/
-    /*        .add_uniform_buffer(1,*/
-    /*                            vulkan::DescriptorBufferInfo::from_vector(*/
-    /*                                swap_chain_manager.get_window_size_swap_buffer_ref()))*/
-    /*        .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())*/
-    /*        .build(m_ctx, m_descriptor_pool);*/
-
-    m_rectangle_vertices_ubo =
+    m_triangle_vertices_ubo =
         SwapUniformBuffer<VertexUBO>(m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1);
-    m_rectangle_vertices_ubo.write(Geometry::rectangle_vertices_ubo);
+    m_triangle_vertices_ubo.write(Geometry::triangle_vertices_ubo);
+    m_triangle_descriptor_set =
+        DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
+            .add_storage_buffer(0,
+                                vulkan::DescriptorBufferInfo::from_vector(
+                                    m_triangle_instance_buffers.get_buffer_references()))
+            .add_uniform_buffer(1,
+                                vulkan::DescriptorBufferInfo::from_vector(
+                                    swap_chain_manager.get_window_size_swap_buffer_ref()))
+            .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())
+            .add_uniform_buffer(3,
+                                vulkan::DescriptorBufferInfo::from_vector(
+                                    m_triangle_vertices_ubo.get_buffer_references()),
+                                {.stage_flags = VK_SHADER_STAGE_FRAGMENT_BIT})
+            .build(m_ctx, m_descriptor_pool);
 
     /*m_rectangle_vertex_buffer =*/
     /*    VertexBuffer(ctx, Geometry::rectangle_vertices, command_buffer_manager);*/
     /*m_rectangle_index_buffer =*/
     /*    IndexBuffer(ctx, Geometry::rectangle_indices, command_buffer_manager);*/
-
+    m_rectangle_vertices_ubo =
+        SwapUniformBuffer<VertexUBO>(m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1);
+    m_rectangle_vertices_ubo.write(Geometry::rectangle_vertices_ubo);
     m_rectangle_descriptor_set =
         DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
             .add_storage_buffer(0,
@@ -106,16 +111,24 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
      * command_buffer_manager));*/
     /*m_hexagon_index_buffer =*/
     /*    IndexBuffer(ctx, Geometry::hexagon_indices, command_buffer_manager);*/
-    /*m_hexagon_descriptor_set =*/
-    /*    DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)*/
-    /*        .add_storage_buffer(0,*/
-    /*                            vulkan::DescriptorBufferInfo::from_vector(*/
-    /*                                m_hexagon_instance_buffers.get_buffer_references()))*/
-    /*        .add_uniform_buffer(1,*/
-    /*                            vulkan::DescriptorBufferInfo::from_vector(*/
-    /*                                swap_chain_manager.get_window_size_swap_buffer_ref()))*/
-    /*        .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())*/
-    /*        .build(m_ctx, m_descriptor_pool);*/
+    m_hexagon_vertices_ubo =
+        SwapUniformBuffer<VertexUBO>(m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1);
+    m_hexagon_vertices_ubo.write(Geometry::hexagon_vertices_ubo);
+    m_hexagon_descriptor_set =
+        DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
+            .add_storage_buffer(0,
+                                vulkan::DescriptorBufferInfo::from_vector(
+                                    m_hexagon_instance_buffers.get_buffer_references()))
+            .add_uniform_buffer(1,
+                                vulkan::DescriptorBufferInfo::from_vector(
+                                    swap_chain_manager.get_window_size_swap_buffer_ref()))
+            .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())
+            .add_uniform_buffer(3,
+                                vulkan::DescriptorBufferInfo::from_vector(
+                                    m_hexagon_vertices_ubo.get_buffer_references()),
+                                {.stage_flags = VK_SHADER_STAGE_FRAGMENT_BIT})
+
+            .build(m_ctx, m_descriptor_pool);
 
     m_graphics_pipeline =
         graphics_pipeline::GraphicsPipelineBuilder()
@@ -135,8 +148,9 @@ void graphics_pipeline::GeometryPipeline::render_circles(
     const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
         auto descriptor_set = m_circle_descriptor_set.get();
-        m_graphics_pipeline.render(command_buffer, m_circle_vertex_buffer,
-                                   m_circle_index_buffer, descriptor_set, num_instances);
+        /*m_graphics_pipeline.render(command_buffer, m_circle_vertex_buffer,*/
+        /*                           m_circle_index_buffer, descriptor_set,
+         * num_instances);*/
     }
     m_circle_instance_buffers.rotate();
 }
@@ -147,9 +161,8 @@ void graphics_pipeline::GeometryPipeline::render_triangles(
     const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
         auto descriptor_set = m_triangle_descriptor_set.get();
-        m_graphics_pipeline.render(command_buffer, m_triangle_vertex_buffer,
-                                   m_triangle_index_buffer, descriptor_set,
-                                   num_instances);
+        m_graphics_pipeline.render(command_buffer, m_quad_vertex_buffer,
+                                   m_quad_index_buffer, descriptor_set, num_instances);
     }
     m_triangle_instance_buffers.rotate();
 }
@@ -169,6 +182,7 @@ void graphics_pipeline::GeometryPipeline::render_rectangles(
         /*                           num_instances);*/
     }
     m_rectangle_instance_buffers.rotate();
+    m_rectangle_vertices_ubo.rotate();
 }
 
 void graphics_pipeline::GeometryPipeline::render_hexagons(
@@ -177,8 +191,8 @@ void graphics_pipeline::GeometryPipeline::render_hexagons(
     const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
         auto descriptor_set = m_hexagon_descriptor_set.get();
-        m_graphics_pipeline.render(command_buffer, m_hexagon_vertex_buffer,
-                                   m_hexagon_index_buffer, descriptor_set, num_instances);
+        m_graphics_pipeline.render(command_buffer, m_quad_vertex_buffer,
+                                   m_quad_index_buffer, descriptor_set, num_instances);
     }
     m_hexagon_instance_buffers.rotate();
 }

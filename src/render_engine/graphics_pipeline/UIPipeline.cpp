@@ -32,8 +32,8 @@ graphics_pipeline::UIPipeline::UIPipeline(
               .set_descriptor_set_layout(&m_descriptor_set.get_layout())
               .build(m_ctx, swap_chain_manager)),
       // clang-format on 
-      m_vertex_buffer(m_ctx, Geometry::rectangle_vertices, command_buffer_manager),
-      m_index_buffer(IndexBuffer(ctx, Geometry::rectangle_indices, command_buffer_manager)) {}
+      m_vertex_buffer(m_ctx, Geometry::quad_vertices, command_buffer_manager),
+      m_index_buffer(IndexBuffer(ctx, Geometry::quad_indices, command_buffer_manager)) {}
 
 graphics_pipeline::UIPipeline::~UIPipeline() {}
 

@@ -81,7 +81,7 @@ class ShapeRendering : public Game {
             ecs.create_entity(), RenderBodyBuilder()
                                      .position(WorldPoint(-208, 108))
                                      .shape(Shape::create_rectangle_data(80.0f, 80.0f))
-                                     .color(colors::BLUE)
+                                     .color(colors::WHITE)
                                      .uvwt(glm::vec4(0.5f, 0.5f, 1.0f, 1.0f))
                                      .build());
     };
