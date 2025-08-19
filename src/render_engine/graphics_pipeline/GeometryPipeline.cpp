@@ -55,7 +55,9 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
                                        m_circle_instance_buffers.get_buffer_references()))
             .add_uniform_buffer(1,
                                 vulkan::DescriptorBufferInfo::from_vector(
-                                    swap_chain_manager.get_window_size_swap_buffer_ref()))
+                                    swap_chain_manager.get_window_size_swap_buffer_ref()),
+                                {.stage_flags = VK_SHADER_STAGE_VERTEX_BIT |
+                                                VK_SHADER_STAGE_FRAGMENT_BIT})
             .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())
             .add_uniform_buffer(3,
                                 vulkan::DescriptorBufferInfo::from_vector(
@@ -74,7 +76,9 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
                                     m_triangle_instance_buffers.get_buffer_references()))
             .add_uniform_buffer(1,
                                 vulkan::DescriptorBufferInfo::from_vector(
-                                    swap_chain_manager.get_window_size_swap_buffer_ref()))
+                                    swap_chain_manager.get_window_size_swap_buffer_ref()),
+                                {.stage_flags = VK_SHADER_STAGE_VERTEX_BIT |
+                                                VK_SHADER_STAGE_FRAGMENT_BIT})
             .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())
             .add_uniform_buffer(3,
                                 vulkan::DescriptorBufferInfo::from_vector(
@@ -82,10 +86,6 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
                                 {.stage_flags = VK_SHADER_STAGE_FRAGMENT_BIT})
             .build(m_ctx, m_descriptor_pool);
 
-    /*m_rectangle_vertex_buffer =*/
-    /*    VertexBuffer(ctx, Geometry::rectangle_vertices, command_buffer_manager);*/
-    /*m_rectangle_index_buffer =*/
-    /*    IndexBuffer(ctx, Geometry::rectangle_indices, command_buffer_manager);*/
     m_rectangle_vertices_ubo =
         SwapUniformBuffer<VertexUBO>(m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1);
     m_rectangle_vertices_ubo.write(Geometry::rectangle_vertices_ubo);
@@ -96,7 +96,9 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
                                     m_rectangle_instance_buffers.get_buffer_references()))
             .add_uniform_buffer(1,
                                 vulkan::DescriptorBufferInfo::from_vector(
-                                    swap_chain_manager.get_window_size_swap_buffer_ref()))
+                                    swap_chain_manager.get_window_size_swap_buffer_ref()),
+                                {.stage_flags = VK_SHADER_STAGE_VERTEX_BIT |
+                                                VK_SHADER_STAGE_FRAGMENT_BIT})
             .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())
             .add_uniform_buffer(3,
                                 vulkan::DescriptorBufferInfo::from_vector(
@@ -104,11 +106,6 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
                                 {.stage_flags = VK_SHADER_STAGE_FRAGMENT_BIT})
             .build(m_ctx, m_descriptor_pool);
 
-    /*m_hexagon_vertex_buffer =*/
-    /*    std::move(VertexBuffer(ctx, Geometry::hexagon_vertices,
-     * command_buffer_manager));*/
-    /*m_hexagon_index_buffer =*/
-    /*    IndexBuffer(ctx, Geometry::hexagon_indices, command_buffer_manager);*/
     m_hexagon_vertices_ubo =
         SwapUniformBuffer<VertexUBO>(m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1);
     m_hexagon_vertices_ubo.write(Geometry::hexagon_vertices_ubo);
@@ -119,7 +116,9 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
                                     m_hexagon_instance_buffers.get_buffer_references()))
             .add_uniform_buffer(1,
                                 vulkan::DescriptorBufferInfo::from_vector(
-                                    swap_chain_manager.get_window_size_swap_buffer_ref()))
+                                    swap_chain_manager.get_window_size_swap_buffer_ref()),
+                                {.stage_flags = VK_SHADER_STAGE_VERTEX_BIT |
+                                                VK_SHADER_STAGE_FRAGMENT_BIT})
             .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())
             .add_uniform_buffer(3,
                                 vulkan::DescriptorBufferInfo::from_vector(

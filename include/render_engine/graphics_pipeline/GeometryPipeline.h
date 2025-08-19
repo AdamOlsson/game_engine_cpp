@@ -44,15 +44,15 @@ struct GeometryInstanceBufferObject {
     alignas(16) glm::vec4 uvwt = glm::vec4(-1.0f);
     struct BorderProperties {
         alignas(16) glm::vec4 color = colors::TRANSPARENT;
-        alignas(4) glm::float32_t rotation = 0.0f;
+        alignas(4) glm::float32_t thickness = 0.0f;
         alignas(4) glm::float32_t radius = 0.0f;
     } border;
 
     GeometryInstanceBufferObject(glm::vec3 center, glm::vec4 color,
                                  glm::float32_t rotation, glm::vec2 dimension,
-                                 glm::vec4 uvwt)
+                                 glm::vec4 uvwt, BorderProperties &&border_props)
         : center(center), color(color), rotation(rotation), dimension(dimension),
-          uvwt(uvwt) {}
+          uvwt(uvwt), border(border_props) {}
 
     std::string to_string() const {
         return std::format("GeometryInstanceBufferObject {{\n"

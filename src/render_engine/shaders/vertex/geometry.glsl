@@ -8,7 +8,7 @@
 #define ARROW 5 
 #define LINE 6 
 
-struct BorderData{
+struct BorderData {
     vec4 color;
     float thickness;
     float radius;
@@ -31,12 +31,15 @@ layout(binding = 1) readonly uniform WindowDimensions {
         vec2 dims;
 } window;
 
-
 layout(location = 0) in vec3 in_position;
 
-layout(location = 0) out vec4 out_frag_color;
-layout(location = 1) out vec2 out_uv;
-layout(location = 2) out vec3 out_position;
+layout(location = 0) out vec3 out_position;
+layout(location = 1) out vec4 out_frag_color;
+layout(location = 2) out vec2 out_uv;
+// layout(location = 3) out BorderData out_border;
+layout(location = 3) out vec4 out_border_color;
+layout(location = 4) out float out_border_thickness;
+layout(location = 5) out float out_border_radius;
 
 mat3 create_rotation_matrix_z(float theta) {
     float c = cos(theta);
@@ -97,7 +100,10 @@ void main() {
     vec2 vertex_in_viewport = rotated_vertex_pos.xy / vec2(window.dims.x, window.dims.y) * 2.0;
     
     gl_Position = vec4(viewport_position + vertex_in_viewport, instance.center.z, 1.0);
+    out_position = in_position;
     out_frag_color = instance.color;
     out_uv = compute_uv(in_position.xy, instance.uvwt);
-    out_position = in_position;
+    out_border_color = instance.border.color;
+    out_border_thickness = instance.border.thickness / window.dims.y;
+    out_border_radius = instance.border.radius / window.dims.y;
 }
