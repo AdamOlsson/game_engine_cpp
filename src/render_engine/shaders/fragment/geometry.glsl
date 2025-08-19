@@ -58,14 +58,19 @@ float signed_distance_polygon(
     return distance * sign; // negative inside, positive outside
 }
 
+float signed_distance_circle(vec3 point, vec3 center, float radius) {
+    return length(point - center) - radius; // negative inside
+}
+
 float signed_distance(vec3 point) {
-    // return signed_distance_polygon(point, vertices.vertices, vertices.num_vertices);
     if(vertices.shape == CIRCLE) {
-        // TODO: Circle specific
-        return signed_distance_polygon(point, vertices.vertices, vertices.num_vertices);
+        // For circles, we do not use the vertices
+        vec3 center = vec3(0.0);
+        float radius = 0.5;
+        return signed_distance_circle(point, center, radius);
     } else if(vertices.shape == RECTANGLE) {
-        // TODO: Rectangle specific
-        return signed_distance_polygon(point, vertices.vertices, vertices.num_vertices);
+        // Rectangles uses the full grid created by the quad 
+        return -1.0;
     } else if(vertices.shape == POLYGON) {
         return signed_distance_polygon(point, vertices.vertices, vertices.num_vertices);
     }

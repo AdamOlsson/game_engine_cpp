@@ -95,27 +95,20 @@ class GeometryPipeline {
     IndexBuffer m_quad_index_buffer;
 
     SwapStorageBuffer<GeometryInstanceBufferObject> m_circle_instance_buffers;
+    SwapUniformBuffer<VertexUBO> m_circle_vertices_ubo;
     DescriptorSet m_circle_descriptor_set;
-    /*VertexBuffer m_circle_vertex_buffer;*/
-    /*IndexBuffer m_circle_index_buffer;*/
 
     SwapStorageBuffer<GeometryInstanceBufferObject> m_triangle_instance_buffers;
     SwapUniformBuffer<VertexUBO> m_triangle_vertices_ubo;
     DescriptorSet m_triangle_descriptor_set;
-    /*VertexBuffer m_triangle_vertex_buffer;*/
-    /*IndexBuffer m_triangle_index_buffer;*/
 
     SwapStorageBuffer<GeometryInstanceBufferObject> m_rectangle_instance_buffers;
     SwapUniformBuffer<VertexUBO> m_rectangle_vertices_ubo;
     DescriptorSet m_rectangle_descriptor_set;
-    /*VertexBuffer m_rectangle_vertex_buffer;*/
-    /*IndexBuffer m_rectangle_index_buffer;*/
 
     SwapStorageBuffer<GeometryInstanceBufferObject> m_hexagon_instance_buffers;
     SwapUniformBuffer<VertexUBO> m_hexagon_vertices_ubo;
     DescriptorSet m_hexagon_descriptor_set;
-    /*VertexBuffer m_hexagon_vertex_buffer;*/
-    /*IndexBuffer m_hexagon_index_buffer;*/
 
     graphics_pipeline::GraphicsPipeline m_graphics_pipeline;
 

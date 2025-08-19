@@ -43,29 +43,27 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
             m_empty_texture.value().view(), &m_empty_sampler.value());
     }
 
-    /*auto quad_buffer_vertex =*/
-    /*    VertexBuffer(m_ctx, Geometry::quad_vertices, command_buffer_manager);*/
-    /*auto quad_buffer_index =*/
-    /*    IndexBuffer(m_ctx, Geometry::quad_indices, command_buffer_manager);*/
+    // Note: for circle rendering we do not use the vertices at all, so these could
+    // potentially be removed to reduce the vertex::MAX_VERTICES value to decrease memory
+    // use
+    m_circle_vertices_ubo =
+        SwapUniformBuffer<VertexUBO>(m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1);
+    m_circle_vertices_ubo.write(Geometry::circle_vertices_ubo);
+    m_circle_descriptor_set =
+        DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
+            .add_storage_buffer(0, vulkan::DescriptorBufferInfo::from_vector(
+                                       m_circle_instance_buffers.get_buffer_references()))
+            .add_uniform_buffer(1,
+                                vulkan::DescriptorBufferInfo::from_vector(
+                                    swap_chain_manager.get_window_size_swap_buffer_ref()))
+            .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())
+            .add_uniform_buffer(3,
+                                vulkan::DescriptorBufferInfo::from_vector(
+                                    m_circle_vertices_ubo.get_buffer_references()),
+                                {.stage_flags = VK_SHADER_STAGE_FRAGMENT_BIT})
 
-    /*m_circle_vertex_buffer =*/
-    /*    VertexBuffer(m_ctx, Geometry::circle_vertices, command_buffer_manager);*/
-    /*m_circle_index_buffer =*/
-    /*    IndexBuffer(m_ctx, Geometry::circle_indices, command_buffer_manager);*/
-    /*m_circle_descriptor_set =*/
-    /*    DescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)*/
-    /*        .add_storage_buffer(0, vulkan::DescriptorBufferInfo::from_vector(*/
-    /*                                   m_circle_instance_buffers.get_buffer_references()))*/
-    /*        .add_uniform_buffer(1,*/
-    /*                            vulkan::DescriptorBufferInfo::from_vector(*/
-    /*                                swap_chain_manager.get_window_size_swap_buffer_ref()))*/
-    /*        .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())*/
-    /*        .build(m_ctx, m_descriptor_pool);*/
+            .build(m_ctx, m_descriptor_pool);
 
-    /*m_triangle_vertex_buffer =*/
-    /*    VertexBuffer(ctx, Geometry::triangle_vertices, command_buffer_manager);*/
-    /*m_triangle_index_buffer =*/
-    /*    IndexBuffer(ctx, Geometry::triangle_indices, command_buffer_manager);*/
     m_triangle_vertices_ubo =
         SwapUniformBuffer<VertexUBO>(m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1);
     m_triangle_vertices_ubo.write(Geometry::triangle_vertices_ubo);
@@ -148,9 +146,8 @@ void graphics_pipeline::GeometryPipeline::render_circles(
     const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
         auto descriptor_set = m_circle_descriptor_set.get();
-        /*m_graphics_pipeline.render(command_buffer, m_circle_vertex_buffer,*/
-        /*                           m_circle_index_buffer, descriptor_set,
-         * num_instances);*/
+        m_graphics_pipeline.render(command_buffer, m_quad_vertex_buffer,
+                                   m_quad_index_buffer, descriptor_set, num_instances);
     }
     m_circle_instance_buffers.rotate();
 }
@@ -176,10 +173,6 @@ void graphics_pipeline::GeometryPipeline::render_rectangles(
         auto descriptor_set = m_rectangle_descriptor_set.get();
         m_graphics_pipeline.render(command_buffer, m_quad_vertex_buffer,
                                    m_quad_index_buffer, descriptor_set, num_instances);
-
-        /*m_graphics_pipeline.render(command_buffer, m_rectangle_vertex_buffer,*/
-        /*                           m_rectangle_index_buffer, descriptor_set,*/
-        /*                           num_instances);*/
     }
     m_rectangle_instance_buffers.rotate();
     m_rectangle_vertices_ubo.rotate();
