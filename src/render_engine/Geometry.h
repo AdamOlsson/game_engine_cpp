@@ -57,7 +57,6 @@ inline VertexUBO generate_circle_vertices_ubo_direct() {
     }
 
     ubo.num_vertices = vertex::MAX_VERTICES;
-    ubo.max_vertices = vertex::MAX_VERTICES;
     ubo.shape = static_cast<uint32_t>(vertex::VertexShape::Circle);
 
     return ubo;
@@ -78,7 +77,6 @@ constexpr VertexUBO triangle_vertices_ubo = VertexUBO{
         Vertex{ -0.5f,   0.433013f, 0.0f },
         Vertex{  0.5f,   0.433013f, 0.0f }},
     .num_vertices = 3,
-    .max_vertices = vertex::MAX_VERTICES,
     .shape = static_cast<uint32_t>(vertex::VertexShape::Polygon),
 };
 // clang-format on
@@ -91,7 +89,6 @@ constexpr VertexUBO rectangle_vertices_ubo = VertexUBO{
         Vertex{ 0.5f,  0.5f, 0.0f}, 
         Vertex{ 0.5f, -0.5f, 0.0f}},
     .num_vertices = 4,
-    .max_vertices = vertex::MAX_VERTICES,
     .shape = static_cast<uint32_t>(vertex::VertexShape::Rectangle),
 };
 // clang-format on
@@ -108,7 +105,6 @@ constexpr VertexUBO hexagon_vertices_ubo = VertexUBO{
 
 },
     .num_vertices = 6,
-    .max_vertices = vertex::MAX_VERTICES,
     .shape = static_cast<uint32_t>(vertex::VertexShape::Polygon),
 };
 // clang-format on

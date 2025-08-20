@@ -22,7 +22,6 @@ const int MAX_VERTICES = 64;
 layout(binding = 3) readonly uniform VertexData {
         vec3 vertices[MAX_VERTICES];
         int num_vertices;
-        int max_vertices; // TODO: Not used, maybe use for shape ID
         int shape;
 } vertices;
 

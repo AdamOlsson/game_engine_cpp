@@ -54,7 +54,6 @@ struct alignas(16) Vertex : public glm::vec3 {
 struct alignas(16) VertexUBO {
     Vertex vertices[vertex::MAX_VERTICES]{};
     uint32_t num_vertices{};
-    uint32_t max_vertices = vertex::MAX_VERTICES;
     uint32_t shape = static_cast<uint32_t>(vertex::VertexShape::Polygon);
     uint32_t _pad = 0;
 
@@ -62,7 +61,6 @@ struct alignas(16) VertexUBO {
         std::ostringstream oss;
         oss << "VertexUBO{\n";
         oss << "  num_vertices: " << num_vertices << "\n";
-        oss << "  max_vertices: " << max_vertices << "\n";
         oss << "  vertices: [\n";
 
         for (uint32_t i = 0; i < num_vertices; ++i) {
