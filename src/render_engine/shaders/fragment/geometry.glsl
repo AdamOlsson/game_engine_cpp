@@ -16,7 +16,7 @@ layout(binding = 1) readonly uniform WindowDimensions {
         vec2 dims;
 } window;
 
-layout(binding = 2) uniform sampler2D texture_sampler;
+layout(binding = 2) uniform sampler2D u_texture_sampler;
 
 const int MAX_VERTICES = 64;
 layout(binding = 3) readonly uniform VertexData {
@@ -99,8 +99,13 @@ void main() {
 
     float border_inner_edge = -in_border_thickness;
     float border_mask = shape_mask * smoothstep(border_inner_edge - aa, border_inner_edge + aa, distance);
+    
+    vec4 shape_color = in_frag_color;
+    if(in_uv.x >= 0.0 && in_uv.y >= 0.0) {
+        shape_color = texture(u_texture_sampler, in_uv); 
+    }
 
-    vec4 color = mix(in_frag_color, in_border_color, border_mask);
+    vec4 color = mix(shape_color, in_border_color, border_mask);
     color.a *= shape_mask;
     
     if (color.a <= 0.001) discard;
