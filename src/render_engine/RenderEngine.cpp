@@ -56,20 +56,22 @@ void RenderEngine::render(
             circle_instance_buffer.emplace_back(
                 deref_b.position, deref_b.color, deref_b.rotation,
                 deref_b.shape.get<Circle>(), deref_b.uvwt,
-                graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{});
+                graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{
+                    .color = colors::YELLOW, .thickness = 20.0f});
             break;
         case ShapeTypeEncoding::TriangleShape:
             triangle_instance_buffer.emplace_back(
                 deref_b.position, deref_b.color, deref_b.rotation, deref_b.shape,
                 deref_b.uvwt,
-                graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{});
+                graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{
+                    .color = colors::YELLOW, .thickness = 20.0f});
             break;
         case ShapeTypeEncoding::RectangleShape:
             rectangle_instance_buffer.emplace_back(
                 deref_b.position, deref_b.color, deref_b.rotation,
                 deref_b.shape.get<Rectangle>(), deref_b.uvwt,
                 graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{
-                    colors::TRANSPARENT, 0.0f, 80.0f});
+                    colors::YELLOW, 20.0f, 80.0f});
             break;
         case ShapeTypeEncoding::HexagonShape:
             hexagon_instance_buffer.emplace_back(

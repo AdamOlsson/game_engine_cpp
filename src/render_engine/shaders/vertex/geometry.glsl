@@ -36,7 +36,6 @@ layout(location = 0) in vec3 in_position;
 layout(location = 0) out vec3 out_position;
 layout(location = 1) out vec4 out_frag_color;
 layout(location = 2) out vec2 out_uv;
-// layout(location = 3) out BorderData out_border;
 layout(location = 3) out vec4 out_border_color;
 layout(location = 4) out float out_border_thickness;
 layout(location = 5) out float out_border_radius;
@@ -104,6 +103,6 @@ void main() {
     out_frag_color = instance.color;
     out_uv = compute_uv(in_position.xy, instance.uvwt);
     out_border_color = instance.border.color;
-    out_border_thickness = instance.border.thickness / window.dims.y;
+    out_border_thickness = instance.border.thickness / window.dims.y;;
     out_border_radius = instance.border.radius / window.dims.y;
 }

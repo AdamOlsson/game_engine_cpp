@@ -41,14 +41,12 @@ float unsigned_distance_to_segment(
 float signed_distance_polygon(
     vec3 point, const vec3 vertices[MAX_VERTICES], const int num_vertices
 ) {
+    // Rounder corners for arbitrary polygons is quite complex, therefore I do
+    // not support it
     float distance = 1e9;
     float winding = 0.0;
 
-    for(int i = 0; i < MAX_VERTICES; i++){
-        if(i >= num_vertices) {
-            break; 
-        }
-        
+    for(int i = 0; i < num_vertices; i++){
         vec2 a  = vertices[i].xy;
         vec2 b  = vertices[(i + 1) % num_vertices].xy;
         
@@ -96,25 +94,17 @@ float signed_distance(vec3 point) {
 }
 
 void main() {
-    
     float distance = signed_distance(in_position);
-
     float aa = fwidth(distance);
-    float background_cover = 1.0 - smoothstep(0.0, aa, distance);
+    float shape_mask = 1.0 - smoothstep(-aa, aa, distance);
 
-    float half_b_width = max(in_border_thickness * 0.5, 0.0);
-    float stroke_outer = smoothstep(half_b_width - aa, half_b_width + aa, distance);
-    float stroke_inner = smoothstep(-half_b_width - aa, -half_b_width + aa, distance);
-    float stroke_cover = clamp(stroke_outer - stroke_inner, 0.0, 1.0);
+    float border_inner_edge = -in_border_thickness;
+    float border_mask = shape_mask * smoothstep(border_inner_edge - aa, border_inner_edge + aa, distance);
 
-    vec4 border_color = in_border_color; 
-    vec4 background_color = in_frag_color; 
-    vec4 color = mix(vec4(0.0), background_color, background_cover); 
-    color = mix(color, border_color, stroke_cover);
-
-    if (color.a <= 0.001){
-        discard;
-    }
-
+    vec4 color = mix(in_frag_color, in_border_color, border_mask);
+    color.a *= shape_mask;
+    
+    if (color.a <= 0.001) discard;
+    
     out_color = color;
 }

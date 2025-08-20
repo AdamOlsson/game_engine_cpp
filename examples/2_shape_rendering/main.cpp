@@ -5,6 +5,7 @@
 #include "entity_component_storage/EntityComponentStorage.h"
 #include "render_engine/RenderBody.h"
 #include "render_engine/RenderEngine.h"
+#include "render_engine/colors.h"
 #include "render_engine/fonts/Font.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "render_engine/ui/ElementProperties.h"
@@ -29,7 +30,7 @@ class ShapeRendering : public Game {
                                       RenderBodyBuilder()
                                           .position(WorldPoint(-300, 300))
                                           .shape(Shape::create_circle_data(80.0f))
-                                          .color(colors::RED)
+                                          .color(colors::TRANSPARENT)
                                           .build());
 
         ecs.add_component<RenderBody>(ecs.create_entity(),
