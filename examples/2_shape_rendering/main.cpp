@@ -4,11 +4,13 @@
 #include "entity_component_storage/ComponentStore.h"
 #include "entity_component_storage/EntityComponentStorage.h"
 #include "render_engine/RenderBody.h"
-#include "render_engine/RenderEngine.h"
 #include "render_engine/colors.h"
 #include "render_engine/fonts/Font.h"
+#include "render_engine/graphics_pipeline/GeometryPipeline.h"
+#include "render_engine/graphics_pipeline/TextPipeline.h"
 #include "render_engine/resources/ResourceManager.h"
 #include "render_engine/ui/ElementProperties.h"
+#include "render_engine/ui/TextBox.h"
 #include "render_engine/window/WindowConfig.h"
 #include "shape.h"
 #include <functional>
@@ -17,10 +19,13 @@
 
 class ShapeRendering : public Game {
   private:
-    std::unique_ptr<RenderEngine> m_render_engine; // TODO: Remove
     std::unique_ptr<SwapChainManager> m_swap_chain_manager;
     std::unique_ptr<CommandBufferManager> m_command_buffer_manager;
-    /*std::unique_ptr<ui::UIPipeline> m_ui_pipeline;*/
+
+    std::unique_ptr<Texture> m_dog_image;
+    vulkan::Sampler m_sampler;
+    std::unique_ptr<graphics_pipeline::GeometryPipeline> m_geometry_pipeline;
+    std::unique_ptr<graphics_pipeline::TextPipeline> m_text_pipeline;
 
   public:
     EntityComponentStorage ecs;
@@ -99,9 +104,19 @@ class ShapeRendering : public Game {
         m_command_buffer_manager = std::make_unique<CommandBufferManager>(
             ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
 
-        m_render_engine = std::make_unique<RenderEngine>(
-            ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
-            UseFont::Default); // TODO: remove
+        m_sampler = vulkan::Sampler(ctx);
+        m_dog_image = Texture::unique_from_image_resource_name(
+            ctx, m_command_buffer_manager.get(), "DogImage");
+        m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(
+            ctx, m_command_buffer_manager.get(), *m_swap_chain_manager,
+            graphics_pipeline::GeometryPipelineOptions{
+                .combined_image_sampler =
+                    vulkan::DescriptorImageInfo(m_dog_image->view(), &m_sampler)});
+
+        auto font = std::make_unique<Font>(ctx, m_command_buffer_manager.get(),
+                                           "DefaultFont", &m_sampler);
+        m_text_pipeline = std::make_unique<graphics_pipeline::TextPipeline>(
+            ctx, m_command_buffer_manager.get(), *m_swap_chain_manager, std::move(font));
     }
 
     void render() override {
@@ -114,15 +129,85 @@ class ShapeRendering : public Game {
         RenderPass render_pass = m_swap_chain_manager->get_render_pass(command_buffer);
         render_pass.begin();
 
-        m_render_engine->render(command_buffer, render_bodies);
+        // START RENDERING GEOMETRIES
+        auto &circle_instance_buffer = m_geometry_pipeline->get_circle_instance_buffer();
+        auto &triangle_instance_buffer =
+            m_geometry_pipeline->get_triangle_instance_buffer();
+        auto &rectangle_instance_buffer =
+            m_geometry_pipeline->get_rectangle_instance_buffer();
+        auto &hexagon_instance_buffer =
+            m_geometry_pipeline->get_hexagon_instance_buffer();
 
-        m_render_engine->render_text(
-            command_buffer, ui::TextBox("ADAM", ui::ElementProperties{.font.size = 128}));
-        m_render_engine->render_text(
-            command_buffer,
-            ui::TextBox("LINDA",
-                        ui::ElementProperties{.container.center = glm::vec2(0.0f, 100.0f),
-                                              .font.size = 64}));
+        circle_instance_buffer.clear();
+        triangle_instance_buffer.clear();
+        rectangle_instance_buffer.clear();
+        hexagon_instance_buffer.clear();
+
+        for (auto &b : render_bodies) {
+            auto deref_b = b.get();
+            switch (deref_b.shape.encode_shape_type()) {
+            case ShapeTypeEncoding::CircleShape:
+                circle_instance_buffer.emplace_back(
+                    deref_b.position, deref_b.color, deref_b.rotation,
+                    deref_b.shape.get<Circle>(), deref_b.uvwt,
+                    graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{
+                        .color = colors::YELLOW, .thickness = 20.0f});
+                break;
+            case ShapeTypeEncoding::TriangleShape:
+                triangle_instance_buffer.emplace_back(
+                    deref_b.position, deref_b.color, deref_b.rotation, deref_b.shape,
+                    deref_b.uvwt,
+                    graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{
+                        .color = colors::YELLOW, .thickness = 20.0f});
+                break;
+            case ShapeTypeEncoding::RectangleShape:
+                rectangle_instance_buffer.emplace_back(
+                    deref_b.position, deref_b.color, deref_b.rotation,
+                    deref_b.shape.get<Rectangle>(), deref_b.uvwt,
+                    graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{
+                        colors::YELLOW, 20.0f, 80.0f});
+                break;
+            case ShapeTypeEncoding::HexagonShape:
+                hexagon_instance_buffer.emplace_back(
+                    deref_b.position, deref_b.color, deref_b.rotation, deref_b.shape,
+                    deref_b.uvwt,
+                    graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{});
+                break;
+            };
+        }
+
+        circle_instance_buffer.transfer();
+        triangle_instance_buffer.transfer();
+        rectangle_instance_buffer.transfer();
+        hexagon_instance_buffer.transfer();
+
+        m_geometry_pipeline->render_circles(command_buffer);
+        m_geometry_pipeline->render_triangles(command_buffer);
+        m_geometry_pipeline->render_rectangles(command_buffer);
+        m_geometry_pipeline->render_hexagons(command_buffer);
+        // STOP RENDERING GEOMETRIES
+
+        const auto text_box_1 =
+            ui::TextBox("ADAM", ui::ElementProperties{.font.size = 128});
+
+        const auto text_box_2 = ui::TextBox(
+            "LINDA", ui::ElementProperties{.container.center = glm::vec2(0.0f, 100.0f),
+                                           .font.size = 64});
+        auto &character_instance_buffer = m_text_pipeline->get_character_buffer();
+        auto &text_segment_buffer = m_text_pipeline->get_text_segment_buffer();
+
+        character_instance_buffer.clear();
+        text_segment_buffer.clear();
+
+        // TODO: This invokation also writes to the instance buffer, make the calling
+        // conventions equal to that of the GeometryPipeline
+        m_text_pipeline->text_kerning(text_box_1.text, text_box_1.properties);
+        m_text_pipeline->text_kerning(text_box_2.text, text_box_2.properties);
+
+        character_instance_buffer.transfer();
+        text_segment_buffer.transfer();
+
+        m_text_pipeline->render_text(command_buffer);
 
         render_pass.end_submit_present();
     };
