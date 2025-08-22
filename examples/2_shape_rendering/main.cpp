@@ -1,4 +1,5 @@
 #include "Coordinates.h"
+#include "Dimension.h"
 #include "Game.h"
 #include "GameEngine.h"
 #include "entity_component_storage/ComponentStore.h"
@@ -27,69 +28,105 @@ class ShapeRendering : public Game {
     std::unique_ptr<graphics_pipeline::GeometryPipeline> m_geometry_pipeline;
     std::unique_ptr<graphics_pipeline::TextPipeline> m_text_pipeline;
 
+    std::vector<graphics_pipeline::GeometryInstanceBufferObject> m_geometries;
+    std::vector<shape::Shape> m_shape_ids;
+
   public:
     EntityComponentStorage ecs;
 
     ShapeRendering() : ecs(EntityComponentStorage()) {
-        ecs.add_component<RenderBody>(ecs.create_entity(),
-                                      RenderBodyBuilder()
-                                          .position(WorldPoint(-300, 300))
-                                          .shape(Shape::create_circle_data(80.0f))
-                                          .color(colors::RED)
-                                          .build());
+        m_shape_ids.push_back(shape::Shape::Circle);
+        m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
+            .center = WorldPoint(-300, 300),
+            .dimension = Dimension(80.0f),
+            .color = colors::RED,
+            .border.color = colors::YELLOW,
+            .border.thickness = 10.0f,
+        });
 
-        ecs.add_component<RenderBody>(ecs.create_entity(),
-                                      RenderBodyBuilder()
-                                          .position(WorldPoint(-200, 300))
-                                          .shape(Shape::create_triangle_data(80.0f))
-                                          .color(colors::RED)
-                                          .build());
+        m_shape_ids.push_back(shape::Shape::Triangle);
+        m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
+            .center = WorldPoint(-200, 300),
+            .dimension = Dimension(80.0f),
+            .color = colors::RED,
+            .border.color = colors::YELLOW,
+            .border.thickness = 5.0f,
+        });
 
-        ecs.add_component<RenderBody>(
-            ecs.create_entity(), RenderBodyBuilder()
-                                     .position(WorldPoint(-100, 300))
-                                     .shape(Shape::create_rectangle_data(80.0f, 80.0f))
-                                     .color(colors::BLUE)
-                                     .uvwt(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f))
-                                     .build());
+        m_shape_ids.push_back(shape::Shape::Rectangle);
+        m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
+            .center = WorldPoint(-100, 300),
+            .dimension = Dimension(80.0f, 80.0f),
+            .color = colors::BLUE,
+            .uvwt = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f),
+            .border.color = colors::YELLOW,
+            .border.thickness = 5.0f,
+            .border.radius = 5.0f,
+        });
 
-        ecs.add_component<RenderBody>(ecs.create_entity(),
-                                      RenderBodyBuilder()
-                                          .position(WorldPoint(0, 300))
-                                          .shape(Shape::create_hexagon_data(80.0f))
-                                          .color(colors::RED)
-                                          .build());
-        ecs.add_component<RenderBody>(
-            ecs.create_entity(), RenderBodyBuilder()
-                                     .position(WorldPoint(-292, 192))
-                                     .shape(Shape::create_rectangle_data(80.0f, 80.0f))
-                                     .color(colors::BLUE)
-                                     .uvwt(glm::vec4(0.0f, 0.0f, 0.5f, 0.5f))
-                                     .build());
+        m_shape_ids.push_back(shape::Shape::Hexagon);
+        m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
+            .center = WorldPoint(0, 300),
+            .dimension = Dimension(80.0f),
+            .color = colors::RED,
+            .border.color = colors::YELLOW,
+            .border.thickness = 5.0f,
+        });
 
-        ecs.add_component<RenderBody>(
-            ecs.create_entity(), RenderBodyBuilder()
-                                     .position(WorldPoint(-208, 192))
-                                     .shape(Shape::create_rectangle_data(80.0f, 80.0f))
-                                     .color(colors::BLUE)
-                                     .uvwt(glm::vec4(0.5f, 0.0f, 1.0f, 0.5f))
-                                     .build());
+        m_shape_ids.push_back(shape::Shape::Rectangle);
+        m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
+            .center = WorldPoint(-292, 192),
+            .dimension = Dimension(80.0f, 80.0f),
+            .color = colors::BLUE,
+            .uvwt = glm::vec4(0.0f, 0.0f, 0.5f, 0.5f),
+            .border.color = colors::YELLOW,
+            .border.thickness = 5.0f,
+            .border.radius = 5.0f,
+        });
 
-        ecs.add_component<RenderBody>(
-            ecs.create_entity(), RenderBodyBuilder()
-                                     .position(WorldPoint(-292, 108))
-                                     .shape(Shape::create_rectangle_data(80.0f, 80.0f))
-                                     .color(colors::BLUE)
-                                     .uvwt(glm::vec4(0.0f, 0.5f, 0.5f, 1.0f))
-                                     .build());
+        m_shape_ids.push_back(shape::Shape::Rectangle);
+        m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
+            .center = WorldPoint(-208, 192),
+            .dimension = Dimension(80.0f, 80.0f),
+            .color = colors::BLUE,
+            .uvwt = glm::vec4(0.5f, 0.0f, 1.0f, 0.5f),
+            .border.color = colors::YELLOW,
+            .border.thickness = 5.0f,
+            .border.radius = 5.0f,
+        });
 
-        ecs.add_component<RenderBody>(
-            ecs.create_entity(), RenderBodyBuilder()
-                                     .position(WorldPoint(-208, 108))
-                                     .shape(Shape::create_rectangle_data(80.0f, 80.0f))
-                                     .color(colors::WHITE)
-                                     .uvwt(glm::vec4(0.5f, 0.5f, 1.0f, 1.0f))
-                                     .build());
+        m_shape_ids.push_back(shape::Shape::Rectangle);
+        m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
+            .center = WorldPoint(-292, 108),
+            .dimension = Dimension(80.0f, 80.0f),
+            .color = colors::BLUE,
+            .uvwt = glm::vec4(0.0f, 0.5f, 0.5f, 1.0f),
+            .border.color = colors::YELLOW,
+            .border.thickness = 5.0f,
+            .border.radius = 5.0f,
+
+        });
+
+        m_shape_ids.push_back(shape::Shape::Rectangle);
+        m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
+            .center = WorldPoint(-208, 108),
+            .dimension = Dimension(80.0f, 80.0f),
+            .color = colors::WHITE,
+            .uvwt = glm::vec4(0.5f, 0.5f, 1.0f, 1.0f),
+            .border.color = colors::YELLOW,
+            .border.thickness = 5.0f,
+            .border.radius = 5.0f,
+        });
+
+        m_shape_ids.push_back(shape::Shape::Rectangle);
+        m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
+            .center = WorldPoint(150.0f, 200.0f, 0.0),
+            .dimension = Dimension(400.0f, 100.0f),
+            .color = colors::TRANSPARENT,
+            .uvwt = glm::vec4(-1.0f),
+            .border.color = colors::WHITE,
+            .border.thickness = 10.0f,
+            .border.radius = 15.0f});
     };
 
     ~ShapeRendering() {};
@@ -143,44 +180,24 @@ class ShapeRendering : public Game {
         rectangle_instance_buffer.clear();
         hexagon_instance_buffer.clear();
 
-        rectangle_instance_buffer.emplace_back(
-            glm::vec3(150.0f, 200.0f, 0.0), colors::TRANSPARENT, 0.0f,
-            glm::vec2(400.0f, 100.0f), glm::vec4(-1.0f),
-            graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{
-                .color = colors::WHITE, .thickness = 10.0f, .radius = 15.0f});
-
-        for (auto &b : render_bodies) {
-            auto deref_b = b.get();
-            switch (deref_b.shape.encode_shape_type()) {
-            case ShapeTypeEncoding::CircleShape:
-                circle_instance_buffer.emplace_back(
-                    deref_b.position, deref_b.color, deref_b.rotation,
-                    deref_b.shape.get<Circle>(), deref_b.uvwt,
-                    graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{
-                        .color = colors::YELLOW, .thickness = 10.0f});
+        const size_t num_geometries = m_geometries.size();
+        for (auto i = 0; i < num_geometries; i++) {
+            switch (m_shape_ids[i]) {
+            case shape::Shape::None:
                 break;
-            case ShapeTypeEncoding::TriangleShape:
-                triangle_instance_buffer.emplace_back(
-                    deref_b.position, deref_b.color, deref_b.rotation, deref_b.shape,
-                    deref_b.uvwt,
-                    graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{
-                        .color = colors::YELLOW, .thickness = 5.0f});
+            case shape::Shape::Circle:
+                circle_instance_buffer.push_back(m_geometries[i]);
                 break;
-            case ShapeTypeEncoding::RectangleShape:
-                rectangle_instance_buffer.emplace_back(
-                    deref_b.position, deref_b.color, deref_b.rotation,
-                    deref_b.shape.get<Rectangle>(), deref_b.uvwt,
-                    graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{
-                        colors::YELLOW, 5.0f, 5.0f});
+            case shape::Shape::Triangle:
+                triangle_instance_buffer.push_back(m_geometries[i]);
                 break;
-            case ShapeTypeEncoding::HexagonShape:
-                hexagon_instance_buffer.emplace_back(
-                    deref_b.position, deref_b.color, deref_b.rotation, deref_b.shape,
-                    deref_b.uvwt,
-                    graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{
-                        colors::YELLOW, 5.0f});
+            case shape::Shape::Rectangle:
+                rectangle_instance_buffer.push_back(m_geometries[i]);
                 break;
-            };
+            case shape::Shape::Hexagon:
+                hexagon_instance_buffer.push_back(m_geometries[i]);
+                break;
+            }
         }
 
         circle_instance_buffer.transfer();

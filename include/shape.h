@@ -6,6 +6,16 @@
 #include <string>
 #include <variant>
 
+namespace shape {
+enum class Shape : uint32_t {
+    None = 0,
+    Circle = 1,
+    Triangle = 2,
+    Rectangle = 3,
+    Hexagon = 4,
+};
+}
+
 struct Circle {
     alignas(4) glm::float32 diameter;
     alignas(4) glm::float32 height;

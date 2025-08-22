@@ -20,9 +20,6 @@
 // ElementProperties struct.
 // - 2. I want to add TextBox class to the menu hierarchy. Right now, if I do not want to
 // render some text I need to set it to an empty string.
-// - 3. It is not possible to call RenderEngine::render_text() and
-// RenderEngine::render_ui() in the same iteration due to that they overwrite each others
-// gpu buffers. I want to be able to render text without having the UI class manage them.
 
 void on_enter_callback(ui::Button &self) {
     self.properties.container.background_color = colors::WHITE;
@@ -37,7 +34,6 @@ void on_leave_callback(ui::Button &self) {
 class UserInterfaceExample : public Game {
   private:
     ui::UI m_ui;
-    std::unique_ptr<RenderEngine> m_render_engine; // TODO: Remove
     std::unique_ptr<SwapChainManager> m_swap_chain_manager;
     std::unique_ptr<CommandBufferManager> m_command_buffer_manager;
 
@@ -248,26 +244,19 @@ class UserInterfaceExample : public Game {
         rectangle_instance_buffer.clear();
         character_instance_buffer.clear();
         text_segment_buffer.clear();
-        // Debug
-        /*rectangle_instance_buffer.emplace_back(*/
-        /*    glm::vec3(-200.0f, 200.0f, 0.0), colors::TRANSPARENT, 0.0f,*/
-        /*    glm::vec2(300.0f, 50.0f), glm::vec4(-1.0f),*/
-        /*    graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{*/
-        /*        .color = button_border_color,*/
-        /*        .thickness = button_border_thickness,*/
-        /*        .radius = button_border_radius});*/
 
         for (const auto button : ui_state.buttons) {
             float rotation = 0.0;
-            glm::vec4 uvwt = glm::vec4(-1.0f);
-            rectangle_instance_buffer.emplace_back(
-                button->properties.container.center,
-                button->properties.container.background_color, rotation,
-                button->properties.container.dimension, uvwt,
-                graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{
-                    .color = button->properties.container.border.color,
-                    .thickness = button->properties.container.border.thickness,
-                    .radius = button->properties.container.border.radius,
+            rectangle_instance_buffer.push_back(
+                graphics_pipeline::GeometryInstanceBufferObject{
+                    .center = button->properties.container.center,
+                    .dimension = button->properties.container.dimension,
+                    .color = button->properties.container.background_color,
+                    .rotation = 0.0f,
+                    .uvwt = glm::vec4(-1.0f),
+                    .border.color = button->properties.container.border.color,
+                    .border.thickness = button->properties.container.border.thickness,
+                    .border.radius = button->properties.container.border.radius,
                 });
 
             m_text_pipeline->text_kerning(button->text, button->properties);
@@ -277,14 +266,15 @@ class UserInterfaceExample : public Game {
             m_text_pipeline->text_kerning(text_box->text, text_box->properties);
         }
 
+        PerformanceWindow::get_instance().render(m_geometry_pipeline.get(),
+                                                 m_text_pipeline.get(), command_buffer);
+
         rectangle_instance_buffer.transfer();
         character_instance_buffer.transfer();
         text_segment_buffer.transfer();
 
         m_geometry_pipeline->render_rectangles(command_buffer);
         m_text_pipeline->render_text(command_buffer);
-
-        /*PerformanceWindow::get_instance().render(*m_render_engine, command_buffer);*/
 
         render_pass.end_submit_present();
     };
@@ -296,10 +286,6 @@ class UserInterfaceExample : public Game {
         m_swap_chain_manager = std::make_unique<SwapChainManager>(ctx);
         m_command_buffer_manager = std::make_unique<CommandBufferManager>(
             ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
-
-        /*m_render_engine = std::make_unique<RenderEngine>(*/
-        /*    ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),*/
-        /*    UseFont::Default); // TODO: remove*/
 
         m_sampler = vulkan::Sampler(ctx);
         m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(

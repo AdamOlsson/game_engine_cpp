@@ -100,7 +100,7 @@ float border_sdf(
 
     // Inner rounded rectangle (shrunk by thickness, smaller radius)
     float inner_radius = max(radius - thickness, 0.0);
-    vec2 inner_dim = shape_dim - 2.0 * vec2(thickness);
+    vec2 inner_dim = shape_aspect - 2.0 * vec2(thickness);
     float d_inner = signed_distance_rectangle(point, inner_radius, inner_dim);
 
     // Ring = outside outer OR inside inner

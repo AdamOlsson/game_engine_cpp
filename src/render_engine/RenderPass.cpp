@@ -22,8 +22,8 @@ void RenderPass::set_viewport(const Dimension &dim) {
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = static_cast<float>(dim.width);
-    viewport.height = static_cast<float>(dim.height);
+    viewport.width = dim.width();
+    viewport.height = dim.height();
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     vkCmdSetViewport(m_command_buffer, 0, 1, &viewport);

@@ -2,7 +2,6 @@
 #include "render_engine/RenderBody.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/buffers/GpuBuffer.h"
-#include "render_engine/colors.h"
 #include "render_engine/fonts/Font.h"
 #include "render_engine/ui/TextBox.h"
 #include "render_engine/vulkan/DescriptorImageInfo.h"
@@ -53,31 +52,31 @@ void RenderEngine::render(
         auto deref_b = b.get();
         switch (deref_b.shape.encode_shape_type()) {
         case ShapeTypeEncoding::CircleShape:
-            circle_instance_buffer.emplace_back(
-                deref_b.position, deref_b.color, deref_b.rotation,
-                deref_b.shape.get<Circle>(), deref_b.uvwt,
-                graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{
-                    .color = colors::YELLOW, .thickness = 20.0f});
+            /*circle_instance_buffer.emplace_back(*/
+            /*    deref_b.position, deref_b.color, deref_b.rotation,*/
+            /*    deref_b.shape.get<Circle>(), deref_b.uvwt,*/
+            /*    graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{*/
+            /*        .color = colors::YELLOW, .thickness = 20.0f});*/
             break;
         case ShapeTypeEncoding::TriangleShape:
-            triangle_instance_buffer.emplace_back(
-                deref_b.position, deref_b.color, deref_b.rotation, deref_b.shape,
-                deref_b.uvwt,
-                graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{
-                    .color = colors::YELLOW, .thickness = 20.0f});
+            /*triangle_instance_buffer.emplace_back(*/
+            /*    deref_b.position, deref_b.color, deref_b.rotation, deref_b.shape,*/
+            /*    deref_b.uvwt,*/
+            /*    graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{*/
+            /*        .color = colors::YELLOW, .thickness = 20.0f});*/
             break;
         case ShapeTypeEncoding::RectangleShape:
-            rectangle_instance_buffer.emplace_back(
-                deref_b.position, deref_b.color, deref_b.rotation,
-                deref_b.shape.get<Rectangle>(), deref_b.uvwt,
-                graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{
-                    colors::YELLOW, 20.0f, 80.0f});
+            /*rectangle_instance_buffer.emplace_back(*/
+            /*    deref_b.position, deref_b.color, deref_b.rotation,*/
+            /*    deref_b.shape.get<Rectangle>(), deref_b.uvwt,*/
+            /*    graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{*/
+            /*        colors::YELLOW, 20.0f, 80.0f});*/
             break;
         case ShapeTypeEncoding::HexagonShape:
-            hexagon_instance_buffer.emplace_back(
-                deref_b.position, deref_b.color, deref_b.rotation, deref_b.shape,
-                deref_b.uvwt,
-                graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{});
+            /*hexagon_instance_buffer.emplace_back(*/
+            /*    deref_b.position, deref_b.color, deref_b.rotation, deref_b.shape,*/
+            /*    deref_b.uvwt,*/
+            /*    graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{});*/
             break;
         };
     }

@@ -1,6 +1,4 @@
 #include "render_engine/PerformanceWindow.h"
-#include "render_engine/RenderBody.h"
-#include "render_engine/RenderEngine.h"
 #include "render_engine/ui/Menu.h"
 #include "render_engine/ui/UI.h"
 #include <glm/glm.hpp>
@@ -20,20 +18,17 @@ PerformanceWindow::PerformanceWindow() {
     const auto font_props = ui::ElementProperties::FontProperties{
         .color = colors::WHITE, .size = 24, .weight = 1.0f, .sharpness = 1.0f};
 
-    m_header =
-        RenderBodyBuilder()
-            .shape(Shape::create_rectangle_data(header_dimension.x, header_dimension.y))
-            .color(colors::BLUE)
-            .position(header_position)
-            .build();
+    m_components.push_back(graphics_pipeline::GeometryInstanceBufferObject{
+        .center = header_position,
+        .dimension = Dimension(header_dimension.x, header_dimension.y),
+        .color = colors::BLUE,
+    });
 
-    m_body = RenderBodyBuilder()
-                 .shape(Shape::create_rectangle_data(body_dimension.x, body_dimension.y))
-                 .color(colors::rgba(0.2f, 0.2f, 0.2f, 0.2f))
-                 .position(body_position)
-                 .build();
-
-    m_components = {std::cref(m_header), std::cref(m_body)};
+    m_components.push_back(graphics_pipeline::GeometryInstanceBufferObject{
+        .center = body_position,
+        .dimension = Dimension(body_dimension.x, body_dimension.y),
+        .color = colors::rgba(0.2f, 0.2f, 0.2f, 0.2f),
+    });
 
     auto m_menu = ui::Menu();
     m_ui = ui::UI(m_menu);
@@ -93,8 +88,10 @@ PerformanceWindow::PerformanceWindow() {
     m_last_frame_time = "0.16";
 }
 
-void PerformanceWindow::render(RenderEngine &render_engine,
+void PerformanceWindow::render(graphics_pipeline::GeometryPipeline *geometry_pipeline,
+                               graphics_pipeline::TextPipeline *text_pipeline,
                                vulkan::CommandBuffer &command_buffer) {
+
     TimePoint now = Clock::now();
     Duration elapsed = now - m_last_update;
 
@@ -111,8 +108,13 @@ void PerformanceWindow::render(RenderEngine &render_engine,
     m_ui.get_text_box(FRAME_TIME_VALUE_TAG).text = m_last_frame_time;
     m_ui.get_text_box(FPS_VALUE_TAG).text = m_last_fps;
 
-    render_engine.render(command_buffer, m_components);
+    auto &rectangle_instance_buffer = geometry_pipeline->get_rectangle_instance_buffer();
 
-    auto ui_state = m_ui.get_state();
-    render_engine.render_ui(command_buffer, ui_state);
+    for (const auto &comp : m_components) {
+        rectangle_instance_buffer.push_back(comp);
+    }
+    auto &ui_state = m_ui.get_state();
+    for (const auto text_box : ui_state.text_boxes) {
+        text_pipeline->text_kerning(text_box->text, text_box->properties);
+    }
 }

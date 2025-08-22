@@ -1,6 +1,6 @@
 #pragma once
 
-#include "render_engine/Dimension.h"
+#include "Dimension.h"
 #include "render_engine/SwapChain.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
 #include "render_engine/vulkan/CommandBuffer.h"

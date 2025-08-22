@@ -1,6 +1,7 @@
 #pragma once
 
-#include "render_engine/RenderEngine.h"
+#include "render_engine/graphics_pipeline/GeometryPipeline.h"
+#include "render_engine/graphics_pipeline/TextPipeline.h"
 #include "render_engine/ui/UI.h"
 class PerformanceWindow {
   private:
@@ -18,10 +19,7 @@ class PerformanceWindow {
     const std::string FPS_VALUE_TAG = "FPS_VALUE";
     const std::string FRAME_TIME_VALUE_TAG = "FRAME_TIME_VALUE";
 
-    RenderBody m_header;
-    RenderBody m_body;
-
-    std::vector<std::reference_wrapper<const RenderBody>> m_components;
+    std::vector<graphics_pipeline::GeometryInstanceBufferObject> m_components;
     ui::UI m_ui;
 
     PerformanceWindow();
@@ -35,5 +33,7 @@ class PerformanceWindow {
     PerformanceWindow(const PerformanceWindow &other) = delete;
     PerformanceWindow &operator=(const PerformanceWindow &other) = delete;
 
-    void render(RenderEngine &render_engine, vulkan::CommandBuffer &command_buffer);
+    void render(graphics_pipeline::GeometryPipeline *geometry_pipeline,
+                graphics_pipeline::TextPipeline *text_pipeline,
+                vulkan::CommandBuffer &command_buffer);
 };

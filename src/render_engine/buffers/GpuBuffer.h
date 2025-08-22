@@ -109,7 +109,7 @@ template <Printable T, GpuBufferType BufferType> class GpuBuffer {
     void push_back(const T &t) { return m_staging_buffer.push_back(t); }
 
     decltype(auto) push_back(T &&t) {
-        return m_staging_buffer.push_back(std::forward(t));
+        return m_staging_buffer.push_back(std::forward<T>(t));
     }
 
     template <typename... Args> decltype(auto) emplace_back(Args &&...args) {
