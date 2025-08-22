@@ -177,7 +177,8 @@ class ShapeRendering : public Game {
                 hexagon_instance_buffer.emplace_back(
                     deref_b.position, deref_b.color, deref_b.rotation, deref_b.shape,
                     deref_b.uvwt,
-                    graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{});
+                    graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{
+                        colors::YELLOW, 5.0f});
                 break;
             };
         }

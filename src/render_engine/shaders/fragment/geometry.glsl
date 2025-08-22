@@ -77,7 +77,7 @@ float signed_distance_rectangle(const vec2 point, const float radius, const vec2
     return outside + inside;
 }
 
-float signed_distance(vec3 point) {
+float signed_distance(const vec3 point) {
     if(vertices.shape == CIRCLE) {
         // For circles, we do not use the vertices
         const vec2 center = vec2(0.0);
@@ -91,14 +91,39 @@ float signed_distance(vec3 point) {
     }
 }
 
+
+float border_sdf(
+    const vec2 point, const float radius, const float thickness, const vec2 shape_aspect 
+){
+    // Outer rounded rectangle
+    float d_outer = signed_distance_rectangle(point, radius, shape_aspect);
+
+    // Inner rounded rectangle (shrunk by thickness, smaller radius)
+    float inner_radius = max(radius - thickness, 0.0);
+    vec2 inner_dim = shape_dim - 2.0 * vec2(thickness);
+    float d_inner = signed_distance_rectangle(point, inner_radius, inner_dim);
+
+    // Ring = outside outer OR inside inner
+    return max(d_outer, -d_inner);
+}
+
 void main() {
     const float distance_px = signed_distance(in_position_px);
     const float aa = fwidth(distance_px);
     const float shape_mask = 1.0 - smoothstep(-aa, aa, distance_px);
 
-    const float border_inner_edge = -in_border_thickness_px;
-    const float border_mask = shape_mask * smoothstep(border_inner_edge - aa, border_inner_edge + aa, distance_px);
-    
+   
+   float border_mask = 0.0;
+    if (vertices.shape == RECTANGLE) {
+        // Compute inner rounded borders, only applicable for rectangles.
+        // Rounded borders for any other shape is not supported due to complexity.
+        const float border_distance_px = border_sdf(in_position_px.xy, in_border_radius_px, in_border_thickness_px, in_shape_dimension_px);
+        border_mask = 1.0 - smoothstep(-aa, aa, border_distance_px);
+    } else {
+        const float border_inner_edge = -in_border_thickness_px;
+        border_mask = shape_mask * smoothstep(border_inner_edge - aa, border_inner_edge + aa, distance_px);
+    }
+   
     vec4 shape_color = in_frag_color;
     if(in_uv.x >= 0.0 && in_uv.y >= 0.0) {
         shape_color = texture(u_texture_sampler, in_uv); 
