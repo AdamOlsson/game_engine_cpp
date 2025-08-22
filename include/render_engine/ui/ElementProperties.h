@@ -4,7 +4,7 @@
 namespace ui {
 struct ElementProperties {
     struct ContainerProperties {
-        alignas(8) glm::vec2 center = glm::vec2(0.0f, 0.0f);
+        alignas(8) glm::vec3 center = glm::vec3(0.0f);
         alignas(8) glm::vec2 dimension = glm::vec2(0.0f, 0.0f);
         alignas(16) glm::vec4 background_color = colors::TRANSPARENT;
         struct {

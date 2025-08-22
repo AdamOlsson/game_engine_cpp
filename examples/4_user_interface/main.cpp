@@ -40,8 +40,10 @@ class UserInterfaceExample : public Game {
     std::unique_ptr<RenderEngine> m_render_engine; // TODO: Remove
     std::unique_ptr<SwapChainManager> m_swap_chain_manager;
     std::unique_ptr<CommandBufferManager> m_command_buffer_manager;
-    /*std::unique_ptr<ui::UIPipeline> m_ui_pipeline;*/
-    /*std::unique_ptr<ui::TextPipeline> m_text_pipeline;*/
+
+    vulkan::Sampler m_sampler;
+    std::unique_ptr<graphics_pipeline::GeometryPipeline> m_geometry_pipeline;
+    std::unique_ptr<graphics_pipeline::TextPipeline> m_text_pipeline;
 
     const std::string VERSION_ID = "VERSION";
     const std::string NUMBER_ID = "NUMBER";
@@ -51,12 +53,12 @@ class UserInterfaceExample : public Game {
     bool m_in_settings;
 
     const float base_width = 400.0f;
-    const glm::vec2 top_button_pos = glm::vec2(0.0f, 50.0f);
+    const glm::vec3 top_button_pos = glm::vec3(0.0f, 50.0f, 0.0f);
     const glm::vec2 button_dimension = glm::vec2(base_width, 100.0f);
     const glm::vec2 square_button_dimension = glm::vec2(190.0f, 100.0f);
-    const glm::vec2 square_button_offset =
-        glm::vec2((base_width - square_button_dimension.x) / 2.0, 0.0f);
-    const glm::vec2 next_button_offset = glm::vec2(0.0f, 120.0f);
+    const glm::vec3 square_button_offset =
+        glm::vec3((base_width - square_button_dimension.x) / 2.0, 0.0f, 0.0f);
+    const glm::vec3 next_button_offset = glm::vec3(0.0f, 120.0f, 0.0f);
     const glm::vec4 button_background_color = colors::BLACK;
     const glm::vec4 button_font_color = colors::WHITE;
     const uint32_t button_font_size = 96;
@@ -65,8 +67,8 @@ class UserInterfaceExample : public Game {
     const float button_border_radius = 15.0f;
 
     const glm::vec2 square_settings_button_dimension = glm::vec2(125.0f, 100.0f);
-    const glm::vec2 square_settings_button_offset =
-        glm::vec2((base_width - square_settings_button_dimension.x) / 2.0, 0.0f);
+    const glm::vec3 square_settings_button_offset =
+        glm::vec3((base_width - square_settings_button_dimension.x) / 2.0, 0.0f, 0.0f);
 
   public:
     UserInterfaceExample() : m_number(0), m_increment(1), m_in_settings(false) {
@@ -201,10 +203,10 @@ class UserInterfaceExample : public Game {
                         .set_on_click([](ui::Button &self) { exit(0); })));
 
         m_ui.add_text_box(
-            NUMBER_ID,
-            ui::TextBox(std::to_string(m_number),
-                        ui::ElementProperties{.container.center = glm::vec2(0.0f, 250.0f),
-                                              .font.size = 158}));
+            NUMBER_ID, ui::TextBox(std::to_string(m_number),
+                                   ui::ElementProperties{
+                                       .container.center = glm::vec3(0.0f, 250.0f, 0.0f),
+                                       .font.size = 158}));
         m_ui.add_text_box(
             INCREMENT_ID,
             ui::TextBox(std::to_string(m_increment),
@@ -213,9 +215,9 @@ class UserInterfaceExample : public Game {
 
         m_ui.add_text_box(VERSION_ID,
                           ui::TextBox("VERSION 1.234",
-                                      ui::ElementProperties{
-                                          .container.center = glm::vec2(-330.0f, -388.0f),
-                                          .font.size = 24}));
+                                      ui::ElementProperties{.container.center = glm::vec3(
+                                                                -330.0f, -388.0f, 0.0f),
+                                                            .font.size = 24}));
     };
 
     ~UserInterfaceExample() {};
@@ -237,8 +239,52 @@ class UserInterfaceExample : public Game {
 
         m_ui.get_text_box(NUMBER_ID).text = std::to_string(m_number);
         auto ui_state = m_ui.get_state();
-        m_render_engine->render_ui(command_buffer, ui_state);
-        PerformanceWindow::get_instance().render(*m_render_engine, command_buffer);
+
+        auto &rectangle_instance_buffer =
+            m_geometry_pipeline->get_rectangle_instance_buffer();
+        auto &character_instance_buffer = m_text_pipeline->get_character_buffer();
+        auto &text_segment_buffer = m_text_pipeline->get_text_segment_buffer();
+
+        rectangle_instance_buffer.clear();
+        character_instance_buffer.clear();
+        text_segment_buffer.clear();
+        // Debug
+        /*rectangle_instance_buffer.emplace_back(*/
+        /*    glm::vec3(-200.0f, 200.0f, 0.0), colors::TRANSPARENT, 0.0f,*/
+        /*    glm::vec2(300.0f, 50.0f), glm::vec4(-1.0f),*/
+        /*    graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{*/
+        /*        .color = button_border_color,*/
+        /*        .thickness = button_border_thickness,*/
+        /*        .radius = button_border_radius});*/
+
+        for (const auto button : ui_state.buttons) {
+            float rotation = 0.0;
+            glm::vec4 uvwt = glm::vec4(-1.0f);
+            rectangle_instance_buffer.emplace_back(
+                button->properties.container.center,
+                button->properties.container.background_color, rotation,
+                button->properties.container.dimension, uvwt,
+                graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{
+                    .color = button->properties.container.border.color,
+                    .thickness = button->properties.container.border.thickness,
+                    .radius = button->properties.container.border.radius,
+                });
+
+            m_text_pipeline->text_kerning(button->text, button->properties);
+        }
+
+        for (const auto text_box : ui_state.text_boxes) {
+            m_text_pipeline->text_kerning(text_box->text, text_box->properties);
+        }
+
+        rectangle_instance_buffer.transfer();
+        character_instance_buffer.transfer();
+        text_segment_buffer.transfer();
+
+        m_geometry_pipeline->render_rectangles(command_buffer);
+        m_text_pipeline->render_text(command_buffer);
+
+        /*PerformanceWindow::get_instance().render(*m_render_engine, command_buffer);*/
 
         render_pass.end_submit_present();
     };
@@ -251,9 +297,19 @@ class UserInterfaceExample : public Game {
         m_command_buffer_manager = std::make_unique<CommandBufferManager>(
             ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
 
-        m_render_engine = std::make_unique<RenderEngine>(
-            ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
-            UseFont::Default); // TODO: remove
+        /*m_render_engine = std::make_unique<RenderEngine>(*/
+        /*    ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),*/
+        /*    UseFont::Default); // TODO: remove*/
+
+        m_sampler = vulkan::Sampler(ctx);
+        m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(
+            ctx, m_command_buffer_manager.get(), *m_swap_chain_manager,
+            graphics_pipeline::GeometryPipelineOptions{});
+
+        auto font = std::make_unique<Font>(ctx, m_command_buffer_manager.get(),
+                                           "DefaultFont", &m_sampler);
+        m_text_pipeline = std::make_unique<graphics_pipeline::TextPipeline>(
+            ctx, m_command_buffer_manager.get(), *m_swap_chain_manager, std::move(font));
 
         ctx->window->register_mouse_event_callback(
             [this](window::MouseEvent e, window::ViewportPoint &p) {

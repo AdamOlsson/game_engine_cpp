@@ -8,7 +8,7 @@
 PerformanceWindow::PerformanceWindow() {
     const glm::vec3 header_dimension = glm::vec3(150.0f, 20.0f, 0.0f);
     const glm::vec3 header_position = glm::vec3(-300.0f, 370.0f, 0.0f);
-    const glm::vec2 header_text = glm::vec2(header_position.x, header_position.y);
+    const glm::vec3 header_text = glm::vec3(header_position.x, header_position.y, 0.0f);
 
     const glm::vec3 body_dimension = glm::vec3(header_dimension.x, 45.0f, 0.0f);
 
@@ -44,9 +44,9 @@ PerformanceWindow::PerformanceWindow() {
                                                              glm::vec2(200.0f, 200.0f),
                                                          .font = font_props}));
 
-    const auto base_header_body_text_offset = glm::vec2(0.0f, 5.0f);
-    const auto text_offset = glm::vec2(0.0f, 18.0f);
-    auto left_alignment = glm::vec2(-5.0f, 0.0);
+    const auto base_header_body_text_offset = glm::vec3(0.0f, 5.0f, 0.0f);
+    const auto text_offset = glm::vec3(0.0f, 18.0f, 0.0f);
+    auto left_alignment = glm::vec3(-5.0f, 0.0, 0.0f);
     m_ui.add_text_box(
         "FPS", ui::TextBox("FPS", ui::ElementProperties{
                                       .container.center = header_text -
@@ -55,7 +55,7 @@ PerformanceWindow::PerformanceWindow() {
                                       .container.dimension = glm::vec2(200.0f, 200.0f),
                                       .font = font_props}));
 
-    auto right_alignment = glm::vec2(36.0f, 0.0);
+    auto right_alignment = glm::vec3(36.0f, 0.0, 0.0f);
     m_ui.add_text_box(
         FPS_VALUE_TAG,
         ui::TextBox(
@@ -65,7 +65,7 @@ PerformanceWindow::PerformanceWindow() {
                                         .container.dimension = glm::vec2(200.0f, 200.0f),
                                         .font = font_props}));
 
-    left_alignment = glm::vec2(-30.0f, 0.0);
+    left_alignment = glm::vec3(-30.0f, 0.0, 0.0f);
     m_ui.add_text_box(
         "FRAME_TIME",
         ui::TextBox("FRAME TIME",
@@ -75,7 +75,7 @@ PerformanceWindow::PerformanceWindow() {
                         .container.dimension = glm::vec2(200.0f, 200.0f),
                         .font = font_props}));
 
-    right_alignment = glm::vec2(45.0f, 0.0f);
+    right_alignment = glm::vec3(45.0f, 0.0f, 0.0f);
     m_ui.add_text_box(
         FRAME_TIME_VALUE_TAG,
         ui::TextBox("00.0",

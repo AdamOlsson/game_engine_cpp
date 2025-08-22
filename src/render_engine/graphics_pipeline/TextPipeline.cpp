@@ -109,7 +109,8 @@ void graphics_pipeline::TextPipeline::text_kerning(
             offset -= font_size * kerning_map.map.find(pair)->second;
         }
         combined_offset += offset;
-        const glm::vec2 glyph_position = text_center + glm::vec2(combined_offset, 0.0f);
+        const glm::vec2 glyph_position =
+            text_center + glm::vec3(combined_offset, 0.0f, 0.0f);
         glyph_instance_buffer.emplace_back(
             glyph_position, m_font->encode_ascii_char(std::toupper(text[i])),
             text_segment_idx);

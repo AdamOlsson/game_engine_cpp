@@ -35,14 +35,14 @@ class ShapeRendering : public Game {
                                       RenderBodyBuilder()
                                           .position(WorldPoint(-300, 300))
                                           .shape(Shape::create_circle_data(80.0f))
-                                          .color(colors::TRANSPARENT)
+                                          .color(colors::RED)
                                           .build());
 
         ecs.add_component<RenderBody>(ecs.create_entity(),
                                       RenderBodyBuilder()
                                           .position(WorldPoint(-200, 300))
                                           .shape(Shape::create_triangle_data(80.0f))
-                                          .color(colors::GREEN)
+                                          .color(colors::RED)
                                           .build());
 
         ecs.add_component<RenderBody>(
@@ -143,6 +143,12 @@ class ShapeRendering : public Game {
         rectangle_instance_buffer.clear();
         hexagon_instance_buffer.clear();
 
+        rectangle_instance_buffer.emplace_back(
+            glm::vec3(150.0f, 200.0f, 0.0), colors::TRANSPARENT, 0.0f,
+            glm::vec2(400.0f, 100.0f), glm::vec4(-1.0f),
+            graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{
+                .color = colors::WHITE, .thickness = 10.0f, .radius = 15.0f});
+
         for (auto &b : render_bodies) {
             auto deref_b = b.get();
             switch (deref_b.shape.encode_shape_type()) {
@@ -151,21 +157,21 @@ class ShapeRendering : public Game {
                     deref_b.position, deref_b.color, deref_b.rotation,
                     deref_b.shape.get<Circle>(), deref_b.uvwt,
                     graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{
-                        .color = colors::YELLOW, .thickness = 20.0f});
+                        .color = colors::YELLOW, .thickness = 10.0f});
                 break;
             case ShapeTypeEncoding::TriangleShape:
                 triangle_instance_buffer.emplace_back(
                     deref_b.position, deref_b.color, deref_b.rotation, deref_b.shape,
                     deref_b.uvwt,
                     graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{
-                        .color = colors::YELLOW, .thickness = 20.0f});
+                        .color = colors::YELLOW, .thickness = 5.0f});
                 break;
             case ShapeTypeEncoding::RectangleShape:
                 rectangle_instance_buffer.emplace_back(
                     deref_b.position, deref_b.color, deref_b.rotation,
                     deref_b.shape.get<Rectangle>(), deref_b.uvwt,
                     graphics_pipeline::GeometryInstanceBufferObject::BorderProperties{
-                        colors::YELLOW, 20.0f, 80.0f});
+                        colors::YELLOW, 5.0f, 5.0f});
                 break;
             case ShapeTypeEncoding::HexagonShape:
                 hexagon_instance_buffer.emplace_back(
@@ -190,9 +196,10 @@ class ShapeRendering : public Game {
         const auto text_box_1 =
             ui::TextBox("ADAM", ui::ElementProperties{.font.size = 128});
 
-        const auto text_box_2 = ui::TextBox(
-            "LINDA", ui::ElementProperties{.container.center = glm::vec2(0.0f, 100.0f),
-                                           .font.size = 64});
+        const auto text_box_2 =
+            ui::TextBox("LINDA", ui::ElementProperties{.container.center =
+                                                           glm::vec3(0.0f, 100.0f, 0.0f),
+                                                       .font.size = 64});
         auto &character_instance_buffer = m_text_pipeline->get_character_buffer();
         auto &text_segment_buffer = m_text_pipeline->get_text_segment_buffer();
 

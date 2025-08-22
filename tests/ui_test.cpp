@@ -10,7 +10,6 @@ TEST(UITest, TestOnEnterAndOnLeaveWithSingleButton) {
     auto m_ui = ui::UI(ui::Menu().add_button(
         ui::Button("",
                    ui::ElementProperties{
-                       .container.center = glm::vec2(0.0f, 0.0f),
                        .container.dimension = glm::vec2(400.0f, 100.0f),
                        .container.border.color = colors::GREEN,
                        .container.border.thickness = 5.0f,
@@ -53,7 +52,7 @@ TEST(UITest, TestOnEnterAndOnLeaveWithThreeeButtons) {
         ui::Menu()
             .add_button(ui::Button("",
                                    ui::ElementProperties{
-                                       .container.center = glm::vec2(0.0f, 200.0f),
+                                       .container.center = glm::vec3(0.0f, 200.0f, 0.0f),
                                        .container.dimension = glm::vec2(400.0f, 100.0f),
                                        .container.border.color = colors::DARK_GREEN,
                                        .container.border.thickness = 5.0f,
@@ -68,7 +67,7 @@ TEST(UITest, TestOnEnterAndOnLeaveWithThreeeButtons) {
                             }))
             .add_button(ui::Button("",
                                    ui::ElementProperties{
-                                       .container.center = glm::vec2(0.0f, 0.0f),
+                                       .container.center = glm::vec3(0.0f, 0.0f, 0.0f),
                                        .container.dimension = glm::vec2(400.0f, 100.0f),
                                        .container.border.color = colors::GREEN,
                                        .container.border.thickness = 5.0f,
@@ -82,7 +81,7 @@ TEST(UITest, TestOnEnterAndOnLeaveWithThreeeButtons) {
                             }))
             .add_button(ui::Button("",
                                    ui::ElementProperties{
-                                       .container.center = glm::vec2(0.0f, -200.0f),
+                                       .container.center = glm::vec3(0.0f, -200.0f, 0.0f),
                                        .container.dimension = glm::vec2(400.0f, 100.0f),
                                        .container.border.color = colors::LIGHT_GREEN,
                                        .container.border.thickness = 5.0f,
