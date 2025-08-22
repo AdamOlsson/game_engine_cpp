@@ -2,9 +2,6 @@
 #include "Dimension.h"
 #include "Game.h"
 #include "GameEngine.h"
-#include "entity_component_storage/ComponentStore.h"
-#include "entity_component_storage/EntityComponentStorage.h"
-#include "render_engine/RenderBody.h"
 #include "render_engine/colors.h"
 #include "render_engine/fonts/Font.h"
 #include "render_engine/graphics_pipeline/GeometryPipeline.h"
@@ -14,9 +11,7 @@
 #include "render_engine/ui/TextBox.h"
 #include "render_engine/window/WindowConfig.h"
 #include "shape.h"
-#include <functional>
 #include <memory>
-#include <optional>
 
 class ShapeRendering : public Game {
   private:
@@ -32,9 +27,7 @@ class ShapeRendering : public Game {
     std::vector<shape::Shape> m_shape_ids;
 
   public:
-    EntityComponentStorage ecs;
-
-    ShapeRendering() : ecs(EntityComponentStorage()) {
+    ShapeRendering() {
         m_shape_ids.push_back(shape::Shape::Circle);
         m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
             .center = WorldPoint(-300, 300),
@@ -157,10 +150,6 @@ class ShapeRendering : public Game {
     }
 
     void render() override {
-        std::vector<std::reference_wrapper<const RenderBody>> render_bodies = {};
-        for (auto it = ecs.begin<RenderBody>(); it != ecs.end<RenderBody>(); it++) {
-            render_bodies.push_back(ecs.get_component<RenderBody>(it.id()).value());
-        }
 
         auto command_buffer = m_command_buffer_manager->get_command_buffer();
         RenderPass render_pass = m_swap_chain_manager->get_render_pass(command_buffer);

@@ -2,11 +2,6 @@
 This project is a physics engine and render engine to support for my personal game development.
 
 # TODO
-- Can we simplify Pipelines even more?
-    - It should be easy to create a new pipeline
-- Wrap VkDescriptorSetLayout in a class to handle descruction
-- Wrap DescriptorSet, DescriptorSetLayout and DescriptorPool in a single class
-- build the render engine and physics engine separately as with software agent
 - Fetch Vulkan during CMake generation of build files
 - Implement a CPU radix sort
 
@@ -26,9 +21,6 @@ This project is a physics engine and render engine to support for my personal ga
 - 3D objects
 - Lighting
 
-
-## Refactoring To Perform
-- Refactor RigidBody and RigidBuilder to have the ability to be available at compile time
 
 ## Known bugs
 - Example 1 has an issue where solving a collision results in NaN, causing the object to disappear
