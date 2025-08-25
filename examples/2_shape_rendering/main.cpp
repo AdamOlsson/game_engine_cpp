@@ -230,7 +230,6 @@ int main() {
     GameEngineConfig config{
         .window_config = window::WindowConfig{.dims = window::WindowDimension(800, 800),
                                               .title = "2_shape_rendering"},
-        .use_font = UseFont::Default,
     };
 
     auto game = std::make_unique<ShapeRendering>();

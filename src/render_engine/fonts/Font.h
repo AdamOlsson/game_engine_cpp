@@ -7,11 +7,6 @@
 #include "render_engine/vulkan/Sampler.h"
 #include <cstddef>
 
-enum class UseFont {
-    None,
-    Default,
-};
-
 class Font {
   private:
     float char_width_px;

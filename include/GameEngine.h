@@ -1,14 +1,12 @@
 #pragma once
 
 #include "Game.h"
-#include "render_engine/fonts/Font.h"
 #include "render_engine/window/WindowConfig.h"
 #include <memory>
 
 struct GameEngineConfig {
     window::WindowConfig window_config;
     float ticks_per_second = 60.0f;
-    UseFont use_font = UseFont::None;
 };
 
 class GameEngine {
