@@ -213,8 +213,6 @@ class ShapeRendering : public Game {
         character_instance_buffer.clear();
         text_segment_buffer.clear();
 
-        // TODO: This invokation also writes to the instance buffer, make the calling
-        // conventions equal to that of the GeometryPipeline
         m_text_pipeline->text_kerning(text_box_1.text, text_box_1.properties);
         m_text_pipeline->text_kerning(text_box_2.text, text_box_2.properties);
 

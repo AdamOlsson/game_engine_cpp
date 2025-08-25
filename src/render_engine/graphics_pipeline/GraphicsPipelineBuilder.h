@@ -8,17 +8,6 @@
 #include "vulkan/vulkan_core.h"
 #include <optional>
 
-// std::unique_ptr<GeometryPipeline> geometry_pipeline = PipelineBuilder()
-// // If index buffer is set use index based drawing
-// .set_vertex_shader(<vertex shader>)
-// .set_fragment_shader(<fragment shader>)
-// .set_vertex_buffer(<vertex buffer>)
-// .set_index_buffer(<index buffer>)
-// .set_push_constants(<push_constants>)
-// .add_sampler(<sampler>)
-// .add_texture(<texture>)
-// .add_gpu_buffer(<gpu buffer>)
-// .build(ctx, swap_chain_manager)
 namespace graphics_pipeline {
 
 class GraphicsPipelineBuilder {
@@ -37,9 +26,6 @@ class GraphicsPipelineBuilder {
     GraphicsPipelineBuilder &set_fragment_shader(const ShaderResource *value);
     GraphicsPipelineBuilder &set_push_constants(VkPushConstantRange &&value);
 
-    // TODO: Think about destruction
-    // TODO: This function is temporary and should instead be created during build() based
-    // on the values from the other set() functions
     GraphicsPipelineBuilder &set_descriptor_set_layout(DescriptorSetLayout *value);
 
     GraphicsPipeline build(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
