@@ -8,6 +8,7 @@ Window::Window(const WindowConfig &config) : m_config(config) {
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     m_window = glfwCreateWindow(config.dims.width, config.dims.height, config.title,
                                 nullptr, nullptr);
+    glfwSetWindowUserPointer(m_window, this);
 }
 
 Window::~Window() {
@@ -25,12 +26,11 @@ bool Window::is_minimized() {
     glfwWaitEvents();
     return width == 0 || height == 0;
 }
+
 void Window::register_mouse_event_callback(MouseEventCallbackFn cb) {
     this->mouse_event_cb = cb;
     glfwSetMouseButtonCallback(m_window, this->mouse_button_callback);
     glfwSetCursorPosCallback(m_window, this->cursor_position_callback);
-    glfwSetWindowUserPointer(m_window,
-                             this); // This should preferably be set elsewhere
 }
 
 void Window::register_keyboard_event_callback(KeyboardEventCallbackFn cb) {
@@ -79,13 +79,12 @@ void Window::mouse_button_callback(GLFWwindow *window, int button, int action, i
     }
 
     auto w = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
-    if (w->mouse_event_cb.has_value()) {
+    if (w != nullptr && w->mouse_event_cb.has_value()) {
         double xpos, ypos;
         glfwGetCursorPos(window, &xpos, &ypos);
         WindowDimension dims = w->m_config.dims;
         auto p =
             ViewportPoint(xpos - dims.width / 2.0f, -1.0f * (ypos - dims.height / 2.0f));
-
         w->mouse_event_cb.value()(m_event, p);
     }
 }
@@ -94,7 +93,7 @@ void Window::keyboard_callback(GLFWwindow *window, int key, int scancode, int ac
                                int mods) {
 
     auto w = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
-    if (w->keyboard_event_cb.has_value()) {
+    if (w != nullptr && w->keyboard_event_cb.has_value()) {
         KeyState state;
         switch (action) {
         case GLFW_PRESS:
@@ -117,6 +116,18 @@ void Window::keyboard_callback(GLFWwindow *window, int key, int scancode, int ac
             break;
         case GLFW_KEY_T:
             key_event = KeyEvent::T;
+            break;
+        case GLFW_KEY_W:
+            key_event = KeyEvent::W;
+            break;
+        case GLFW_KEY_A:
+            key_event = KeyEvent::A;
+            break;
+        case GLFW_KEY_S:
+            key_event = KeyEvent::S;
+            break;
+        case GLFW_KEY_D:
+            key_event = KeyEvent::D;
             break;
         default:
             return;
