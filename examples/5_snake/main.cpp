@@ -1,15 +1,16 @@
 #include "Game.h"
 #include "GameEngine.h"
-#include "io.h"
 #include "render_engine/CommandBufferManager.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "render_engine/resources/ResourceManager.h"
 
-constexpr glm::vec2 UP = glm::vec2(0.0f, -1.0f);
-constexpr glm::vec2 DOWN = glm::vec2(0.0f, 1.0f);
-constexpr glm::vec2 LEFT = glm::vec2(-1.0f, 0.0f);
-constexpr glm::vec2 RIGHT = glm::vec2(1.0f, 0.0f);
+constexpr glm::vec3 UP = glm::vec3(0.0f, 1.0f, 0.0f);
+constexpr glm::vec3 DOWN = glm::vec3(0.0f, -1.0f, 0.0f);
+constexpr glm::vec3 LEFT = glm::vec3(-1.0f, 0.0f, 0.0f);
+constexpr glm::vec3 RIGHT = glm::vec3(1.0f, 0.0f, 0.0f);
+
+constexpr float TILE_SIDE = 50.0f;
 
 class Snake : public Game {
   private:
@@ -21,8 +22,8 @@ class Snake : public Game {
     const float m_game_tick_duration_s = 1.0f;
 
     // Snake params
-    glm::vec2 m_direction = glm::vec2(0.0f);
-    glm::vec2 m_position = glm::vec2(0.0f);
+    glm::vec3 m_direction = glm::vec3(0.0f);
+    glm::vec3 m_position = glm::vec3(0.0f);
 
   public:
     Snake() {};
@@ -34,10 +35,31 @@ class Snake : public Game {
             return;
         }
         m_current_tick_duration_s = 0.0f;
-        std::cout << m_direction << std::endl;
+
+        m_position += m_direction * TILE_SIDE;
     };
 
-    void render() override {};
+    void render() override {
+        auto &instance_buffer = m_geometry_pipeline->get_rectangle_instance_buffer();
+        instance_buffer.clear();
+
+        instance_buffer.push_back(graphics_pipeline::GeometryInstanceBufferObject{
+            .center = m_position,
+            .dimension = glm::vec2(TILE_SIDE),
+            .color = colors::RED,
+            .uvwt = glm::vec4(-1.0f),
+        });
+
+        instance_buffer.transfer();
+
+        auto command_buffer = m_command_buffer_manager->get_command_buffer();
+        auto render_pass = m_swap_chain_manager->get_render_pass(command_buffer);
+        render_pass.begin();
+
+        m_geometry_pipeline->render_rectangles(command_buffer);
+
+        render_pass.end_submit_present();
+    };
 
     void handle_keyboard_input(window::KeyEvent &event, window::KeyState &key_state) {
         if (key_state != window::KeyState::DOWN) {
