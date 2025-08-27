@@ -23,6 +23,7 @@ class Snake : public Game {
     const float m_game_tick_duration_s = 1.0f;
 
     // Snake params
+    glm::vec3 m_pending_head_direction = UP;
     glm::vec3 m_head_direction = UP;
     std::vector<glm::vec3> m_body_directions = {};
     std::vector<glm::vec3> m_body_positions = {};
@@ -46,6 +47,11 @@ class Snake : public Game {
             return;
         }
         m_current_tick_duration_s = 0.0f;
+
+        // Check for illegal move
+        if (m_pending_head_direction != -m_head_direction) {
+            m_head_direction = m_pending_head_direction;
+        }
 
         m_body_directions.pop_back();
         m_body_directions.insert(m_body_directions.begin(), m_head_direction);
@@ -87,22 +93,22 @@ class Snake : public Game {
         case window::KeyEvent::UP:
         case window::KeyEvent::K:
         case window::KeyEvent::W:
-            m_head_direction = UP;
+            m_pending_head_direction = UP;
             break;
         case window::KeyEvent::LEFT:
         case window::KeyEvent::H:
         case window::KeyEvent::A:
-            m_head_direction = LEFT;
+            m_pending_head_direction = LEFT;
             break;
         case window::KeyEvent::DOWN:
         case window::KeyEvent::J:
         case window::KeyEvent::S:
-            m_head_direction = DOWN;
+            m_pending_head_direction = DOWN;
             break;
         case window::KeyEvent::RIGHT:
         case window::KeyEvent::L:
         case window::KeyEvent::D:
-            m_head_direction = RIGHT;
+            m_pending_head_direction = RIGHT;
             break;
         default:
             break;
