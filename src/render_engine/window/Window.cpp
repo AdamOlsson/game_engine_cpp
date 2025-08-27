@@ -94,80 +94,8 @@ void Window::keyboard_callback(GLFWwindow *window, int key, int scancode, int ac
 
     auto w = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
     if (w != nullptr && w->keyboard_event_cb.has_value()) {
-        KeyState state;
-        switch (action) {
-        case GLFW_PRESS:
-            state = KeyState::DOWN;
-            break;
-        case GLFW_RELEASE:
-            state = KeyState::UP;
-            break;
-        case GLFW_REPEAT:
-            state = KeyState::REPEAT;
-            break;
-        default:
-            return;
-        }
-
-        KeyEvent key_event;
-        switch (key) {
-        case GLFW_KEY_R:
-            key_event = KeyEvent::R;
-            break;
-        case GLFW_KEY_T:
-            key_event = KeyEvent::T;
-            break;
-        case GLFW_KEY_W:
-            key_event = KeyEvent::W;
-            break;
-        case GLFW_KEY_A:
-            key_event = KeyEvent::A;
-            break;
-        case GLFW_KEY_S:
-            key_event = KeyEvent::S;
-            break;
-        case GLFW_KEY_D:
-            key_event = KeyEvent::D;
-            break;
-        default:
-            return;
-        }
-
+        KeyState state = static_cast<KeyState>(action);
+        KeyEvent key_event = static_cast<KeyEvent>(key);
         w->keyboard_event_cb.value()(key_event, state);
     }
-}
-
-std::ostream &operator<<(std::ostream &os, const KeyEvent &k) {
-    std::string key_string;
-    switch (k) {
-    case KeyEvent::R:
-        key_string = "R";
-        break;
-    case KeyEvent::T:
-        key_string = "T";
-        break;
-    default:
-        key_string = "UNKNOWN";
-        break;
-    }
-    return os << "KeyEvent::" << key_string;
-}
-
-std::ostream &operator<<(std::ostream &os, const KeyState &k) {
-    std::string state_string;
-    switch (k) {
-    case KeyState::UP:
-        state_string = "UP";
-        break;
-    case KeyState::REPEAT:
-        state_string = "REPEAT";
-        break;
-    case KeyState::DOWN:
-        state_string = "DOWN";
-        break;
-    default:
-        state_string = "UNKNOWN";
-        break;
-    }
-    return os << "KeyEvent::" << state_string;
 }
