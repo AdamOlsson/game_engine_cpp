@@ -84,15 +84,23 @@ class Snake : public Game {
             return;
         }
         switch (event) {
+        case window::KeyEvent::UP:
+        case window::KeyEvent::K:
         case window::KeyEvent::W:
             m_head_direction = UP;
             break;
+        case window::KeyEvent::LEFT:
+        case window::KeyEvent::H:
         case window::KeyEvent::A:
             m_head_direction = LEFT;
             break;
+        case window::KeyEvent::DOWN:
+        case window::KeyEvent::J:
         case window::KeyEvent::S:
             m_head_direction = DOWN;
             break;
+        case window::KeyEvent::RIGHT:
+        case window::KeyEvent::L:
         case window::KeyEvent::D:
             m_head_direction = RIGHT;
             break;
