@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "GameEngine.h"
+#include "io.h"
 #include "render_engine/CommandBufferManager.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/graphics_pipeline/GeometryPipeline.h"
@@ -22,11 +23,21 @@ class Snake : public Game {
     const float m_game_tick_duration_s = 1.0f;
 
     // Snake params
-    glm::vec3 m_direction = glm::vec3(0.0f);
-    glm::vec3 m_position = glm::vec3(0.0f);
+    glm::vec3 m_head_direction = UP;
+    std::vector<glm::vec3> m_body_directions = {};
+    std::vector<glm::vec3> m_body_positions = {};
 
   public:
-    Snake() {};
+    Snake() {
+        const auto start_position = glm::vec3(0.0f);
+        m_body_positions.push_back(start_position + DOWN * TILE_SIDE * 0.0f);
+        m_body_positions.push_back(start_position + DOWN * TILE_SIDE * 1.0f);
+        m_body_positions.push_back(start_position + DOWN * TILE_SIDE * 2.0f);
+        m_body_directions.push_back(UP);
+        m_body_directions.push_back(UP);
+        m_body_directions.push_back(UP);
+    }
+
     ~Snake() {};
 
     void update(float dt) override {
@@ -36,19 +47,26 @@ class Snake : public Game {
         }
         m_current_tick_duration_s = 0.0f;
 
-        m_position += m_direction * TILE_SIDE;
+        m_body_directions.pop_back();
+        m_body_directions.insert(m_body_directions.begin(), m_head_direction);
+
+        for (auto i = 0; i < m_body_directions.size(); i++) {
+            m_body_positions[i] += m_body_directions[i] * TILE_SIDE;
+        }
     };
 
     void render() override {
         auto &instance_buffer = m_geometry_pipeline->get_rectangle_instance_buffer();
         instance_buffer.clear();
 
-        instance_buffer.push_back(graphics_pipeline::GeometryInstanceBufferObject{
-            .center = m_position,
-            .dimension = glm::vec2(TILE_SIDE),
-            .color = colors::RED,
-            .uvwt = glm::vec4(-1.0f),
-        });
+        for (auto i = 0; i < m_body_positions.size(); i++) {
+            instance_buffer.push_back(graphics_pipeline::GeometryInstanceBufferObject{
+                .center = m_body_positions[i],
+                .dimension = glm::vec2(TILE_SIDE),
+                .color = i == 0 ? colors::RED : colors::WHITE,
+                .uvwt = glm::vec4(-1.0f),
+            });
+        }
 
         instance_buffer.transfer();
 
@@ -67,16 +85,16 @@ class Snake : public Game {
         }
         switch (event) {
         case window::KeyEvent::W:
-            m_direction = UP;
+            m_head_direction = UP;
             break;
         case window::KeyEvent::A:
-            m_direction = LEFT;
+            m_head_direction = LEFT;
             break;
         case window::KeyEvent::S:
-            m_direction = DOWN;
+            m_head_direction = DOWN;
             break;
         case window::KeyEvent::D:
-            m_direction = RIGHT;
+            m_head_direction = RIGHT;
             break;
         default:
             break;
