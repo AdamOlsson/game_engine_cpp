@@ -1,8 +1,9 @@
 #include "Game.h"
 #include "GameEngine.h"
-#include "io.h"
+#include "logger.h"
 #include "render_engine/CommandBufferManager.h"
 #include "render_engine/SwapChainManager.h"
+#include "render_engine/colors.h"
 #include "render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "render_engine/resources/ResourceManager.h"
 
@@ -12,6 +13,17 @@ constexpr glm::vec3 LEFT = glm::vec3(-1.0f, 0.0f, 0.0f);
 constexpr glm::vec3 RIGHT = glm::vec3(1.0f, 0.0f, 0.0f);
 
 constexpr float TILE_SIDE = 50.0f;
+
+constexpr graphics_pipeline::GeometryInstanceBufferObject FRAME = {
+    .center = glm::vec3(0.0f),
+    .dimension = glm::vec2(1.0f) * TILE_SIDE * 12.0f - TILE_SIDE / 2.0f,
+    .color = colors::TRANSPARENT,
+    .border.thickness = 10.0f,
+    .border.color = colors::WHITE,
+};
+
+constexpr glm::vec2 FRAME_INNER_BOUNDS =
+    FRAME.dimension / 2.0f - glm::vec2(FRAME.border.thickness);
 
 class Snake : public Game {
   private:
@@ -29,7 +41,14 @@ class Snake : public Game {
     std::vector<glm::vec3> m_body_positions = {};
 
   public:
-    Snake() {
+    Snake() { game_reset(); }
+
+    ~Snake() {};
+
+    void game_reset() {
+        m_body_positions.clear();
+        m_body_directions.clear();
+
         const auto start_position = glm::vec3(0.0f);
         m_body_positions.push_back(start_position + DOWN * TILE_SIDE * 0.0f);
         m_body_positions.push_back(start_position + DOWN * TILE_SIDE * 1.0f);
@@ -37,9 +56,10 @@ class Snake : public Game {
         m_body_directions.push_back(UP);
         m_body_directions.push_back(UP);
         m_body_directions.push_back(UP);
-    }
 
-    ~Snake() {};
+        m_pending_head_direction = UP;
+        m_head_direction = UP;
+    }
 
     void update(float dt) override {
         m_current_tick_duration_s += dt;
@@ -53,11 +73,21 @@ class Snake : public Game {
             m_head_direction = m_pending_head_direction;
         }
 
+        // CONTINUE: Add spawn apple mechanic and increase snake length once eaten
+        // CONTINUE: Add game over check when snake eats itself
+
         m_body_directions.pop_back();
         m_body_directions.insert(m_body_directions.begin(), m_head_direction);
 
         for (auto i = 0; i < m_body_directions.size(); i++) {
             m_body_positions[i] += m_body_directions[i] * TILE_SIDE;
+        }
+
+        // Check for playing field bounds
+        const auto abs_snake_head_pos = abs(m_body_positions[0]);
+        if (abs_snake_head_pos.x > FRAME_INNER_BOUNDS.x ||
+            abs_snake_head_pos.y > FRAME_INNER_BOUNDS.y) {
+            game_reset();
         }
     };
 
@@ -73,6 +103,8 @@ class Snake : public Game {
                 .uvwt = glm::vec4(-1.0f),
             });
         }
+
+        instance_buffer.push_back(FRAME);
 
         instance_buffer.transfer();
 
