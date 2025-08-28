@@ -14,16 +14,20 @@ constexpr glm::vec3 RIGHT = glm::vec3(1.0f, 0.0f, 0.0f);
 
 constexpr float TILE_SIDE = 50.0f;
 
+constexpr glm::vec3 GAME_FIELD_CENTER = glm::vec3(0.0f, 0.0f, 0.0f);
 constexpr graphics_pipeline::GeometryInstanceBufferObject FRAME = {
-    .center = glm::vec3(0.0f),
+    .center = GAME_FIELD_CENTER,
     .dimension = glm::vec2(1.0f) * TILE_SIDE * 12.0f - TILE_SIDE / 2.0f,
     .color = colors::TRANSPARENT,
     .border.thickness = 10.0f,
     .border.color = colors::WHITE,
 };
 
-constexpr glm::vec2 FRAME_INNER_BOUNDS =
-    FRAME.dimension / 2.0f - glm::vec2(FRAME.border.thickness);
+constexpr glm::vec4 FRAME_INNER_BOUNDS =
+    glm::vec4(GAME_FIELD_CENTER.x + FRAME.dimension.x / 2.0f - FRAME.border.thickness,
+              GAME_FIELD_CENTER.y + FRAME.dimension.y / 2.0f - FRAME.border.thickness,
+              GAME_FIELD_CENTER.x - FRAME.dimension.x / 2.0f + FRAME.border.thickness,
+              GAME_FIELD_CENTER.y - FRAME.dimension.x / 2.0f + FRAME.border.thickness);
 
 class Snake : public Game {
   private:
@@ -49,7 +53,7 @@ class Snake : public Game {
         m_body_positions.clear();
         m_body_directions.clear();
 
-        const auto start_position = glm::vec3(0.0f);
+        const auto start_position = GAME_FIELD_CENTER;
         m_body_positions.push_back(start_position + DOWN * TILE_SIDE * 0.0f);
         m_body_positions.push_back(start_position + DOWN * TILE_SIDE * 1.0f);
         m_body_positions.push_back(start_position + DOWN * TILE_SIDE * 2.0f);
@@ -84,9 +88,11 @@ class Snake : public Game {
         }
 
         // Check for playing field bounds
-        const auto abs_snake_head_pos = abs(m_body_positions[0]);
-        if (abs_snake_head_pos.x > FRAME_INNER_BOUNDS.x ||
-            abs_snake_head_pos.y > FRAME_INNER_BOUNDS.y) {
+        const auto snake_head_pos = m_body_positions[0];
+        if (!(snake_head_pos.x < FRAME_INNER_BOUNDS.x &&
+              snake_head_pos.x > FRAME_INNER_BOUNDS.z) ||
+            !(snake_head_pos.y < FRAME_INNER_BOUNDS.y &&
+              snake_head_pos.y > FRAME_INNER_BOUNDS.w)) {
             game_reset();
         }
     };
