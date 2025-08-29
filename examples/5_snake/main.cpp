@@ -18,13 +18,13 @@ constexpr int NUM_TILES = 13; // let be an odd number
 
 constexpr glm::vec3 GAME_FIELD_CENTER = glm::vec3(0.0f, 0.0f, 0.0f);
 
+constexpr float BORDER_THICKNESS = 10.0f;
 constexpr graphics_pipeline::GeometryInstanceBufferObject FRAME = {
     .center = GAME_FIELD_CENTER,
-    /*.dimension = glm::vec2(1.0f) * TILE_SIDE_PX * static_cast<float>(NUM_TILES) -*/
-    /*             TILE_SIDE_PX / 2.0f,*/
-    .dimension = glm::vec2(1.0f) * TILE_SIDE_PX * static_cast<float>(NUM_TILES + 1),
+    .dimension =
+        glm::vec2(1.0f) * TILE_SIDE_PX * static_cast<float>(NUM_TILES) + BORDER_THICKNESS,
     .color = colors::TRANSPARENT,
-    .border.thickness = 10.0f,
+    .border.thickness = BORDER_THICKNESS,
     .border.color = colors::WHITE,
 };
 
@@ -41,8 +41,10 @@ class Snake : public Game {
     std::unique_ptr<CommandBufferManager> m_command_buffer_manager;
 
     // Game tick
+    const float m_game_tick_duration_base_s = 1.0f;
+    const float m_game_tick_decrease_s = 0.02f;
     float m_current_tick_duration_s = 0.0f;
-    const float m_game_tick_duration_s = 1.0f;
+    float m_game_tick_duration_s = 1.0f;
 
     // Game state
     std::random_device m_rd;
@@ -69,6 +71,8 @@ class Snake : public Game {
         m_body_directions.clear();
         m_tiles_occupied.clear();
         m_apple_positions.clear();
+
+        m_game_tick_duration_s = m_game_tick_duration_base_s;
 
         m_tiles_occupied.resize(NUM_TILES * NUM_TILES, false);
 
@@ -143,6 +147,9 @@ class Snake : public Game {
                 m_body_directions.push_back(
                     UP); // Gets popped next iteration so values does not matter
                 m_tiles_occupied[coordinate_to_index(new_body)] = true;
+
+                // Speed up the game
+                m_game_tick_duration_s -= m_game_tick_decrease_s;
                 break;
             }
         }
