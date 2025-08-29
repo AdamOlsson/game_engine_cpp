@@ -1,5 +1,6 @@
 #pragma once
 
+#include "io.h"
 #include "traits.h"
 #include <iostream>
 #include <source_location>

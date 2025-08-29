@@ -6,18 +6,23 @@
 #include "render_engine/colors.h"
 #include "render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "render_engine/resources/ResourceManager.h"
+#include <random>
 
-constexpr glm::vec3 UP = glm::vec3(0.0f, 1.0f, 0.0f);
-constexpr glm::vec3 DOWN = glm::vec3(0.0f, -1.0f, 0.0f);
-constexpr glm::vec3 LEFT = glm::vec3(-1.0f, 0.0f, 0.0f);
-constexpr glm::vec3 RIGHT = glm::vec3(1.0f, 0.0f, 0.0f);
+constexpr glm::ivec3 UP = glm::ivec3(0, 1, 0);
+constexpr glm::ivec3 DOWN = glm::ivec3(0, -1, 0);
+constexpr glm::ivec3 LEFT = glm::ivec3(-1, 0, 0);
+constexpr glm::ivec3 RIGHT = glm::ivec3(1, 0, 0);
 
-constexpr float TILE_SIDE = 50.0f;
+constexpr float TILE_SIDE_PX = 50.0f;
+constexpr int NUM_TILES = 13; // let be an odd number
 
 constexpr glm::vec3 GAME_FIELD_CENTER = glm::vec3(0.0f, 0.0f, 0.0f);
+
 constexpr graphics_pipeline::GeometryInstanceBufferObject FRAME = {
     .center = GAME_FIELD_CENTER,
-    .dimension = glm::vec2(1.0f) * TILE_SIDE * 12.0f - TILE_SIDE / 2.0f,
+    /*.dimension = glm::vec2(1.0f) * TILE_SIDE_PX * static_cast<float>(NUM_TILES) -*/
+    /*             TILE_SIDE_PX / 2.0f,*/
+    .dimension = glm::vec2(1.0f) * TILE_SIDE_PX * static_cast<float>(NUM_TILES + 1),
     .color = colors::TRANSPARENT,
     .border.thickness = 10.0f,
     .border.color = colors::WHITE,
@@ -35,34 +40,54 @@ class Snake : public Game {
     std::unique_ptr<SwapChainManager> m_swap_chain_manager;
     std::unique_ptr<CommandBufferManager> m_command_buffer_manager;
 
+    // Game tick
     float m_current_tick_duration_s = 0.0f;
     const float m_game_tick_duration_s = 1.0f;
 
+    // Game state
+    std::random_device m_rd;
+    std::mt19937 m_rnd_gen;
+    std::vector<bool> m_tiles_occupied;
+    std::vector<glm::ivec3> m_apple_positions;
+
     // Snake params
-    glm::vec3 m_pending_head_direction = UP;
-    glm::vec3 m_head_direction = UP;
-    std::vector<glm::vec3> m_body_directions = {};
-    std::vector<glm::vec3> m_body_positions = {};
+    glm::ivec3 m_pending_head_direction = UP;
+    glm::ivec3 m_head_direction = UP;
+    std::vector<glm::ivec3> m_body_directions = {};
+    std::vector<glm::ivec3> m_body_positions = {};
 
   public:
-    Snake() { game_reset(); }
+    Snake() {
+        m_rnd_gen = std::mt19937(m_rd());
+        game_reset();
+    }
 
     ~Snake() {};
 
     void game_reset() {
         m_body_positions.clear();
         m_body_directions.clear();
+        m_tiles_occupied.clear();
+        m_apple_positions.clear();
 
-        const auto start_position = GAME_FIELD_CENTER;
-        m_body_positions.push_back(start_position + DOWN * TILE_SIDE * 0.0f);
-        m_body_positions.push_back(start_position + DOWN * TILE_SIDE * 1.0f);
-        m_body_positions.push_back(start_position + DOWN * TILE_SIDE * 2.0f);
+        m_tiles_occupied.resize(NUM_TILES * NUM_TILES, false);
+
+        const auto start_position = glm::ivec3(0.0);
+        m_body_positions.push_back(start_position + DOWN * 0);
+        m_tiles_occupied[coordinate_to_index(m_body_positions.back())] = true;
+        m_body_positions.push_back(start_position + DOWN * 1);
+        m_tiles_occupied[coordinate_to_index(m_body_positions.back())] = true;
+        m_body_positions.push_back(start_position + DOWN * 2);
+        m_tiles_occupied[coordinate_to_index(m_body_positions.back())] = true;
+
         m_body_directions.push_back(UP);
         m_body_directions.push_back(UP);
         m_body_directions.push_back(UP);
 
         m_pending_head_direction = UP;
         m_head_direction = UP;
+
+        logger::info("Game reset");
     }
 
     void update(float dt) override {
@@ -77,34 +102,121 @@ class Snake : public Game {
             m_head_direction = m_pending_head_direction;
         }
 
-        // CONTINUE: Add spawn apple mechanic and increase snake length once eaten
         // CONTINUE: Add game over check when snake eats itself
 
         m_body_directions.pop_back();
         m_body_directions.insert(m_body_directions.begin(), m_head_direction);
 
-        for (auto i = 0; i < m_body_directions.size(); i++) {
-            m_body_positions[i] += m_body_directions[i] * TILE_SIDE;
+        // Check for playing field bounds, only required for head
+        const auto old_snake_head_pos = m_body_positions[0];
+        m_body_positions[0] += m_body_directions[0];
+        const auto new_snake_head_pos = m_body_positions[0];
+        const bool is_out_of_bounds = !(new_snake_head_pos.x <= NUM_TILES / 2 &&
+                                        new_snake_head_pos.x >= -NUM_TILES / 2) ||
+                                      !(new_snake_head_pos.y <= NUM_TILES / 2 &&
+                                        new_snake_head_pos.y >= -NUM_TILES / 2);
+        if (is_out_of_bounds) {
+            game_reset();
+            return;
         }
 
-        // Check for playing field bounds
-        const auto snake_head_pos = m_body_positions[0];
-        if (!(snake_head_pos.x < FRAME_INNER_BOUNDS.x &&
-              snake_head_pos.x > FRAME_INNER_BOUNDS.z) ||
-            !(snake_head_pos.y < FRAME_INNER_BOUNDS.y &&
-              snake_head_pos.y > FRAME_INNER_BOUNDS.w)) {
-            game_reset();
+        m_tiles_occupied[coordinate_to_index(old_snake_head_pos)] = false;
+        m_tiles_occupied[coordinate_to_index(new_snake_head_pos)] = true;
+
+        for (auto i = 1; i < m_body_directions.size(); i++) {
+            auto old_tile = m_body_positions[i];
+            m_body_positions[i] += m_body_directions[i];
+            auto new_tile = m_body_positions[i];
+            m_tiles_occupied[coordinate_to_index(old_tile)] = false;
+            m_tiles_occupied[coordinate_to_index(new_tile)] = true;
+        }
+
+        // Check if the snake is on the same tile as an apple
+        for (auto i = 0; i < m_apple_positions.size(); i++) {
+            if (m_apple_positions[i] == new_snake_head_pos) {
+                m_apple_positions.erase(m_apple_positions.begin() + i);
+
+                // Increase length of snake
+                auto tail = m_body_positions.back();
+                auto new_body = tail - m_body_directions.back();
+                m_body_positions.push_back(new_body);
+                m_body_directions.push_back(
+                    UP); // Gets popped next iteration so values does not matter
+                m_tiles_occupied[coordinate_to_index(new_body)] = true;
+                break;
+            }
+        }
+
+        // Spawn apple every n tick or if there are no apples
+        if (true || m_apple_positions.size() == 0) {
+            spawn_apple();
         }
     };
+
+    uint coordinate_to_index(const glm::ivec3 &coord) {
+        DEBUG_ASSERT(abs(coord.x) <= NUM_TILES / 2 && abs(coord.y) <= NUM_TILES / 2,
+                     "Received a coordinate ("
+                         << coord << ") that is outisde of the playing field");
+
+        // Because playing field is origo centered, coords can be negative
+        const glm::ivec3 offset_coord =
+            coord + glm::ivec3(NUM_TILES / 2, NUM_TILES / 2, 0);
+
+        DEBUG_ASSERT(offset_coord.x >= 0 && offset_coord.y >= 0,
+                     "Expected the offset coordinate (" << coord << " -> " << offset_coord
+                                                        << ") to be positive");
+
+        return offset_coord.x + offset_coord.y * NUM_TILES;
+    }
+
+    glm::ivec3 index_to_coordinate(const uint index) {
+        const auto half_num_tiles = NUM_TILES / 2;
+        const int x = (index % NUM_TILES) - half_num_tiles;
+        const int y = (index / NUM_TILES) - half_num_tiles;
+        return glm::ivec3(x, y, 0);
+    }
+
+    void spawn_apple() {
+        // Get free tiles
+        std::vector<size_t> free_tile_indices = {};
+        for (auto i = 0; i < m_tiles_occupied.size(); i++) {
+            if (!m_tiles_occupied[i]) {
+                free_tile_indices.push_back(i);
+            }
+        }
+
+        // Randomly select one free tile
+        std::uniform_int_distribution<> dist(0, free_tile_indices.size());
+        const size_t selected_tile_index = dist(m_rnd_gen);
+        const size_t free_tile_index = free_tile_indices[selected_tile_index];
+        const auto spawn_location = index_to_coordinate(free_tile_index);
+
+        DEBUG_ASSERT(abs(spawn_location.x) <= NUM_TILES / 2 &&
+                         abs(spawn_location.y) <= NUM_TILES / 2,
+                     "Attempted to spawn an apple outisde of the playing field at "
+                         << spawn_location);
+
+        m_apple_positions.push_back(spawn_location);
+        m_tiles_occupied[free_tile_index] = true;
+    }
 
     void render() override {
         auto &instance_buffer = m_geometry_pipeline->get_rectangle_instance_buffer();
         instance_buffer.clear();
 
+        for (auto i = 0; i < m_apple_positions.size(); i++) {
+            instance_buffer.push_back(graphics_pipeline::GeometryInstanceBufferObject{
+                .center = static_cast<glm::vec3>(m_apple_positions[i]) * TILE_SIDE_PX,
+                .dimension = glm::vec2(TILE_SIDE_PX),
+                .color = colors::GREEN,
+                .uvwt = glm::vec4(-1.0f),
+            });
+        }
+
         for (auto i = 0; i < m_body_positions.size(); i++) {
             instance_buffer.push_back(graphics_pipeline::GeometryInstanceBufferObject{
-                .center = m_body_positions[i],
-                .dimension = glm::vec2(TILE_SIDE),
+                .center = static_cast<glm::vec3>(m_body_positions[i]) * TILE_SIDE_PX,
+                .dimension = glm::vec2(TILE_SIDE_PX),
                 .color = i == 0 ? colors::RED : colors::WHITE,
                 .uvwt = glm::vec4(-1.0f),
             });

@@ -23,6 +23,7 @@ std::ostream &operator<<(std::ostream &os, const glm::vec4 &vec) {
     os << "glm::vec4(" << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w << ")";
     return os;
 }
+
 std::ostream &operator<<(std::ostream &os, const std::vector<glm::vec3> &vec) {
     os << "[ ";
     for (auto v : vec) {
@@ -54,4 +55,20 @@ std::ostream &operator<<(std::ostream &os, const std::vector<uint16_t> &us) {
         os << u << ", ";
     }
     return os << "]";
+}
+
+std::ostream &operator<<(std::ostream &os, const glm::ivec2 &vec) {
+    os << "glm::ivec2(" << vec.x << ", " << vec.y << ")";
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os, const glm::ivec3 &vec) {
+    os << "glm::ivec3(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os, const glm::ivec4 &vec) {
+    os << "glm::ivec4(" << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w
+       << ")";
+    return os;
 }
