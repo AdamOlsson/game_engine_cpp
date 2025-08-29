@@ -45,12 +45,14 @@ class Snake : public Game {
     const float m_game_tick_decrease_s = 0.02f;
     float m_current_tick_duration_s = 0.0f;
     float m_game_tick_duration_s = 1.0f;
+    uint m_tick_count = 0;
 
     // Game state
     std::random_device m_rd;
     std::mt19937 m_rnd_gen;
     std::vector<bool> m_tiles_occupied;
     std::vector<glm::ivec3> m_apple_positions;
+    const uint m_apple_spawn_tick_rate = 8;
 
     // Snake params
     glm::ivec3 m_pending_head_direction = UP;
@@ -73,6 +75,7 @@ class Snake : public Game {
         m_apple_positions.clear();
 
         m_game_tick_duration_s = m_game_tick_duration_base_s;
+        m_tick_count = 0;
 
         m_tiles_occupied.resize(NUM_TILES * NUM_TILES, false);
 
@@ -107,6 +110,8 @@ class Snake : public Game {
         }
 
         // CONTINUE: Add game over check when snake eats itself
+        // CONTINUE: Add score when eating apple
+        // CONTINUE: Add menu
 
         m_body_directions.pop_back();
         m_body_directions.insert(m_body_directions.begin(), m_head_direction);
@@ -155,9 +160,12 @@ class Snake : public Game {
         }
 
         // Spawn apple every n tick or if there are no apples
-        if (true || m_apple_positions.size() == 0) {
+        if (m_apple_positions.size() == 0 ||
+            m_tick_count % m_apple_spawn_tick_rate == 0) {
             spawn_apple();
         }
+
+        m_tick_count++;
     };
 
     uint coordinate_to_index(const glm::ivec3 &coord) {
