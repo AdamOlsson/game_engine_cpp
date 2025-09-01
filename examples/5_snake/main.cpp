@@ -5,7 +5,9 @@
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/colors.h"
 #include "render_engine/graphics_pipeline/GeometryPipeline.h"
+#include "render_engine/graphics_pipeline/TextPipeline.h"
 #include "render_engine/resources/ResourceManager.h"
+#include "render_engine/ui/UI.h"
 #include <random>
 
 constexpr glm::ivec3 UP = glm::ivec3(0, 1, 0);
@@ -34,11 +36,29 @@ constexpr glm::vec4 FRAME_INNER_BOUNDS =
               GAME_FIELD_CENTER.x - FRAME.dimension.x / 2.0f + FRAME.border.thickness,
               GAME_FIELD_CENTER.y - FRAME.dimension.x / 2.0f + FRAME.border.thickness);
 
+void set_hover_color(ui::Button &self) {
+    self.properties.container.background_color = colors::WHITE;
+    self.properties.font.color = colors::BLACK;
+}
+
+void unset_hover_color(ui::Button &self) {
+    self.properties.container.background_color = colors::BLACK;
+    self.properties.font.color = colors::WHITE;
+}
+
+enum class GameState { MainMenu, Started };
+
 class Snake : public Game {
   private:
-    std::unique_ptr<graphics_pipeline::GeometryPipeline> m_geometry_pipeline;
+    // Rendering
     std::unique_ptr<SwapChainManager> m_swap_chain_manager;
     std::unique_ptr<CommandBufferManager> m_command_buffer_manager;
+    vulkan::Sampler m_sampler;
+    std::unique_ptr<graphics_pipeline::GeometryPipeline> m_geometry_pipeline;
+    std::unique_ptr<graphics_pipeline::TextPipeline> m_text_pipeline;
+
+    GameState m_game_state = GameState::MainMenu;
+    ui::UI m_main_menu;
 
     // Game tick
     const float m_game_tick_duration_base_s = 1.0f;
@@ -63,6 +83,51 @@ class Snake : public Game {
   public:
     Snake() {
         m_rnd_gen = std::mt19937(m_rd());
+        m_main_menu = ui::UI(
+            ui::Menu()
+                .add_button(
+                    ui::Button("SNAKE",
+                               ui::ElementProperties{
+                                   .container.center = glm::vec3(0.0f, 250.0f, 0.0f),
+                                   .container.dimension = Dimension(0.0f),
+                                   .container.background_color = colors::TRANSPARENT,
+                                   .font.color = colors::WHITE,
+                                   .font.size = 118,
+                               }))
+                .add_button(
+                    ui::Button("START",
+                               ui::ElementProperties{
+                                   .container.center = glm::vec3(0.0f, 60.0f, 0.0f),
+                                   .container.dimension = Dimension(400.0f, 100.0f),
+                                   .container.background_color = colors::BLACK,
+                                   .container.border.radius = 10.0f,
+                                   .container.border.thickness = 5.0f,
+                                   .container.border.color = colors::WHITE,
+                                   .font.color = colors::WHITE,
+                                   .font.size = 96,
+                               })
+                        .set_on_enter(set_hover_color)
+                        .set_on_leave(unset_hover_color)
+                        .set_on_click([this](ui::Button &self) {
+                            m_game_state = GameState::Started;
+                            unset_hover_color(self);
+                        }))
+                .add_button(
+                    ui::Button("QUIT",
+                               ui::ElementProperties{
+                                   .container.center =
+                                       glm::vec3(0.0f, -60.0f, 0.0),
+                                   .container.dimension = Dimension(400.0f, 100.0f),
+                                   .container.background_color = colors::BLACK,
+                                   .container.border.radius = 10.0f,
+                                   .container.border.thickness = 5.0f,
+                                   .container.border.color = colors::WHITE,
+                                   .font.color = colors::WHITE,
+                                   .font.size = 96,
+                               })
+                        .set_on_enter(set_hover_color)
+                        .set_on_leave(unset_hover_color)
+                        .set_on_click([this](ui::Button &self) { exit(0); })));
         game_reset();
     }
 
@@ -94,6 +159,8 @@ class Snake : public Game {
         m_pending_head_direction = UP;
         m_head_direction = UP;
 
+        m_game_state = GameState::MainMenu;
+
         logger::info("Game reset");
     }
 
@@ -104,14 +171,19 @@ class Snake : public Game {
         }
         m_current_tick_duration_s = 0.0f;
 
+        if (m_game_state == GameState::MainMenu) {
+            return;
+        }
+
         // Check for illegal move
         if (m_pending_head_direction != -m_head_direction) {
             m_head_direction = m_pending_head_direction;
         }
 
         // CONTINUE: Add score when eating apple
-        // CONTINUE: Add menu
         // CONTINUE: Add textures to snake and apple
+        // TODO: Wrap the position in a class
+        // TODO: Add a nice main menu animation of snakes going accross in the background
 
         m_body_directions.pop_back();
         m_body_directions.insert(m_body_directions.begin(), m_head_direction);
@@ -156,6 +228,8 @@ class Snake : public Game {
 
                 // Speed up the game
                 m_game_tick_duration_s -= m_game_tick_decrease_s;
+
+                m_tick_count = 0; // reset apple spawn timer
                 break;
             }
         }
@@ -226,35 +300,59 @@ class Snake : public Game {
 
     void render() override {
         auto &instance_buffer = m_geometry_pipeline->get_rectangle_instance_buffer();
+        auto &glyph_instance_buffer = m_text_pipeline->get_character_buffer();
+        auto &text_segment_buffer = m_text_pipeline->get_text_segment_buffer();
+
         instance_buffer.clear();
+        glyph_instance_buffer.clear();
+        text_segment_buffer.clear();
 
-        for (auto i = 0; i < m_apple_positions.size(); i++) {
-            instance_buffer.push_back(graphics_pipeline::GeometryInstanceBufferObject{
-                .center = static_cast<glm::vec3>(m_apple_positions[i]) * TILE_SIDE_PX,
-                .dimension = glm::vec2(TILE_SIDE_PX),
-                .color = colors::GREEN,
-                .uvwt = glm::vec4(-1.0f),
-            });
+        if (m_game_state == GameState::MainMenu) {
+            auto ui_state = m_main_menu.get_state();
+            for (const auto button : ui_state.buttons) {
+                instance_buffer.push_back(graphics_pipeline::GeometryInstanceBufferObject{
+                    .center = button->properties.container.center,
+                    .dimension = button->properties.container.dimension,
+                    .color = button->properties.container.background_color,
+                    .border.color = button->properties.container.border.color,
+                    .border.thickness = button->properties.container.border.thickness,
+                    .border.radius = button->properties.container.border.radius,
+                });
+
+                m_text_pipeline->text_kerning(button->text, button->properties);
+            }
+        } else {
+            // render game
+            for (auto i = 0; i < m_apple_positions.size(); i++) {
+                instance_buffer.push_back(graphics_pipeline::GeometryInstanceBufferObject{
+                    .center = static_cast<glm::vec3>(m_apple_positions[i]) * TILE_SIDE_PX,
+                    .dimension = glm::vec2(TILE_SIDE_PX),
+                    .color = colors::GREEN,
+                    .uvwt = glm::vec4(-1.0f),
+                });
+            }
+
+            for (auto i = 0; i < m_body_positions.size(); i++) {
+                instance_buffer.push_back(graphics_pipeline::GeometryInstanceBufferObject{
+                    .center = static_cast<glm::vec3>(m_body_positions[i]) * TILE_SIDE_PX,
+                    .dimension = glm::vec2(TILE_SIDE_PX),
+                    .color = i == 0 ? colors::RED : colors::WHITE,
+                    .uvwt = glm::vec4(-1.0f),
+                });
+            }
+            instance_buffer.push_back(FRAME);
         }
-
-        for (auto i = 0; i < m_body_positions.size(); i++) {
-            instance_buffer.push_back(graphics_pipeline::GeometryInstanceBufferObject{
-                .center = static_cast<glm::vec3>(m_body_positions[i]) * TILE_SIDE_PX,
-                .dimension = glm::vec2(TILE_SIDE_PX),
-                .color = i == 0 ? colors::RED : colors::WHITE,
-                .uvwt = glm::vec4(-1.0f),
-            });
-        }
-
-        instance_buffer.push_back(FRAME);
 
         instance_buffer.transfer();
+        glyph_instance_buffer.transfer();
+        text_segment_buffer.transfer();
 
         auto command_buffer = m_command_buffer_manager->get_command_buffer();
         auto render_pass = m_swap_chain_manager->get_render_pass(command_buffer);
         render_pass.begin();
 
         m_geometry_pipeline->render_rectangles(command_buffer);
+        m_text_pipeline->render_text(command_buffer);
 
         render_pass.end_submit_present();
     };
@@ -290,7 +388,10 @@ class Snake : public Game {
     }
 
     void setup(std::shared_ptr<graphics_context::GraphicsContext> &ctx) override {
+        // TODO: Register shaders based on which pipelines are used
         register_all_shaders();
+        // TODO: Let the user register the fonts
+        register_all_fonts();
         m_swap_chain_manager = std::make_unique<SwapChainManager>(ctx);
         m_command_buffer_manager = std::make_unique<CommandBufferManager>(
             ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
@@ -299,9 +400,23 @@ class Snake : public Game {
             ctx, m_command_buffer_manager.get(), *m_swap_chain_manager,
             graphics_pipeline::GeometryPipelineOptions{});
 
+        m_sampler = vulkan::Sampler(ctx);
+        auto font = std::make_unique<Font>(ctx, m_command_buffer_manager.get(),
+                                           "DefaultFont", &m_sampler);
+        m_text_pipeline = std::make_unique<graphics_pipeline::TextPipeline>(
+            ctx, m_command_buffer_manager.get(), *m_swap_chain_manager, std::move(font));
+
         ctx->window->register_keyboard_event_callback(
             [this](window::KeyEvent &event, window::KeyState &key_state) {
                 handle_keyboard_input(event, key_state);
+            });
+
+        ctx->window->register_mouse_event_callback(
+            [this](window::MouseEvent e, window::ViewportPoint &p) {
+                if (m_game_state != GameState::MainMenu) {
+                    return;
+                }
+                this->m_main_menu.update_state_from_mouse_event(e, p);
             });
     }
 };

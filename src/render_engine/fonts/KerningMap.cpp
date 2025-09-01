@@ -42,6 +42,16 @@ const font::KerningMap &font::get_default_kerning_map() {
                                            {"IM", 0.75f},
                                            {"ME", 0.62f},
                                            {"E ", 0.7f},
+                                           {"ST", 0.67f},
+                                           {"TA", 0.7f},
+                                           {"AR", 0.65f},
+                                           {"RT", 0.67f},
+                                           {"QU", 0.62f},
+                                           {"UI", 0.75f},
+                                           {"SN", 0.62f},
+                                           {"NA", 0.62f},
+                                           {"AK", 0.62f},
+                                           {"KE", 0.62f},
 
                                            // String pairs 00 to 99 (value: 0.62f)
                                            {"00", 0.62f},
