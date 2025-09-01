@@ -109,9 +109,9 @@ class Snake : public Game {
             m_head_direction = m_pending_head_direction;
         }
 
-        // CONTINUE: Add game over check when snake eats itself
         // CONTINUE: Add score when eating apple
         // CONTINUE: Add menu
+        // CONTINUE: Add textures to snake and apple
 
         m_body_directions.pop_back();
         m_body_directions.insert(m_body_directions.begin(), m_head_direction);
@@ -125,6 +125,7 @@ class Snake : public Game {
                                       !(new_snake_head_pos.y <= NUM_TILES / 2 &&
                                         new_snake_head_pos.y >= -NUM_TILES / 2);
         if (is_out_of_bounds) {
+            logger::info("Game over, sneak out of bounds");
             game_reset();
             return;
         }
@@ -156,6 +157,14 @@ class Snake : public Game {
                 // Speed up the game
                 m_game_tick_duration_s -= m_game_tick_decrease_s;
                 break;
+            }
+        }
+
+        // Check if the snake has eaten itself
+        for (auto i = 1; i < m_body_positions.size(); i++) {
+            if (new_snake_head_pos == m_body_positions[i]) {
+                logger::info("Game over, sneak ate itself");
+                game_reset();
             }
         }
 

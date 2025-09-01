@@ -15,6 +15,11 @@ static void log(const std::string &level, const std::source_location &location,
     std::cout << std::endl;
 }
 
+template <Printable... Args> static void trace(const Args &...args) {
+    const std::source_location &location = std::source_location::current();
+    log("Trace", location, args...);
+}
+
 template <Printable... Args> static void debug(const Args &...args) {
     const std::source_location &location = std::source_location::current();
     log("Debug", location, args...);
