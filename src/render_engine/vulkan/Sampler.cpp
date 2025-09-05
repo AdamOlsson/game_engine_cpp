@@ -2,8 +2,13 @@
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
-vulkan::Sampler::Sampler(std::shared_ptr<graphics_context::GraphicsContext> m_ctx)
-    : m_ctx(m_ctx), m_sampler(create_sampler()) {}
+vulkan::Sampler::Sampler(std::shared_ptr<graphics_context::GraphicsContext> ctx)
+    : m_ctx(ctx), m_sampler(create_sampler(vulkan::Filter::LIENAR,
+                                           vulkan::SamplerAddressMode::REPEAT)) {}
+
+vulkan::Sampler::Sampler(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+                         vulkan::Filter filter, SamplerAddressMode address_mode)
+    : m_ctx(ctx), m_sampler(create_sampler(filter, address_mode)) {}
 
 vulkan::Sampler::~Sampler() {
     if (m_sampler == VK_NULL_HANDLE) {
@@ -43,17 +48,18 @@ vulkan::Sampler::create_descriptor_set_layout_binding(const size_t binding_num) 
     return sampler_layout_binding;
 }
 
-VkSampler vulkan::Sampler::create_sampler() {
+VkSampler vulkan::Sampler::create_sampler(vulkan::Filter filter,
+                                          SamplerAddressMode address_mode) {
     VkPhysicalDeviceProperties properties{};
     vkGetPhysicalDeviceProperties(m_ctx->physical_device, &properties);
 
     VkSamplerCreateInfo sampler_info{};
     sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    sampler_info.magFilter = VK_FILTER_LINEAR;
-    sampler_info.minFilter = VK_FILTER_LINEAR;
-    sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    sampler_info.magFilter = static_cast<VkFilter>(filter);
+    sampler_info.minFilter = static_cast<VkFilter>(filter);
+    sampler_info.addressModeU = static_cast<VkSamplerAddressMode>(address_mode);
+    sampler_info.addressModeV = static_cast<VkSamplerAddressMode>(address_mode);
+    sampler_info.addressModeW = static_cast<VkSamplerAddressMode>(address_mode);
     sampler_info.anisotropyEnable = VK_TRUE;
     sampler_info.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
     sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;

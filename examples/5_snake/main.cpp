@@ -20,6 +20,16 @@ constexpr int NUM_TILES = 13; // let be an odd number
 
 constexpr glm::vec3 GAME_FIELD_CENTER = glm::vec3(0.0f, 0.0f, 0.0f);
 
+constexpr glm::vec4 UV_APPLE = glm::vec4(0.125f * 0.0f, 0.0f, 0.125f * 1.0f, 1.0);
+constexpr glm::vec4 UV_SNAKE_HEAD = glm::vec4(0.125f * 1.0f, 0.0f, 0.125f * 2.0f, 1.0);
+constexpr glm::vec4 UV_SNAKE_BODY = glm::vec4(0.125f * 2.0f, 0.0f, 0.125f * 3.0f, 1.0);
+constexpr glm::vec4 UV_SNAKE_TAIL = glm::vec4(0.125f * 3.0f, 0.0f, 0.125f * 4.0f, 1.0);
+
+constexpr float SPRITE_ROTATION_LEFT = 0.0f;
+constexpr float SPRITE_ROTATION_UP = M_PI / 2.0f;
+constexpr float SPRITE_ROTATION_RIGHT = 2.0f * M_PI / 2.0f;
+constexpr float SPRITE_ROTATION_DOWN = 3.0f * M_PI / 2.0f;
+
 constexpr float BORDER_THICKNESS = 10.0f;
 constexpr graphics_pipeline::GeometryInstanceBufferObject FRAME = {
     .center = GAME_FIELD_CENTER,
@@ -56,6 +66,7 @@ class Snake : public Game {
     vulkan::Sampler m_sampler;
     std::unique_ptr<graphics_pipeline::GeometryPipeline> m_geometry_pipeline;
     std::unique_ptr<graphics_pipeline::TextPipeline> m_text_pipeline;
+    std::unique_ptr<Texture> m_sprite_sheet;
 
     GameState m_game_state = GameState::MainMenu;
     ui::UI m_main_menu;
@@ -75,14 +86,27 @@ class Snake : public Game {
     const uint m_apple_spawn_tick_rate = 8;
 
     // Snake params
+    float m_pending_sprite_rotation = SPRITE_ROTATION_UP;
+    float m_sprite_rotation = SPRITE_ROTATION_UP;
     glm::ivec3 m_pending_head_direction = UP;
     glm::ivec3 m_head_direction = UP;
     std::vector<glm::ivec3> m_body_directions = {};
     std::vector<glm::ivec3> m_body_positions = {};
 
+    graphics_pipeline::GeometryInstanceBufferObject m_snake_head;
+    graphics_pipeline::GeometryInstanceBufferObject m_snake_body;
+    graphics_pipeline::GeometryInstanceBufferObject m_snake_tail;
+
   public:
     Snake() {
         m_rnd_gen = std::mt19937(m_rd());
+        m_snake_head = graphics_pipeline::GeometryInstanceBufferObject{
+            .dimension = glm::vec2(TILE_SIDE_PX), .uvwt = UV_SNAKE_HEAD};
+        m_snake_body = graphics_pipeline::GeometryInstanceBufferObject{
+            .dimension = glm::vec2(TILE_SIDE_PX), .uvwt = UV_SNAKE_BODY};
+        m_snake_tail = graphics_pipeline::GeometryInstanceBufferObject{
+            .dimension = glm::vec2(TILE_SIDE_PX), .uvwt = UV_SNAKE_TAIL};
+
         m_main_menu = ui::UI(
             ui::Menu()
                 .add_button(
@@ -178,10 +202,13 @@ class Snake : public Game {
         // Check for illegal move
         if (m_pending_head_direction != -m_head_direction) {
             m_head_direction = m_pending_head_direction;
+            m_sprite_rotation = m_pending_sprite_rotation;
         }
 
         // CONTINUE: Add score when eating apple
-        // CONTINUE: Add textures to snake and apple
+        // TODO: Fix the blurryness of the texture sampler (new sampler?)
+        // TODO: Fix the lines around the texture, the snake parts should be seamless
+        // TODO: Create a sprite for the corner of a snake when it turns
         // TODO: Wrap the position in a class
         // TODO: Add a nice main menu animation of snakes going accross in the background
 
@@ -328,18 +355,26 @@ class Snake : public Game {
                     .center = static_cast<glm::vec3>(m_apple_positions[i]) * TILE_SIDE_PX,
                     .dimension = glm::vec2(TILE_SIDE_PX),
                     .color = colors::GREEN,
-                    .uvwt = glm::vec4(-1.0f),
+                    .uvwt = UV_APPLE,
                 });
             }
 
-            for (auto i = 0; i < m_body_positions.size(); i++) {
-                instance_buffer.push_back(graphics_pipeline::GeometryInstanceBufferObject{
-                    .center = static_cast<glm::vec3>(m_body_positions[i]) * TILE_SIDE_PX,
-                    .dimension = glm::vec2(TILE_SIDE_PX),
-                    .color = i == 0 ? colors::RED : colors::WHITE,
-                    .uvwt = glm::vec4(-1.0f),
-                });
+            m_snake_head.center =
+                static_cast<glm::vec3>(m_body_positions[0]) * TILE_SIDE_PX;
+            m_snake_head.rotation = m_sprite_rotation;
+            instance_buffer.push_back(m_snake_head);
+
+            for (auto i = 1; i < m_body_positions.size() - 1; i++) {
+                m_snake_body.center =
+                    static_cast<glm::vec3>(m_body_positions[i]) * TILE_SIDE_PX;
+                m_snake_body.rotation = m_sprite_rotation;
+                instance_buffer.push_back(m_snake_body);
             }
+            m_snake_tail.center =
+                static_cast<glm::vec3>(m_body_positions.back()) * TILE_SIDE_PX;
+            m_snake_tail.rotation = m_sprite_rotation;
+            instance_buffer.push_back(m_snake_tail);
+
             instance_buffer.push_back(FRAME);
         }
 
@@ -366,21 +401,25 @@ class Snake : public Game {
         case window::KeyEvent::K:
         case window::KeyEvent::W:
             m_pending_head_direction = UP;
+            m_pending_sprite_rotation = SPRITE_ROTATION_UP;
             break;
         case window::KeyEvent::LEFT:
         case window::KeyEvent::H:
         case window::KeyEvent::A:
             m_pending_head_direction = LEFT;
+            m_pending_sprite_rotation = SPRITE_ROTATION_LEFT;
             break;
         case window::KeyEvent::DOWN:
         case window::KeyEvent::J:
         case window::KeyEvent::S:
             m_pending_head_direction = DOWN;
+            m_pending_sprite_rotation = SPRITE_ROTATION_DOWN;
             break;
         case window::KeyEvent::RIGHT:
         case window::KeyEvent::L:
         case window::KeyEvent::D:
             m_pending_head_direction = RIGHT;
+            m_pending_sprite_rotation = SPRITE_ROTATION_RIGHT;
             break;
         default:
             break;
@@ -392,15 +431,21 @@ class Snake : public Game {
         register_all_shaders();
         // TODO: Let the user register the fonts
         register_all_fonts();
+
         m_swap_chain_manager = std::make_unique<SwapChainManager>(ctx);
         m_command_buffer_manager = std::make_unique<CommandBufferManager>(
             ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
 
+        m_sampler = vulkan::Sampler(ctx);
+        m_sprite_sheet =
+            Texture::unique_from_filepath(ctx, m_command_buffer_manager.get(),
+                                          "examples/5_snake/assets/Sprite-0001.png");
         m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(
             ctx, m_command_buffer_manager.get(), *m_swap_chain_manager,
-            graphics_pipeline::GeometryPipelineOptions{});
+            graphics_pipeline::GeometryPipelineOptions{
+                .combined_image_sampler =
+                    vulkan::DescriptorImageInfo(m_sprite_sheet->view(), &m_sampler)});
 
-        m_sampler = vulkan::Sampler(ctx);
         auto font = std::make_unique<Font>(ctx, m_command_buffer_manager.get(),
                                            "DefaultFont", &m_sampler);
         m_text_pipeline = std::make_unique<graphics_pipeline::TextPipeline>(
