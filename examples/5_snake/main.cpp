@@ -10,6 +10,7 @@
 #include "render_engine/ui/UI.h"
 #include <random>
 
+enum class Direction { UP, DOWN, LEFT, RIGHT };
 constexpr glm::ivec3 UP = glm::ivec3(0, 1, 0);
 constexpr glm::ivec3 DOWN = glm::ivec3(0, -1, 0);
 constexpr glm::ivec3 LEFT = glm::ivec3(-1, 0, 0);
@@ -24,6 +25,7 @@ constexpr glm::vec4 UV_APPLE = glm::vec4(0.125f * 0.0f, 0.0f, 0.125f * 1.0f, 1.0
 constexpr glm::vec4 UV_SNAKE_HEAD = glm::vec4(0.125f * 1.0f, 0.0f, 0.125f * 2.0f, 1.0);
 constexpr glm::vec4 UV_SNAKE_BODY = glm::vec4(0.125f * 2.0f, 0.0f, 0.125f * 3.0f, 1.0);
 constexpr glm::vec4 UV_SNAKE_TAIL = glm::vec4(0.125f * 3.0f, 0.0f, 0.125f * 4.0f, 1.0);
+constexpr glm::vec4 UV_SNAKE_CORNER = glm::vec4(0.125f * 4.0f, 0.0f, 0.125f * 5.0f, 1.0);
 
 constexpr float SPRITE_ROTATION_LEFT = 0.0f;
 constexpr float SPRITE_ROTATION_UP = M_PI / 2.0f;
@@ -86,26 +88,27 @@ class Snake : public Game {
     const uint m_apple_spawn_tick_rate = 8;
 
     // Snake params
-    float m_pending_sprite_rotation = SPRITE_ROTATION_UP;
-    float m_sprite_rotation = SPRITE_ROTATION_UP;
-    glm::ivec3 m_pending_head_direction = UP;
-    glm::ivec3 m_head_direction = UP;
-    std::vector<glm::ivec3> m_body_directions = {};
+    Direction m_direction = Direction::UP;
+    Direction m_pending_direction = Direction::UP;
+    float m_head_rotation = SPRITE_ROTATION_UP;
     std::vector<glm::ivec3> m_body_positions = {};
-
-    graphics_pipeline::GeometryInstanceBufferObject m_snake_head;
-    graphics_pipeline::GeometryInstanceBufferObject m_snake_body;
-    graphics_pipeline::GeometryInstanceBufferObject m_snake_tail;
+    std::vector<Direction> m_body_directions = {};
+    std::unordered_map<Direction, float> m_direction_to_rotation;
+    std::unordered_map<Direction, glm::ivec3> m_direction_to_movement;
 
   public:
     Snake() {
         m_rnd_gen = std::mt19937(m_rd());
-        m_snake_head = graphics_pipeline::GeometryInstanceBufferObject{
-            .dimension = glm::vec2(TILE_SIDE_PX), .uvwt = UV_SNAKE_HEAD};
-        m_snake_body = graphics_pipeline::GeometryInstanceBufferObject{
-            .dimension = glm::vec2(TILE_SIDE_PX), .uvwt = UV_SNAKE_BODY};
-        m_snake_tail = graphics_pipeline::GeometryInstanceBufferObject{
-            .dimension = glm::vec2(TILE_SIDE_PX), .uvwt = UV_SNAKE_TAIL};
+
+        m_direction_to_rotation[Direction::UP] = SPRITE_ROTATION_UP;
+        m_direction_to_rotation[Direction::LEFT] = SPRITE_ROTATION_LEFT;
+        m_direction_to_rotation[Direction::RIGHT] = SPRITE_ROTATION_RIGHT;
+        m_direction_to_rotation[Direction::DOWN] = SPRITE_ROTATION_DOWN;
+
+        m_direction_to_movement[Direction::UP] = UP;
+        m_direction_to_movement[Direction::LEFT] = LEFT;
+        m_direction_to_movement[Direction::RIGHT] = RIGHT;
+        m_direction_to_movement[Direction::DOWN] = DOWN;
 
         m_main_menu = ui::UI(
             ui::Menu()
@@ -160,6 +163,7 @@ class Snake : public Game {
     void game_reset() {
         m_body_positions.clear();
         m_body_directions.clear();
+
         m_tiles_occupied.clear();
         m_apple_positions.clear();
 
@@ -176,13 +180,12 @@ class Snake : public Game {
         m_body_positions.push_back(start_position + DOWN * 2);
         m_tiles_occupied[coordinate_to_index(m_body_positions.back())] = true;
 
-        m_body_directions.push_back(UP);
-        m_body_directions.push_back(UP);
-        m_body_directions.push_back(UP);
+        m_body_directions.push_back(Direction::UP);
+        m_body_directions.push_back(Direction::UP);
+        m_body_directions.push_back(Direction::UP);
 
-        m_pending_head_direction = UP;
-        m_head_direction = UP;
-
+        m_direction = Direction::UP;
+        m_pending_direction = Direction::UP;
         m_game_state = GameState::MainMenu;
 
         logger::info("Game reset");
@@ -200,24 +203,35 @@ class Snake : public Game {
         }
 
         // Check for illegal move
-        if (m_pending_head_direction != -m_head_direction) {
-            m_head_direction = m_pending_head_direction;
-            m_sprite_rotation = m_pending_sprite_rotation;
+        auto pending_movement = m_direction_to_movement.find(m_pending_direction)->second;
+        auto current_movement = m_direction_to_movement.find(m_direction)->second;
+        if (pending_movement != -current_movement) {
+            auto pending_rotation =
+                m_direction_to_rotation.find(m_pending_direction)->second;
+            m_head_rotation = pending_rotation;
+            m_direction = m_pending_direction;
         }
 
         // CONTINUE: Add score when eating apple
+        // TODO: Validate game logic when snake is about to eat itself
         // TODO: Fix the blurryness of the texture sampler (new sampler?)
         // TODO: Fix the lines around the texture, the snake parts should be seamless
-        // TODO: Create a sprite for the corner of a snake when it turns
         // TODO: Wrap the position in a class
         // TODO: Add a nice main menu animation of snakes going accross in the background
 
         m_body_directions.pop_back();
-        m_body_directions.insert(m_body_directions.begin(), m_head_direction);
+        m_body_directions.insert(m_body_directions.begin(), m_direction);
+
+        for (auto i = 0; i < m_body_directions.size(); i++) {
+            auto old_tile = m_body_positions[i];
+            m_body_positions[i] +=
+                m_direction_to_movement.find(m_body_directions[i])->second;
+            auto new_tile = m_body_positions[i];
+            m_tiles_occupied[coordinate_to_index(old_tile)] = false;
+            m_tiles_occupied[coordinate_to_index(new_tile)] = true;
+        }
 
         // Check for playing field bounds, only required for head
-        const auto old_snake_head_pos = m_body_positions[0];
-        m_body_positions[0] += m_body_directions[0];
         const auto new_snake_head_pos = m_body_positions[0];
         const bool is_out_of_bounds = !(new_snake_head_pos.x <= NUM_TILES / 2 &&
                                         new_snake_head_pos.x >= -NUM_TILES / 2) ||
@@ -229,17 +243,6 @@ class Snake : public Game {
             return;
         }
 
-        m_tiles_occupied[coordinate_to_index(old_snake_head_pos)] = false;
-        m_tiles_occupied[coordinate_to_index(new_snake_head_pos)] = true;
-
-        for (auto i = 1; i < m_body_directions.size(); i++) {
-            auto old_tile = m_body_positions[i];
-            m_body_positions[i] += m_body_directions[i];
-            auto new_tile = m_body_positions[i];
-            m_tiles_occupied[coordinate_to_index(old_tile)] = false;
-            m_tiles_occupied[coordinate_to_index(new_tile)] = true;
-        }
-
         // Check if the snake is on the same tile as an apple
         for (auto i = 0; i < m_apple_positions.size(); i++) {
             if (m_apple_positions[i] == new_snake_head_pos) {
@@ -247,10 +250,11 @@ class Snake : public Game {
 
                 // Increase length of snake
                 auto tail = m_body_positions.back();
-                auto new_body = tail - m_body_directions.back();
+                auto new_body =
+                    tail - m_direction_to_movement.find(m_body_directions.back())->second;
                 m_body_positions.push_back(new_body);
-                m_body_directions.push_back(
-                    UP); // Gets popped next iteration so values does not matter
+                m_body_directions.push_back(Direction::UP); // Gets popped next iteration
+                                                            // so values does not matter
                 m_tiles_occupied[coordinate_to_index(new_body)] = true;
 
                 // Speed up the game
@@ -274,22 +278,22 @@ class Snake : public Game {
             m_tick_count % m_apple_spawn_tick_rate == 0) {
             spawn_apple();
         }
-
         m_tick_count++;
     };
 
     uint coordinate_to_index(const glm::ivec3 &coord) {
-        DEBUG_ASSERT(abs(coord.x) <= NUM_TILES / 2 && abs(coord.y) <= NUM_TILES / 2,
-                     "Received a coordinate ("
-                         << coord << ") that is outisde of the playing field");
+        /*DEBUG_ASSERT(abs(coord.x) <= NUM_TILES / 2 && abs(coord.y) <= NUM_TILES / 2,*/
+        /*             "Received a coordinate ("*/
+        /*                 << coord << ") that is outisde of the playing field");*/
 
         // Because playing field is origo centered, coords can be negative
         const glm::ivec3 offset_coord =
             coord + glm::ivec3(NUM_TILES / 2, NUM_TILES / 2, 0);
 
-        DEBUG_ASSERT(offset_coord.x >= 0 && offset_coord.y >= 0,
-                     "Expected the offset coordinate (" << coord << " -> " << offset_coord
-                                                        << ") to be positive");
+        /*DEBUG_ASSERT(offset_coord.x >= 0 && offset_coord.y >= 0,*/
+        /*             "Expected the offset coordinate (" << coord << " -> " <<
+         * offset_coord*/
+        /*                                                << ") to be positive");*/
 
         return offset_coord.x + offset_coord.y * NUM_TILES;
     }
@@ -359,21 +363,58 @@ class Snake : public Game {
                 });
             }
 
-            m_snake_head.center =
-                static_cast<glm::vec3>(m_body_positions[0]) * TILE_SIDE_PX;
-            m_snake_head.rotation = m_sprite_rotation;
-            instance_buffer.push_back(m_snake_head);
+            // HEAD
+            instance_buffer.push_back(graphics_pipeline::GeometryInstanceBufferObject{
+                .dimension = glm::vec2(TILE_SIDE_PX),
+                .center = static_cast<glm::vec3>(m_body_positions[0]) * TILE_SIDE_PX,
+                .rotation = m_direction_to_rotation.find(m_body_directions[0])->second,
+                .uvwt = UV_SNAKE_HEAD});
 
+            // BODY
+            auto prev_direction = m_body_directions[0];
             for (auto i = 1; i < m_body_positions.size() - 1; i++) {
-                m_snake_body.center =
-                    static_cast<glm::vec3>(m_body_positions[i]) * TILE_SIDE_PX;
-                m_snake_body.rotation = m_sprite_rotation;
-                instance_buffer.push_back(m_snake_body);
+                auto current_direction = m_body_directions[i];
+
+                bool is_corner = prev_direction != current_direction;
+                auto uv = is_corner ? UV_SNAKE_CORNER : UV_SNAKE_BODY;
+
+                float rotation = m_direction_to_rotation.find(current_direction)->second;
+                if (is_corner) {
+                    if ((current_direction == Direction::UP &&
+                         prev_direction == Direction::RIGHT) ||
+                        (current_direction == Direction::LEFT &&
+                         prev_direction == Direction::DOWN)) {
+                        rotation = 0.0f;
+                    } else if ((current_direction == Direction::RIGHT &&
+                                prev_direction == Direction::DOWN) ||
+                               (current_direction == Direction::UP &&
+                                prev_direction == Direction::LEFT)) {
+                        rotation = M_PI / 2.0f;
+                    } else if ((current_direction == Direction::DOWN &&
+                                prev_direction == Direction::LEFT) ||
+                               (current_direction == Direction::RIGHT &&
+                                prev_direction == Direction::UP)) {
+                        rotation = 2.0f * M_PI / 2.0f;
+                    } else {
+                        rotation = 3.0f * M_PI / 2.0f;
+                    }
+                }
+
+                instance_buffer.push_back(graphics_pipeline::GeometryInstanceBufferObject{
+                    .dimension = glm::vec2(TILE_SIDE_PX),
+                    .center = static_cast<glm::vec3>(m_body_positions[i]) * TILE_SIDE_PX,
+                    .rotation = rotation,
+                    .uvwt = uv});
+                prev_direction = current_direction;
             }
-            m_snake_tail.center =
-                static_cast<glm::vec3>(m_body_positions.back()) * TILE_SIDE_PX;
-            m_snake_tail.rotation = m_sprite_rotation;
-            instance_buffer.push_back(m_snake_tail);
+
+            // TAIL
+            // tails rotation is dependent on second to last rotation
+            instance_buffer.push_back(graphics_pipeline::GeometryInstanceBufferObject{
+                .dimension = glm::vec2(TILE_SIDE_PX),
+                .center = static_cast<glm::vec3>(m_body_positions.back()) * TILE_SIDE_PX,
+                .rotation = m_direction_to_rotation.find(prev_direction)->second,
+                .uvwt = UV_SNAKE_TAIL});
 
             instance_buffer.push_back(FRAME);
         }
@@ -400,26 +441,22 @@ class Snake : public Game {
         case window::KeyEvent::UP:
         case window::KeyEvent::K:
         case window::KeyEvent::W:
-            m_pending_head_direction = UP;
-            m_pending_sprite_rotation = SPRITE_ROTATION_UP;
+            m_pending_direction = Direction::UP;
             break;
         case window::KeyEvent::LEFT:
         case window::KeyEvent::H:
         case window::KeyEvent::A:
-            m_pending_head_direction = LEFT;
-            m_pending_sprite_rotation = SPRITE_ROTATION_LEFT;
+            m_pending_direction = Direction::LEFT;
             break;
         case window::KeyEvent::DOWN:
         case window::KeyEvent::J:
         case window::KeyEvent::S:
-            m_pending_head_direction = DOWN;
-            m_pending_sprite_rotation = SPRITE_ROTATION_DOWN;
+            m_pending_direction = Direction::DOWN;
             break;
         case window::KeyEvent::RIGHT:
         case window::KeyEvent::L:
         case window::KeyEvent::D:
-            m_pending_head_direction = RIGHT;
-            m_pending_sprite_rotation = SPRITE_ROTATION_RIGHT;
+            m_pending_direction = Direction::RIGHT;
             break;
         default:
             break;
