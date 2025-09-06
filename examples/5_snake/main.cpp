@@ -35,8 +35,8 @@ constexpr float SPRITE_ROTATION_DOWN = 3.0f * M_PI / 2.0f;
 constexpr float BORDER_THICKNESS = 10.0f;
 constexpr graphics_pipeline::GeometryInstanceBufferObject FRAME = {
     .center = GAME_FIELD_CENTER,
-    .dimension =
-        glm::vec2(1.0f) * TILE_SIDE_PX * static_cast<float>(NUM_TILES) + BORDER_THICKNESS,
+    .dimension = glm::vec2(1.0f) * TILE_SIDE_PX * static_cast<float>(NUM_TILES) +
+                 BORDER_THICKNESS + 10.0f, // last term is an offset to make it look nice
     .color = colors::TRANSPARENT,
     .border.thickness = BORDER_THICKNESS,
     .border.color = colors::WHITE,
@@ -65,7 +65,8 @@ class Snake : public Game {
     // Rendering
     std::unique_ptr<SwapChainManager> m_swap_chain_manager;
     std::unique_ptr<CommandBufferManager> m_command_buffer_manager;
-    vulkan::Sampler m_sampler;
+    vulkan::Sampler m_glyph_sampler;
+    vulkan::Sampler m_texture_sampler;
     std::unique_ptr<graphics_pipeline::GeometryPipeline> m_geometry_pipeline;
     std::unique_ptr<graphics_pipeline::TextPipeline> m_text_pipeline;
     std::unique_ptr<Texture> m_sprite_sheet;
@@ -90,7 +91,6 @@ class Snake : public Game {
     // Snake params
     Direction m_direction = Direction::UP;
     Direction m_pending_direction = Direction::UP;
-    float m_head_rotation = SPRITE_ROTATION_UP;
     std::vector<glm::ivec3> m_body_positions = {};
     std::vector<Direction> m_body_directions = {};
     std::unordered_map<Direction, float> m_direction_to_rotation;
@@ -208,13 +208,11 @@ class Snake : public Game {
         if (pending_movement != -current_movement) {
             auto pending_rotation =
                 m_direction_to_rotation.find(m_pending_direction)->second;
-            m_head_rotation = pending_rotation;
             m_direction = m_pending_direction;
         }
 
         // CONTINUE: Add score when eating apple
         // TODO: Validate game logic when snake is about to eat itself
-        // TODO: Fix the blurryness of the texture sampler (new sampler?)
         // TODO: Fix the lines around the texture, the snake parts should be seamless
         // TODO: Wrap the position in a class
         // TODO: Add a nice main menu animation of snakes going accross in the background
@@ -473,18 +471,20 @@ class Snake : public Game {
         m_command_buffer_manager = std::make_unique<CommandBufferManager>(
             ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
 
-        m_sampler = vulkan::Sampler(ctx);
+        m_texture_sampler = vulkan::Sampler(ctx, vulkan::Filter::NEAREST,
+                                            vulkan::SamplerAddressMode::CLAMP_TO_BORDER);
         m_sprite_sheet =
             Texture::unique_from_filepath(ctx, m_command_buffer_manager.get(),
                                           "examples/5_snake/assets/Sprite-0001.png");
         m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(
             ctx, m_command_buffer_manager.get(), *m_swap_chain_manager,
             graphics_pipeline::GeometryPipelineOptions{
-                .combined_image_sampler =
-                    vulkan::DescriptorImageInfo(m_sprite_sheet->view(), &m_sampler)});
+                .combined_image_sampler = vulkan::DescriptorImageInfo(
+                    m_sprite_sheet->view(), &m_texture_sampler)});
 
+        m_glyph_sampler = vulkan::Sampler(ctx);
         auto font = std::make_unique<Font>(ctx, m_command_buffer_manager.get(),
-                                           "DefaultFont", &m_sampler);
+                                           "DefaultFont", &m_glyph_sampler);
         m_text_pipeline = std::make_unique<graphics_pipeline::TextPipeline>(
             ctx, m_command_buffer_manager.get(), *m_swap_chain_manager, std::move(font));
 
