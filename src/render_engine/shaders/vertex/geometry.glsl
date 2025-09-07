@@ -91,13 +91,13 @@ vec2 compute_uv(vec2 vertex, vec4 bbox) {
 void main() {
     InstanceData instance = instance_data_block.instances[gl_InstanceIndex];
     
-    vec3 scaled_vertex_pos = scale_vertex(in_position, instance.dimension.x, instance.dimension.y);
+    vec3 in_position_px = scale_vertex(in_position, instance.dimension.x, instance.dimension.y);
         
     mat3 rotation_matrix = create_rotation_matrix_z(-instance.rotation);
-    vec3 rotated_vertex_pos = rotation_matrix * scaled_vertex_pos;
-        
+    in_position_px = rotation_matrix * in_position_px;
+
     vec2 viewport_position = positions_to_viewport(instance.center.xy, window.dims);
-    vec2 vertex_in_viewport = rotated_vertex_pos.xy / vec2(window.dims.x, window.dims.y) * 2.0;
+    vec2 vertex_in_viewport = in_position_px.xy / vec2(window.dims.x, window.dims.y) * 2.0;
     
     gl_Position = vec4(viewport_position + vertex_in_viewport, instance.center.z, 1.0);
     out_position_px = vec3(in_position.xy * instance.dimension, 0.0);

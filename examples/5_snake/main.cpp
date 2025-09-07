@@ -26,6 +26,7 @@ constexpr glm::vec4 UV_SNAKE_HEAD = glm::vec4(0.125f * 1.0f, 0.0f, 0.125f * 2.0f
 constexpr glm::vec4 UV_SNAKE_BODY = glm::vec4(0.125f * 2.0f, 0.0f, 0.125f * 3.0f, 1.0);
 constexpr glm::vec4 UV_SNAKE_TAIL = glm::vec4(0.125f * 3.0f, 0.0f, 0.125f * 4.0f, 1.0);
 constexpr glm::vec4 UV_SNAKE_CORNER = glm::vec4(0.125f * 4.0f, 0.0f, 0.125f * 5.0f, 1.0);
+constexpr glm::vec4 UV_DEBUG = glm::vec4(0.125f * 5.0f, 0.0f, 0.125f * 6.0f, 1.0);
 
 constexpr float SPRITE_ROTATION_LEFT = 0.0f;
 constexpr float SPRITE_ROTATION_UP = M_PI / 2.0f;
@@ -213,7 +214,6 @@ class Snake : public Game {
 
         // CONTINUE: Add score when eating apple
         // TODO: Validate game logic when snake is about to eat itself
-        // TODO: Fix the lines around the texture, the snake parts should be seamless
         // TODO: Wrap the position in a class
         // TODO: Add a nice main menu animation of snakes going accross in the background
 

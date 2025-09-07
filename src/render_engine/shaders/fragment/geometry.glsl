@@ -108,12 +108,21 @@ float border_sdf(
 }
 
 void main() {
+    
+    // If we simply want to render a texture with no fuzz
+    if (in_uv.x >= 0.0 && in_uv.y >= 0.0 && 
+            vertices.shape == RECTANGLE && 
+            in_border_thickness_px < 1.0 &&
+            in_border_radius_px < 1.0) {
+        out_color = texture(u_texture_sampler, in_uv);
+        return;
+    }
+
     const float distance_px = signed_distance(in_position_px);
     const float aa = fwidth(distance_px);
     const float shape_mask = 1.0 - smoothstep(-aa, aa, distance_px);
 
-   
-   float border_mask = 0.0;
+    float border_mask = 0.0;
     if (vertices.shape == RECTANGLE) {
         // Compute inner rounded borders, only applicable for rectangles.
         // Rounded borders for any other shape is not supported due to complexity.
