@@ -1,7 +1,7 @@
-#include "Coordinates.h"
 #include "Dimension.h"
 #include "Game.h"
 #include "GameEngine.h"
+#include "WorldPoint.h"
 #include "render_engine/colors.h"
 #include "render_engine/fonts/Font.h"
 #include "render_engine/graphics_pipeline/GeometryPipeline.h"

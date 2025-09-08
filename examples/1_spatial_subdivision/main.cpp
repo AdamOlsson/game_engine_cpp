@@ -1,6 +1,6 @@
-#include "Coordinates.h"
 #include "Game.h"
 #include "GameEngine.h"
+#include "WorldPoint.h"
 #include "entity_component_storage/ComponentStore.h"
 #include "entity_component_storage/EntityComponentStorage.h"
 #include "helper_functions.h"

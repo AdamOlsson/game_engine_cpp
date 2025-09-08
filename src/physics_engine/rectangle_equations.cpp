@@ -1,5 +1,5 @@
 #include "rectangle_equations.h"
-#include "Coordinates.h"
+#include "WorldPoint.h"
 #include "equations/equations.h"
 #include "physics_engine/RigidBody.h"
 

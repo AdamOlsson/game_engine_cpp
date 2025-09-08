@@ -1,6 +1,6 @@
 #pragma once
 #include "glm/glm.hpp"
-struct WorldPoint;
+#include <ostream>
 
 struct WorldPoint : public glm::vec3 {
     using glm::vec3::vec3;
@@ -10,5 +10,10 @@ struct WorldPoint : public glm::vec3 {
     WorldPoint(float x, float y) : glm::vec3(x, y, 0.0f) {}
     WorldPoint(double x, double y, float z)
         : glm::vec3(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)) {
+    }
+
+    friend std::ostream &operator<<(std::ostream &os, const WorldPoint &wp) {
+        os << "WorldPoint(" << wp.x << ", " << wp.y << ", " << wp.x << ")";
+        return os;
     }
 };

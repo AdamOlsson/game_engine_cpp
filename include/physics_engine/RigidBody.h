@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Coordinates.h"
+#include "WorldPoint.h"
 #include "glm/fwd.hpp"
 #include "shape.h"
 #include <glm/glm.hpp>

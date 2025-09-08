@@ -1,5 +1,7 @@
+#include "Dimension.h"
 #include "Game.h"
 #include "GameEngine.h"
+#include "WorldPoint.h"
 #include "logger.h"
 #include "render_engine/CommandBufferManager.h"
 #include "render_engine/SwapChainManager.h"
@@ -36,7 +38,7 @@ constexpr float SPRITE_ROTATION_DOWN = 3.0f * M_PI / 2.0f;
 constexpr float BORDER_THICKNESS = 10.0f;
 constexpr graphics_pipeline::GeometryInstanceBufferObject FRAME = {
     .center = GAME_FIELD_CENTER,
-    .dimension = glm::vec2(1.0f) * TILE_SIDE_PX * static_cast<float>(NUM_TILES) +
+    .dimension = Dimension(1.0f) * TILE_SIDE_PX * static_cast<float>(NUM_TILES) +
                  BORDER_THICKNESS + 10.0f, // last term is an offset to make it look nice
     .color = colors::TRANSPARENT,
     .border.thickness = BORDER_THICKNESS,
@@ -116,7 +118,7 @@ class Snake : public Game {
                 .add_button(
                     ui::Button("SNAKE",
                                ui::ElementProperties{
-                                   .container.center = glm::vec3(0.0f, 250.0f, 0.0f),
+                                   .container.center = WorldPoint(0.0f, 250.0f, 0.0f),
                                    .container.dimension = Dimension(0.0f),
                                    .container.background_color = colors::TRANSPARENT,
                                    .font.color = colors::WHITE,
@@ -125,7 +127,7 @@ class Snake : public Game {
                 .add_button(
                     ui::Button("START",
                                ui::ElementProperties{
-                                   .container.center = glm::vec3(0.0f, 60.0f, 0.0f),
+                                   .container.center = WorldPoint(0.0f, 60.0f, 0.0f),
                                    .container.dimension = Dimension(400.0f, 100.0f),
                                    .container.background_color = colors::BLACK,
                                    .container.border.radius = 10.0f,
@@ -144,7 +146,7 @@ class Snake : public Game {
                     ui::Button("QUIT",
                                ui::ElementProperties{
                                    .container.center =
-                                       glm::vec3(0.0f, -60.0f, 0.0),
+                                       WorldPoint(0.0f, -60.0f, 0.0),
                                    .container.dimension = Dimension(400.0f, 100.0f),
                                    .container.background_color = colors::BLACK,
                                    .container.border.radius = 10.0f,
@@ -214,7 +216,6 @@ class Snake : public Game {
 
         // CONTINUE: Add score when eating apple
         // TODO: Validate game logic when snake is about to eat itself
-        // TODO: Wrap the position in a class
         // TODO: Add a nice main menu animation of snakes going accross in the background
 
         m_body_directions.pop_back();
@@ -354,8 +355,9 @@ class Snake : public Game {
             // render game
             for (auto i = 0; i < m_apple_positions.size(); i++) {
                 instance_buffer.push_back(graphics_pipeline::GeometryInstanceBufferObject{
-                    .center = static_cast<glm::vec3>(m_apple_positions[i]) * TILE_SIDE_PX,
-                    .dimension = glm::vec2(TILE_SIDE_PX),
+                    .center =
+                        static_cast<WorldPoint>(m_apple_positions[i]) * TILE_SIDE_PX,
+                    .dimension = Dimension(TILE_SIDE_PX),
                     .color = colors::GREEN,
                     .uvwt = UV_APPLE,
                 });
@@ -363,8 +365,8 @@ class Snake : public Game {
 
             // HEAD
             instance_buffer.push_back(graphics_pipeline::GeometryInstanceBufferObject{
-                .dimension = glm::vec2(TILE_SIDE_PX),
-                .center = static_cast<glm::vec3>(m_body_positions[0]) * TILE_SIDE_PX,
+                .dimension = Dimension(TILE_SIDE_PX),
+                .center = static_cast<WorldPoint>(m_body_positions[0]) * TILE_SIDE_PX,
                 .rotation = m_direction_to_rotation.find(m_body_directions[0])->second,
                 .uvwt = UV_SNAKE_HEAD});
 
@@ -399,8 +401,8 @@ class Snake : public Game {
                 }
 
                 instance_buffer.push_back(graphics_pipeline::GeometryInstanceBufferObject{
-                    .dimension = glm::vec2(TILE_SIDE_PX),
-                    .center = static_cast<glm::vec3>(m_body_positions[i]) * TILE_SIDE_PX,
+                    .dimension = Dimension(TILE_SIDE_PX),
+                    .center = static_cast<WorldPoint>(m_body_positions[i]) * TILE_SIDE_PX,
                     .rotation = rotation,
                     .uvwt = uv});
                 prev_direction = current_direction;
@@ -409,8 +411,8 @@ class Snake : public Game {
             // TAIL
             // tails rotation is dependent on second to last rotation
             instance_buffer.push_back(graphics_pipeline::GeometryInstanceBufferObject{
-                .dimension = glm::vec2(TILE_SIDE_PX),
-                .center = static_cast<glm::vec3>(m_body_positions.back()) * TILE_SIDE_PX,
+                .dimension = Dimension(TILE_SIDE_PX),
+                .center = static_cast<WorldPoint>(m_body_positions.back()) * TILE_SIDE_PX,
                 .rotation = m_direction_to_rotation.find(prev_direction)->second,
                 .uvwt = UV_SNAKE_TAIL});
 
