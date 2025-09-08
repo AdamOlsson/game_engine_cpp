@@ -17,9 +17,8 @@ template <typename T>
 inline constexpr bool is_valid_resource_v = is_valid_resource<T>::value;
 
 class ResourceManager {
-    std::unordered_map<std::string, std::unique_ptr<Resource>> resources;
-
   private:
+    std::unordered_map<std::string, std::unique_ptr<Resource>> resources;
     ResourceManager() = default;
 
   public:
@@ -51,3 +50,4 @@ class ResourceManager {
 void register_all_fonts();
 void register_all_images();
 void register_all_shaders();
+void register_shader(std::unique_ptr<ShaderResource> shader);

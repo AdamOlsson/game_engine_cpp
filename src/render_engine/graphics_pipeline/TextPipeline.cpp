@@ -4,6 +4,8 @@
 #include "render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "render_engine/graphics_pipeline/GraphicsPipelineBuilder.h"
 #include "render_engine/resources/ResourceManager.h"
+#include "render_engine/resources/shaders/fragment/text/text.h"
+#include "render_engine/resources/shaders/vertex/text/text.h"
 #include <cstring>
 
 graphics_pipeline::TextPipeline::TextPipeline(
@@ -35,6 +37,10 @@ graphics_pipeline::TextPipeline::TextPipeline(
             .add_storage_buffer(3, vulkan::DescriptorBufferInfo::from_vector(
                                        m_text_segment_buffers.get_buffer_references()))
             .build(m_ctx, m_descriptor_pool);
+
+    register_shader(TextFragment::create_resource());
+    register_shader(TextVertex::create_resource());
+
     m_graphics_pipeline =
         // clang-format off
         graphics_pipeline::GraphicsPipelineBuilder()

@@ -4,6 +4,8 @@
 #include "render_engine/descriptors/DescriptorSetBuilder.h"
 #include "render_engine/graphics_pipeline/GraphicsPipelineBuilder.h"
 #include "render_engine/resources/ResourceManager.h"
+#include "render_engine/resources/shaders/fragment/geometry/geometry.h"
+#include "render_engine/resources/shaders/vertex/geometry/geometry.h"
 #include "vulkan/vulkan_core.h"
 #include <cstring>
 #include <memory>
@@ -126,6 +128,9 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
                                 {.stage_flags = VK_SHADER_STAGE_FRAGMENT_BIT})
 
             .build(m_ctx, m_descriptor_pool);
+
+    register_shader(GeometryFragment::create_resource());
+    register_shader(GeometryVertex::create_resource());
 
     m_graphics_pipeline =
         graphics_pipeline::GraphicsPipelineBuilder()

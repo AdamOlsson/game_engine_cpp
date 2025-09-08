@@ -214,9 +214,11 @@ class Snake : public Game {
             m_direction = m_pending_direction;
         }
 
-        // CONTINUE: Add score when eating apple
-        // TODO: Validate game logic when snake is about to eat itself
+        // TODO: Add score when eating apple
         // TODO: Add a nice main menu animation of snakes going accross in the background
+        // TODO: Game over screen
+        // TODO: Take another look at text rendering, why is my text so blocky?
+        // TODO: Make a delivery
 
         m_body_directions.pop_back();
         m_body_directions.insert(m_body_directions.begin(), m_direction);
@@ -464,9 +466,6 @@ class Snake : public Game {
     }
 
     void setup(std::shared_ptr<graphics_context::GraphicsContext> &ctx) override {
-        // TODO: Register shaders based on which pipelines are used
-        register_all_shaders();
-        // TODO: Let the user register the fonts
         register_all_fonts();
 
         m_swap_chain_manager = std::make_unique<SwapChainManager>(ctx);

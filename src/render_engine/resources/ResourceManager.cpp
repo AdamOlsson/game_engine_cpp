@@ -23,8 +23,13 @@ void register_all_images() {
 void register_all_shaders() {
     ResourceManager &instance = ResourceManager::get_instance();
 
-    auto fonts = fetch_all_shaders();
-    for (auto &f : fonts) {
-        instance.register_resource<ShaderResource>(std::move(f));
+    auto shaders = fetch_all_shaders();
+    for (auto &s : shaders) {
+        instance.register_resource<ShaderResource>(std::move(s));
     }
+}
+
+void register_shader(std::unique_ptr<ShaderResource> shader) {
+    ResourceManager &instance = ResourceManager::get_instance();
+    instance.register_resource<ShaderResource>(std::move(shader));
 }
