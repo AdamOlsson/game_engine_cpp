@@ -85,6 +85,7 @@ class Snake : public Game {
     uint m_tick_count = 0;
 
     // Game state
+    uint32_t m_score = 0;
     std::random_device m_rd;
     std::mt19937 m_rnd_gen;
     std::vector<bool> m_tiles_occupied;
@@ -164,6 +165,7 @@ class Snake : public Game {
     ~Snake() {};
 
     void game_reset() {
+        m_score = 0;
         m_body_positions.clear();
         m_body_directions.clear();
 
@@ -214,10 +216,9 @@ class Snake : public Game {
             m_direction = m_pending_direction;
         }
 
-        // TODO: Add score when eating apple
-        // TODO: Add a nice main menu animation of snakes going accross in the background
         // TODO: Game over screen
         // TODO: Take another look at text rendering, why is my text so blocky?
+        // TODO: Add a nice main menu animation of snakes going accross in the background
         // TODO: Make a delivery
 
         m_body_directions.pop_back();
@@ -262,6 +263,7 @@ class Snake : public Game {
                 m_game_tick_duration_s -= m_game_tick_decrease_s;
 
                 m_tick_count = 0; // reset apple spawn timer
+                m_score += 10;
                 break;
             }
         }
@@ -364,6 +366,14 @@ class Snake : public Game {
                     .uvwt = UV_APPLE,
                 });
             }
+
+            auto score_str = std::to_string(m_score);
+            m_text_pipeline->text_kerning(
+                score_str, ui::ElementProperties{
+                               .container.center = WorldPoint(-300.0f, 350.0f, 0.0f),
+                               .container.dimension = Dimension(100.0f, 50.0f),
+                               .font.size = 54,
+                           });
 
             // HEAD
             instance_buffer.push_back(graphics_pipeline::GeometryInstanceBufferObject{
