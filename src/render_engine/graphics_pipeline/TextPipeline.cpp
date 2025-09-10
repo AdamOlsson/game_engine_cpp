@@ -92,6 +92,7 @@ void graphics_pipeline::TextPipeline::text_kerning(
     const auto font_color = properties.font.color;
     const auto font_size = properties.font.size;
     const float font_rotation = properties.font.rotation;
+    const float font_weight = properties.font.weight;
 
     auto &glyph_instance_buffer = m_character_buffers.get_buffer();
     auto &text_segment_buffer = m_text_segment_buffers.get_buffer();
@@ -100,7 +101,7 @@ void graphics_pipeline::TextPipeline::text_kerning(
     const size_t num_char = text.size();
     const auto text_center = properties.container.center;
 
-    text_segment_buffer.emplace_back(font_color, font_size, font_rotation);
+    text_segment_buffer.emplace_back(font_color, font_size, font_rotation, font_weight);
     const uint32_t text_segment_idx = text_segment_buffer.num_elements() - 1;
 
     // First character has no offset
@@ -136,11 +137,9 @@ std::string to_string(const graphics_pipeline::TextSegmentBufferObject &obj) {
                        "  font_rotation:  {:.3f}\n"
                        "  font_size: {:d}\n"
                        "  font_weight: {:.3f}\n"
-                       "  font_sharpness: {:.3f}\n"
                        "}}",
                        obj.font_color.x, obj.font_color.y, obj.font_color.z,
-                       obj.font_rotation, obj.font_size, obj.font_weight,
-                       obj.font_sharpness);
+                       obj.font_rotation, obj.font_size, obj.font_weight);
 }
 
 std::ostream &operator<<(std::ostream &os,

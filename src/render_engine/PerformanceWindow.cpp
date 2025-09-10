@@ -16,7 +16,7 @@ PerformanceWindow::PerformanceWindow() {
     const glm::vec3 body_position = header_position - header_body_position_offset;
 
     const auto font_props = ui::ElementProperties::FontProperties{
-        .color = colors::WHITE, .size = 24, .weight = 1.0f, .sharpness = 1.0f};
+        .color = colors::WHITE, .size = 24, .weight = 1.0f};
 
     m_components.push_back(graphics_pipeline::GeometryInstanceBufferObject{
         .center = header_position,

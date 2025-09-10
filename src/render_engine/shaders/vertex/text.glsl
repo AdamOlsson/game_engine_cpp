@@ -11,7 +11,6 @@ struct TextSegmentData {
     uint font_size;
     float font_rotation;
     float font_weight;
-    float font_sharpness;
 };
 
 layout(std140, binding = 0) readonly buffer CharacterDataBlock {
@@ -31,7 +30,6 @@ layout(location = 0) in vec3 in_position;
 layout(location = 0) out vec4 out_frag_color;
 layout(location = 1) out vec2 out_uv;
 layout(location = 2) out float out_font_weight;
-layout(location = 3) out float out_font_sharpness;
 
 mat3 rotationMatrixZ(float theta) {
     float c = cos(theta);
@@ -85,7 +83,6 @@ void main() {
     vec4 font_color = text_data.font_color;
     uint font_size = text_data.font_size;
     float font_weight = text_data.font_weight;
-    float font_sharpness = text_data.font_sharpness;
     float rotation = text_data.font_rotation;
 
 
@@ -101,6 +98,5 @@ void main() {
     out_frag_color = font_color;
     out_uv = compute_uv(in_position.xy, character_data.uvwt);
     out_font_weight = font_weight;
-    out_font_sharpness = font_sharpness;
 
 }

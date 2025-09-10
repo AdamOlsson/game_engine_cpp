@@ -51,6 +51,8 @@ constexpr glm::vec4 FRAME_INNER_BOUNDS =
               GAME_FIELD_CENTER.x - FRAME.dimension.x / 2.0f + FRAME.border.thickness,
               GAME_FIELD_CENTER.y - FRAME.dimension.x / 2.0f + FRAME.border.thickness);
 
+constexpr float FONT_WEIGHT = 0.525;
+
 void set_hover_color(ui::Button &self) {
     self.properties.container.background_color = colors::WHITE;
     self.properties.font.color = colors::BLACK;
@@ -61,7 +63,7 @@ void unset_hover_color(ui::Button &self) {
     self.properties.font.color = colors::WHITE;
 }
 
-enum class GameState { MainMenu, Started };
+enum class GameState { MainMenu, Started, GameOver };
 
 class Snake : public Game {
   private:
@@ -124,6 +126,7 @@ class Snake : public Game {
                                    .container.background_color = colors::TRANSPARENT,
                                    .font.color = colors::WHITE,
                                    .font.size = 118,
+                                   .font.weight = FONT_WEIGHT,
                                }))
                 .add_button(
                     ui::Button("START",
@@ -136,6 +139,7 @@ class Snake : public Game {
                                    .container.border.color = colors::WHITE,
                                    .font.color = colors::WHITE,
                                    .font.size = 96,
+                                   .font.weight = FONT_WEIGHT,
                                })
                         .set_on_enter(set_hover_color)
                         .set_on_leave(unset_hover_color)
@@ -155,6 +159,7 @@ class Snake : public Game {
                                    .container.border.color = colors::WHITE,
                                    .font.color = colors::WHITE,
                                    .font.size = 96,
+                                   .font.weight = FONT_WEIGHT,
                                })
                         .set_on_enter(set_hover_color)
                         .set_on_leave(unset_hover_color)
@@ -203,7 +208,7 @@ class Snake : public Game {
         }
         m_current_tick_duration_s = 0.0f;
 
-        if (m_game_state == GameState::MainMenu) {
+        if (m_game_state == GameState::MainMenu || m_game_state == GameState::GameOver) {
             return;
         }
 
@@ -216,8 +221,6 @@ class Snake : public Game {
             m_direction = m_pending_direction;
         }
 
-        // TODO: Game over screen
-        // TODO: Take another look at text rendering, why is my text so blocky?
         // TODO: Add a nice main menu animation of snakes going accross in the background
         // TODO: Make a delivery
 
@@ -241,7 +244,7 @@ class Snake : public Game {
                                         new_snake_head_pos.y >= -NUM_TILES / 2);
         if (is_out_of_bounds) {
             logger::info("Game over, sneak out of bounds");
-            game_reset();
+            m_game_state = GameState::GameOver;
             return;
         }
 
@@ -272,7 +275,7 @@ class Snake : public Game {
         for (auto i = 1; i < m_body_positions.size(); i++) {
             if (new_snake_head_pos == m_body_positions[i]) {
                 logger::info("Game over, sneak ate itself");
-                game_reset();
+                m_game_state = GameState::GameOver;
             }
         }
 
@@ -341,6 +344,10 @@ class Snake : public Game {
         glyph_instance_buffer.clear();
         text_segment_buffer.clear();
 
+        text_segment_buffer.push_back(graphics_pipeline::TextSegmentBufferObject{
+
+        });
+
         if (m_game_state == GameState::MainMenu) {
             auto ui_state = m_main_menu.get_state();
             for (const auto button : ui_state.buttons) {
@@ -373,6 +380,7 @@ class Snake : public Game {
                                .container.center = WorldPoint(-300.0f, 350.0f, 0.0f),
                                .container.dimension = Dimension(100.0f, 50.0f),
                                .font.size = 54,
+                               .font.weight = FONT_WEIGHT,
                            });
 
             // HEAD
@@ -429,6 +437,24 @@ class Snake : public Game {
                 .uvwt = UV_SNAKE_TAIL});
 
             instance_buffer.push_back(FRAME);
+
+            if (m_game_state == GameState::GameOver) {
+                m_text_pipeline->text_kerning(
+                    "GAME OVER!", ui::ElementProperties{
+                                      .container.center = WorldPoint(0.0f, 0.0f, 0.0f),
+                                      .container.dimension = Dimension(100.0f, 50.0f),
+                                      .font.size = 96,
+                                      .font.weight = FONT_WEIGHT,
+                                  });
+                m_text_pipeline->text_kerning(
+                    "PRESS W TO CONTINUE",
+                    ui::ElementProperties{
+                        .container.center = WorldPoint(0.0f, -100.0f, 0.0f),
+                        .container.dimension = Dimension(100.0f, 50.0f),
+                        .font.size = 74,
+                        .font.weight = FONT_WEIGHT,
+                    });
+            }
         }
 
         instance_buffer.transfer();
@@ -453,7 +479,11 @@ class Snake : public Game {
         case window::KeyEvent::UP:
         case window::KeyEvent::K:
         case window::KeyEvent::W:
+
             m_pending_direction = Direction::UP;
+            if (m_game_state == GameState::GameOver) {
+                game_reset();
+            }
             break;
         case window::KeyEvent::LEFT:
         case window::KeyEvent::H:

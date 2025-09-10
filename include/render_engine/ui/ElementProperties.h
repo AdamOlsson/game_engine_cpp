@@ -18,8 +18,7 @@ struct ElementProperties {
         alignas(16) glm::vec4 color = colors::WHITE; // 16
         alignas(4) glm::uint32_t size = 128;         // 24
         alignas(4) glm::float32_t rotation = 0.0f;   // 20
-        alignas(4) glm::float32_t weight = 0.4f;     // 28
-        alignas(4) glm::float32_t sharpness = 0.8f;  // 32
+        alignas(4) glm::float32_t weight = 0.5f;     // 28
     } font;
 };
 } // namespace ui
