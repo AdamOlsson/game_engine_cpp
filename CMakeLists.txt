@@ -1,18 +1,10 @@
 cmake_minimum_required(VERSION 3.28)
 
-include(cmake/llvm.cmake)
-
-if(LLVM_CLANG_CXX)
-    set(CMAKE_CXX_COMPILER ${LLVM_CLANG_CXX})
-    message(STATUS "Using LLVM Clang: ${LLVM_CLANG_CXX}")
-else()
-    message(FATAL_ERROR "LLVM Clang not found")
-endif()
+# include(cmake/llvm.cmake)
 
 message(STATUS "CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}")
 message(STATUS "CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "CMAKE_CXX_COMPILER_VERSION: ${CMAKE_CXX_COMPILER_VERSION}")
-
 
 project(game_engine CXX)
 
@@ -38,7 +30,7 @@ foreach(source_file ${GAME_ENGINE_MODULES})
 endforeach()
 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 
 add_library(game_engine 
     STATIC 
@@ -47,7 +39,8 @@ add_library(game_engine
         # ${GAME_ENGINE_MODULES} 
 )
 
-target_compile_options(game_engine PUBLIC -stdlib=libc++)
+# target_compile_options(game_engine PUBLIC -stdlib=libc++)
+# target_link_options(game_engine PUBLIC -stdlib=libc++)
 
 target_include_directories(game_engine
     PUBLIC 
@@ -60,8 +53,6 @@ target_link_libraries(game_engine
     PUBLIC
         ${Vulkan_LIBRARY}
         glfw
-        c++
-        c++abi
 )
 
 target_compile_features(game_engine PUBLIC cxx_std_20)
@@ -73,27 +64,32 @@ set_target_properties(game_engine
 
 
 # Tests configuration
-# enable_testing()
-# file(GLOB_RECURSE TEST_SOURCES "tests/*.cpp")
-# add_executable(unit_tests ${TEST_SOURCES})
-# target_include_directories(unit_tests
-#     PRIVATE
-#         ${CMAKE_CURRENT_SOURCE_DIR}/tests
-#         ${CMAKE_CURRENT_SOURCE_DIR}/include
-#         ${CMAKE_CURRENT_SOURCE_DIR}/src
-# )
-# target_link_libraries(unit_tests
-#     PRIVATE
-#         game_engine
-#         GTest::gtest_main
-# )
-#
-# include(GoogleTest)
-# gtest_discover_tests(unit_tests)
-# set_target_properties(unit_tests
-#     PROPERTIES
-#         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-# )
+enable_testing()
+file(GLOB_RECURSE TEST_SOURCES "tests/*.cpp")
+set(TEST_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_utils.h")
+add_executable(unit_tests 
+    ${TEST_SOURCES}
+    ${TEST_HEADERS}
+)
+
+target_include_directories(unit_tests
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(unit_tests
+    PRIVATE
+        game_engine
+        GTest::gtest_main
+)
+
+include(GoogleTest)
+gtest_discover_tests(unit_tests)
+set_target_properties(unit_tests
+    PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
 
 # file(GLOB_RECURSE DEV_SOURCES "examples/1_spatial_subdivision/*.cpp")
 # add_executable(1_spatial_subdivision ${DEV_SOURCES})
