@@ -33,52 +33,55 @@ PerformanceWindow::PerformanceWindow() {
     auto m_menu = ui::Menu();
     m_ui = ui::UI(m_menu);
     m_ui.add_text_box(
-        "HEADER",
-        ui::TextBox("PERFORMANCE", ui::ElementProperties{.container.center = header_text,
-                                                         .container.dimension =
-                                                             glm::vec2(200.0f, 200.0f),
-                                                         .font = font_props}));
+        "HEADER", ui::TextBox("PERFORMANCE",
+                              ui::ElementProperties{
+                                  .container = {.center = header_text,
+                                                .dimension = glm::vec2(200.0f, 200.0f)},
+                                  .font = font_props}));
 
     const auto base_header_body_text_offset = glm::vec3(0.0f, 5.0f, 0.0f);
     const auto text_offset = glm::vec3(0.0f, 18.0f, 0.0f);
     auto left_alignment = glm::vec3(-5.0f, 0.0, 0.0f);
     m_ui.add_text_box(
-        "FPS", ui::TextBox("FPS", ui::ElementProperties{
-                                      .container.center = header_text -
-                                                          base_header_body_text_offset -
-                                                          text_offset + left_alignment,
-                                      .container.dimension = glm::vec2(200.0f, 200.0f),
-                                      .font = font_props}));
+        "FPS",
+        ui::TextBox("FPS", ui::ElementProperties{
+                               .container = {.center = header_text -
+                                                       base_header_body_text_offset -
+                                                       text_offset + left_alignment,
+                                             .dimension = glm::vec2(200.0f, 200.0f)},
+                               .font = font_props}));
 
     auto right_alignment = glm::vec3(36.0f, 0.0, 0.0f);
     m_ui.add_text_box(
         FPS_VALUE_TAG,
         ui::TextBox(
-            "60", ui::ElementProperties{.container.center = header_text -
-                                                            base_header_body_text_offset -
-                                                            text_offset + right_alignment,
-                                        .container.dimension = glm::vec2(200.0f, 200.0f),
-                                        .font = font_props}));
+            "60", ui::ElementProperties{
+                      .container = {.center = header_text - base_header_body_text_offset -
+                                              text_offset + right_alignment,
+                                    .dimension = glm::vec2(200.0f, 200.0f)},
+                      .font = font_props}));
 
     left_alignment = glm::vec3(-30.0f, 0.0, 0.0f);
     m_ui.add_text_box(
         "FRAME_TIME",
-        ui::TextBox("FRAME TIME",
-                    ui::ElementProperties{
-                        .container.center = header_text - base_header_body_text_offset +
-                                            left_alignment - text_offset * 2.0f,
-                        .container.dimension = glm::vec2(200.0f, 200.0f),
-                        .font = font_props}));
+        ui::TextBox(
+            "FRAME TIME",
+            ui::ElementProperties{
+                .container = {.center = header_text - base_header_body_text_offset +
+                                        left_alignment - text_offset * 2.0f,
+                              .dimension = glm::vec2(200.0f, 200.0f)},
+                .font = font_props}));
 
     right_alignment = glm::vec3(45.0f, 0.0f, 0.0f);
     m_ui.add_text_box(
         FRAME_TIME_VALUE_TAG,
-        ui::TextBox("00.0",
-                    ui::ElementProperties{
-                        .container.center = header_text - base_header_body_text_offset +
-                                            right_alignment - text_offset * 2.0f,
-                        .container.dimension = glm::vec2(200.0f, 200.0f),
-                        .font = font_props}));
+        ui::TextBox(
+            "00.0",
+            ui::ElementProperties{
+                .container = {.center = header_text - base_header_body_text_offset +
+                                        right_alignment - text_offset * 2.0f,
+                              .dimension = glm::vec2(200.0f, 200.0f)},
+                .font = font_props}));
 
     m_last_update = Clock::now();
     m_update_interval_s = 0.5f;

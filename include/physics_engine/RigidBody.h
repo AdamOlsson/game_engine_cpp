@@ -9,8 +9,8 @@
 struct RigidBody {
     WorldPoint position;
     WorldPoint prev_position;
-    Shape shape;
     float rotation = 0.0f;
+    Shape shape;
     glm::vec3 velocity = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 acceleration = glm::vec3(0.0f, 0.0f, 0.0f);
     float angular_velocity = 0.0f;
@@ -111,8 +111,8 @@ class RigidBodyBuilder {
         return RigidBody{
             .position = position_.value(),
             .prev_position = WorldPoint(position_.value() - velocity_ * dt),
-            .shape = shape_.value(),
             .rotation = rotation_,
+            .shape = shape_.value(),
             .velocity = velocity_,
             .acceleration = acceleration_,
             .angular_velocity = angular_velocity_,

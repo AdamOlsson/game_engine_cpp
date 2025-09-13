@@ -241,7 +241,7 @@ BoundingVolumes create_bounding_volumes(const std::vector<RigidBody> &bodies) {
     intermediate_results.volumes.reserve(bodies.size());
     std::for_each(bodies.begin(), bodies.end(), [&](const RigidBody &body) {
         float radius = body.bounding_volume_radius() * scale_factor;
-        BoundingCircle bounding_circle{.radius = radius, .center = body.position};
+        BoundingCircle bounding_circle{.center = body.position, .radius = radius};
         intermediate_results.volumes.push_back(std::move(bounding_circle));
         intermediate_results.largest_radius =
             std::max(intermediate_results.largest_radius, radius);

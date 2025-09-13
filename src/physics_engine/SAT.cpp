@@ -131,14 +131,14 @@ CollisionEdge find_collision_edge(const RigidBody &body,
     // We determine the closest as the edge who is most perpendicular to the separation
     // normal.
     if (glm::dot(right_edge, collision_axis) <= glm::dot(left_edge, collision_axis)) {
-        return CollisionEdge{.max = mid_vertex,
-                             .start = prev_vertex,
+        return CollisionEdge{.start = prev_vertex,
                              .end = mid_vertex,
+                             .max = mid_vertex,
                              .edge = mid_vertex - prev_vertex};
     } else {
-        return CollisionEdge{.max = mid_vertex,
-                             .start = mid_vertex,
+        return CollisionEdge{.start = mid_vertex,
                              .end = next_vertex,
+                             .max = mid_vertex,
                              .edge = next_vertex - mid_vertex};
     }
 }
@@ -257,10 +257,10 @@ CollisionInformation find_clipping_points(const CollisionEdge &edge_a,
 
     return CollisionInformation{
         .penetration_depth = max_depth,
-        .deepest_contact_idx = max_depth_idx,
         .normal = std::move(collision_normal),
-        .contact_patch = std::move(contact_patch),
         .contact_type = contact_type,
+        .contact_patch = std::move(contact_patch),
+        .deepest_contact_idx = max_depth_idx,
     };
 }
 

@@ -50,51 +50,49 @@ TEST(UITest, TestOnEnterAndOnLeaveWithThreeeButtons) {
     const auto cursor_pos_off_button = window::ViewportPoint(200.1f, 0.0f);
     auto m_ui = ui::UI(
         ui::Menu()
-            .add_button(ui::Button("",
-                                   ui::ElementProperties{
-                                       .container.center = glm::vec3(0.0f, 200.0f, 0.0f),
-                                       .container.dimension = glm::vec2(400.0f, 100.0f),
-                                       .container.border.color = colors::DARK_GREEN,
-                                       .container.border.thickness = 5.0f,
-                                       .container.border.radius = 15.0f,
-                                   })
-                            .set_on_enter([](ui::Button &self) {
-                                self.properties.container.border.color =
-                                    colors::DARK_BLUE;
-                            })
-                            .set_on_leave([](ui::Button &self) {
-                                self.properties.container.border.color = colors::DARK_RED;
-                            }))
-            .add_button(ui::Button("",
-                                   ui::ElementProperties{
-                                       .container.center = glm::vec3(0.0f, 0.0f, 0.0f),
-                                       .container.dimension = glm::vec2(400.0f, 100.0f),
-                                       .container.border.color = colors::GREEN,
-                                       .container.border.thickness = 5.0f,
-                                       .container.border.radius = 15.0f,
-                                   })
-                            .set_on_enter([](ui::Button &self) {
-                                self.properties.container.border.color = colors::BLUE;
-                            })
-                            .set_on_leave([](ui::Button &self) {
-                                self.properties.container.border.color = colors::RED;
-                            }))
-            .add_button(ui::Button("",
-                                   ui::ElementProperties{
-                                       .container.center = glm::vec3(0.0f, -200.0f, 0.0f),
-                                       .container.dimension = glm::vec2(400.0f, 100.0f),
-                                       .container.border.color = colors::LIGHT_GREEN,
-                                       .container.border.thickness = 5.0f,
-                                       .container.border.radius = 15.0f,
-                                   })
-                            .set_on_enter([](ui::Button &self) {
-                                self.properties.container.border.color =
-                                    colors::LIGHT_BLUE;
-                            })
-                            .set_on_leave([](ui::Button &self) {
-                                self.properties.container.border.color =
-                                    colors::LIGHT_RED;
-                            }))
+            .add_button(
+                ui::Button("",
+                           ui::ElementProperties{
+                               .container = {.center = glm::vec3(0.0f, 200.0f, 0.0f),
+                                             .dimension = glm::vec2(400.0f, 100.0f),
+                                             .border.color = colors::DARK_GREEN,
+                                             .border.thickness = 5.0f,
+                                             .border.radius = 15.0f},
+                           })
+                    .set_on_enter([](ui::Button &self) {
+                        self.properties.container.border.color = colors::DARK_BLUE;
+                    })
+                    .set_on_leave([](ui::Button &self) {
+                        self.properties.container.border.color = colors::DARK_RED;
+                    }))
+            .add_button(
+                ui::Button("",
+                           ui::ElementProperties{
+                               .container = {.center = glm::vec3(0.0f, 0.0f, 0.0f),
+                                             .dimension = glm::vec2(400.0f, 100.0f),
+                                             .border.color = colors::GREEN,
+                                             .border.thickness = 5.0f,
+                                             .border.radius = 15.0f}})
+                    .set_on_enter([](ui::Button &self) {
+                        self.properties.container.border.color = colors::BLUE;
+                    })
+                    .set_on_leave([](ui::Button &self) {
+                        self.properties.container.border.color = colors::RED;
+                    }))
+            .add_button(
+                ui::Button("",
+                           ui::ElementProperties{
+                               .container = {.center = glm::vec3(0.0f, -200.0f, 0.0f),
+                                             .dimension = glm::vec2(400.0f, 100.0f),
+                                             .border.color = colors::LIGHT_GREEN,
+                                             .border.thickness = 5.0f,
+                                             .border.radius = 15.0f}})
+                    .set_on_enter([](ui::Button &self) {
+                        self.properties.container.border.color = colors::LIGHT_BLUE;
+                    })
+                    .set_on_leave([](ui::Button &self) {
+                        self.properties.container.border.color = colors::LIGHT_RED;
+                    }))
 
     );
 

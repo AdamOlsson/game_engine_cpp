@@ -98,7 +98,7 @@ template <Printable T, GpuBufferType BufferType> class GpuBuffer {
     }
 
     GpuBufferRef get_reference() {
-        return {.buffer = m_buffer, .size = m_size, .type = BufferType};
+        return {.size = m_size, .buffer = m_buffer, .type = BufferType};
     }
     size_t size() const { return m_size; }
     size_t num_elements() const { return m_staging_buffer.size(); }

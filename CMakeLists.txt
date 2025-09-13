@@ -1,36 +1,29 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.28)
+
+include(cmake/llvm.cmake)
+
+if(LLVM_CLANG_CXX)
+    set(CMAKE_CXX_COMPILER ${LLVM_CLANG_CXX})
+    message(STATUS "Using LLVM Clang: ${LLVM_CLANG_CXX}")
+else()
+    message(FATAL_ERROR "LLVM Clang not found")
+endif()
 
 message(STATUS "CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}")
 message(STATUS "CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "CMAKE_CXX_COMPILER_VERSION: ${CMAKE_CXX_COMPILER_VERSION}")
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk")
+
 project(game_engine CXX)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-set(VULKAN_SDK_PATH "/Users/adamolsson/VulkanSDK/1.3.296.0/macOS")
-set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/opt/homebrew")
-
-set(Vulkan_INCLUDE_DIR "${VULKAN_SDK_PATH}/include")
-set(Vulkan_LIBRARY "${VULKAN_SDK_PATH}/lib/libvulkan.1.3.296.dylib")
-
-find_package(glfw3 REQUIRED)
-
-cmake_policy(SET CMP0135 NEW) 
-include(FetchContent)
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/b514bdc898e2951020cbdca1304b75f5950d1f59.zip
-)
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
+include(cmake/cmake-global-settings.cmake)
+include(cmake/vulkan.cmake)
+include(cmake/glfw.cmake)
+include(cmake/gtest.cmake)
 
 file(GLOB_RECURSE GAME_ENGINE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE GAME_ENGINE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h")
+# file(GLOB_RECURSE GAME_ENGINE_MODULES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cppm" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.ixx")
 
 foreach(header ${GAME_ENGINE_HEADERS})
     message(STATUS "Found header: ${header}")
@@ -40,12 +33,21 @@ foreach(source_file ${GAME_ENGINE_SOURCES})
     message(STATUS "Found source file: ${source_file}")
 endforeach()
 
+foreach(source_file ${GAME_ENGINE_MODULES})
+    message(STATUS "Found module file: ${source_file}")
+endforeach()
+
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 
 add_library(game_engine 
     STATIC 
         ${GAME_ENGINE_SOURCES} 
         ${GAME_ENGINE_HEADERS} 
+        # ${GAME_ENGINE_MODULES} 
 )
+
+target_compile_options(game_engine PUBLIC -stdlib=libc++)
 
 target_include_directories(game_engine
     PUBLIC 
@@ -58,108 +60,115 @@ target_link_libraries(game_engine
     PUBLIC
         ${Vulkan_LIBRARY}
         glfw
+        c++
+        c++abi
 )
+
+target_compile_features(game_engine PUBLIC cxx_std_20)
 
 set_target_properties(game_engine
     PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
 )
-
-
-file(GLOB_RECURSE DEV_SOURCES "examples/1_spatial_subdivision/*.cpp")
-add_executable(1_spatial_subdivision ${DEV_SOURCES})
-target_include_directories(1_spatial_subdivision
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
-target_link_libraries(1_spatial_subdivision
-    PRIVATE
-        game_engine
-)
-# Output directory for binaries
-set_target_properties(1_spatial_subdivision
-    PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-)
-
-file(GLOB_RECURSE DEV_SOURCES "examples/2_shape_rendering/*.cpp")
-add_executable(2_shape_rendering ${DEV_SOURCES})
-target_include_directories(2_shape_rendering
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
-target_link_libraries(2_shape_rendering
-    PRIVATE
-        game_engine
-)
-# Output directory for binaries
-set_target_properties(2_shape_rendering
-    PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-)
-
-
-file(GLOB_RECURSE DEV_SOURCES "examples/4_user_interface/*.cpp")
-add_executable(4_user_interface ${DEV_SOURCES})
-target_include_directories(4_user_interface
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
-target_link_libraries(4_user_interface
-    PRIVATE
-        game_engine
-)
-# Output directory for binaries
-set_target_properties(4_user_interface
-    PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-)
-
-file(GLOB_RECURSE SNAKE_SOURCES "examples/5_snake/*.cpp")
-add_executable(5_snake ${SNAKE_SOURCES})
-target_include_directories(5_snake
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
-target_link_libraries(5_snake
-    PRIVATE
-        game_engine
-)
-# Output directory for binaries
-set_target_properties(5_snake
-    PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-)
-
 
 
 # Tests configuration
-enable_testing()
-file(GLOB_RECURSE TEST_SOURCES "tests/*.cpp")
-add_executable(unit_tests ${TEST_SOURCES})
-target_include_directories(unit_tests
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/tests
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
-target_link_libraries(unit_tests
-    PRIVATE
-        game_engine
-        GTest::gtest_main
-)
-include(GoogleTest)
-gtest_discover_tests(unit_tests)
+# enable_testing()
+# file(GLOB_RECURSE TEST_SOURCES "tests/*.cpp")
+# add_executable(unit_tests ${TEST_SOURCES})
+# target_include_directories(unit_tests
+#     PRIVATE
+#         ${CMAKE_CURRENT_SOURCE_DIR}/tests
+#         ${CMAKE_CURRENT_SOURCE_DIR}/include
+#         ${CMAKE_CURRENT_SOURCE_DIR}/src
+# )
+# target_link_libraries(unit_tests
+#     PRIVATE
+#         game_engine
+#         GTest::gtest_main
+# )
+#
+# include(GoogleTest)
+# gtest_discover_tests(unit_tests)
+# set_target_properties(unit_tests
+#     PROPERTIES
+#         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+# )
 
-# Output directory for test binary
-set_target_properties(unit_tests
-    PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-)
+# file(GLOB_RECURSE DEV_SOURCES "examples/1_spatial_subdivision/*.cpp")
+# add_executable(1_spatial_subdivision ${DEV_SOURCES})
+# target_include_directories(1_spatial_subdivision
+#     PRIVATE
+#         ${CMAKE_CURRENT_SOURCE_DIR}/include
+#         ${CMAKE_CURRENT_SOURCE_DIR}/src
+# )
+# target_link_libraries(1_spatial_subdivision
+#     PRIVATE
+#         game_engine
+# )
+# # Output directory for binaries
+# set_target_properties(1_spatial_subdivision
+#     PROPERTIES
+#         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+#         CXX_SCAN_FOR_MODULES ON 
+# )
+
+# file(GLOB_RECURSE DEV_SOURCES "examples/2_shape_rendering/*.cpp")
+# add_executable(2_shape_rendering ${DEV_SOURCES})
+# target_include_directories(2_shape_rendering
+#     PRIVATE
+#         ${CMAKE_CURRENT_SOURCE_DIR}/include
+#         ${CMAKE_CURRENT_SOURCE_DIR}/src
+# )
+# target_link_libraries(2_shape_rendering
+#     PRIVATE
+#         game_engine
+# )
+# # Output directory for binaries
+# set_target_properties(2_shape_rendering
+#     PROPERTIES
+#         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+#         CXX_SCAN_FOR_MODULES ON 
+# )
+
+
+# file(GLOB_RECURSE DEV_SOURCES "examples/4_user_interface/*.cpp")
+# add_executable(4_user_interface ${DEV_SOURCES})
+# target_include_directories(4_user_interface
+#     PRIVATE
+#         ${CMAKE_CURRENT_SOURCE_DIR}/include
+#         ${CMAKE_CURRENT_SOURCE_DIR}/src
+# )
+# target_link_libraries(4_user_interface
+#     PRIVATE
+#         game_engine
+# )
+# # Output directory for binaries
+# set_target_properties(4_user_interface
+#     PROPERTIES
+#         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+#         CXX_SCAN_FOR_MODULES ON 
+# )
+
+# file(GLOB_RECURSE SNAKE_SOURCES "examples/5_snake/*.cpp")
+# add_executable(5_snake ${SNAKE_SOURCES})
+# target_include_directories(5_snake
+#     PRIVATE
+#         ${CMAKE_CURRENT_SOURCE_DIR}/include
+#         ${CMAKE_CURRENT_SOURCE_DIR}/src
+# )
+# target_link_libraries(5_snake
+#     PRIVATE
+#         game_engine
+# )
+# # Output directory for binaries
+# set_target_properties(5_snake
+#     PROPERTIES
+#         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+#         CXX_SCAN_FOR_MODULES ON 
+# )
+
+
 
 # Clean Target
 add_custom_target(clean-all
