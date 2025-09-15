@@ -1,8 +1,8 @@
+#include "game_engine_sdk/physics_engine/RigidBody.h"
+#include "game_engine_sdk/physics_engine/SAT.cpp"
+#include "game_engine_sdk/physics_engine/SAT.h"
+#include "game_engine_sdk/shape.h"
 #include "glm/ext/scalar_constants.hpp"
-#include "physics_engine/RigidBody.h"
-#include "physics_engine/SAT.cpp"
-#include "physics_engine/SAT.h"
-#include "shape.h"
 #include "test_utils.h"
 #include <gtest/gtest.h>
 #include <optional>

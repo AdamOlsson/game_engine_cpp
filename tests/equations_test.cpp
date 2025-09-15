@@ -1,8 +1,8 @@
-#include "equations/equations.h"
-#include "equations/round.h"
+#include "game_engine_sdk/equations/equations.h"
+#include "game_engine_sdk/equations/round.h"
+#include "game_engine_sdk/io.h"
 #include "glm/ext/scalar_constants.hpp"
 #include "glm/glm.hpp"
-#include "io.h"
 #include <gtest/gtest.h>
 
 TEST(EquationsTest, Given2dVectorExpectRoundedTo3Decimals) {

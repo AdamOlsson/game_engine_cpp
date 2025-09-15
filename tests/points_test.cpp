@@ -1,4 +1,4 @@
-#include "render_engine/window/ViewportPoint.h"
+#include "game_engine_sdk/render_engine/window/ViewportPoint.h"
 #include <gtest/gtest.h>
 
 TEST(PointsTest, ViewportPointAtTopLeftToWorldPointTest) {

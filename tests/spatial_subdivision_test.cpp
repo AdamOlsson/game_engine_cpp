@@ -1,6 +1,6 @@
-#include "physics_engine/RigidBody.h"
-#include "physics_engine/broadphase/SpatialSubdivision.cpp"
-#include "physics_engine/broadphase/SpatialSubdivision.h"
+#include "game_engine_sdk/physics_engine/RigidBody.h"
+#include "game_engine_sdk/physics_engine/broadphase/SpatialSubdivision.cpp"
+#include "game_engine_sdk/physics_engine/broadphase/SpatialSubdivision.h"
 #include "test_utils.h"
 #include <cstdint>
 #include <gtest/gtest.h>

@@ -1,7 +1,7 @@
-#include "entity_component_storage/ComponentStore.h"
-#include "entity_component_storage/EntityComponentStorage.h"
-#include "physics_engine/RigidBody.h"
-#include "render_engine/colors.h"
+#include "game_engine_sdk/entity_component_storage/ComponentStore.h"
+#include "game_engine_sdk/entity_component_storage/EntityComponentStorage.h"
+#include "game_engine_sdk/physics_engine/RigidBody.h"
+#include "game_engine_sdk/render_engine/colors.h"
 #include <gtest/gtest.h>
 
 TEST(ECSTest, TestAdd) {

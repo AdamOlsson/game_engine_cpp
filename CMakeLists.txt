@@ -15,7 +15,6 @@ include(cmake/gtest.cmake)
 
 file(GLOB_RECURSE GAME_ENGINE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE GAME_ENGINE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h")
-# file(GLOB_RECURSE GAME_ENGINE_MODULES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cppm" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.ixx")
 
 foreach(header ${GAME_ENGINE_HEADERS})
     message(STATUS "Found header: ${header}")
@@ -30,17 +29,11 @@ foreach(source_file ${GAME_ENGINE_MODULES})
 endforeach()
 
 
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-
 add_library(game_engine 
     STATIC 
         ${GAME_ENGINE_SOURCES} 
         ${GAME_ENGINE_HEADERS} 
-        # ${GAME_ENGINE_MODULES} 
 )
-
-# target_compile_options(game_engine PUBLIC -stdlib=libc++)
-# target_link_options(game_engine PUBLIC -stdlib=libc++)
 
 target_include_directories(game_engine
     PUBLIC 

@@ -9,14 +9,14 @@ Usage:
     python compile_assets.py [--verbose] [--dry-run]
 
 Directory Structure:
-    - Shaders: src/render_engine/shaders/{vertex,fragment}/*.spv
+    - Shaders: src/game_engine_sdk/render_engine/shaders/{vertex,fragment}/*.spv
     - Images: assets/images/*.{png,jpg,jpeg,bmp,tga,gif}
     - Fonts: assets/fonts/*.{png,bmp,tga} (each with individual .json config)
 
 Output:
-    - Shaders: src/render_engine/resources/shaders/{vertex,fragment}/{name}/
-    - Images: src/render_engine/resources/images/{name}/
-    - Fonts: src/render_engine/resources/fonts/{name}/
+    - Shaders: src/game_engine_sdk/render_engine/resources/shaders/{vertex,fragment}/{name}/
+    - Images: src/game_engine_sdk/render_engine/resources/images/{name}/
+    - Fonts: src/game_engine_sdk/render_engine/resources/fonts/{name}/
 """
 
 import argparse
@@ -157,11 +157,11 @@ class AssetDiscovery:
         assets = []
         
         # Vertex shaders
-        vertex_dir = Path("src/render_engine/shaders/vertex")
+        vertex_dir = Path("src/game_engine_sdk/render_engine/shaders/vertex")
         if vertex_dir.exists():
             for spv_file in vertex_dir.glob("*.spv"):
                 resource_name = self._to_resource_name(spv_file.stem, "Vertex")
-                output_dir = Path(f"src/render_engine/resources/shaders/vertex/{spv_file.stem}")
+                output_dir = Path(f"src/game_engine_sdk/render_engine/resources/shaders/vertex/{spv_file.stem}")
                 
                 assets.append(Asset(
                     filename=spv_file.name,
@@ -173,11 +173,11 @@ class AssetDiscovery:
                 ))
         
         # Fragment shaders
-        fragment_dir = Path("src/render_engine/shaders/fragment")
+        fragment_dir = Path("src/game_engine_sdk/render_engine/shaders/fragment")
         if fragment_dir.exists():
             for spv_file in fragment_dir.glob("*.spv"):
                 resource_name = self._to_resource_name(spv_file.stem, "Fragment")
-                output_dir = Path(f"src/render_engine/resources/shaders/fragment/{spv_file.stem}")
+                output_dir = Path(f"src/game_engine_sdk/render_engine/resources/shaders/fragment/{spv_file.stem}")
                 
                 assets.append(Asset(
                     filename=spv_file.name,
@@ -202,7 +202,7 @@ class AssetDiscovery:
         for ext in self.IMAGE_EXTENSIONS:
             for image_file in images_dir.glob(f"*{ext}"):
                 resource_name = self._to_resource_name(image_file.stem, "Image")
-                output_dir = Path(f"src/render_engine/resources/images/{image_file.stem}")
+                output_dir = Path(f"src/game_engine_sdk/render_engine/resources/images/{image_file.stem}")
                 
                 assets.append(Asset(
                     filename=image_file.name,
@@ -237,7 +237,7 @@ class AssetDiscovery:
                         continue
                     logger.debug(f"Reading {font_file}") 
                     resource_name = self._to_resource_name(font_file.stem, "Font")
-                    output_dir = Path(f"src/render_engine/resources/fonts/{font_file.stem}")
+                    output_dir = Path(f"src/game_engine_sdk/render_engine/resources/fonts/{font_file.stem}")
                     
                     atlas_dims, char_dims = self.font_config.get_dimensions(font_file)
                     
@@ -274,7 +274,7 @@ std::string resource_name = "{resource_name}";
     # Template for shader header files
     SHADER_HEADER_TEMPLATE = '''\
 #pragma once
-#include "render_engine/resources/shaders/ShaderResource.h"
+#include "game_engine_sdk/render_engine/resources/shaders/ShaderResource.h"
 #include <memory>
 
 class {class_name} {{
@@ -286,7 +286,7 @@ class {class_name} {{
     # Template for image header files
     IMAGE_HEADER_TEMPLATE = '''\
 #pragma once
-#include "render_engine/resources/images/ImageResource.h"
+#include "game_engine_sdk/render_engine/resources/images/ImageResource.h"
 #include <memory>
 
 class {class_name} {{
@@ -298,7 +298,7 @@ class {class_name} {{
     # Template for font header files
     FONT_HEADER_TEMPLATE = '''\
 #pragma once
-#include "render_engine/resources/fonts/FontResource.h"
+#include "game_engine_sdk/render_engine/resources/fonts/FontResource.h"
 #include <memory>
 
 class {class_name} {{
