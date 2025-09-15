@@ -1,4 +1,4 @@
-#include "IndexBuffer.h"
+#include "render_engine/buffers/IndexBuffer.h"
 #include "render_engine/buffers/StagingBuffer.h"
 #include "render_engine/buffers/common.h"
 #include "vulkan/vulkan_core.h"

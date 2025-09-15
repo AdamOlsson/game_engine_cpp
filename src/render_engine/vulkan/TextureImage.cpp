@@ -1,4 +1,4 @@
-#include "TextureImage.h"
+#include "render_engine/vulkan/TextureImage.h"
 #include "render_engine/SingleTimeCommandBuffer.h"
 #include "vulkan/vulkan_core.h"
 

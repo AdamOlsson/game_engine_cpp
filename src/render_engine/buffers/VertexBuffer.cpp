@@ -1,4 +1,4 @@
-#include "VertexBuffer.h"
+#include "render_engine/buffers/VertexBuffer.h"
 #include "render_engine/buffers/StagingBuffer.h"
 #include "render_engine/buffers/common.h"
 #include <vector>

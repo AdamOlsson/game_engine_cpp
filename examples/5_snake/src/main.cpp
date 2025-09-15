@@ -514,9 +514,8 @@ class Snake : public Game {
 
         m_texture_sampler = vulkan::Sampler(ctx, vulkan::Filter::NEAREST,
                                             vulkan::SamplerAddressMode::CLAMP_TO_BORDER);
-        m_sprite_sheet =
-            Texture::unique_from_filepath(ctx, m_command_buffer_manager.get(),
-                                          "examples/5_snake/assets/Sprite-0001.png");
+        m_sprite_sheet = Texture::unique_from_filepath(
+            ctx, m_command_buffer_manager.get(), "assets/Sprite-0001.png");
         m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(
             ctx, m_command_buffer_manager.get(), *m_swap_chain_manager,
             graphics_pipeline::GeometryPipelineOptions{

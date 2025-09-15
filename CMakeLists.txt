@@ -146,25 +146,6 @@ set_target_properties(unit_tests
 #         CXX_SCAN_FOR_MODULES ON 
 # )
 
-# file(GLOB_RECURSE SNAKE_SOURCES "examples/5_snake/*.cpp")
-# add_executable(5_snake ${SNAKE_SOURCES})
-# target_include_directories(5_snake
-#     PRIVATE
-#         ${CMAKE_CURRENT_SOURCE_DIR}/include
-#         ${CMAKE_CURRENT_SOURCE_DIR}/src
-# )
-# target_link_libraries(5_snake
-#     PRIVATE
-#         game_engine
-# )
-# # Output directory for binaries
-# set_target_properties(5_snake
-#     PROPERTIES
-#         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-#         CXX_SCAN_FOR_MODULES ON 
-# )
-
-
 
 # Clean Target
 add_custom_target(clean-all

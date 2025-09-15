@@ -1,5 +1,5 @@
-#include "GraphicsContext.h"
-#include "validation_layers.h"
+#include "render_engine/graphics_context/GraphicsContext.h"
+#include "render_engine/graphics_context/validation_layers.h"
 #include "vulkan/vulkan_core.h"
 
 graphics_context::GraphicsContext::GraphicsContext(window::Window *window)

@@ -1,4 +1,4 @@
-#include "DescriptorBufferInfo.h"
+#include "render_engine/vulkan/DescriptorBufferInfo.h"
 
 vulkan::DescriptorBufferInfo::DescriptorBufferInfo(GpuBufferRef &buffer_ref)
     : m_descriptor_buffer_info(VkDescriptorBufferInfo{

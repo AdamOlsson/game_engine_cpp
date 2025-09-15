@@ -1,9 +1,9 @@
 #pragma once
 
-#include "GraphicsPipeline.h"
 #include "render_engine/SwapChainManager.h"
 #include "render_engine/descriptors/DescriptorSetLayout.h"
 #include "render_engine/graphics_context/GraphicsContext.h"
+#include "render_engine/graphics_pipeline/GraphicsPipeline.h"
 #include "render_engine/resources/shaders/ShaderResource.h"
 #include "vulkan/vulkan_core.h"
 #include <optional>

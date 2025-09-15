@@ -1,4 +1,4 @@
-#include "StagingBuffer.h"
+#include "render_engine/buffers/StagingBuffer.h"
 #include "render_engine/buffers/common.h"
 
 StagingBuffer::StagingBuffer(std::shared_ptr<graphics_context::GraphicsContext> ctx,

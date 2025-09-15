@@ -1,4 +1,4 @@
-#include "ShaderResource.h"
+#include "render_engine/resources/shaders/ShaderResource.h"
 #include "render_engine/resources/shaders/fragment/geometry/geometry.h"
 #include "render_engine/resources/shaders/fragment/text/text.h"
 #include "render_engine/resources/shaders/vertex/geometry/geometry.h"

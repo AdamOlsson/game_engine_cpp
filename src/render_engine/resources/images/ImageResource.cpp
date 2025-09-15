@@ -1,4 +1,4 @@
-#include "ImageResource.h"
+#include "render_engine/resources/images/ImageResource.h"
 #include "render_engine/resources/images/dog/dog.h"
 #include <memory>
 

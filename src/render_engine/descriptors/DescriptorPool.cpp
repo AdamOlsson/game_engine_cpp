@@ -1,9 +1,9 @@
-#include "DescriptorPool.h"
+#include "render_engine/descriptors/DescriptorPool.h"
 
-DescriptorPool::DescriptorPool(
-    std::shared_ptr<graphics_context::GraphicsContext> &ctx, const uint32_t capacity,
-    const uint32_t num_storage_bufs, const uint32_t num_uniform_bufs,
-    const uint32_t num_samplers)
+DescriptorPool::DescriptorPool(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+                               const uint32_t capacity, const uint32_t num_storage_bufs,
+                               const uint32_t num_uniform_bufs,
+                               const uint32_t num_samplers)
     : m_ctx(ctx), m_descriptor_pool(create_descriptor_pool(
                       capacity, num_storage_bufs, num_uniform_bufs, num_samplers)) {}
 

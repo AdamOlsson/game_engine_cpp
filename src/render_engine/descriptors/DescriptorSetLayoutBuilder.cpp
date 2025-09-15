@@ -1,4 +1,4 @@
-#include "DescriptorSetLayoutBuilder.h"
+#include "render_engine/descriptors/DescriptorSetLayoutBuilder.h"
 #include "vulkan/vulkan_core.h"
 
 DescriptorSetLayoutBuilder &
