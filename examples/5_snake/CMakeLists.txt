@@ -7,8 +7,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # set(GAME_ENGINE_SDK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../build/lib")
 
+# TODO: Bundle vulkan and GLFW with the SDK
 set(GAME_ENGINE_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../..")
-set(GAME_ENGINE_SDK_DIR "${GAME_ENGINE_ROOT_DIR}/build/lib")
+set(GAME_ENGINE_SDK_DIR "${GAME_ENGINE_ROOT_DIR}/build/release/lib")
 set(GAME_ENGINE_INCLUDE_DIR "${GAME_ENGINE_ROOT_DIR}/include")
 
 set(VULKAN_SDK_PATH "/Users/adamolsson/VulkanSDK/1.3.296.0/macOS")

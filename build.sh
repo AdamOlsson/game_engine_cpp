@@ -45,11 +45,11 @@ BUILD_TYPE="Debug"
 while [[ $# -gt 0 ]]; do
     case $1 in
         --debug)
-            BUILD_TYPE="Debug"
+            BUILD_TYPE="debug"
             shift
             ;;
         --release)
-            BUILD_TYPE="Release"
+            BUILD_TYPE="release"
             shift
             ;;
         *)
@@ -60,6 +60,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+BUILD_DIR="build/${BUILD_TYPE}"
 # Create build directory and run CMake
-mkdir -p build
-cmake -B build -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON  -DCMAKE_BUILD_TYPE=$BUILD_TYPE && cmake --build build -- -j$(nproc)
+mkdir -p "$BUILD_DIR"
+cmake -B "$BUILD_DIR" -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON  -DCMAKE_BUILD_TYPE=$BUILD_TYPE && cmake --build "$BUILD_DIR" -- -j$(nproc)

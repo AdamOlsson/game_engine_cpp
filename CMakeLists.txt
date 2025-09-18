@@ -39,12 +39,12 @@ target_include_directories(game_engine
     PUBLIC 
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${Vulkan_INCLUDE_DIR}
+        ${VULKAN_INCLUDE_DIR}
 )
 
 target_link_libraries(game_engine
     PUBLIC
-        ${Vulkan_LIBRARY}
+        ${VULKAN_LIBRARY}
         glfw
 )
 
