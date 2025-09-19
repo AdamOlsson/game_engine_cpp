@@ -1,9 +1,9 @@
 #pragma once
 
+#include "game_engine_sdk/physics_engine/RigidBody.h"
+#include "game_engine_sdk/physics_engine/collision_resolver.h"
+#include "game_engine_sdk/render_engine/colors.h"
 #include "glm/fwd.hpp"
-#include "physics_engine/RigidBody.h"
-#include "physics_engine/collision_resolver.h"
-#include "render_engine/colors.h"
 
 const std::vector<glm::vec4> COLORS{colors::RED, colors::GREEN, colors::BLUE,
                                     colors::YELLOW, colors::CYAN};

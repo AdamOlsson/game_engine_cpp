@@ -1,16 +1,16 @@
-#include "Game.h"
-#include "GameEngine.h"
-#include "render_engine/PerformanceWindow.h"
-#include "render_engine/RenderPass.h"
-#include "render_engine/colors.h"
-#include "render_engine/fonts/Font.h"
-#include "render_engine/graphics_context/GraphicsContext.h"
-#include "render_engine/graphics_pipeline/GeometryPipeline.h"
-#include "render_engine/resources/ResourceManager.h"
-#include "render_engine/ui/Button.h"
-#include "render_engine/ui/ElementProperties.h"
-#include "render_engine/ui/UI.h"
-#include "render_engine/window/WindowConfig.h"
+#include "game_engine_sdk/Game.h"
+#include "game_engine_sdk/GameEngine.h"
+#include "game_engine_sdk/render_engine/PerformanceWindow.h"
+#include "game_engine_sdk/render_engine/RenderPass.h"
+#include "game_engine_sdk/render_engine/colors.h"
+#include "game_engine_sdk/render_engine/fonts/Font.h"
+#include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
+#include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
+#include "game_engine_sdk/render_engine/resources/ResourceManager.h"
+#include "game_engine_sdk/render_engine/ui/Button.h"
+#include "game_engine_sdk/render_engine/ui/ElementProperties.h"
+#include "game_engine_sdk/render_engine/ui/UI.h"
+#include "game_engine_sdk/render_engine/window/WindowConfig.h"
 #include <memory>
 
 // FUTURE IMPROVEMENTS (without any particular order):
@@ -74,14 +74,20 @@ class UserInterfaceExample : public Game {
                     ui::Button(
                         "+",
                         ui::ElementProperties{
-                            .container.center = top_button_pos + square_button_offset,
-                            .container.dimension = square_button_dimension,
-                            .container.background_color = button_background_color,
-                            .container.border.color = button_border_color,
-                            .container.border.thickness = button_border_thickness,
-                            .container.border.radius = button_border_radius,
-                            .font.color = button_font_color,
-                            .font.size = button_font_size})
+                            .container = {.center = top_button_pos + square_button_offset,
+                                          .dimension = square_button_dimension,
+                                          .background_color = button_background_color,
+                                          .border =
+                                              {
+                                                  .color = button_border_color,
+                                                  .thickness = button_border_thickness,
+                                                  .radius = button_border_radius,
+                                              }},
+                            .font =
+                                {
+                                    .color = button_font_color,
+                                    .size = button_font_size,
+                                }})
                         .set_on_enter(on_enter_callback)
                         .set_on_leave(on_leave_callback)
                         .set_on_click([this](ui::Button &self) {
@@ -89,17 +95,26 @@ class UserInterfaceExample : public Game {
                         }))
 
                 .add_button(
-                    ui::Button("-",
-                               ui::ElementProperties{
-                                   .container.center = top_button_pos -
-                                                       square_button_offset,
-                                   .container.dimension = square_button_dimension,
-                                   .container.background_color = button_background_color,
-                                   .container.border.color = button_border_color,
-                                   .container.border.thickness = button_border_thickness,
-                                   .container.border.radius = button_border_radius,
-                                   .font.color = button_font_color,
-                                   .font.size = button_font_size})
+                    ui::Button(
+                        "-",
+                        ui::ElementProperties{
+                            .container =
+                                {
+                                    .center = top_button_pos - square_button_offset,
+                                    .dimension =
+                                        square_button_dimension,
+                                    .background_color =
+                                        button_background_color,
+                                    .border
+                                        .color =
+                                        button_border_color,
+                                    .border
+                                        .thickness = button_border_thickness,
+                                    .border
+                                        .radius = button_border_radius,
+                                },
+                            .font.color = button_font_color,
+                            .font.size = button_font_size})
                         .set_on_enter(on_enter_callback)
                         .set_on_leave(on_leave_callback)
                         .set_on_click([this](ui::Button &self) {
