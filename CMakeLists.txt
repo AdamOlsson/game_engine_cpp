@@ -39,12 +39,13 @@ add_library(game_engine_sdk
         ${GAME_ENGINE_SOURCES} 
         ${GAME_ENGINE_HEADERS} 
 )
+target_compile_features(game_engine_sdk PUBLIC cxx_std_20)
 
 target_include_directories(game_engine_sdk
     PUBLIC 
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${VULKAN_INCLUDE_DIR}
+        ${VULKAN_SDK_PATH}/include
         ${glfw_SOURCE_DIR}/include
 )
 
@@ -54,7 +55,6 @@ target_link_libraries(game_engine_sdk
         glfw
 )
 
-target_compile_features(game_engine_sdk PUBLIC cxx_std_20)
 
 set_target_properties(game_engine_sdk
     PROPERTIES

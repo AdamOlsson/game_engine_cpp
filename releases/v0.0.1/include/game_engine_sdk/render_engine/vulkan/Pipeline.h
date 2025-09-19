@@ -1,0 +1,39 @@
+#pragma once
+
+#include "game_engine_sdk/render_engine/SwapChainManager.h"
+#include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
+#include "game_engine_sdk/render_engine/vulkan/PipelineLayout.h"
+#include "game_engine_sdk/render_engine/vulkan/ShaderModule.h"
+#include "vulkan/vulkan_core.h"
+#include <memory>
+
+namespace vulkan {
+class Pipeline {
+  private:
+    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
+
+    VkPipeline m_pipeline;
+
+    VkPipeline create_graphics_pipeline(PipelineLayout *layout,
+                                        const ShaderModule &vertex_shader_module,
+                                        const ShaderModule &fragment_shader_module,
+                                        SwapChainManager &swap_chain_manager);
+
+  public:
+    Pipeline() = default;
+    Pipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+             PipelineLayout *layout, const ShaderModule &vertex_shader_module,
+             const ShaderModule &fragment_shader_module,
+             SwapChainManager &swap_chain_manager);
+
+    ~Pipeline();
+
+    Pipeline(Pipeline &&other) noexcept;
+    Pipeline &operator=(Pipeline &&other) noexcept;
+
+    Pipeline &operator=(const Pipeline &other) = delete;
+    Pipeline(const Pipeline &other) = delete;
+
+    operator VkPipeline() const { return m_pipeline; }
+};
+} // namespace vulkan
