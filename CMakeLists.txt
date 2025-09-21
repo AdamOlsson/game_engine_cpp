@@ -2,8 +2,10 @@ cmake_minimum_required(VERSION 3.28)
 
 option(GAME_ENGINE_SDK_BUILD_TEST "Build the unit tests" OFF)
 option(GAME_ENGINE_SDK_BUILD_EXAMPLES "Build the examples" OFF)
+option(CMAKE_LOG_LEVEL_DEBUG "Confgure using debug log level" OFF)
 
 message(STATUS "Building game engine SDK with the following options:")
+message(STATUS "    Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "    Build tests: ${GAME_ENGINE_SDK_BUILD_TEST}")
 message(STATUS "    Build examples: ${GAME_ENGINE_SDK_BUILD_EXAMPLES}")
 
@@ -22,6 +24,7 @@ include(cmake/glfw.cmake)
 file(GLOB_RECURSE GAME_ENGINE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE GAME_ENGINE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h")
 
+if(CMAKE_LOG_LEVEL_DEBUG)
 foreach(header ${GAME_ENGINE_HEADERS})
     message(STATUS "Found header: ${header}")
 endforeach()
@@ -33,15 +36,18 @@ endforeach()
 foreach(source_file ${GAME_ENGINE_MODULES})
     message(STATUS "Found module file: ${source_file}")
 endforeach()
+endif()
 
-add_library(game_engine_sdk
+add_library(${PROJECT_NAME}
     STATIC 
         ${GAME_ENGINE_SOURCES} 
         ${GAME_ENGINE_HEADERS} 
 )
-target_compile_features(game_engine_sdk PUBLIC cxx_std_20)
 
-target_include_directories(game_engine_sdk
+add_library(GameEngineSDK::Engine ALIAS ${PROJECT_NAME})
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
+
+target_include_directories(${PROJECT_NAME}
     PUBLIC 
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -49,50 +55,19 @@ target_include_directories(game_engine_sdk
         ${glfw_SOURCE_DIR}/include
 )
 
-target_link_libraries(game_engine_sdk
+target_link_libraries(${PROJECT_NAME}
     PUBLIC
         ${VULKAN_LIBRARY}
         glfw
 )
 
-
-set_target_properties(game_engine_sdk
+set_target_properties(${PROJECT_NAME}
     PROPERTIES
         ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
 )
 
 if(GAME_ENGINE_SDK_BUILD_TEST)
-    message(STATUS "Building tests...")
-    # Tests configuration
-    include(cmake/gtest.cmake)
-    enable_testing()
-    file(GLOB_RECURSE TEST_SOURCES "tests/*.cpp")
-    set(TEST_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_utils.h")
-    add_executable(unit_tests 
-        ${TEST_SOURCES}
-        ${TEST_HEADERS}
-    )
-    
-    target_include_directories(unit_tests
-        PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}/tests
-            ${CMAKE_CURRENT_SOURCE_DIR}/include
-            ${CMAKE_CURRENT_SOURCE_DIR}/src
-    )
-    target_link_libraries(unit_tests
-        PRIVATE
-        game_engine_sdk
-            GTest::gtest_main
-    )
-    
-    include(GoogleTest)
-    gtest_discover_tests(unit_tests)
-    set_target_properties(unit_tests
-        PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-    )
-
-    message(STATUS "Building tests... DONE!")
+    include(cmake/tests.cmake)
 endif()
 
 if(GAME_ENGINE_SDK_BUILD_EXAMPLES)
@@ -115,5 +90,17 @@ if(CMAKE_EXPORT_COMPILE_COMMANDS)
         COMMAND ${CMAKE_COMMAND} -E create_symlink
             ${CMAKE_BINARY_DIR}/compile_commands.json
             ${CMAKE_SOURCE_DIR}/compile_commands.json
+    )
+endif()
+
+if(CMAKE_BUILD_TYPE STREQUAL "release")
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_CURRENT_SOURCE_DIR}/include
+            ${CMAKE_BINARY_DIR}/dist/include
+        COMMAND ${CMAKE_COMMAND} -E copy
+            $<TARGET_FILE:${PROJECT_NAME}>
+            ${CMAKE_BINARY_DIR}/dist/
+        COMMENT "Copying headers and library to distribution directory"
     )
 endif()
