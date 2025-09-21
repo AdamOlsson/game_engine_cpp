@@ -1,37 +1,30 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.28)
+
+option(GAME_ENGINE_SDK_BUILD_TEST "Build the unit tests" OFF)
+option(GAME_ENGINE_SDK_BUILD_EXAMPLES "Build the examples" OFF)
+option(CMAKE_LOG_LEVEL_DEBUG "Confgure using debug log level" OFF)
+
+message(STATUS "Building game engine SDK with the following options:")
+message(STATUS "    Build type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "    Build tests: ${GAME_ENGINE_SDK_BUILD_TEST}")
+message(STATUS "    Build examples: ${GAME_ENGINE_SDK_BUILD_EXAMPLES}")
+
+# include(cmake/llvm.cmake)
 
 message(STATUS "CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}")
 message(STATUS "CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "CMAKE_CXX_COMPILER_VERSION: ${CMAKE_CXX_COMPILER_VERSION}")
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk")
-project(game_engine CXX)
+project(game_engine_sdk CXX)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-set(VULKAN_SDK_PATH "/Users/adamolsson/VulkanSDK/1.3.296.0/macOS")
-set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/opt/homebrew")
-
-set(Vulkan_INCLUDE_DIR "${VULKAN_SDK_PATH}/include")
-set(Vulkan_LIBRARY "${VULKAN_SDK_PATH}/lib/libvulkan.1.3.296.dylib")
-
-find_package(glfw3 REQUIRED)
-
-cmake_policy(SET CMP0135 NEW) 
-include(FetchContent)
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/b514bdc898e2951020cbdca1304b75f5950d1f59.zip
-)
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
+include(cmake/cmake-global-settings.cmake)
+include(cmake/vulkan.cmake)
+include(cmake/glfw.cmake)
 
 file(GLOB_RECURSE GAME_ENGINE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE GAME_ENGINE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h")
 
+if(CMAKE_LOG_LEVEL_DEBUG)
 foreach(header ${GAME_ENGINE_HEADERS})
     message(STATUS "Found header: ${header}")
 endforeach()
@@ -40,141 +33,51 @@ foreach(source_file ${GAME_ENGINE_SOURCES})
     message(STATUS "Found source file: ${source_file}")
 endforeach()
 
+foreach(source_file ${GAME_ENGINE_MODULES})
+    message(STATUS "Found module file: ${source_file}")
+endforeach()
+endif()
 
-add_library(game_engine 
+add_library(${PROJECT_NAME}
     STATIC 
         ${GAME_ENGINE_SOURCES} 
         ${GAME_ENGINE_HEADERS} 
 )
 
-target_include_directories(game_engine
+add_library(GameEngineSDK::Engine ALIAS ${PROJECT_NAME})
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
+
+target_include_directories(${PROJECT_NAME}
     PUBLIC 
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${Vulkan_INCLUDE_DIR}
+        ${VULKAN_SDK_PATH}/include
+        ${glfw_SOURCE_DIR}/include
 )
 
-target_link_libraries(game_engine
+target_link_libraries(${PROJECT_NAME}
     PUBLIC
-        ${Vulkan_LIBRARY}
+        ${VULKAN_LIBRARY}
         glfw
 )
 
-set_target_properties(game_engine
+set_target_properties(${PROJECT_NAME}
     PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
 )
 
-file(GLOB_RECURSE DEV_SOURCES "examples/0_collision_detection/*.cpp")
-add_executable(0_collision_detection ${DEV_SOURCES})
-target_include_directories(0_collision_detection
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
+if(GAME_ENGINE_SDK_BUILD_TEST)
+    include(cmake/tests.cmake)
+endif()
 
-target_link_libraries(0_collision_detection
-    PRIVATE
-        game_engine
-)
+if(GAME_ENGINE_SDK_BUILD_EXAMPLES)
+    message(STATUS "Configuring examples...")
+    add_subdirectory(examples/1_spatial_subdivision)
+    add_subdirectory(examples/2_shape_rendering)
+    add_subdirectory(examples/4_user_interface)
+    message(STATUS "Configuring examples... DONE!")
+endif()
 
-# Output directory for binaries
-set_target_properties(0_collision_detection
-    PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-)
-
-file(GLOB_RECURSE DEV_SOURCES "examples/1_spatial_subdivision/*.cpp")
-add_executable(1_spatial_subdivision ${DEV_SOURCES})
-target_include_directories(1_spatial_subdivision
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
-target_link_libraries(1_spatial_subdivision
-    PRIVATE
-        game_engine
-)
-# Output directory for binaries
-set_target_properties(1_spatial_subdivision
-    PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-)
-
-file(GLOB_RECURSE DEV_SOURCES "examples/2_shape_rendering/*.cpp")
-add_executable(2_shape_rendering ${DEV_SOURCES})
-target_include_directories(2_shape_rendering
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
-target_link_libraries(2_shape_rendering
-    PRIVATE
-        game_engine
-)
-# Output directory for binaries
-set_target_properties(2_shape_rendering
-    PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-)
-
-file(GLOB_RECURSE DEV_SOURCES "examples/3_collision_scenarios/*.cpp")
-add_executable(3_collision_scenarios ${DEV_SOURCES})
-target_include_directories(3_collision_scenarios
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
-target_link_libraries(3_collision_scenarios
-    PRIVATE
-        game_engine
-)
-# Output directory for binaries
-set_target_properties(3_collision_scenarios
-    PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-)
-
-file(GLOB_RECURSE DEV_SOURCES "examples/4_user_interface/*.cpp")
-add_executable(4_user_interface ${DEV_SOURCES})
-target_include_directories(4_user_interface
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
-target_link_libraries(4_user_interface
-    PRIVATE
-        game_engine
-)
-# Output directory for binaries
-set_target_properties(4_user_interface
-    PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-)
-
-# Tests configuration
-enable_testing()
-file(GLOB_RECURSE TEST_SOURCES "tests/*.cpp")
-add_executable(unit_tests ${TEST_SOURCES})
-target_include_directories(unit_tests
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/tests
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
-target_link_libraries(unit_tests
-    PRIVATE
-        game_engine
-        GTest::gtest_main
-)
-include(GoogleTest)
-gtest_discover_tests(unit_tests)
-
-# Output directory for test binary
-set_target_properties(unit_tests
-    PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-)
 
 # Clean Target
 add_custom_target(clean-all
@@ -187,5 +90,17 @@ if(CMAKE_EXPORT_COMPILE_COMMANDS)
         COMMAND ${CMAKE_COMMAND} -E create_symlink
             ${CMAKE_BINARY_DIR}/compile_commands.json
             ${CMAKE_SOURCE_DIR}/compile_commands.json
+    )
+endif()
+
+if(CMAKE_BUILD_TYPE STREQUAL "release")
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_CURRENT_SOURCE_DIR}/include
+            ${CMAKE_BINARY_DIR}/dist/include
+        COMMAND ${CMAKE_COMMAND} -E copy
+            $<TARGET_FILE:${PROJECT_NAME}>
+            ${CMAKE_BINARY_DIR}/dist/
+        COMMENT "Copying headers and library to distribution directory"
     )
 endif()

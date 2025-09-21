@@ -1,6 +1,6 @@
-#include "physics_engine/RigidBody.h"
-#include "physics_engine/broadphase/SpatialSubdivision.cpp"
-#include "physics_engine/broadphase/SpatialSubdivision.h"
+#include "game_engine_sdk/physics_engine/RigidBody.h"
+#include "game_engine_sdk/physics_engine/broadphase/SpatialSubdivision.cpp"
+#include "game_engine_sdk/physics_engine/broadphase/SpatialSubdivision.h"
 #include "test_utils.h"
 #include <cstdint>
 #include <gtest/gtest.h>
@@ -33,7 +33,7 @@ TEST(SpatialSubdivisionTest, TestNoCollisionCandidatesShouldExist) {
 
     SpatialSubdivision broadphase = SpatialSubdivision();
     auto collision_candidates = broadphase.collision_detection(bodies);
-    std::cout << collision_candidates << std::endl;
+
     EXPECT_EQ(0, collision_candidates.pass1.size());
     EXPECT_EQ(0, collision_candidates.pass2.size());
     EXPECT_EQ(0, collision_candidates.pass3.size());

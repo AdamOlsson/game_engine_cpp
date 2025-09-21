@@ -40,16 +40,16 @@ if [ $ASSETS_COMPILE_STATUS -ne 0 ]; then
 fi
 
 
-BUILD_TYPE="Debug"
+BUILD_TYPE="debug"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         --debug)
-            BUILD_TYPE="Debug"
+            BUILD_TYPE="debug"
             shift
             ;;
         --release)
-            BUILD_TYPE="Release"
+            BUILD_TYPE="release"
             shift
             ;;
         *)
@@ -60,6 +60,11 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+BUILD_DIR="build/${BUILD_TYPE}"
 # Create build directory and run CMake
-mkdir -p build
-cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON  -DCMAKE_BUILD_TYPE=$BUILD_TYPE && cmake --build build -- -j$(nproc)
+mkdir -p "$BUILD_DIR"
+cmake -B "$BUILD_DIR" -G Ninja \
+    -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+    -DGAME_ENGINE_SDK_BUILD_TEST=TRUE\
+    -DGAME_ENGINE_SDK_BUILD_EXAMPLES=TRUE
+cmake --build "$BUILD_DIR" -- -j$(nproc)

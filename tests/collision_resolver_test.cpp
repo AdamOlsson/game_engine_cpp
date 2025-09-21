@@ -1,9 +1,9 @@
-#include "Coordinates.h"
-#include "equations/equations.h"
-#include "io.h"
-#include "physics_engine/RigidBody.h"
-#include "physics_engine/SAT.h"
-#include "physics_engine/collision_resolver.h"
+#include "game_engine_sdk/WorldPoint.h"
+#include "game_engine_sdk/equations/equations.h"
+#include "game_engine_sdk/io.h"
+#include "game_engine_sdk/physics_engine/RigidBody.h"
+#include "game_engine_sdk/physics_engine/SAT.h"
+#include "game_engine_sdk/physics_engine/collision_resolver.h"
 #include "test_utils.h"
 #include <cfloat>
 #include <gtest/gtest.h>
@@ -374,11 +374,12 @@ TEST(CollisionResolverTest, DISABLED_GivenObjectMoveAwayFromEachOtherExpectNoCol
                            .build();
 
     CollisionInformation collision_info{
-        .contact_type = ContactType::EDGE_EDGE,
+        .penetration_depth = 40.0f,
         .normal = glm::vec3(1.0f, 0.0f, 0.0f),
+        .contact_type = ContactType::EDGE_EDGE,
         .contact_patch = {glm::vec3(-40.0f, 40.0, 0.0), glm::vec3(-40.0f, -40.0, 0.0)},
         .deepest_contact_idx = 0,
-        .penetration_depth = 40.0f};
+    };
 
     auto solver = CollisionSolver(1.0f);
     auto collision_corrections_ =

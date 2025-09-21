@@ -1,8 +1,8 @@
+#include "game_engine_sdk/physics_engine/RigidBody.h"
+#include "game_engine_sdk/physics_engine/SAT.cpp"
+#include "game_engine_sdk/physics_engine/SAT.h"
+#include "game_engine_sdk/shape.h"
 #include "glm/ext/scalar_constants.hpp"
-#include "physics_engine/RigidBody.h"
-#include "physics_engine/SAT.cpp"
-#include "physics_engine/SAT.h"
-#include "shape.h"
 #include "test_utils.h"
 #include <gtest/gtest.h>
 #include <optional>
@@ -463,9 +463,9 @@ TEST(SATTest, GivenExample1BodyAAtDyn4jTestFindCollisionEdge) {
     const glm::vec3 collision_axis = glm::vec3(0.0, -1.0, 0.0);
     const CollisionEdge output = find_collision_edge(test_body, collision_axis);
 
-    const CollisionEdge expected = CollisionEdge{.max = glm::vec3(8.0, 4.0, 0.0),
-                                                 .start = glm::vec3(8.0, 4.0, 0.0),
+    const CollisionEdge expected = CollisionEdge{.start = glm::vec3(8.0, 4.0, 0.0),
                                                  .end = glm::vec3(14.0, 4.0, 0.0),
+                                                 .max = glm::vec3(8.0, 4.0, 0.0),
                                                  .edge = glm::vec3(6.0, 0.0, 0.0)};
     expect_near(expected, output, MAX_DIFF);
 }
@@ -490,9 +490,9 @@ TEST(SATTest, GivenExample1BodyBAtDyn4jTestFindCollisionEdge) {
                       // is resolved by letting the other bodys edge
                       // be the reference edge.
                       /*.max = glm::vec3(12.0, 5.0, 0.0),*/
-                      .max = glm::vec3(4.0, 5.0, 0.0),
                       .start = glm::vec3(12.0, 5.0, 0.0),
                       .end = glm::vec3(4.0, 5.0, 0.0),
+                      .max = glm::vec3(4.0, 5.0, 0.0),
                       .edge = glm::vec3(-8.0, 0.0, 0.0)};
     EXPECT_EQ(expected.max, output.max)
         << "Expected " << expected.max << " found " << output.max;
@@ -515,9 +515,9 @@ TEST(SATTest, GivenOffsetTriangleWithNoRotationTestFindCollisionEdgeOnBodyA) {
         MTV{.direction = glm::vec3(0.866025f, -0.5f, 0.0f), .magnitude = 1.732f};
     const CollisionEdge output = find_collision_edge(test_body, mtv.direction);
     const CollisionEdge expected =
-        CollisionEdge{.max = glm::vec3(1.0f, -2.88675f, 0.0f),
-                      .start = glm::vec3(-9.0f, -2.88675f, 0.0f),
+        CollisionEdge{.start = glm::vec3(-9.0f, -2.88675f, 0.0f),
                       .end = glm::vec3(1.0f, -2.88675f, 0.0f),
+                      .max = glm::vec3(1.0f, -2.88675f, 0.0f),
                       .edge = glm::vec3(10.0f, 0.0f, 0.0f)};
 
     expect_near(expected, output, MAX_DIFF);
@@ -534,9 +534,9 @@ TEST(SATTest, GivenOffsetTriangleWithNoRotationTestFindCollisionEdgeOnBodyB) {
         MTV{.direction = glm::vec3(-0.866025f, 0.5f, 0.0f), .magnitude = 1.732f};
     const CollisionEdge output = find_collision_edge(test_body, mtv.direction);
     const CollisionEdge expected =
-        CollisionEdge{.max = glm::vec3(4.0f, 5.7735f, 0.0f),
-                      .start = glm::vec3(4.0f, 5.7735f, 0.0f),
+        CollisionEdge{.start = glm::vec3(4.0f, 5.7735f, 0.0f),
                       .end = glm::vec3(-1.0f, -2.88675f, 0.0f),
+                      .max = glm::vec3(4.0f, 5.7735f, 0.0f),
                       .edge = glm::vec3(-5.0f, -8.66025f, 0.0f)};
 
     expect_near(expected, output, MAX_DIFF);
@@ -552,9 +552,9 @@ TEST(SATTest, GivenExample2BodyAAtDyn4jTestFindCollisionEdge) {
     glm::vec3 collision_axis = glm::vec3(0.0, -1.0, 0.0);
     CollisionEdge output = find_collision_edge(test_body, collision_axis);
 
-    CollisionEdge expected = CollisionEdge{.max = glm::vec3(6.0, 4.0, 0.0),
-                                           .start = glm::vec3(2.0, 8.0, 0.0),
+    CollisionEdge expected = CollisionEdge{.start = glm::vec3(2.0, 8.0, 0.0),
                                            .end = glm::vec3(6.0, 4.0, 0.0),
+                                           .max = glm::vec3(6.0, 4.0, 0.0),
                                            .edge = glm::vec3(4.0, -4.0, 0.0)};
     expect_near(expected, output, MAX_DIFF);
 }
@@ -579,9 +579,9 @@ TEST(SATTest, GivenExample2BodyBAtDyn4jTestFindCollisionEdge) {
                       // is resolved by letting the other bodys edge
                       // be the reference edge.
                       /*.max = glm::vec3(12.0, 5.0, 0.0),*/
-                      .max = glm::vec3(4.0, 5.0, 0.0),
                       .start = glm::vec3(12.0, 5.0, 0.0),
                       .end = glm::vec3(4.0, 5.0, 0.0),
+                      .max = glm::vec3(4.0, 5.0, 0.0),
                       .edge = glm::vec3(-8.0, 0.0, 0.0)};
     expect_near(expected, output, MAX_DIFF);
 }
@@ -596,9 +596,9 @@ TEST(SATTest, GivenExample3BodyAAtDyn4jTestFindCollisionEdge) {
     const glm::vec3 collision_axis = glm::vec3(-0.19, -0.98, 0.0);
     const CollisionEdge output = find_collision_edge(test_body, collision_axis);
 
-    const CollisionEdge expected = CollisionEdge{.max = glm::vec3(13.0, 3.0, 0.0),
-                                                 .start = glm::vec3(9.0, 4.0, 0.0),
+    const CollisionEdge expected = CollisionEdge{.start = glm::vec3(9.0, 4.0, 0.0),
                                                  .end = glm::vec3(13.0, 3.0, 0.0),
+                                                 .max = glm::vec3(13.0, 3.0, 0.0),
                                                  .edge = glm::vec3(4.0, -1.0, 0.0)};
     expect_near(expected, output, MAX_DIFF);
 }
@@ -614,9 +614,9 @@ TEST(SATTest, GivenExample3BodyBAtDyn4jTestFindCollisionEdge) {
     const glm::vec3 collision_axis = glm::vec3(0.19, 0.98, 0.0);
     const CollisionEdge output = find_collision_edge(test_body, collision_axis);
 
-    const CollisionEdge expected = CollisionEdge{.max = glm::vec3(12.0, 5.0, 0.0),
-                                                 .start = glm::vec3(12.0, 5.0, 0.0),
+    const CollisionEdge expected = CollisionEdge{.start = glm::vec3(12.0, 5.0, 0.0),
                                                  .end = glm::vec3(4.0, 5.0, 0.0),
+                                                 .max = glm::vec3(12.0, 5.0, 0.0),
                                                  .edge = glm::vec3(-8.0, 0.0, 0.0)};
     expect_near(expected, output, MAX_DIFF);
 }

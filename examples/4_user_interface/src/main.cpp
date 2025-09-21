@@ -1,0 +1,334 @@
+#include "game_engine_sdk/Game.h"
+#include "game_engine_sdk/GameEngine.h"
+#include "game_engine_sdk/render_engine/PerformanceWindow.h"
+#include "game_engine_sdk/render_engine/RenderPass.h"
+#include "game_engine_sdk/render_engine/colors.h"
+#include "game_engine_sdk/render_engine/fonts/Font.h"
+#include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
+#include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
+#include "game_engine_sdk/render_engine/resources/ResourceManager.h"
+#include "game_engine_sdk/render_engine/ui/Button.h"
+#include "game_engine_sdk/render_engine/ui/ElementProperties.h"
+#include "game_engine_sdk/render_engine/ui/UI.h"
+#include "game_engine_sdk/render_engine/window/WindowConfig.h"
+#include <memory>
+
+// FUTURE IMPROVEMENTS (without any particular order):
+// - 1. Animations should not use a pointer to the member of ElementProperties it wants
+// to animate, as keeping pointer to struct members is bad practise. Instead, I should use
+// a lambda function based system that act on either the ui element or on the
+// ElementProperties struct.
+// - 2. I want to add TextBox class to the menu hierarchy. Right now, if I do not want to
+// render some text I need to set it to an empty string.
+
+void on_enter_callback(ui::Button &self) {
+    self.properties.container.background_color = colors::WHITE;
+    self.properties.font.color = colors::BLACK;
+}
+
+void on_leave_callback(ui::Button &self) {
+    self.properties.container.background_color = colors::BLACK;
+    self.properties.font.color = colors::WHITE;
+}
+
+class UserInterfaceExample : public Game {
+  private:
+    ui::UI m_ui;
+    std::unique_ptr<SwapChainManager> m_swap_chain_manager;
+    std::unique_ptr<CommandBufferManager> m_command_buffer_manager;
+
+    vulkan::Sampler m_sampler;
+    std::unique_ptr<graphics_pipeline::GeometryPipeline> m_geometry_pipeline;
+    std::unique_ptr<graphics_pipeline::TextPipeline> m_text_pipeline;
+
+    const std::string VERSION_ID = "VERSION";
+    const std::string NUMBER_ID = "NUMBER";
+    const std::string INCREMENT_ID = "INCREMENT";
+    int m_number;
+    int m_increment;
+    bool m_in_settings;
+
+    const float base_width = 400.0f;
+    const glm::vec3 top_button_pos = glm::vec3(0.0f, 50.0f, 0.0f);
+    const glm::vec2 button_dimension = glm::vec2(base_width, 100.0f);
+    const glm::vec2 square_button_dimension = glm::vec2(190.0f, 100.0f);
+    const glm::vec3 square_button_offset =
+        glm::vec3((base_width - square_button_dimension.x) / 2.0, 0.0f, 0.0f);
+    const glm::vec3 next_button_offset = glm::vec3(0.0f, 120.0f, 0.0f);
+    const glm::vec4 button_background_color = colors::BLACK;
+    const glm::vec4 button_font_color = colors::WHITE;
+    const uint32_t button_font_size = 96;
+    const glm::vec4 button_border_color = colors::WHITE;
+    const float button_border_thickness = 5.0f;
+    const float button_border_radius = 15.0f;
+
+    const glm::vec2 square_settings_button_dimension = glm::vec2(125.0f, 100.0f);
+    const glm::vec3 square_settings_button_offset =
+        glm::vec3((base_width - square_settings_button_dimension.x) / 2.0, 0.0f, 0.0f);
+
+  public:
+    UserInterfaceExample() : m_number(0), m_increment(1), m_in_settings(false) {
+        m_ui = ui::UI(
+            ui::Menu()
+                .add_button(
+                    ui::Button(
+                        "+",
+                        ui::ElementProperties{
+                            .container = {.center = top_button_pos + square_button_offset,
+                                          .dimension = square_button_dimension,
+                                          .background_color = button_background_color,
+                                          .border =
+                                              {
+                                                  .color = button_border_color,
+                                                  .thickness = button_border_thickness,
+                                                  .radius = button_border_radius,
+                                              }},
+                            .font =
+                                {
+                                    .color = button_font_color,
+                                    .size = button_font_size,
+                                }})
+                        .set_on_enter(on_enter_callback)
+                        .set_on_leave(on_leave_callback)
+                        .set_on_click([this](ui::Button &self) {
+                            this->m_number += this->m_increment;
+                        }))
+
+                .add_button(
+                    ui::Button(
+                        "-",
+                        ui::ElementProperties{
+                            .container =
+                                {
+                                    .center = top_button_pos - square_button_offset,
+                                    .dimension =
+                                        square_button_dimension,
+                                    .background_color =
+                                        button_background_color,
+                                    .border
+                                        .color =
+                                        button_border_color,
+                                    .border
+                                        .thickness = button_border_thickness,
+                                    .border
+                                        .radius = button_border_radius,
+                                },
+                            .font.color = button_font_color,
+                            .font.size = button_font_size})
+                        .set_on_enter(on_enter_callback)
+                        .set_on_leave(on_leave_callback)
+                        .set_on_click([this](ui::Button &self) {
+                            this->m_number -= this->m_increment;
+                        }))
+
+                .add_submenu(
+                    ui::Menu(
+                        ui::Button("SETTINGS",
+                                   ui::ElementProperties{
+                                       .container.center = top_button_pos -
+                                                           next_button_offset * 1.0f,
+                                       .container.dimension = button_dimension,
+                                       .container.background_color =
+                                           button_background_color,
+                                       .container.border.color = button_border_color,
+                                       .container.border.thickness =
+                                           button_border_thickness,
+                                       .container.border.radius = button_border_radius,
+                                       .font.color = button_font_color,
+                                       .font.size = button_font_size})
+                            .set_on_enter(on_enter_callback)
+                            .set_on_leave(on_leave_callback)
+                            .set_on_click(
+                                [this](ui::Button &self) { this->m_in_settings = true; }),
+
+                        ui::Button(
+                            "BACK",
+                            ui::ElementProperties{
+                                .container.center =
+                                    top_button_pos - next_button_offset * 1.0f,
+                                .container.dimension = button_dimension,
+                                .container.background_color = button_background_color,
+                                .container.border.color = button_border_color,
+                                .container.border.thickness = button_border_thickness,
+                                .container.border.radius = button_border_radius,
+                                .font.color = button_font_color,
+                                .font.size = button_font_size})
+                            .set_on_enter(on_enter_callback)
+                            .set_on_leave(on_leave_callback)
+                            .set_on_click([this](ui::Button &self) {
+                                this->m_in_settings = false;
+                            }))
+
+                        .add_button(
+                            ui::Button(
+                                "+",
+                                ui::ElementProperties{
+                                    .container.center =
+                                        top_button_pos + square_settings_button_offset,
+                                    .container.dimension =
+                                        square_settings_button_dimension,
+                                    .container.background_color = button_background_color,
+                                    .container.border.color = button_border_color,
+                                    .container.border.thickness = button_border_thickness,
+                                    .container.border.radius = button_border_radius,
+                                    .font.color = button_font_color,
+                                    .font.size = button_font_size})
+                                .set_on_enter(on_enter_callback)
+                                .set_on_leave(on_leave_callback)
+                                .set_on_click(
+                                    [this](ui::Button &self) { this->m_increment++; }))
+
+                        .add_button(
+                            ui::Button(
+                                "-",
+                                ui::ElementProperties{
+                                    .container.center =
+                                        top_button_pos - square_settings_button_offset,
+                                    .container.dimension =
+                                        square_settings_button_dimension,
+                                    .container.background_color = button_background_color,
+                                    .container.border.color = button_border_color,
+                                    .container.border.thickness = button_border_thickness,
+                                    .container.border.radius = button_border_radius,
+                                    .font.color = button_font_color,
+                                    .font.size = button_font_size})
+                                .set_on_enter(on_enter_callback)
+                                .set_on_leave(on_leave_callback)
+                                .set_on_click(
+                                    [this](ui::Button &self) { this->m_increment--; })))
+
+                .add_button(
+                    ui::Button("EXIT",
+                               ui::ElementProperties{
+                                   .container.center =
+                                       top_button_pos - next_button_offset * 2.0f,
+                                   .container.dimension = button_dimension,
+                                   .container.background_color = button_background_color,
+                                   .container.border.color = button_border_color,
+                                   .container.border.thickness = button_border_thickness,
+                                   .container.border.radius = button_border_radius,
+                                   .font.color = button_font_color,
+                                   .font.size = button_font_size})
+                        .set_on_enter(on_enter_callback)
+                        .set_on_leave(on_leave_callback)
+                        .set_on_click([](ui::Button &self) { exit(0); })));
+
+        m_ui.add_text_box(
+            NUMBER_ID, ui::TextBox(std::to_string(m_number),
+                                   ui::ElementProperties{
+                                       .container.center = glm::vec3(0.0f, 250.0f, 0.0f),
+                                       .font.size = 158}));
+        m_ui.add_text_box(
+            INCREMENT_ID,
+            ui::TextBox(std::to_string(m_increment),
+                        ui::ElementProperties{.container.center = top_button_pos,
+                                              .font.size = 48}));
+
+        m_ui.add_text_box(VERSION_ID,
+                          ui::TextBox("VERSION 1.234",
+                                      ui::ElementProperties{.container.center = glm::vec3(
+                                                                -330.0f, -388.0f, 0.0f),
+                                                            .font.size = 24}));
+    };
+
+    ~UserInterfaceExample() {};
+
+    void update(float dt) override {};
+
+    void render() override {
+
+        if (m_in_settings) {
+            m_ui.get_text_box(INCREMENT_ID).text = std::to_string(m_increment);
+        } else {
+            m_ui.get_text_box(INCREMENT_ID).text = "";
+        }
+
+        auto command_buffer = m_command_buffer_manager->get_command_buffer();
+        RenderPass render_pass = m_swap_chain_manager->get_render_pass(command_buffer);
+
+        render_pass.begin();
+
+        m_ui.get_text_box(NUMBER_ID).text = std::to_string(m_number);
+        auto ui_state = m_ui.get_state();
+
+        auto &rectangle_instance_buffer =
+            m_geometry_pipeline->get_rectangle_instance_buffer();
+        auto &character_instance_buffer = m_text_pipeline->get_character_buffer();
+        auto &text_segment_buffer = m_text_pipeline->get_text_segment_buffer();
+
+        rectangle_instance_buffer.clear();
+        character_instance_buffer.clear();
+        text_segment_buffer.clear();
+
+        for (const auto button : ui_state.buttons) {
+            float rotation = 0.0;
+            rectangle_instance_buffer.push_back(
+                graphics_pipeline::GeometryInstanceBufferObject{
+                    .center = button->properties.container.center,
+                    .dimension = button->properties.container.dimension,
+                    .color = button->properties.container.background_color,
+                    .rotation = 0.0f,
+                    .uvwt = glm::vec4(-1.0f),
+                    .border.color = button->properties.container.border.color,
+                    .border.thickness = button->properties.container.border.thickness,
+                    .border.radius = button->properties.container.border.radius,
+                });
+
+            m_text_pipeline->text_kerning(button->text, button->properties);
+        }
+
+        for (const auto text_box : ui_state.text_boxes) {
+            m_text_pipeline->text_kerning(text_box->text, text_box->properties);
+        }
+
+        PerformanceWindow::get_instance().render(m_geometry_pipeline.get(),
+                                                 m_text_pipeline.get(), command_buffer);
+
+        rectangle_instance_buffer.transfer();
+        character_instance_buffer.transfer();
+        text_segment_buffer.transfer();
+
+        m_geometry_pipeline->render_rectangles(command_buffer);
+        m_text_pipeline->render_text(command_buffer);
+
+        render_pass.end_submit_present();
+    };
+
+    void setup(std::shared_ptr<graphics_context::GraphicsContext> &ctx) override {
+        register_all_fonts();
+        register_all_images();
+        register_all_shaders();
+        m_swap_chain_manager = std::make_unique<SwapChainManager>(ctx);
+        m_command_buffer_manager = std::make_unique<CommandBufferManager>(
+            ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
+
+        m_sampler = vulkan::Sampler(ctx);
+        m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(
+            ctx, m_command_buffer_manager.get(), *m_swap_chain_manager,
+            graphics_pipeline::GeometryPipelineOptions{});
+
+        auto font = std::make_unique<Font>(ctx, m_command_buffer_manager.get(),
+                                           "DefaultFont", &m_sampler);
+        m_text_pipeline = std::make_unique<graphics_pipeline::TextPipeline>(
+            ctx, m_command_buffer_manager.get(), *m_swap_chain_manager, std::move(font));
+
+        ctx->window->register_mouse_event_callback(
+            [this](window::MouseEvent e, window::ViewportPoint &p) {
+                this->m_ui.update_state_from_mouse_event(e, p);
+            });
+    }
+};
+
+int main() {
+
+    GameEngineConfig config{
+        .window_config = window::WindowConfig{.dims = window::WindowDimension(800, 800),
+                                              .title = "4_user_interface"}};
+
+    auto game = std::make_unique<UserInterfaceExample>();
+    auto game_engine = std::make_unique<GameEngine>(std::move(game), config);
+
+    game_engine->run();
+
+    return 0;
+}
