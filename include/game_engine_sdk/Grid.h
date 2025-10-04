@@ -1,3 +1,4 @@
+#pragma once
 #include "game_engine_sdk/Dimension.h"
 #include "game_engine_sdk/WorldPoint.h"
 

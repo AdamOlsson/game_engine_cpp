@@ -1,3 +1,4 @@
+#include "Tileset16x16.h"
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
 #include "game_engine_sdk/Grid.h"
@@ -42,6 +43,9 @@ class TileShowcase : public Game {
                                                  ASSET_FILE("dungeon_tileset_16x16.png"));
         m_tileset_16x16_uvwt = TilesetUVWT(m_tileset_16x16, TileSize(16, 16));
 
+        auto tiles_16x16 = get_showcase_16x16(-6, 3, m_grid, m_tileset_16x16_uvwt);
+        m_geometries.insert(m_geometries.begin(), tiles_16x16.begin(), tiles_16x16.end());
+
         m_tileset_24x24 = Texture::from_filepath(ctx, m_command_buffer_manager.get(),
                                                  ASSET_FILE("dungeon_tileset_24x24.png"));
 
@@ -50,27 +54,6 @@ class TileShowcase : public Game {
             graphics_pipeline::GeometryPipelineOptions{
                 .combined_image_sampler =
                     vulkan::DescriptorImageInfo(m_tileset_16x16.view(), &m_sampler)});
-
-        // TODO: Can I implement some class that makes the below process easier?
-        // Specifically,
-        //  - Avoid having to calculate the world point to fit the grid
-        m_geometries = {
-            graphics_pipeline::GeometryInstanceBufferObject{
-                .center = m_grid.world_point_at(-5, 6),
-                .dimension = m_grid.cell_dimension(),
-                .uvwt = m_tileset_16x16_uvwt.uvwt_for_tile_at(1, 0),
-            },
-            graphics_pipeline::GeometryInstanceBufferObject{
-                .center = m_grid.world_point_at(-5, 5),
-                .dimension = m_grid.cell_dimension(),
-                .uvwt = m_tileset_16x16_uvwt.uvwt_for_tile_at(1, 1),
-            },
-            graphics_pipeline::GeometryInstanceBufferObject{
-                .center = m_grid.world_point_at(-5, 4),
-                .dimension = m_grid.cell_dimension(),
-                .uvwt = m_tileset_16x16_uvwt.uvwt_for_tile_at(1, 2),
-            },
-        };
     }
 
     void render() override {

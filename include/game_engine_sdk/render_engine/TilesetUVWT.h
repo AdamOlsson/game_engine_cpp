@@ -1,3 +1,4 @@
+#pragma once
 #include "game_engine_sdk/render_engine/Texture.h"
 
 class TileSize : public glm::vec2 {
