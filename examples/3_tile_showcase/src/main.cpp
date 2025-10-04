@@ -1,8 +1,11 @@
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
+#include "game_engine_sdk/render_engine/TilesetUVWT.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "game_engine_sdk/render_engine/window/WindowConfig.h"
 #include <memory>
+
+#define ASSET_FILE(filename) ASSET_DIR "/" filename
 
 class TileShowcase : public Game {
   private:
@@ -13,14 +16,14 @@ class TileShowcase : public Game {
     std::unique_ptr<graphics_pipeline::GeometryPipeline> m_geometry_pipeline;
     std::vector<graphics_pipeline::GeometryInstanceBufferObject> m_geometries;
 
+    // TODO: Handle multiple textures in the same GeometryPipeline (and TextPipeline)
+    Texture m_tileset_16x16;
+    TilesetUVWT m_tileset_16x16_uvwt;
+
+    Texture m_tileset_24x24;
+
   public:
-    TileShowcase() {
-        m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
-            .center = WorldPoint(100, -100),
-            .dimension = Dimension(20, 60),
-            .color = colors::YELLOW,
-        });
-    };
+    TileShowcase() {}
 
     ~TileShowcase() {};
 
@@ -31,10 +34,41 @@ class TileShowcase : public Game {
         m_command_buffer_manager = std::make_unique<CommandBufferManager>(
             ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
 
-        m_sampler = vulkan::Sampler(ctx);
+        m_sampler = vulkan::Sampler(ctx, vulkan::Filter::NEAREST,
+                                    vulkan::SamplerAddressMode::CLAMP_TO_BORDER);
+        m_tileset_16x16 = Texture::from_filepath(ctx, m_command_buffer_manager.get(),
+                                                 ASSET_FILE("dungeon_tileset_16x16.png"));
+        m_tileset_16x16_uvwt = TilesetUVWT(m_tileset_16x16, TileSize(16, 16));
+
+        m_tileset_24x24 = Texture::from_filepath(ctx, m_command_buffer_manager.get(),
+                                                 ASSET_FILE("dungeon_tileset_24x24.png"));
+
         m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(
             ctx, m_command_buffer_manager.get(), *m_swap_chain_manager,
-            graphics_pipeline::GeometryPipelineOptions{});
+            graphics_pipeline::GeometryPipelineOptions{
+                .combined_image_sampler =
+                    vulkan::DescriptorImageInfo(m_tileset_16x16.view(), &m_sampler)});
+
+        // TODO: Can I implement some class that makes the below process easier?
+        // Specifically,
+        //  - Avoid having to calculate the world point to fit the grid
+        m_geometries = {
+            graphics_pipeline::GeometryInstanceBufferObject{
+                .center = WorldPoint(0, 0),
+                .dimension = Dimension(60, 60),
+                .uvwt = m_tileset_16x16_uvwt.uvwt_for_tile_at(1, 0),
+            },
+            graphics_pipeline::GeometryInstanceBufferObject{
+                .center = WorldPoint(0, -60),
+                .dimension = Dimension(60, 60),
+                .uvwt = m_tileset_16x16_uvwt.uvwt_for_tile_at(1, 1),
+            },
+            graphics_pipeline::GeometryInstanceBufferObject{
+                .center = WorldPoint(0, -120),
+                .dimension = Dimension(60, 60),
+                .uvwt = m_tileset_16x16_uvwt.uvwt_for_tile_at(1, 2),
+            },
+        };
     }
 
     void render() override {

@@ -5,6 +5,7 @@
 #include "game_engine_sdk/render_engine/resources/ResourceManager.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
+#include <random>
 
 Texture::Texture(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                  CommandBufferManager *command_buffer_manager,
@@ -102,3 +103,7 @@ Texture Texture::empty(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
 }
 
 vulkan::ImageView *Texture::view() { return &m_texture_image_view; }
+
+vulkan::TextureImageDimension Texture::dimension() const {
+    return m_texture_image.m_dimension;
+}

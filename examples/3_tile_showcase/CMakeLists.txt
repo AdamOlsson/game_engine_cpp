@@ -11,6 +11,9 @@ file(GLOB_RECURSE SOURCE_FILES "src/*.cpp")
 add_executable(${EXAMPLE_NAME} ${SOURCE_FILES})
 target_compile_features(${EXAMPLE_NAME} PUBLIC cxx_std_20)
 
+target_compile_definitions(${EXAMPLE_NAME} PRIVATE 
+    ASSET_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets")
+
 target_include_directories(${EXAMPLE_NAME}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include

@@ -3,7 +3,7 @@
 #include <memory>
 
 vulkan::Sampler::Sampler(std::shared_ptr<graphics_context::GraphicsContext> ctx)
-    : m_ctx(ctx), m_sampler(create_sampler(vulkan::Filter::LIENAR,
+    : m_ctx(ctx), m_sampler(create_sampler(vulkan::Filter::LINEAR,
                                            vulkan::SamplerAddressMode::REPEAT)) {}
 
 vulkan::Sampler::Sampler(std::shared_ptr<graphics_context::GraphicsContext> ctx,

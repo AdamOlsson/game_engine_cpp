@@ -67,4 +67,6 @@ class Texture {
     Texture &operator=(const Texture &other) = delete;
 
     vulkan::ImageView *view();
+
+    vulkan::TextureImageDimension dimension() const;
 };
