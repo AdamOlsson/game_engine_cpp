@@ -1,5 +1,6 @@
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
+#include "game_engine_sdk/Grid.h"
 #include "game_engine_sdk/render_engine/TilesetUVWT.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "game_engine_sdk/render_engine/window/WindowConfig.h"
@@ -16,6 +17,7 @@ class TileShowcase : public Game {
     std::unique_ptr<graphics_pipeline::GeometryPipeline> m_geometry_pipeline;
     std::vector<graphics_pipeline::GeometryInstanceBufferObject> m_geometries;
 
+    Grid m_grid;
     // TODO: Handle multiple textures in the same GeometryPipeline (and TextPipeline)
     Texture m_tileset_16x16;
     TilesetUVWT m_tileset_16x16_uvwt;
@@ -23,7 +25,7 @@ class TileShowcase : public Game {
     Texture m_tileset_24x24;
 
   public:
-    TileShowcase() {}
+    TileShowcase() : m_grid(Grid(Dimension(60, 60))) {}
 
     ~TileShowcase() {};
 
@@ -54,18 +56,18 @@ class TileShowcase : public Game {
         //  - Avoid having to calculate the world point to fit the grid
         m_geometries = {
             graphics_pipeline::GeometryInstanceBufferObject{
-                .center = WorldPoint(0, 0),
-                .dimension = Dimension(60, 60),
+                .center = m_grid.world_point_at(-5, 6),
+                .dimension = m_grid.cell_dimension(),
                 .uvwt = m_tileset_16x16_uvwt.uvwt_for_tile_at(1, 0),
             },
             graphics_pipeline::GeometryInstanceBufferObject{
-                .center = WorldPoint(0, -60),
-                .dimension = Dimension(60, 60),
+                .center = m_grid.world_point_at(-5, 5),
+                .dimension = m_grid.cell_dimension(),
                 .uvwt = m_tileset_16x16_uvwt.uvwt_for_tile_at(1, 1),
             },
             graphics_pipeline::GeometryInstanceBufferObject{
-                .center = WorldPoint(0, -120),
-                .dimension = Dimension(60, 60),
+                .center = m_grid.world_point_at(-5, 4),
+                .dimension = m_grid.cell_dimension(),
                 .uvwt = m_tileset_16x16_uvwt.uvwt_for_tile_at(1, 2),
             },
         };
