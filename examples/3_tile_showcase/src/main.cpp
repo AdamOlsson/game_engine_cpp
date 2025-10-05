@@ -19,7 +19,8 @@ class TileShowcase : public Game {
     std::vector<graphics_pipeline::GeometryInstanceBufferObject> m_geometries;
 
     Grid m_grid;
-    // TODO: Handle multiple textures in the same GeometryPipeline (and TextPipeline)
+    // TODO: See if MoltenV suports non-uniform indexing so we can avoid specifying the
+    // size of the texture array in the shader
     Texture m_tileset_16x16;
     TilesetUVWT m_tileset_16x16_uvwt;
 
@@ -52,8 +53,10 @@ class TileShowcase : public Game {
         m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(
             ctx, m_command_buffer_manager.get(), *m_swap_chain_manager,
             graphics_pipeline::GeometryPipelineOptions{
-                .combined_image_sampler =
-                    vulkan::DescriptorImageInfo(m_tileset_16x16.view(), &m_sampler)});
+                .combined_image_samplers = {
+                    vulkan::DescriptorImageInfo(m_tileset_16x16.view(), &m_sampler),
+                    vulkan::DescriptorImageInfo(m_tileset_24x24.view(), &m_sampler),
+                }});
     }
 
     void render() override {

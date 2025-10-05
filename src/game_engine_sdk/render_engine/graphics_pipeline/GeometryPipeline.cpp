@@ -28,7 +28,7 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
 
       m_descriptor_pool(DescriptorPool(m_ctx, m_descriptor_pool_capacity,
                                        m_num_storage_buffers, m_num_uniform_buffers,
-                                       m_num_samplers)),
+                                       m_num_combined_image_samplers)),
 
       m_quad_vertex_buffer(
           VertexBuffer(m_ctx, Geometry::quad_vertices, command_buffer_manager)),
@@ -37,17 +37,14 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
 
 {
     // Handle options
-    if (!m_opts.combined_image_sampler.has_value()) {
+    if (m_opts.combined_image_samplers.size() == 0) {
         m_empty_texture =
             std::make_optional(Texture::empty(m_ctx, command_buffer_manager));
         m_empty_sampler = std::make_optional(vulkan::Sampler(m_ctx));
-        m_opts.combined_image_sampler = vulkan::DescriptorImageInfo(
-            m_empty_texture.value().view(), &m_empty_sampler.value());
+        m_opts.combined_image_samplers = {vulkan::DescriptorImageInfo(
+            m_empty_texture.value().view(), &m_empty_sampler.value())};
     }
 
-    // Note: for circle rendering we do not use the vertices at all, so these could
-    // potentially be removed to reduce the vertex::MAX_VERTICES value to decrease memory
-    // use
     m_circle_vertices_ubo =
         SwapUniformBuffer<VertexUBO>(m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1);
     m_circle_vertices_ubo.write(Geometry::circle_vertices_ubo);
@@ -60,7 +57,7 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
                                     swap_chain_manager.get_window_size_swap_buffer_ref()),
                                 {.stage_flags = VK_SHADER_STAGE_VERTEX_BIT |
                                                 VK_SHADER_STAGE_FRAGMENT_BIT})
-            .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())
+            .add_combined_image_sampler(2, m_opts.combined_image_samplers)
             .add_uniform_buffer(3,
                                 vulkan::DescriptorBufferInfo::from_vector(
                                     m_circle_vertices_ubo.get_buffer_references()),
@@ -81,7 +78,7 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
                                     swap_chain_manager.get_window_size_swap_buffer_ref()),
                                 {.stage_flags = VK_SHADER_STAGE_VERTEX_BIT |
                                                 VK_SHADER_STAGE_FRAGMENT_BIT})
-            .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())
+            .add_combined_image_sampler(2, m_opts.combined_image_samplers)
             .add_uniform_buffer(3,
                                 vulkan::DescriptorBufferInfo::from_vector(
                                     m_triangle_vertices_ubo.get_buffer_references()),
@@ -101,7 +98,7 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
                                     swap_chain_manager.get_window_size_swap_buffer_ref()),
                                 {.stage_flags = VK_SHADER_STAGE_VERTEX_BIT |
                                                 VK_SHADER_STAGE_FRAGMENT_BIT})
-            .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())
+            .add_combined_image_sampler(2, m_opts.combined_image_samplers)
             .add_uniform_buffer(3,
                                 vulkan::DescriptorBufferInfo::from_vector(
                                     m_rectangle_vertices_ubo.get_buffer_references()),
@@ -121,12 +118,11 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
                                     swap_chain_manager.get_window_size_swap_buffer_ref()),
                                 {.stage_flags = VK_SHADER_STAGE_VERTEX_BIT |
                                                 VK_SHADER_STAGE_FRAGMENT_BIT})
-            .add_combined_image_sampler(2, m_opts.combined_image_sampler.value())
+            .add_combined_image_sampler(2, m_opts.combined_image_samplers)
             .add_uniform_buffer(3,
                                 vulkan::DescriptorBufferInfo::from_vector(
                                     m_hexagon_vertices_ubo.get_buffer_references()),
                                 {.stage_flags = VK_SHADER_STAGE_FRAGMENT_BIT})
-
             .build(m_ctx, m_descriptor_pool);
 
     register_shader(GeometryFragment::create_resource());

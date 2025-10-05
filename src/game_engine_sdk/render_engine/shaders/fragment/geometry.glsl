@@ -16,7 +16,9 @@ layout(binding = 1) readonly uniform WindowDimensions {
         vec2 dims;
 } window;
 
-layout(binding = 2) uniform sampler2D u_texture_sampler;
+const int MAX_TEXTURES = 2; // Arbitrarily set
+layout(binding = 2) uniform sampler2D u_texture_sampler[MAX_TEXTURES];
+
 
 const int MAX_VERTICES = 64;
 layout(binding = 3) readonly uniform VertexData {
@@ -24,6 +26,7 @@ layout(binding = 3) readonly uniform VertexData {
         int num_vertices;
         int shape;
 } vertices;
+
 
 layout(location = 0) out vec4 out_color;
 
@@ -114,7 +117,7 @@ void main() {
             vertices.shape == RECTANGLE && 
             in_border_thickness_px < 1.0 &&
             in_border_radius_px < 1.0) {
-        out_color = texture(u_texture_sampler, in_uv);
+        out_color = texture(u_texture_sampler[0], in_uv);
         return;
     }
 
@@ -135,7 +138,7 @@ void main() {
    
     vec4 shape_color = in_frag_color;
     if(in_uv.x >= 0.0 && in_uv.y >= 0.0) {
-        shape_color = texture(u_texture_sampler, in_uv); 
+        shape_color = texture(u_texture_sampler[0], in_uv); 
     }
 
     vec4 color = mix(shape_color, in_border_color, border_mask);

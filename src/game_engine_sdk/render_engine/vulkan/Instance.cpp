@@ -11,6 +11,7 @@ vulkan::Instance::Instance(bool enable_validation_layers)
 vulkan::Instance::~Instance() { vkDestroyInstance(m_instance, nullptr); }
 
 VkInstance vulkan::Instance::create_instance() {
+    print_vulkan_version();
     if (m_enable_validation_layers &&
         !graphics_context::validation_layers::check_validation_layer_support()) {
         throw std::runtime_error("validation layers requested, but not available!");
@@ -45,12 +46,13 @@ VkInstance vulkan::Instance::create_instance() {
 
     createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
     auto extensions = get_required_extensions();
+    /*print_enabled_extensions(extensions);*/
     createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
     createInfo.ppEnabledExtensionNames = extensions.data();
 
     VkInstance instance;
     VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
-    /*print_enabled_extensions(m_instance);*/
+    /*print_supported_extensions();*/
     switch (result) {
     case VK_SUCCESS:
         break;
@@ -64,6 +66,14 @@ VkInstance vulkan::Instance::create_instance() {
             "failed to create m_instance! (code: " + std::to_string(result) + ")");
     }
     return instance;
+}
+
+void vulkan::Instance::print_enabled_extensions(
+    const std::vector<const char *> &extensions) {
+    logger::debug("Enabled extensions are:");
+    for (auto e : extensions) {
+        logger::debug(e);
+    }
 }
 
 std::vector<const char *> vulkan::Instance::get_required_extensions() {
@@ -81,11 +91,27 @@ std::vector<const char *> vulkan::Instance::get_required_extensions() {
     }
 
     extensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+    /*extensions.emplace_back(*/
+    /*   VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME); // Not available on macos (i.e*/
+    /*                                               // MoltenVK)*/
 
     return extensions;
 }
 
-void vulkan::Instance::print_enabled_extensions() {
+void vulkan::Instance::print_vulkan_version() {
+    uint32_t instanceVersion;
+    VkResult result = vkEnumerateInstanceVersion(&instanceVersion);
+
+    if (result == VK_SUCCESS) {
+        uint32_t major = VK_VERSION_MAJOR(instanceVersion);
+        uint32_t minor = VK_VERSION_MINOR(instanceVersion);
+        uint32_t patch = VK_VERSION_PATCH(instanceVersion);
+
+        logger::debug("Vulkan Instance Version: ", major, ".", minor, ".", patch);
+    }
+}
+
+void vulkan::Instance::print_supported_extensions() {
     uint32_t extensionCount = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 

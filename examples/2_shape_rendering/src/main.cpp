@@ -152,8 +152,8 @@ class ShapeRendering : public Game {
         m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(
             ctx, m_command_buffer_manager.get(), *m_swap_chain_manager,
             graphics_pipeline::GeometryPipelineOptions{
-                .combined_image_sampler =
-                    vulkan::DescriptorImageInfo(m_dog_image->view(), &m_sampler)});
+                .combined_image_samplers = {
+                    vulkan::DescriptorImageInfo(m_dog_image->view(), &m_sampler)}});
 
         auto font = std::make_unique<Font>(ctx, m_command_buffer_manager.get(),
                                            "DefaultFont", &m_sampler);

@@ -23,8 +23,8 @@ graphics_pipeline::TextPipeline::TextPipeline(
                                        m_num_storage_buffers, m_num_uniform_buffers,
                                        m_num_samplers)) {
 
-    m_opts.combined_image_sampler =
-        vulkan::DescriptorImageInfo(m_font->font_atlas.view(), m_font->sampler);
+    m_opts.combined_image_samplers = {
+        vulkan::DescriptorImageInfo(m_font->font_atlas.view(), m_font->sampler)};
 
     m_descriptor_set =
         DescriptorSetBuilder(graphics_pipeline::MAX_FRAMES_IN_FLIGHT)
@@ -33,7 +33,7 @@ graphics_pipeline::TextPipeline::TextPipeline(
             .add_uniform_buffer(1,
                                 vulkan::DescriptorBufferInfo::from_vector(
                                     swap_chain_manager.get_window_size_swap_buffer_ref()))
-            .add_combined_image_sampler(2, m_opts.combined_image_sampler)
+            .add_combined_image_sampler(2, m_opts.combined_image_samplers)
             .add_storage_buffer(3, vulkan::DescriptorBufferInfo::from_vector(
                                        m_text_segment_buffers.get_buffer_references()))
             .build(m_ctx, m_descriptor_pool);

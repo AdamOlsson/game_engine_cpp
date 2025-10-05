@@ -68,14 +68,14 @@ struct GeometryInstanceBufferObject {
 };
 
 struct GeometryPipelineOptions {
-    std::optional<vulkan::DescriptorImageInfo> combined_image_sampler;
+    std::vector<vulkan::DescriptorImageInfo> combined_image_samplers;
 };
 
 class GeometryPipeline {
   private:
     const uint32_t m_num_storage_buffers = MAX_FRAMES_IN_FLIGHT * 4;
     const uint32_t m_num_uniform_buffers = MAX_FRAMES_IN_FLIGHT * 4 * 2;
-    const uint32_t m_num_samplers = MAX_FRAMES_IN_FLIGHT * 4;
+    const uint32_t m_num_combined_image_samplers = MAX_FRAMES_IN_FLIGHT * 4 * 5;
     const uint32_t m_descriptor_pool_capacity = MAX_FRAMES_IN_FLIGHT * 4;
 
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
@@ -125,7 +125,6 @@ class GeometryPipeline {
     StorageBuffer<GeometryInstanceBufferObject> &get_rectangle_instance_buffer();
     StorageBuffer<GeometryInstanceBufferObject> &get_hexagon_instance_buffer();
 
-    // TODO: These render function should merge into one generic call
     void render_circles(const VkCommandBuffer &command_buffer);
     void render_triangles(const VkCommandBuffer &command_buffer);
     void render_rectangles(const VkCommandBuffer &command_buffer);

@@ -12,7 +12,9 @@ class Instance {
     VkInstance create_instance();
     std::vector<const char *> get_required_extensions();
 
-    void print_enabled_extensions();
+    void print_vulkan_version();
+    void print_supported_extensions();
+    void print_enabled_extensions(const std::vector<const char *> &extensions);
 
   public:
     Instance(bool enable_validation_layers);
