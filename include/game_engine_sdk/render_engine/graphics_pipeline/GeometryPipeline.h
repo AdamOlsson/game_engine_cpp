@@ -40,6 +40,7 @@ struct GeometryInstanceBufferObject {
     alignas(16) glm::vec3 center = glm::vec3(0.0f);
     alignas(8) glm::vec2 dimension = glm::vec2(0.0f);
     alignas(4) glm::float32_t rotation = 0.0f;
+    alignas(4) glm::uint32_t texture_idx = 0;
     alignas(16) glm::vec4 color = colors::TRANSPARENT;
     alignas(16) glm::vec4 uvwt = glm::vec4(-1.0f);
     struct BorderProperties {

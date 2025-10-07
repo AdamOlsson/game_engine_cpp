@@ -24,7 +24,7 @@ VkInstance vulkan::Instance::create_instance() {
     appInfo.applicationVersion = VK_MAKE_VERSION(0, 0, 1);
     appInfo.pEngineName = "No Engine";
     appInfo.engineVersion = VK_MAKE_VERSION(0, 0, 1);
-    appInfo.apiVersion = VK_API_VERSION_1_0;
+    appInfo.apiVersion = VK_API_VERSION_1_2;
 
     VkInstanceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -91,10 +91,7 @@ std::vector<const char *> vulkan::Instance::get_required_extensions() {
     }
 
     extensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-    /*extensions.emplace_back(*/
-    /*   VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME); // Not available on macos (i.e*/
-    /*                                               // MoltenVK)*/
-
+    /*extensions.emplace_back(VK_KHR_MAINTENANCE3_EXTENSION_NAME);*/
     return extensions;
 }
 
@@ -119,7 +116,7 @@ void vulkan::Instance::print_supported_extensions() {
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
 
     // Print all supported extensions
-    logger::info("Available m_instance extensions:");
+    logger::info("Suppoerted instance extensions:");
     for (const auto &ext : extensions) {
         logger::info(ext.extensionName);
     }

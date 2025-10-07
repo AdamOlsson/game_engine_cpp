@@ -5,53 +5,26 @@
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
 
 using namespace graphics_pipeline;
-std::vector<GeometryInstanceBufferObject> left_wall(unsigned int x, unsigned int y,
-                                                    Grid &grid, TilesetUVWT tileset_uvwt);
-std::vector<GeometryInstanceBufferObject>
-right_wall(unsigned int x, unsigned int y, Grid &grid, TilesetUVWT tileset_uvwt);
-std::vector<GeometryInstanceBufferObject>
-center_wall(unsigned int x, unsigned int y, Grid &grid, TilesetUVWT tileset_uvwt);
-std::vector<GeometryInstanceBufferObject> door(unsigned int x, unsigned int y, Grid &grid,
-                                               TilesetUVWT tileset_uvwt);
-std::vector<GeometryInstanceBufferObject>
-jail_bars_1(unsigned int x, unsigned int y, Grid &grid, TilesetUVWT tileset_uvwt);
-std::vector<GeometryInstanceBufferObject>
-jail_bars_2(unsigned int x, unsigned int y, Grid &grid, TilesetUVWT tileset_uvwt);
-std::vector<GeometryInstanceBufferObject> torch(unsigned int x, unsigned int y,
-                                                Grid &grid, TilesetUVWT tileset_uvwt);
-std::vector<GeometryInstanceBufferObject> floor(unsigned int x, unsigned int y,
-                                                Grid &grid, TilesetUVWT tileset_uvwt);
+/*std::vector<GeometryInstanceBufferObject> left_wall(unsigned int x, unsigned int y,*/
+/*                                                    Grid &grid, TilesetUVWT
+ * tileset_uvwt);*/
+/*std::vector<GeometryInstanceBufferObject>*/
+/*right_wall(unsigned int x, unsigned int y, Grid &grid, TilesetUVWT tileset_uvwt);*/
+/*std::vector<GeometryInstanceBufferObject>*/
+/*center_wall(unsigned int x, unsigned int y, Grid &grid, TilesetUVWT tileset_uvwt);*/
+/*std::vector<GeometryInstanceBufferObject> door(unsigned int x, unsigned int y, Grid
+ * &grid,*/
+/*                                               TilesetUVWT tileset_uvwt);*/
+/*std::vector<GeometryInstanceBufferObject>*/
+/*jail_bars_1(unsigned int x, unsigned int y, Grid &grid, TilesetUVWT tileset_uvwt);*/
+/*std::vector<GeometryInstanceBufferObject>*/
+/*jail_bars_2(unsigned int x, unsigned int y, Grid &grid, TilesetUVWT tileset_uvwt);*/
+/*std::vector<GeometryInstanceBufferObject> torch(unsigned int x, unsigned int y,*/
+/*                                                Grid &grid, TilesetUVWT tileset_uvwt);*/
+/*std::vector<GeometryInstanceBufferObject> floor(unsigned int x, unsigned int y,*/
+/*                                                Grid &grid, TilesetUVWT tileset_uvwt);*/
 
-inline std::vector<GeometryInstanceBufferObject>
-get_showcase_16x16(unsigned int x, unsigned int y, Grid &grid, TilesetUVWT tileset_uvwt) {
-    std::vector<GeometryInstanceBufferObject> tiles = {};
-    auto t = floor(x, y, grid, tileset_uvwt);
-    tiles.insert(tiles.begin(), t.begin(), t.end());
-
-    t = left_wall(x + 1, y + 1, grid, tileset_uvwt);
-    tiles.insert(tiles.begin(), t.begin(), t.end());
-
-    t = center_wall(x + 2, y + 1, grid, tileset_uvwt);
-    tiles.insert(tiles.begin(), t.begin(), t.end());
-
-    t = door(x + 3, y + 1, grid, tileset_uvwt);
-    tiles.insert(tiles.begin(), t.begin(), t.end());
-
-    t = jail_bars_1(x + 4, y + 1, grid, tileset_uvwt);
-    tiles.insert(tiles.begin(), t.begin(), t.end());
-
-    t = jail_bars_2(x + 5, y + 1, grid, tileset_uvwt);
-    tiles.insert(tiles.begin(), t.begin(), t.end());
-
-    t = torch(x + 6, y + 1, grid, tileset_uvwt);
-    tiles.insert(tiles.begin(), t.begin(), t.end());
-
-    t = right_wall(x + 7, y + 1, grid, tileset_uvwt);
-    tiles.insert(tiles.begin(), t.begin(), t.end());
-
-    return tiles;
-}
-
+namespace tileset16x16 {
 inline std::vector<GeometryInstanceBufferObject>
 torch(unsigned int x, unsigned int y, Grid &grid, TilesetUVWT tileset_uvwt) {
     return {
@@ -286,4 +259,34 @@ floor(unsigned int x, unsigned int y, Grid &grid, TilesetUVWT tileset_uvwt) {
             .uvwt = floor_broken_uvwt,
         },
     };
+}
+} // namespace tileset16x16
+inline std::vector<GeometryInstanceBufferObject>
+get_showcase_16x16(unsigned int x, unsigned int y, Grid &grid, TilesetUVWT tileset_uvwt) {
+    std::vector<GeometryInstanceBufferObject> tiles = {};
+    auto t = tileset16x16::floor(x, y, grid, tileset_uvwt);
+    tiles.insert(tiles.begin(), t.begin(), t.end());
+
+    t = tileset16x16::left_wall(x + 1, y + 1, grid, tileset_uvwt);
+    tiles.insert(tiles.begin(), t.begin(), t.end());
+
+    t = tileset16x16::center_wall(x + 2, y + 1, grid, tileset_uvwt);
+    tiles.insert(tiles.begin(), t.begin(), t.end());
+
+    t = tileset16x16::door(x + 3, y + 1, grid, tileset_uvwt);
+    tiles.insert(tiles.begin(), t.begin(), t.end());
+
+    t = tileset16x16::jail_bars_1(x + 4, y + 1, grid, tileset_uvwt);
+    tiles.insert(tiles.begin(), t.begin(), t.end());
+
+    t = tileset16x16::jail_bars_2(x + 5, y + 1, grid, tileset_uvwt);
+    tiles.insert(tiles.begin(), t.begin(), t.end());
+
+    t = tileset16x16::torch(x + 6, y + 1, grid, tileset_uvwt);
+    tiles.insert(tiles.begin(), t.begin(), t.end());
+
+    t = tileset16x16::right_wall(x + 7, y + 1, grid, tileset_uvwt);
+    tiles.insert(tiles.begin(), t.begin(), t.end());
+
+    return tiles;
 }
