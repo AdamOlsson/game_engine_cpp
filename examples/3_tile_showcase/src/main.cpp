@@ -50,7 +50,7 @@ class TileShowcase : public Game {
         m_tileset_24x24 = Texture::from_filepath(ctx, m_command_buffer_manager.get(),
                                                  ASSET_FILE("dungeon_tileset_24x24.png"));
         m_tileset_24x24_uvwt = TilesetUVWT(m_tileset_24x24, TileSize(24, 24));
-        auto tiles_24x24 = get_showcase_24x24(0, -4, m_grid, m_tileset_24x24_uvwt);
+        auto tiles_24x24 = get_showcase_24x24(-6, -3, m_grid, m_tileset_24x24_uvwt);
         m_geometries.insert(m_geometries.begin(), tiles_24x24.begin(), tiles_24x24.end());
 
         m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(
