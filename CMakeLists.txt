@@ -76,6 +76,7 @@ if(GAME_ENGINE_SDK_BUILD_EXAMPLES)
     add_subdirectory(examples/2_shape_rendering)
     add_subdirectory(examples/3_tile_showcase)
     add_subdirectory(examples/4_user_interface)
+    add_subdirectory(examples/5_map_generation)
     message(STATUS "Configuring examples... DONE!")
 endif()
 
