@@ -85,6 +85,10 @@ class PhysicalDevice {
     VkPhysicalDevice pick_physical_device(const Instance &instance,
                                           const Surface &surface) const;
 
+    void print_device_version(const VkPhysicalDevice &device) const;
+    void print_supported_extensions(
+        const std::vector<VkExtensionProperties> &extensions) const;
+
   public:
     PhysicalDevice(const Instance &instance, const Surface &surface);
     ~PhysicalDevice() = default;

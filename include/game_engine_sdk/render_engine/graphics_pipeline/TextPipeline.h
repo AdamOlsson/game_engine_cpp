@@ -45,7 +45,7 @@ std::ostream &operator<<(std::ostream &os, const TextSegmentBufferObject &obj);
 std::ostream &operator<<(std::ostream &os, const CharacterInstanceBufferObject &obj);
 
 struct TextPipelineOptions {
-    vulkan::DescriptorImageInfo combined_image_sampler;
+    std::vector<vulkan::DescriptorImageInfo> combined_image_samplers;
 };
 
 class TextPipeline {

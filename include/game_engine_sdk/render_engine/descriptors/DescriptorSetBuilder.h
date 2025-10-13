@@ -24,8 +24,8 @@ class DescriptorSetBuilder {
     std::vector<size_t> m_uniform_buffer_bindings;
     std::vector<vulkan::DescriptorBufferInfo> m_uniform_buffers_infos;
 
-    std::optional<vulkan::DescriptorImageInfo> m_combined_image_sampler_info;
-    std::optional<size_t> m_combined_image_sampler_binding;
+    std::vector<VkDescriptorImageInfo> m_combined_image_sampler_infos;
+    size_t m_combined_image_sampler_binding;
 
     std::vector<VkDescriptorSet>
     allocate_descriptor_sets(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
@@ -38,14 +38,16 @@ class DescriptorSetBuilder {
 
     VkWriteDescriptorSet
     create_texture_and_sampler_descriptor_write(const VkDescriptorSet &dst_descriptor_set,
-                                                const VkDescriptorImageInfo *image_info,
+                                                const VkDescriptorImageInfo *image_infos,
+                                                const size_t num_image_infos,
                                                 const size_t binding_num);
 
   public:
     DescriptorSetBuilder(size_t capacity);
 
     DescriptorSetBuilder &
-    add_combined_image_sampler(size_t binding, vulkan::DescriptorImageInfo &image_info);
+    add_combined_image_sampler(size_t binding,
+                               std::vector<vulkan::DescriptorImageInfo> &image_info);
 
     DescriptorSetBuilder &
     add_storage_buffer(size_t binding,

@@ -1,17 +1,21 @@
 #pragma once
 #include "glm/glm.hpp"
 #include "vulkan/vulkan_core.h"
-#include <cstdint>
 
 struct Dimension : public glm::vec2 {
     using glm::vec2::vec2;
 
-    constexpr Dimension(uint32_t width, uint32_t height)
-        : glm::vec2(static_cast<float>(width), static_cast<float>(height)) {}
-
     constexpr Dimension(float width, float height) : glm::vec2(width, height) {}
 
     constexpr Dimension(float diameter) : glm::vec2(diameter, diameter) {}
+
+    template <typename T>
+    constexpr Dimension(T width, T height)
+        : glm::vec2(static_cast<float>(width), static_cast<float>(height)) {}
+
+    template <typename T>
+    constexpr Dimension(T diameter)
+        : glm::vec2(static_cast<float>(diameter), static_cast<float>(diameter)) {}
 
     static Dimension from_extent2d(VkExtent2D &extent) {
         return Dimension{extent.width, extent.height};

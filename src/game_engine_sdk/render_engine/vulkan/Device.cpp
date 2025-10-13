@@ -8,6 +8,7 @@ namespace {
 
 const std::vector<const char *> device_extensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+    VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
 };
 
 }
@@ -40,6 +41,9 @@ vulkan::device::PhysicalDevice::pick_physical_device(const vulkan::Instance &ins
     if (physical_device == VK_NULL_HANDLE) {
         throw std::runtime_error("failed to find a suitable GPU!");
     }
+
+    /*print_device_version(physical_device);*/
+
     return physical_device;
 }
 
@@ -80,6 +84,8 @@ bool vulkan::device::PhysicalDevice::check_device_extension_support(
     vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extensionCount,
                                          availableExtensions.data());
 
+    /*print_supported_extensions(availableExtensions);*/
+
     std::set<std::string> requiredExtensions(device_extensions.begin(),
                                              device_extensions.end());
 
@@ -88,6 +94,37 @@ bool vulkan::device::PhysicalDevice::check_device_extension_support(
     }
 
     return requiredExtensions.empty();
+}
+
+void vulkan::device::PhysicalDevice::print_device_version(
+    const VkPhysicalDevice &device) const {
+    VkPhysicalDeviceProperties device_properties;
+    vkGetPhysicalDeviceProperties(device, &device_properties);
+    logger::debug("=== Device ", ": ", device_properties.deviceName, " ===");
+    logger::debug("API Version: ", VK_VERSION_MAJOR(device_properties.apiVersion), ".",
+                  VK_VERSION_MINOR(device_properties.apiVersion), ".",
+                  VK_VERSION_PATCH(device_properties.apiVersion));
+    logger::debug("Driver Version: ", device_properties.driverVersion);
+}
+
+void vulkan::device::PhysicalDevice::print_supported_extensions(
+    const std::vector<VkExtensionProperties> &extensions) const {
+    // Print all supported extensions
+    logger::info("Supported physical device extensions:");
+    for (const auto &ext : extensions) {
+        logger::info(ext.extensionName);
+    }
+
+    /*bool hasDescriptorIndexing = false;*/
+    /*for (const auto &ext : extensions) {*/
+    /*    if (std::string(ext.extensionName) == VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME)
+     * {*/
+    /*        hasDescriptorIndexing = true;*/
+    /*        break;*/
+    /*    }*/
+    /*}*/
+    /*std::cout << "VK_EXT_descriptor_indexing extension: "*/
+    /*          << (hasDescriptorIndexing ? "SUPPORTED" : "NOT SUPPORTED") << "\n\n";*/
 }
 
 vulkan::device::QueueFamilyIndices
@@ -208,20 +245,32 @@ VkDevice vulkan::device::LogicalDevice::create_logical_device(
         queueCreateInfos.push_back(queueCreateInfo);
     }
 
-    VkPhysicalDeviceFeatures deviceFeatures{};
-    deviceFeatures.samplerAnisotropy = VK_TRUE;
-
     std::vector<const char *> extendedDeviceExtensions(device_extensions);
     if (m_enable_validation_layers) {
         extendedDeviceExtensions.emplace_back(
             VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME); // needed for macOS
     }
 
+    VkPhysicalDeviceDescriptorIndexingFeatures indexing_features{};
+    indexing_features.sType =
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+    indexing_features.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+    indexing_features.shaderStorageBufferArrayNonUniformIndexing = VK_TRUE;
+    indexing_features.shaderUniformBufferArrayNonUniformIndexing = VK_TRUE;
+    indexing_features.descriptorBindingVariableDescriptorCount = VK_TRUE;
+    indexing_features.runtimeDescriptorArray = VK_TRUE;
+
+    VkPhysicalDeviceFeatures2 devices_features{};
+    devices_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    devices_features.pNext = &indexing_features;
+    devices_features.features.samplerAnisotropy = VK_TRUE;
+
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    createInfo.pNext = &devices_features; // new way of enabling features
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
-    createInfo.pEnabledFeatures = &deviceFeatures;
+    createInfo.pEnabledFeatures = nullptr; // Old way of enabling features
 
     createInfo.enabledExtensionCount =
         static_cast<uint32_t>(extendedDeviceExtensions.size());

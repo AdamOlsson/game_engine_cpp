@@ -18,6 +18,7 @@ struct InstanceData {
     vec3 center;
     vec2 dimension;
     float rotation;
+    uint texture_idx;
     vec4 color;
     vec4 uvwt; 
     BorderData border;
@@ -40,6 +41,7 @@ layout(location = 3) out vec4 out_border_color;
 layout(location = 4) out float out_border_thickness_px;
 layout(location = 5) out float out_border_radius_px;
 layout(location = 6) out vec2 out_shape_dimension_px;
+layout(location = 7) out uint out_texture_idx;
 
 mat3 create_rotation_matrix_z(float theta) {
     float c = cos(theta);
@@ -107,4 +109,5 @@ void main() {
     out_border_thickness_px = instance.border.thickness;
     out_border_radius_px = instance.border.radius;
     out_shape_dimension_px = instance.dimension; 
+    out_texture_idx = instance.texture_idx;
 }

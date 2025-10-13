@@ -23,10 +23,11 @@ DescriptorSetLayout DescriptorSetLayoutBuilder::build(
 }
 
 DescriptorSetLayoutBuilder &
-DescriptorSetLayoutBuilder::add_combined_image_sampler_binding(uint32_t binding) {
+DescriptorSetLayoutBuilder::add_combined_image_sampler_binding(uint32_t binding,
+                                                               uint32_t count) {
     VkDescriptorSetLayoutBinding sampler_layout_binding{};
     sampler_layout_binding.binding = binding;
-    sampler_layout_binding.descriptorCount = 1;
+    sampler_layout_binding.descriptorCount = count;
     sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     sampler_layout_binding.pImmutableSamplers = nullptr;
     sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;

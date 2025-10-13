@@ -2,7 +2,7 @@
 
 # Compile all vertex shaders
 echo "Compiling vertex shaders..."
-for shader in ./src/render_engine/shaders/vertex/*.glsl; do
+for shader in ./src/game_engine_sdk/render_engine/shaders/vertex/*.glsl; do
     if [ -f "$shader" ]; then
         output="${shader%.glsl}.spv"
         echo "Compiling: $shader -> $output"
@@ -16,7 +16,7 @@ done
 
 # Compile all fragment shaders
 echo "Compiling fragment shaders..."
-for shader in ./src/render_engine/shaders/fragment/*.glsl; do
+for shader in ./src/game_engine_sdk/render_engine/shaders/fragment/*.glsl; do
     if [ -f "$shader" ]; then
         output="${shader%.glsl}.spv"
         echo "Compiling: $shader -> $output"

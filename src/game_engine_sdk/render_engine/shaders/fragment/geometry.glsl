@@ -1,4 +1,5 @@
 #version 450
+#extension GL_EXT_nonuniform_qualifier : require 
 
 #define CIRCLE 0
 #define RECTANGLE 1
@@ -10,13 +11,14 @@ layout(location = 2) in vec2 in_uv;
 layout(location = 3) in vec4 in_border_color;
 layout(location = 4) in float in_border_thickness_px;
 layout(location = 5) in float in_border_radius_px;
-layout(location = 6) in vec2 in_shape_dimension_px;
+layout(location = 6) in flat vec2 in_shape_dimension_px;
+layout(location = 7) in flat uint in_texture_idx;
 
 layout(binding = 1) readonly uniform WindowDimensions {
         vec2 dims;
 } window;
 
-layout(binding = 2) uniform sampler2D u_texture_sampler;
+layout(binding = 2) uniform sampler2D u_texture_sampler[];
 
 const int MAX_VERTICES = 64;
 layout(binding = 3) readonly uniform VertexData {
@@ -24,6 +26,7 @@ layout(binding = 3) readonly uniform VertexData {
         int num_vertices;
         int shape;
 } vertices;
+
 
 layout(location = 0) out vec4 out_color;
 
@@ -114,7 +117,7 @@ void main() {
             vertices.shape == RECTANGLE && 
             in_border_thickness_px < 1.0 &&
             in_border_radius_px < 1.0) {
-        out_color = texture(u_texture_sampler, in_uv);
+        out_color = texture(u_texture_sampler[nonuniformEXT(in_texture_idx)], in_uv);
         return;
     }
 
@@ -135,7 +138,7 @@ void main() {
    
     vec4 shape_color = in_frag_color;
     if(in_uv.x >= 0.0 && in_uv.y >= 0.0) {
-        shape_color = texture(u_texture_sampler, in_uv); 
+        shape_color = texture(u_texture_sampler[nonuniformEXT(in_texture_idx)], in_uv); 
     }
 
     vec4 color = mix(shape_color, in_border_color, border_mask);

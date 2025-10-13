@@ -1,6 +1,5 @@
 #include "game_engine_sdk/render_engine/descriptors/DescriptorSetBuilder.h"
 #include "vulkan/vulkan_core.h"
-#include <optional>
 
 DescriptorSetBuilder::DescriptorSetBuilder(size_t capacity) : m_capacity(capacity) {}
 
@@ -55,16 +54,20 @@ DescriptorSetBuilder &DescriptorSetBuilder::add_uniform_buffer(
 }
 
 DescriptorSetBuilder &DescriptorSetBuilder::add_combined_image_sampler(
-    size_t binding, vulkan::DescriptorImageInfo &image_info) {
-    m_combined_image_sampler_info = image_info;
+    size_t binding, std::vector<vulkan::DescriptorImageInfo> &image_info) {
+    m_combined_image_sampler_infos.assign(image_info.begin(), image_info.end());
     m_combined_image_sampler_binding = binding;
-    m_descriptor_set_layout_builder.add_combined_image_sampler_binding(binding);
+    m_descriptor_set_layout_builder.add_combined_image_sampler_binding(
+        binding, m_combined_image_sampler_infos.size());
+    /*logger::debug("Num image sampler descriptors: ",*/
+    /*              m_combined_image_sampler_infos.size());*/
     return *this;
 }
 
 std::vector<VkDescriptorSet> DescriptorSetBuilder::allocate_descriptor_sets(
     std::shared_ptr<graphics_context::GraphicsContext> &ctx,
     DescriptorPool &descriptor_pool, const VkDescriptorSetLayout &descriptor_set_layout) {
+
     std::vector<VkDescriptorSetLayout> layouts(m_capacity, descriptor_set_layout);
 
     VkDescriptorSetAllocateInfo alloc_info{};
@@ -97,16 +100,16 @@ VkWriteDescriptorSet DescriptorSetBuilder::create_buffer_descriptor_write(
 }
 
 VkWriteDescriptorSet DescriptorSetBuilder::create_texture_and_sampler_descriptor_write(
-    const VkDescriptorSet &dst_descriptor_set, const VkDescriptorImageInfo *image_info,
-    const size_t binding_num) {
+    const VkDescriptorSet &dst_descriptor_set, const VkDescriptorImageInfo *image_infos,
+    const size_t num_image_infos, const size_t binding_num) {
     VkWriteDescriptorSet texture_descriptor_write{};
     texture_descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     texture_descriptor_write.dstSet = dst_descriptor_set;
     texture_descriptor_write.dstBinding = binding_num;
     texture_descriptor_write.dstArrayElement = 0;
     texture_descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    texture_descriptor_write.descriptorCount = 1;
-    texture_descriptor_write.pImageInfo = image_info;
+    texture_descriptor_write.descriptorCount = num_image_infos;
+    texture_descriptor_write.pImageInfo = image_infos;
     return texture_descriptor_write;
 }
 
@@ -137,7 +140,6 @@ DescriptorSetBuilder::build(std::shared_ptr<graphics_context::GraphicsContext> &
 
     for (auto i = 0; i < m_capacity; i++) {
         std::vector<VkWriteDescriptorSet> descriptor_writes = {};
-        std::vector<VkDescriptorBufferInfo *> buffer_ptrs = {};
 
         for (auto j = 0; j < num_storage_buffers_per_set; j++) {
             const auto idx = j * m_capacity + i;
@@ -154,10 +156,10 @@ DescriptorSetBuilder::build(std::shared_ptr<graphics_context::GraphicsContext> &
                 m_uniform_buffers_infos[idx].get(), m_uniform_buffer_bindings[idx]));
         }
 
-        if (m_combined_image_sampler_info.has_value()) {
+        if (m_combined_image_sampler_infos.size() > 0) {
             descriptor_writes.push_back(create_texture_and_sampler_descriptor_write(
-                descriptor_sets[i], m_combined_image_sampler_info.value().get(),
-                m_combined_image_sampler_binding.value()));
+                descriptor_sets[i], m_combined_image_sampler_infos.data(),
+                m_combined_image_sampler_infos.size(), m_combined_image_sampler_binding));
         }
 
         vkUpdateDescriptorSets(ctx->logical_device, descriptor_writes.size(),
