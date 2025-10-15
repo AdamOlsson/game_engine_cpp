@@ -6,7 +6,6 @@ struct Dimension : public glm::vec2 {
     using glm::vec2::vec2;
 
     constexpr Dimension(float width, float height) : glm::vec2(width, height) {}
-
     constexpr Dimension(float diameter) : glm::vec2(diameter, diameter) {}
 
     template <typename T>
