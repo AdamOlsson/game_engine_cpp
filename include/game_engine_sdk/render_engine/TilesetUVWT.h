@@ -7,6 +7,7 @@ class TileSize : public glm::vec2 {
   public:
     TileSize() = default;
     explicit TileSize(const glm::vec2 &vec) : glm::vec2(vec) {}
+
     template <typename T>
     TileSize(T x, T y) : glm::vec2(static_cast<float>(x), static_cast<float>(y)) {}
 };
