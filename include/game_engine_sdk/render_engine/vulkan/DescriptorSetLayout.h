@@ -21,6 +21,8 @@ class DescriptorSetLayout {
     DescriptorSetLayout &operator=(const DescriptorSetLayout &) = delete;
 
     operator VkDescriptorSetLayout() const { return m_layout; }
+
+    const VkDescriptorSetLayout *get_handle() const { return &m_layout; }
 };
 
 } // namespace vulkan

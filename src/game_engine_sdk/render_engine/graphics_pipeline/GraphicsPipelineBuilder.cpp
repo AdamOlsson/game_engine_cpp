@@ -41,7 +41,6 @@ graphics_pipeline::GraphicsPipeline graphics_pipeline::GraphicsPipelineBuilder::
             "GraphicsPipelineBuilder::Vertex and fragment shaders need to be set");
     }
 
-    // Temporary
     if (m_descriptor_set_layout == nullptr) {
         throw std::runtime_error(
             "GraphicsPipelineBuilder::Descriptor set layout needs to be set");
@@ -57,10 +56,9 @@ graphics_pipeline::GraphicsPipeline graphics_pipeline::GraphicsPipelineBuilder::
         push_constant_ranges.push_back(m_push_constant_range.value());
     }
 
-    vulkan::DescriptorSetLayout *descriptor_set_layout = m_descriptor_set_layout;
-    vulkan::PipelineLayout layout =
-        vulkan::PipelineLayout(ctx, *descriptor_set_layout, push_constant_ranges);
-    vulkan::Pipeline pipeline = vulkan::Pipeline(ctx, &layout, vertex_shader,
-                                                 fragment_shader, swap_chain_manager);
+    vulkan::PipelineLayout layout = vulkan::PipelineLayout(
+        ctx, m_descriptor_set_layout, std::move(push_constant_ranges));
+    vulkan::Pipeline pipeline =
+        vulkan::Pipeline(ctx, layout, vertex_shader, fragment_shader, swap_chain_manager);
     return GraphicsPipeline(std::move(layout), std::move(pipeline));
 }

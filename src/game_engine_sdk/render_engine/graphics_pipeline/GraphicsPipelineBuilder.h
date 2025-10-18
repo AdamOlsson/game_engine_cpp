@@ -16,7 +16,7 @@ class GraphicsPipelineBuilder {
     const ShaderResource *m_fragment_shader_resource;
     std::optional<VkPushConstantRange> m_push_constant_range;
 
-    vulkan::DescriptorSetLayout *m_descriptor_set_layout; // Temporary
+    vulkan::DescriptorSetLayout *m_descriptor_set_layout;
 
   public:
     GraphicsPipelineBuilder() = default;

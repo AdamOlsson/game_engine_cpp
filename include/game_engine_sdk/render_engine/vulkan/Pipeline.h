@@ -22,7 +22,7 @@ class Pipeline {
   public:
     Pipeline() = default;
     Pipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
-             PipelineLayout *layout, const ShaderModule &vertex_shader_module,
+             PipelineLayout &layout, const ShaderModule &vertex_shader_module,
              const ShaderModule &fragment_shader_module,
              SwapChainManager &swap_chain_manager);
 

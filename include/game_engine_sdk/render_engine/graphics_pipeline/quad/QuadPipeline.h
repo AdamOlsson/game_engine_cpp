@@ -1,18 +1,16 @@
 #pragma once
 #include "game_engine_sdk/render_engine/buffers/IndexBuffer.h"
 #include "game_engine_sdk/render_engine/buffers/VertexBuffer.h"
-#include "game_engine_sdk/render_engine/descriptors/SwapDescriptorSet.h"
 #include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
+#include "game_engine_sdk/render_engine/graphics_pipeline/quad/QuadPipelineDescriptorSet.h"
 #include "game_engine_sdk/render_engine/vulkan/CommandBuffer.h"
-#include "game_engine_sdk/render_engine/vulkan/DescriptorBufferInfo.h"
-#include "game_engine_sdk/render_engine/vulkan/DescriptorImageInfo.h"
-#include "game_engine_sdk/render_engine/vulkan/DescriptorPool.h"
+#include "game_engine_sdk/render_engine/vulkan/Pipeline.h"
+#include "game_engine_sdk/render_engine/vulkan/PipelineLayout.h"
 #include <memory>
 
 namespace graphics_pipeline {
 
 struct QuadPipelineUBO {
-
     std::string to_string() const {
         return std::format("QuadPipelineUBO {{\n"
                            "}}");
@@ -23,26 +21,6 @@ struct QuadPipelineUBO {
     }
 };
 
-struct QuadPipelineDescriptorSetOpts {
-    unsigned int num_sets = 2;
-    std::vector<vulkan::DescriptorBufferInfo> storage_buffer_refs = {};
-    std::vector<vulkan::DescriptorBufferInfo> uniform_buffer_refs = {};
-    std::vector<vulkan::DescriptorImageInfo> combined_image_sampler_infos = {};
-};
-
-class QuadPipelineDescriptorSet {
-  private:
-    SwapDescriptorSet m_descriptor_set;
-
-  public:
-    QuadPipelineDescriptorSet(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
-                              vulkan::DescriptorPool &descriptor_pool,
-                              QuadPipelineDescriptorSetOpts &&opts);
-
-    const vulkan::DescriptorSetLayout &get_layout();
-    const SwapDescriptorSet *handle() const;
-};
-
 class QuadPipeline {
   private:
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
@@ -50,15 +28,18 @@ class QuadPipeline {
     VertexBuffer m_quad_vertex_buffer;
     IndexBuffer m_quad_index_buffer;
 
-    VkPipelineLayout m_pipeline_layout;
-    VkPipeline m_pipeline;
+    vulkan::PipelineLayout m_pipeline_layout;
+    vulkan::Pipeline m_pipeline;
 
   public:
     QuadPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
-                 CommandBufferManager *command_buffer_manager);
+                 CommandBufferManager *command_buffer_manager,
+                 SwapChainManager *swap_chain_manager,
+                 const std::optional<vulkan::DescriptorSetLayout> &descriptor_set_layout);
 
     void render(const vulkan::CommandBuffer &command_buffer,
-                const QuadPipelineDescriptorSet &descriptor_set);
+                std::optional<QuadPipelineDescriptorSet> &descriptor_set,
+                const int num_instances);
 };
 
 } // namespace graphics_pipeline

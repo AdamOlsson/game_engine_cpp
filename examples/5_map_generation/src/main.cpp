@@ -51,6 +51,7 @@ class MapGeneration : public Game {
 
     vulkan::Sampler m_sampler;
     std::unique_ptr<graphics_pipeline::GeometryPipeline> m_geometry_pipeline;
+    std::unique_ptr<graphics_pipeline::QuadPipeline> m_quad_pipeline;
 
     std::vector<graphics_pipeline::GeometryInstanceBufferObject> m_render_cells;
 
@@ -195,29 +196,31 @@ class MapGeneration : public Game {
         /*auto tile_storage_buffer =
          * SwapStorageBuffer<graphics_pipeline::QuadPipelineUBO>(*/
         /*    ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1024);*/
-        /**/
-        /*auto descriptor_pool = DescriptorPool(*/
-        /*    ctx, DescriptorPoolOpts{.max_num_descriptor_sets =*/
-        /*                                graphics_pipeline::MAX_FRAMES_IN_FLIGHT,*/
-        /*                            .num_storage_buffers = 2,*/
-        /*                            .num_uniform_buffers = 0,*/
-        /*                            .num_combined_image_samplers = 1});*/
+
+        /*auto descriptor_pool = vulkan::DescriptorPool(*/
+        /*    ctx, vulkan::DescriptorPoolOpts{.max_num_descriptor_sets =*/
+        /*                                        graphics_pipeline::MAX_FRAMES_IN_FLIGHT,*/
+        /*                                    .num_storage_buffers = 0,*/
+        /*                                    .num_uniform_buffers = 0,*/
+        /*                                    .num_combined_image_samplers = 0});*/
+
         /*auto quad_descriptor_set = graphics_pipeline::QuadPipelineDescriptorSet(*/
         /*    ctx, descriptor_pool,*/
         /*    graphics_pipeline::QuadPipelineDescriptorSetOpts{*/
         /*        .storage_buffer_refs = vulkan::DescriptorBufferInfo::from_vector(*/
         /*            tile_storage_buffer.get_buffer_references()),*/
         /*    });*/
-        /**/
-        /*auto quad_pipeline =*/
-        /*    graphics_pipeline::QuadPipeline(ctx, m_command_buffer_manager.get());*/
+        /*auto &quad_descriptor_set_layout = quad_descriptor_set.get_layout();*/
+        m_quad_pipeline = std::make_unique<graphics_pipeline::QuadPipeline>(
+            ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
+            std::nullopt);
 
-        m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(
-            ctx, m_command_buffer_manager.get(), *m_swap_chain_manager,
-            graphics_pipeline::GeometryPipelineOptions{
-                .combined_image_samplers = {
-                    vulkan::DescriptorImageInfo(m_tileset.view(), &m_sampler),
-                }});
+        /*m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(*/
+        /*    ctx, m_command_buffer_manager.get(), *m_swap_chain_manager,*/
+        /*    graphics_pipeline::GeometryPipelineOptions{*/
+        /*        .combined_image_samplers = {*/
+        /*            vulkan::DescriptorImageInfo(m_tileset.view(), &m_sampler),*/
+        /*        }});*/
 
         wang_tiling();
 
@@ -257,38 +260,40 @@ class MapGeneration : public Game {
         RenderPass render_pass = m_swap_chain_manager->get_render_pass(command_buffer);
         render_pass.begin();
 
-        auto &rectangle_instance_buffer =
-            m_geometry_pipeline->get_rectangle_instance_buffer();
+        /*auto &rectangle_instance_buffer =*/
+        /*    m_geometry_pipeline->get_rectangle_instance_buffer();*/
 
-        rectangle_instance_buffer.clear();
+        /*rectangle_instance_buffer.clear();*/
 
-        const size_t num_geometries = m_render_cells.size();
-        for (auto i = 0; i < num_geometries; i++) {
-            rectangle_instance_buffer.push_back(m_render_cells[i]);
-        }
+        /*const size_t num_geometries = m_render_cells.size();*/
+        /*for (auto i = 0; i < num_geometries; i++) {*/
+        /*    rectangle_instance_buffer.push_back(m_render_cells[i]);*/
+        /*}*/
 
-        const int cell_width = 50;
-        const int cell_height = 50;
-        const WorldPoint center_offset =
-            WorldPoint((noise_map_width / 2.0f) * cell_width,
-                       (noise_map_height / 2.0f) * cell_height);
+        /*const int cell_width = 50;*/
+        /*const int cell_height = 50;*/
+        /*const WorldPoint center_offset =*/
+        /*    WorldPoint((noise_map_width / 2.0f) * cell_width,*/
+        /*               (noise_map_height / 2.0f) * cell_height);*/
 
-        m_render_cells.reserve(cell_sprites.size());
-        for (auto i = 0; i < cell_sprites.size(); i++) {
-            const int x = (i % noise_map_width) * cell_width;
-            const int y = (i / noise_map_width) * cell_height;
-            m_render_cells.push_back(graphics_pipeline::GeometryInstanceBufferObject{
-                .center = WorldPoint(x, y) - center_offset,
-                .dimension = Dimension(cell_width, cell_height),
-                .uvwt = cell_sprites[i],
-            });
-        }
+        /*m_render_cells.reserve(cell_sprites.size());*/
+        /*for (auto i = 0; i < cell_sprites.size(); i++) {*/
+        /*    const int x = (i % noise_map_width) * cell_width;*/
+        /*    const int y = (i / noise_map_width) * cell_height;*/
+        /*    m_render_cells.push_back(graphics_pipeline::GeometryInstanceBufferObject{*/
+        /*        .center = WorldPoint(x, y) - center_offset,*/
+        /*        .dimension = Dimension(cell_width, cell_height),*/
+        /*        .uvwt = cell_sprites[i],*/
+        /*    });*/
+        /*}*/
 
-        rectangle_instance_buffer.transfer();
+        /*rectangle_instance_buffer.transfer();*/
 
         auto camera_transform_projection = m_camera.get_transform_projection_matrix();
-        m_geometry_pipeline->render_rectangles(command_buffer,
-                                               camera_transform_projection);
+        std::optional<graphics_pipeline::QuadPipelineDescriptorSet> no_descriptor;
+        m_quad_pipeline->render(command_buffer, no_descriptor, 1);
+        /*m_geometry_pipeline->render_rectangles(command_buffer,*/
+        /*                                       camera_transform_projection);*/
 
         render_pass.end_submit_present();
     };

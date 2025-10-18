@@ -3,12 +3,12 @@
 #include "vulkan/vulkan_core.h"
 
 vulkan::Pipeline::Pipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
-                           PipelineLayout *layout,
+                           PipelineLayout &layout,
                            const ShaderModule &vertex_shader_module,
                            const ShaderModule &fragment_shader_module,
                            SwapChainManager &swap_chain_manager)
     : m_ctx(ctx),
-      m_pipeline(create_graphics_pipeline(layout, vertex_shader_module,
+      m_pipeline(create_graphics_pipeline(&layout, vertex_shader_module,
                                           fragment_shader_module, swap_chain_manager)) {}
 
 vulkan::Pipeline::~Pipeline() {
