@@ -11,7 +11,7 @@ DescriptorPool::DescriptorPool(std::shared_ptr<graphics_context::GraphicsContext
                                const DescriptorPoolOpts &&opts)
     : m_ctx(ctx), m_descriptor_pool(create_descriptor_pool(
                       opts.max_num_descriptor_sets, opts.num_storage_buffers,
-                      opts.num_uniform_buffers, opts.num_combined_image_sampelrs)) {}
+                      opts.num_uniform_buffers, opts.num_combined_image_samplers)) {}
 
 DescriptorPool::~DescriptorPool() {
     if (m_descriptor_pool != nullptr) {
