@@ -1,6 +1,6 @@
 #include "game_engine_sdk/render_engine/graphics_pipeline/TextPipeline.h"
 #include "game_engine_sdk/render_engine/Geometry.h"
-#include "game_engine_sdk/render_engine/descriptors/DescriptorSetBuilder.h"
+#include "game_engine_sdk/render_engine/descriptors/SwapDescriptorSetBuilder.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GraphicsPipelineBuilder.h"
 #include "game_engine_sdk/render_engine/resources/ResourceManager.h"

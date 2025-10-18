@@ -1,4 +1,4 @@
-#include "game_engine_sdk/render_engine/descriptors/DescriptorSet.h"
+#include "game_engine_sdk/render_engine/descriptors/SwapDescriptorSet.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorSet.h"
 #include <memory>
 

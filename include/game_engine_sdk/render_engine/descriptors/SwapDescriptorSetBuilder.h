@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DescriptorSet.h"
+#include "SwapDescriptorSet.h"
 #include "game_engine_sdk/render_engine/descriptors/DescriptorSetLayoutBuilder.h"
 #include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorBufferInfo.h"

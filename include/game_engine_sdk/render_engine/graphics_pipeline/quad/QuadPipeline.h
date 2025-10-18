@@ -1,7 +1,7 @@
 #pragma once
 #include "game_engine_sdk/render_engine/buffers/IndexBuffer.h"
 #include "game_engine_sdk/render_engine/buffers/VertexBuffer.h"
-#include "game_engine_sdk/render_engine/descriptors/DescriptorSet.h"
+#include "game_engine_sdk/render_engine/descriptors/SwapDescriptorSet.h"
 #include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/CommandBuffer.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorBufferInfo.h"

@@ -1,7 +1,7 @@
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "game_engine_sdk/render_engine/Geometry.h"
 #include "game_engine_sdk/render_engine/buffers/GpuBuffer.h"
-#include "game_engine_sdk/render_engine/descriptors/DescriptorSetBuilder.h"
+#include "game_engine_sdk/render_engine/descriptors/SwapDescriptorSetBuilder.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GraphicsPipelineBuilder.h"
 #include "game_engine_sdk/render_engine/resources/ResourceManager.h"
 #include "game_engine_sdk/render_engine/resources/shaders/fragment/geometry/geometry.h"

@@ -1,4 +1,4 @@
-#include "game_engine_sdk/render_engine/descriptors/DescriptorSetBuilder.h"
+#include "game_engine_sdk/render_engine/descriptors/SwapDescriptorSetBuilder.h"
 #include "vulkan/vulkan_core.h"
 
 SwapDescriptorSetBuilder::SwapDescriptorSetBuilder(size_t capacity)

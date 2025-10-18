@@ -1,14 +1,11 @@
 #include "game_engine_sdk/render_engine/graphics_pipeline/quad/QuadPipeline.h"
 #include "game_engine_sdk/render_engine/Geometry.h"
-#include "game_engine_sdk/render_engine/descriptors/DescriptorSetBuilder.h"
+#include "game_engine_sdk/render_engine/descriptors/SwapDescriptorSetBuilder.h"
 
 // TODO:
 // 1. Implement the QuadPipeline and use it in map generation example
 // 2. Implement the QuadPipeline::render() function
 // 3. Pass the QuadPipelineDescriptorSet in the QuadPipeline::render() function
-// 6. Move DescriptorPool class
-// 7. Rename file DescriptorSet to SwapDescriptorSet
-// 8. Rename file DescriptorSet to SwapDescriptorSetBuilder
 
 using namespace graphics_pipeline;
 
