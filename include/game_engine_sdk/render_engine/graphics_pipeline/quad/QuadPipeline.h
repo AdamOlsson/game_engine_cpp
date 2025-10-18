@@ -32,7 +32,7 @@ struct QuadPipelineDescriptorSetOpts {
 
 class QuadPipelineDescriptorSet {
   private:
-    DescriptorSet m_descriptor_set;
+    SwapDescriptorSet m_descriptor_set;
 
   public:
     QuadPipelineDescriptorSet(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
@@ -40,7 +40,7 @@ class QuadPipelineDescriptorSet {
                               QuadPipelineDescriptorSetOpts &&opts);
 
     const DescriptorSetLayout &get_layout();
-    const DescriptorSet *handle() const;
+    const SwapDescriptorSet *handle() const;
 };
 
 class QuadPipeline {

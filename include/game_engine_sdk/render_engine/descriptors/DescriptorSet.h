@@ -2,10 +2,11 @@
 
 #include "game_engine_sdk/render_engine/descriptors/DescriptorSetLayout.h"
 #include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
+#include "game_engine_sdk/render_engine/vulkan/DescriptorSet.h"
 #include <cstddef>
 
-class DescriptorSet {
-    friend class DescriptorSetBuilder;
+class SwapDescriptorSet {
+    friend class SwapDescriptorSetBuilder;
 
   private:
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
@@ -13,22 +14,22 @@ class DescriptorSet {
     size_t m_next;
 
     DescriptorSetLayout m_layout;
-    std::vector<VkDescriptorSet> m_descriptor_sets;
+    std::vector<vulkan::DescriptorSet> m_descriptor_sets;
 
-    DescriptorSet(std::shared_ptr<graphics_context::GraphicsContext> ctx,
-                  std::vector<VkDescriptorSet> &descriptor_sets,
-                  DescriptorSetLayout &&layout);
+    SwapDescriptorSet(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+                      std::vector<vulkan::DescriptorSet> &descriptor_sets,
+                      DescriptorSetLayout &&layout);
 
   public:
-    DescriptorSet() = default;
+    SwapDescriptorSet() = default;
 
-    DescriptorSet(DescriptorSet &&other) noexcept = default;
-    DescriptorSet &operator=(DescriptorSet &&other) noexcept = default;
-    DescriptorSet(const DescriptorSet &other) = delete;
-    DescriptorSet &operator=(const DescriptorSet &other) = delete;
+    SwapDescriptorSet(SwapDescriptorSet &&other) noexcept = default;
+    SwapDescriptorSet &operator=(SwapDescriptorSet &&other) noexcept = default;
+    SwapDescriptorSet(const SwapDescriptorSet &other) = delete;
+    SwapDescriptorSet &operator=(const SwapDescriptorSet &other) = delete;
 
-    ~DescriptorSet() = default;
+    ~SwapDescriptorSet() = default;
 
     DescriptorSetLayout &get_layout() { return m_layout; }
-    const VkDescriptorSet get();
+    const vulkan::DescriptorSet get();
 };

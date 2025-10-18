@@ -27,7 +27,7 @@ graphics_pipeline::TextPipeline::TextPipeline(
         vulkan::DescriptorImageInfo(m_font->font_atlas.view(), m_font->sampler)};
 
     m_descriptor_set =
-        DescriptorSetBuilder(graphics_pipeline::MAX_FRAMES_IN_FLIGHT)
+        SwapDescriptorSetBuilder(graphics_pipeline::MAX_FRAMES_IN_FLIGHT)
             .add_storage_buffer(0, vulkan::DescriptorBufferInfo::from_vector(
                                        m_character_buffers.get_buffer_references()))
             .add_uniform_buffer(1,

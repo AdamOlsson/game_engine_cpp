@@ -6,7 +6,7 @@
 // 1. Implement the QuadPipeline and use it in map generation example
 // 2. Implement the QuadPipeline::render() function
 // 3. Pass the QuadPipelineDescriptorSet in the QuadPipeline::render() function
-// 4. Refactor DescriptorSet class
+// 5. Refactor DescriptorSetLayout class
 
 using namespace graphics_pipeline;
 
@@ -14,7 +14,7 @@ QuadPipelineDescriptorSet::QuadPipelineDescriptorSet(
     std::shared_ptr<graphics_context::GraphicsContext> &ctx,
     DescriptorPool &descriptor_pool, QuadPipelineDescriptorSetOpts &&opts)
     : m_descriptor_set(
-          DescriptorSetBuilder(opts.num_sets)
+          SwapDescriptorSetBuilder(opts.num_sets)
               .add_storage_buffer(0, std::move(opts.storage_buffer_refs))
               .add_uniform_buffer(1, std::move(opts.uniform_buffer_refs))
               .add_combined_image_sampler(2, opts.combined_image_sampler_infos)
@@ -24,7 +24,7 @@ const DescriptorSetLayout &QuadPipelineDescriptorSet::get_layout() {
     return m_descriptor_set.get_layout();
 }
 
-const DescriptorSet *QuadPipelineDescriptorSet::handle() const {
+const SwapDescriptorSet *QuadPipelineDescriptorSet::handle() const {
     return &m_descriptor_set;
 }
 

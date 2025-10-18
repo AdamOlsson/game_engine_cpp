@@ -8,11 +8,11 @@
 #include "game_engine_sdk/render_engine/vulkan/DescriptorImageInfo.h"
 #include "vulkan/vulkan_core.h"
 
-struct DescriptorSetBuilderOptions {
+struct SwapDescriptorSetBuilderOptions {
     VkShaderStageFlags stage_flags = VK_SHADER_STAGE_VERTEX_BIT;
 };
 
-class DescriptorSetBuilder {
+class SwapDescriptorSetBuilder {
   private:
     DescriptorSetLayoutBuilder m_descriptor_set_layout_builder;
 
@@ -43,30 +43,30 @@ class DescriptorSetBuilder {
                                                 const size_t binding_num);
 
   public:
-    DescriptorSetBuilder(size_t capacity);
+    SwapDescriptorSetBuilder(size_t capacity);
 
-    DescriptorSetBuilder &
+    SwapDescriptorSetBuilder &
     add_combined_image_sampler(size_t binding,
                                std::vector<vulkan::DescriptorImageInfo> &image_info);
 
-    DescriptorSetBuilder &
+    SwapDescriptorSetBuilder &
     add_storage_buffer(size_t binding,
                        std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos);
 
-    DescriptorSetBuilder &
+    SwapDescriptorSetBuilder &
     add_storage_buffer(size_t binding,
                        std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos,
-                       DescriptorSetBuilderOptions &&options);
+                       SwapDescriptorSetBuilderOptions &&options);
 
-    DescriptorSetBuilder &
+    SwapDescriptorSetBuilder &
     add_uniform_buffer(size_t binding,
                        std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos);
 
-    DescriptorSetBuilder &
+    SwapDescriptorSetBuilder &
     add_uniform_buffer(size_t binding,
                        std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos,
-                       DescriptorSetBuilderOptions &&options);
+                       SwapDescriptorSetBuilderOptions &&options);
 
-    DescriptorSet build(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
-                        DescriptorPool &descriptor_pool);
+    SwapDescriptorSet build(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+                            DescriptorPool &descriptor_pool);
 };

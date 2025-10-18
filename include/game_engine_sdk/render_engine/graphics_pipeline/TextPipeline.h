@@ -67,7 +67,7 @@ class TextPipeline {
     IndexBuffer m_index_buffer;
 
     DescriptorPool m_descriptor_pool;
-    DescriptorSet m_descriptor_set;
+    SwapDescriptorSet m_descriptor_set;
     graphics_pipeline::GraphicsPipeline m_graphics_pipeline;
 
   public:

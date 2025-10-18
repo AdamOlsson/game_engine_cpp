@@ -1,11 +1,12 @@
 #include "game_engine_sdk/render_engine/descriptors/DescriptorSetBuilder.h"
 #include "vulkan/vulkan_core.h"
 
-DescriptorSetBuilder::DescriptorSetBuilder(size_t capacity) : m_capacity(capacity) {}
+SwapDescriptorSetBuilder::SwapDescriptorSetBuilder(size_t capacity)
+    : m_capacity(capacity) {}
 
-DescriptorSetBuilder &DescriptorSetBuilder::add_storage_buffer(
+SwapDescriptorSetBuilder &SwapDescriptorSetBuilder::add_storage_buffer(
     size_t binding, std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos,
-    DescriptorSetBuilderOptions &&options) {
+    SwapDescriptorSetBuilderOptions &&options) {
     if (buffer_infos.size() != m_capacity) {
         throw std::runtime_error(
             "size of storage buffer reference needs to be equal to capacity");
@@ -22,15 +23,15 @@ DescriptorSetBuilder &DescriptorSetBuilder::add_storage_buffer(
     return *this;
 }
 
-DescriptorSetBuilder &DescriptorSetBuilder::add_storage_buffer(
+SwapDescriptorSetBuilder &SwapDescriptorSetBuilder::add_storage_buffer(
     size_t binding, std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos) {
     return add_storage_buffer(binding, std::move(buffer_infos),
-                              DescriptorSetBuilderOptions{});
+                              SwapDescriptorSetBuilderOptions{});
 }
 
-DescriptorSetBuilder &DescriptorSetBuilder::add_uniform_buffer(
+SwapDescriptorSetBuilder &SwapDescriptorSetBuilder::add_uniform_buffer(
     size_t binding, std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos,
-    DescriptorSetBuilderOptions &&options) {
+    SwapDescriptorSetBuilderOptions &&options) {
     if (buffer_infos.size() != m_capacity) {
         throw std::runtime_error(
             "size of uniform buffer reference needs to be equal to capacity");
@@ -47,13 +48,13 @@ DescriptorSetBuilder &DescriptorSetBuilder::add_uniform_buffer(
     return *this;
 }
 
-DescriptorSetBuilder &DescriptorSetBuilder::add_uniform_buffer(
+SwapDescriptorSetBuilder &SwapDescriptorSetBuilder::add_uniform_buffer(
     size_t binding, std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos) {
     return add_uniform_buffer(binding, std::move(buffer_infos),
-                              DescriptorSetBuilderOptions{});
+                              SwapDescriptorSetBuilderOptions{});
 }
 
-DescriptorSetBuilder &DescriptorSetBuilder::add_combined_image_sampler(
+SwapDescriptorSetBuilder &SwapDescriptorSetBuilder::add_combined_image_sampler(
     size_t binding, std::vector<vulkan::DescriptorImageInfo> &image_info) {
     m_combined_image_sampler_infos.assign(image_info.begin(), image_info.end());
     m_combined_image_sampler_binding = binding;
@@ -64,7 +65,7 @@ DescriptorSetBuilder &DescriptorSetBuilder::add_combined_image_sampler(
     return *this;
 }
 
-std::vector<VkDescriptorSet> DescriptorSetBuilder::allocate_descriptor_sets(
+std::vector<VkDescriptorSet> SwapDescriptorSetBuilder::allocate_descriptor_sets(
     std::shared_ptr<graphics_context::GraphicsContext> &ctx,
     DescriptorPool &descriptor_pool, const VkDescriptorSetLayout &descriptor_set_layout) {
 
@@ -85,7 +86,7 @@ std::vector<VkDescriptorSet> DescriptorSetBuilder::allocate_descriptor_sets(
     return descriptor_sets;
 }
 
-VkWriteDescriptorSet DescriptorSetBuilder::create_buffer_descriptor_write(
+VkWriteDescriptorSet SwapDescriptorSetBuilder::create_buffer_descriptor_write(
     const VkDescriptorType type, const VkDescriptorSet &dst_descriptor_set,
     const VkDescriptorBufferInfo *buffer_info, const size_t binding_num) {
     VkWriteDescriptorSet buffer_descriptor_write{};
@@ -99,7 +100,8 @@ VkWriteDescriptorSet DescriptorSetBuilder::create_buffer_descriptor_write(
     return buffer_descriptor_write;
 }
 
-VkWriteDescriptorSet DescriptorSetBuilder::create_texture_and_sampler_descriptor_write(
+VkWriteDescriptorSet
+SwapDescriptorSetBuilder::create_texture_and_sampler_descriptor_write(
     const VkDescriptorSet &dst_descriptor_set, const VkDescriptorImageInfo *image_infos,
     const size_t num_image_infos, const size_t binding_num) {
     VkWriteDescriptorSet texture_descriptor_write{};
@@ -113,9 +115,9 @@ VkWriteDescriptorSet DescriptorSetBuilder::create_texture_and_sampler_descriptor
     return texture_descriptor_write;
 }
 
-DescriptorSet
-DescriptorSetBuilder::build(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
-                            DescriptorPool &descriptor_pool) {
+SwapDescriptorSet
+SwapDescriptorSetBuilder::build(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+                                DescriptorPool &descriptor_pool) {
 
     if (m_storage_buffers_infos.size() % m_capacity != 0) {
         throw std::runtime_error(
@@ -166,5 +168,5 @@ DescriptorSetBuilder::build(std::shared_ptr<graphics_context::GraphicsContext> &
                                descriptor_writes.data(), 0, nullptr);
     }
 
-    return DescriptorSet(ctx, descriptor_sets, std::move(descriptor_set_layout));
+    return SwapDescriptorSet(ctx, descriptor_sets, std::move(descriptor_set_layout));
 }

@@ -91,27 +91,28 @@ class GeometryPipeline {
 
     SwapStorageBuffer<GeometryInstanceBufferObject> m_circle_instance_buffers;
     SwapUniformBuffer<VertexUBO> m_circle_vertices_ubo;
-    DescriptorSet m_circle_descriptor_set;
+    SwapDescriptorSet m_circle_descriptor_set;
 
     SwapStorageBuffer<GeometryInstanceBufferObject> m_triangle_instance_buffers;
     SwapUniformBuffer<VertexUBO> m_triangle_vertices_ubo;
-    DescriptorSet m_triangle_descriptor_set;
+    SwapDescriptorSet m_triangle_descriptor_set;
 
     SwapStorageBuffer<GeometryInstanceBufferObject> m_rectangle_instance_buffers;
     SwapUniformBuffer<VertexUBO> m_rectangle_vertices_ubo;
-    DescriptorSet m_rectangle_descriptor_set;
+    SwapDescriptorSet m_rectangle_descriptor_set;
 
     SwapStorageBuffer<GeometryInstanceBufferObject> m_hexagon_instance_buffers;
     SwapUniformBuffer<VertexUBO> m_hexagon_vertices_ubo;
-    DescriptorSet m_hexagon_descriptor_set;
+    SwapDescriptorSet m_hexagon_descriptor_set;
 
     graphics_pipeline::GraphicsPipeline m_graphics_pipeline;
 
-    void record_draw_command(const VkCommandBuffer &command_buffer,
-                             DescriptorSet &descriptor_set,
-                             const ShapeTypeEncoding shape_type_encoding,
-                             const VertexBuffer &vertex_buffer,
-                             const IndexBuffer &index_buffer, const size_t num_instances);
+    /*void record_draw_command(const VkCommandBuffer &command_buffer,*/
+    /*                         DescriptorSet &descriptor_set,*/
+    /*                         const ShapeTypeEncoding shape_type_encoding,*/
+    /*                         const VertexBuffer &vertex_buffer,*/
+    /*                         const IndexBuffer &index_buffer, const size_t
+     * num_instances);*/
 
   public:
     GeometryPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
