@@ -39,7 +39,7 @@ class QuadPipelineDescriptorSet {
                               DescriptorPool &descriptor_pool,
                               QuadPipelineDescriptorSetOpts &&opts);
 
-    const DescriptorSetLayout &get_layout();
+    const vulkan::DescriptorSetLayout &get_layout();
     const SwapDescriptorSet *handle() const;
 };
 

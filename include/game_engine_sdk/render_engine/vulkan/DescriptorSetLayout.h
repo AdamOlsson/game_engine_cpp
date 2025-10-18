@@ -2,6 +2,7 @@
 
 #include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
+namespace vulkan {
 class DescriptorSetLayout {
   private:
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
@@ -21,3 +22,5 @@ class DescriptorSetLayout {
 
     operator VkDescriptorSetLayout() const { return m_layout; }
 };
+
+} // namespace vulkan

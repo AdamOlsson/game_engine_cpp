@@ -1,8 +1,8 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/descriptors/DescriptorSetLayout.h"
 #include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorSet.h"
+#include "game_engine_sdk/render_engine/vulkan/DescriptorSetLayout.h"
 #include <cstddef>
 
 class SwapDescriptorSet {
@@ -13,12 +13,12 @@ class SwapDescriptorSet {
     size_t m_capacity;
     size_t m_next;
 
-    DescriptorSetLayout m_layout;
+    vulkan::DescriptorSetLayout m_layout;
     std::vector<vulkan::DescriptorSet> m_descriptor_sets;
 
     SwapDescriptorSet(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                       std::vector<vulkan::DescriptorSet> &descriptor_sets,
-                      DescriptorSetLayout &&layout);
+                      vulkan::DescriptorSetLayout &&layout);
 
   public:
     SwapDescriptorSet() = default;
@@ -30,6 +30,6 @@ class SwapDescriptorSet {
 
     ~SwapDescriptorSet() = default;
 
-    DescriptorSetLayout &get_layout() { return m_layout; }
+    vulkan::DescriptorSetLayout &get_layout() { return m_layout; }
     const vulkan::DescriptorSet get();
 };

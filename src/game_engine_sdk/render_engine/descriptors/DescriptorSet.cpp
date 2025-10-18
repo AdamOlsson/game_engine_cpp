@@ -4,7 +4,8 @@
 
 SwapDescriptorSet::SwapDescriptorSet(
     std::shared_ptr<graphics_context::GraphicsContext> ctx,
-    std::vector<vulkan::DescriptorSet> &descriptor_sets, DescriptorSetLayout &&layout)
+    std::vector<vulkan::DescriptorSet> &descriptor_sets,
+    vulkan::DescriptorSetLayout &&layout)
     : m_ctx(ctx), m_capacity(descriptor_sets.size()), m_next(0),
       m_layout(std::move(layout)), m_descriptor_sets(std::move(descriptor_sets)) {}
 

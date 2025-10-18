@@ -6,7 +6,8 @@
 // 1. Implement the QuadPipeline and use it in map generation example
 // 2. Implement the QuadPipeline::render() function
 // 3. Pass the QuadPipelineDescriptorSet in the QuadPipeline::render() function
-// 5. Refactor DescriptorSetLayout class
+// 5. Move DescriptorSetLayout class
+// 6. Move DescriptorPool class
 
 using namespace graphics_pipeline;
 
@@ -20,7 +21,7 @@ QuadPipelineDescriptorSet::QuadPipelineDescriptorSet(
               .add_combined_image_sampler(2, opts.combined_image_sampler_infos)
               .build(ctx, descriptor_pool)) {}
 
-const DescriptorSetLayout &QuadPipelineDescriptorSet::get_layout() {
+const vulkan::DescriptorSetLayout &QuadPipelineDescriptorSet::get_layout() {
     return m_descriptor_set.get_layout();
 }
 

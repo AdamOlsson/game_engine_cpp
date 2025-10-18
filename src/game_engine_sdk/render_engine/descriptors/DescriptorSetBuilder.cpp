@@ -129,7 +129,7 @@ SwapDescriptorSetBuilder::build(std::shared_ptr<graphics_context::GraphicsContex
             "Number of uniform buffers needs to be a multiple of capacity");
     }
 
-    DescriptorSetLayout descriptor_set_layout =
+    vulkan::DescriptorSetLayout descriptor_set_layout =
         m_descriptor_set_layout_builder.build(ctx);
 
     std::vector<VkDescriptorSet> descriptor_sets =

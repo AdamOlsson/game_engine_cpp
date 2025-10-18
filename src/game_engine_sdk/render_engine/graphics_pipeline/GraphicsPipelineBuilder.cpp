@@ -1,4 +1,5 @@
 #include "GraphicsPipelineBuilder.h"
+#include "game_engine_sdk/render_engine/vulkan/DescriptorSetLayout.h"
 #include "game_engine_sdk/render_engine/vulkan/Pipeline.h"
 #include "game_engine_sdk/render_engine/vulkan/ShaderModule.h"
 #include <stdexcept>
@@ -26,7 +27,7 @@ graphics_pipeline::GraphicsPipelineBuilder::set_push_constants(
 
 graphics_pipeline::GraphicsPipelineBuilder &
 graphics_pipeline::GraphicsPipelineBuilder::set_descriptor_set_layout(
-    DescriptorSetLayout *value) {
+    vulkan::DescriptorSetLayout *value) {
     m_descriptor_set_layout = value;
     return *this;
 }
@@ -56,7 +57,7 @@ graphics_pipeline::GraphicsPipeline graphics_pipeline::GraphicsPipelineBuilder::
         push_constant_ranges.push_back(m_push_constant_range.value());
     }
 
-    DescriptorSetLayout *descriptor_set_layout = m_descriptor_set_layout;
+    vulkan::DescriptorSetLayout *descriptor_set_layout = m_descriptor_set_layout;
     vulkan::PipelineLayout layout =
         vulkan::PipelineLayout(ctx, *descriptor_set_layout, push_constant_ranges);
     vulkan::Pipeline pipeline = vulkan::Pipeline(ctx, &layout, vertex_shader,
