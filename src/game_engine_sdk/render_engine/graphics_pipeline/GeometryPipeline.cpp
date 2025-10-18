@@ -26,9 +26,9 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
       m_hexagon_instance_buffers(SwapStorageBuffer<GeometryInstanceBufferObject>(
           ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
 
-      m_descriptor_pool(DescriptorPool(m_ctx, m_descriptor_pool_capacity,
-                                       m_num_storage_buffers, m_num_uniform_buffers,
-                                       m_num_combined_image_samplers)),
+      m_descriptor_pool(
+          vulkan::DescriptorPool(m_ctx, m_descriptor_pool_capacity, m_num_storage_buffers,
+                                 m_num_uniform_buffers, m_num_combined_image_samplers)),
 
       m_quad_vertex_buffer(
           VertexBuffer(m_ctx, Geometry::quad_vertices, command_buffer_manager)),

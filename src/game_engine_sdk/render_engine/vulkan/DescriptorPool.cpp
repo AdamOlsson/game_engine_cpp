@@ -1,28 +1,28 @@
-#include "game_engine_sdk/render_engine/descriptors/DescriptorPool.h"
+#include "game_engine_sdk/render_engine/vulkan/DescriptorPool.h"
 
-DescriptorPool::DescriptorPool(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
-                               const uint32_t capacity, const uint32_t num_storage_bufs,
-                               const uint32_t num_uniform_bufs,
-                               const uint32_t num_samplers)
+vulkan::DescriptorPool::DescriptorPool(
+    std::shared_ptr<graphics_context::GraphicsContext> &ctx, const uint32_t capacity,
+    const uint32_t num_storage_bufs, const uint32_t num_uniform_bufs,
+    const uint32_t num_samplers)
     : m_ctx(ctx), m_descriptor_pool(create_descriptor_pool(
                       capacity, num_storage_bufs, num_uniform_bufs, num_samplers)) {}
 
-DescriptorPool::DescriptorPool(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
-                               const DescriptorPoolOpts &&opts)
+vulkan::DescriptorPool::DescriptorPool(
+    std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+    const DescriptorPoolOpts &&opts)
     : m_ctx(ctx), m_descriptor_pool(create_descriptor_pool(
                       opts.max_num_descriptor_sets, opts.num_storage_buffers,
                       opts.num_uniform_buffers, opts.num_combined_image_samplers)) {}
 
-DescriptorPool::~DescriptorPool() {
+vulkan::DescriptorPool::~DescriptorPool() {
     if (m_descriptor_pool != nullptr) {
         vkDestroyDescriptorPool(m_ctx->logical_device, m_descriptor_pool, nullptr);
     }
 }
 
-VkDescriptorPool DescriptorPool::create_descriptor_pool(const uint32_t capacity,
-                                                        const uint32_t num_storage_bufs,
-                                                        const uint32_t num_uniform_bufs,
-                                                        const uint32_t num_samplers) {
+VkDescriptorPool vulkan::DescriptorPool::create_descriptor_pool(
+    const uint32_t capacity, const uint32_t num_storage_bufs,
+    const uint32_t num_uniform_bufs, const uint32_t num_samplers) {
     std::array<VkDescriptorPoolSize, 3> pool_sizes{};
 
     pool_sizes[0].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;

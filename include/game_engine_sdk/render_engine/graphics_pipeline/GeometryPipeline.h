@@ -7,11 +7,11 @@
 #include "game_engine_sdk/render_engine/buffers/IndexBuffer.h"
 #include "game_engine_sdk/render_engine/buffers/VertexBuffer.h"
 #include "game_engine_sdk/render_engine/colors.h"
-#include "game_engine_sdk/render_engine/descriptors/DescriptorPool.h"
 #include "game_engine_sdk/render_engine/descriptors/DescriptorSet.h"
 #include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GraphicsPipeline.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorImageInfo.h"
+#include "game_engine_sdk/render_engine/vulkan/DescriptorPool.h"
 #include "game_engine_sdk/render_engine/vulkan/Sampler.h"
 #include "game_engine_sdk/shape.h"
 #include "vulkan/vulkan_core.h"
@@ -85,7 +85,7 @@ class GeometryPipeline {
     std::optional<Texture> m_empty_texture;
     std::optional<vulkan::Sampler> m_empty_sampler;
 
-    DescriptorPool m_descriptor_pool;
+    vulkan::DescriptorPool m_descriptor_pool;
     VertexBuffer m_quad_vertex_buffer;
     IndexBuffer m_quad_index_buffer;
 

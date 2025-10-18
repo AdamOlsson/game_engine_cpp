@@ -1,12 +1,12 @@
 #pragma once
 #include "game_engine_sdk/render_engine/buffers/IndexBuffer.h"
 #include "game_engine_sdk/render_engine/buffers/VertexBuffer.h"
-#include "game_engine_sdk/render_engine/descriptors/DescriptorPool.h"
 #include "game_engine_sdk/render_engine/descriptors/DescriptorSet.h"
 #include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/CommandBuffer.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorBufferInfo.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorImageInfo.h"
+#include "game_engine_sdk/render_engine/vulkan/DescriptorPool.h"
 #include <memory>
 
 namespace graphics_pipeline {
@@ -36,7 +36,7 @@ class QuadPipelineDescriptorSet {
 
   public:
     QuadPipelineDescriptorSet(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
-                              DescriptorPool &descriptor_pool,
+                              vulkan::DescriptorPool &descriptor_pool,
                               QuadPipelineDescriptorSetOpts &&opts);
 
     const vulkan::DescriptorSetLayout &get_layout();

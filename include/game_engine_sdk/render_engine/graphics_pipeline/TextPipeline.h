@@ -5,13 +5,13 @@
 #include "game_engine_sdk/render_engine/buffers/IndexBuffer.h"
 #include "game_engine_sdk/render_engine/buffers/VertexBuffer.h"
 #include "game_engine_sdk/render_engine/colors.h"
-#include "game_engine_sdk/render_engine/descriptors/DescriptorPool.h"
 #include "game_engine_sdk/render_engine/descriptors/DescriptorSet.h"
 #include "game_engine_sdk/render_engine/fonts/Font.h"
 #include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GraphicsPipeline.h"
 #include "game_engine_sdk/render_engine/ui/ElementProperties.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorImageInfo.h"
+#include "game_engine_sdk/render_engine/vulkan/DescriptorPool.h"
 #include "glm/fwd.hpp"
 #include "vulkan/vulkan_core.h"
 #include <memory>
@@ -66,7 +66,7 @@ class TextPipeline {
     VertexBuffer m_vertex_buffer;
     IndexBuffer m_index_buffer;
 
-    DescriptorPool m_descriptor_pool;
+    vulkan::DescriptorPool m_descriptor_pool;
     SwapDescriptorSet m_descriptor_set;
     graphics_pipeline::GraphicsPipeline m_graphics_pipeline;
 

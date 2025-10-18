@@ -2,7 +2,7 @@
 
 #include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
-
+namespace vulkan {
 struct DescriptorPoolOpts {
     unsigned int max_num_descriptor_sets = 2;
     unsigned int num_storage_buffers = 2;
@@ -39,3 +39,4 @@ class DescriptorPool {
 
     operator VkDescriptorPool() const { return m_descriptor_pool; }
 };
+} // namespace vulkan

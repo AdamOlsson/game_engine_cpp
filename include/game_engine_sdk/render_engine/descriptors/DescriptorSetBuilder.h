@@ -1,11 +1,11 @@
 #pragma once
 
-#include "DescriptorPool.h"
 #include "DescriptorSet.h"
 #include "game_engine_sdk/render_engine/descriptors/DescriptorSetLayoutBuilder.h"
 #include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorBufferInfo.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorImageInfo.h"
+#include "game_engine_sdk/render_engine/vulkan/DescriptorPool.h"
 #include "vulkan/vulkan_core.h"
 
 struct SwapDescriptorSetBuilderOptions {
@@ -29,7 +29,7 @@ class SwapDescriptorSetBuilder {
 
     std::vector<VkDescriptorSet>
     allocate_descriptor_sets(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
-                             DescriptorPool &descriptor_pool,
+                             vulkan::DescriptorPool &descriptor_pool,
                              const VkDescriptorSetLayout &descriptor_set_layout);
 
     VkWriteDescriptorSet create_buffer_descriptor_write(
@@ -68,5 +68,5 @@ class SwapDescriptorSetBuilder {
                        SwapDescriptorSetBuilderOptions &&options);
 
     SwapDescriptorSet build(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
-                            DescriptorPool &descriptor_pool);
+                            vulkan::DescriptorPool &descriptor_pool);
 };

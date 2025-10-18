@@ -6,14 +6,15 @@
 // 1. Implement the QuadPipeline and use it in map generation example
 // 2. Implement the QuadPipeline::render() function
 // 3. Pass the QuadPipelineDescriptorSet in the QuadPipeline::render() function
-// 5. Move DescriptorSetLayout class
 // 6. Move DescriptorPool class
+// 7. Rename file DescriptorSet to SwapDescriptorSet
+// 8. Rename file DescriptorSet to SwapDescriptorSetBuilder
 
 using namespace graphics_pipeline;
 
 QuadPipelineDescriptorSet::QuadPipelineDescriptorSet(
     std::shared_ptr<graphics_context::GraphicsContext> &ctx,
-    DescriptorPool &descriptor_pool, QuadPipelineDescriptorSetOpts &&opts)
+    vulkan::DescriptorPool &descriptor_pool, QuadPipelineDescriptorSetOpts &&opts)
     : m_descriptor_set(
           SwapDescriptorSetBuilder(opts.num_sets)
               .add_storage_buffer(0, std::move(opts.storage_buffer_refs))

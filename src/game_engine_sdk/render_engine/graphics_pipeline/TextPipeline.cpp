@@ -6,6 +6,7 @@
 #include "game_engine_sdk/render_engine/resources/ResourceManager.h"
 #include "game_engine_sdk/render_engine/resources/shaders/fragment/text/text.h"
 #include "game_engine_sdk/render_engine/resources/shaders/vertex/text/text.h"
+#include "game_engine_sdk/render_engine/vulkan/DescriptorPool.h"
 #include <cstring>
 
 graphics_pipeline::TextPipeline::TextPipeline(
@@ -19,9 +20,9 @@ graphics_pipeline::TextPipeline::TextPipeline(
           ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 16)),
       m_vertex_buffer(VertexBuffer(ctx, Geometry::quad_vertices, command_buffer_manager)),
       m_index_buffer(IndexBuffer(ctx, Geometry::quad_indices, command_buffer_manager)),
-      m_descriptor_pool(DescriptorPool(m_ctx, m_descriptor_pool_capacity,
-                                       m_num_storage_buffers, m_num_uniform_buffers,
-                                       m_num_samplers)) {
+      m_descriptor_pool(vulkan::DescriptorPool(m_ctx, m_descriptor_pool_capacity,
+                                               m_num_storage_buffers,
+                                               m_num_uniform_buffers, m_num_samplers)) {
 
     m_opts.combined_image_samplers = {
         vulkan::DescriptorImageInfo(m_font->font_atlas.view(), m_font->sampler)};
