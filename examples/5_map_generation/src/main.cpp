@@ -1,5 +1,6 @@
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
+#include "game_engine_sdk/render_engine/Camera.h"
 #include "game_engine_sdk/render_engine/TilesetUVWT.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "game_engine_sdk/render_engine/window/WindowConfig.h"
@@ -62,6 +63,10 @@ class MapGeneration : public Game {
     const int noise_map_height = 3;
     const std::vector<float> noise_map = {0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
                                           1.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+
+    bool m_is_right_mouse_pressed = false;
+    window::ViewportPoint m_mouse_last_position = window::ViewportPoint();
+    Camera2D m_camera;
 
     std::vector<glm::vec4> cell_sprites;
 
@@ -194,6 +199,35 @@ class MapGeneration : public Game {
                 }});
 
         wang_tiling();
+
+        auto window_size = ctx->window->get_framebuffer_size<float>();
+        m_camera = Camera2D(window_size.width, window_size.height);
+        register_mouse_event_handler(ctx.get());
+    }
+
+    void register_mouse_event_handler(graphics_context::GraphicsContext *ctx) {
+        ctx->window->register_mouse_event_callback(
+            [this](window::MouseEvent mouse_event, window::ViewportPoint &point) -> void {
+                switch (mouse_event) {
+                case window::MouseEvent::RIGHT_BUTTON_DOWN:
+                    m_is_right_mouse_pressed = true;
+                    break;
+                case window::MouseEvent::RIGHT_BUTTON_UP:
+                    m_is_right_mouse_pressed = false;
+                    break;
+                case window::MouseEvent::CURSOR_MOVED:
+                    if (m_is_right_mouse_pressed) {
+                        logger::debug("Mouse position: ", point);
+                        auto position_change = point - m_mouse_last_position;
+                        m_camera.set_relative_position(position_change);
+                    }
+                    m_mouse_last_position = point;
+                    break;
+                case window::MouseEvent::LEFT_BUTTON_DOWN:
+                case window::MouseEvent::LEFT_BUTTON_UP:
+                    break;
+                }
+            });
     }
 
     void render() override {
@@ -231,7 +265,9 @@ class MapGeneration : public Game {
 
         rectangle_instance_buffer.transfer();
 
-        m_geometry_pipeline->render_rectangles(command_buffer);
+        auto camera_transform_projection = m_camera.get_transform_projection_matrix();
+        m_geometry_pipeline->render_rectangles(command_buffer,
+                                               camera_transform_projection);
 
         render_pass.end_submit_present();
     };

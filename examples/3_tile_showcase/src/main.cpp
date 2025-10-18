@@ -3,6 +3,7 @@
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
 #include "game_engine_sdk/Grid.h"
+#include "game_engine_sdk/render_engine/Camera.h"
 #include "game_engine_sdk/render_engine/TilesetUVWT.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "game_engine_sdk/render_engine/window/WindowConfig.h"
@@ -80,7 +81,8 @@ class TileShowcase : public Game {
 
         rectangle_instance_buffer.transfer();
 
-        m_geometry_pipeline->render_rectangles(command_buffer);
+        auto camera_view_matrix = Camera2D::get_default_transform_matrix();
+        m_geometry_pipeline->render_rectangles(command_buffer, camera_view_matrix);
 
         render_pass.end_submit_present();
     };

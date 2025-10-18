@@ -33,6 +33,8 @@ std::ostream &operator<<(std::ostream &os, const glm::ivec2 &vec);
 std::ostream &operator<<(std::ostream &os, const glm::ivec3 &vec);
 std::ostream &operator<<(std::ostream &os, const glm::ivec4 &vec);
 
+std::ostream &operator<<(std::ostream &os, const glm::mat4 &m);
+
 template <typename T>
 std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec) {
     os << "[ ";

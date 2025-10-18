@@ -11,5 +11,19 @@ enum class MouseEvent {
     RIGHT_BUTTON_UP
 };
 
+inline std::ostream &operator<<(std::ostream &os, MouseEvent type) {
+    switch (type) {
+    case MouseEvent::CURSOR_MOVED:
+        return os << "MouseEvent::CURSOR_MOVED";
+    case MouseEvent::LEFT_BUTTON_DOWN:
+        return os << "MouseEvent::LEFT_BUTTON_DOWN";
+    case MouseEvent::LEFT_BUTTON_UP:
+        return os << "MouseEvent::LEFT_BUTTON_UP";
+    case MouseEvent::RIGHT_BUTTON_DOWN:
+        return os << "MouseEvent::RIGHT_BUTTON_DOWN";
+    case MouseEvent::RIGHT_BUTTON_UP:
+        return os << "MouseEvent::RIGHT_BUTTON_UP";
+    }
+}
 using MouseEventCallbackFn = std::function<void(MouseEvent, ViewportPoint &)>;
 } // namespace window

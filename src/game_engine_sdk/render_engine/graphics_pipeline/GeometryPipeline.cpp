@@ -133,6 +133,10 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
             // clang-format off
                 .set_vertex_shader(ResourceManager::get_instance().get_resource<ShaderResource>("GeometryVertex"))
                 .set_fragment_shader(ResourceManager::get_instance().get_resource<ShaderResource>("GeometryFragment"))
+                .set_push_constants(VkPushConstantRange{
+                        .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+                        .offset = 0,
+                        .size = sizeof(glm::mat4) })
                 .set_descriptor_set_layout(&m_rectangle_descriptor_set.get_layout()) // All descriptors have same layout
                 .build(m_ctx, swap_chain_manager);
     // clang-format on
@@ -141,10 +145,12 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
 graphics_pipeline::GeometryPipeline::~GeometryPipeline() {}
 
 void graphics_pipeline::GeometryPipeline::render_circles(
-    const VkCommandBuffer &command_buffer) {
+    const VkCommandBuffer &command_buffer, glm::mat4 &camera_matrix) {
     const auto &instance_buffer = m_circle_instance_buffers.get_buffer();
     const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
+        m_graphics_pipeline.bind_push_constants(
+            command_buffer, VK_SHADER_STAGE_VERTEX_BIT, camera_matrix);
         auto descriptor_set = m_circle_descriptor_set.get();
         m_graphics_pipeline.render(command_buffer, m_quad_vertex_buffer,
                                    m_quad_index_buffer, descriptor_set, num_instances);
@@ -153,10 +159,12 @@ void graphics_pipeline::GeometryPipeline::render_circles(
 }
 
 void graphics_pipeline::GeometryPipeline::render_triangles(
-    const VkCommandBuffer &command_buffer) {
+    const VkCommandBuffer &command_buffer, glm::mat4 &camera_matrix) {
     const auto &instance_buffer = m_triangle_instance_buffers.get_buffer();
     const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
+        m_graphics_pipeline.bind_push_constants(
+            command_buffer, VK_SHADER_STAGE_VERTEX_BIT, camera_matrix);
         auto descriptor_set = m_triangle_descriptor_set.get();
         m_graphics_pipeline.render(command_buffer, m_quad_vertex_buffer,
                                    m_quad_index_buffer, descriptor_set, num_instances);
@@ -165,11 +173,14 @@ void graphics_pipeline::GeometryPipeline::render_triangles(
 }
 
 void graphics_pipeline::GeometryPipeline::render_rectangles(
-    const VkCommandBuffer &command_buffer) {
+    const VkCommandBuffer &command_buffer, glm::mat4 &camera_matrix) {
 
     const auto &instance_buffer = m_rectangle_instance_buffers.get_buffer();
     const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
+        m_graphics_pipeline.bind_push_constants(
+            command_buffer, VK_SHADER_STAGE_VERTEX_BIT, camera_matrix);
+
         auto descriptor_set = m_rectangle_descriptor_set.get();
         m_graphics_pipeline.render(command_buffer, m_quad_vertex_buffer,
                                    m_quad_index_buffer, descriptor_set, num_instances);
@@ -179,10 +190,12 @@ void graphics_pipeline::GeometryPipeline::render_rectangles(
 }
 
 void graphics_pipeline::GeometryPipeline::render_hexagons(
-    const VkCommandBuffer &command_buffer) {
+    const VkCommandBuffer &command_buffer, glm::mat4 &camera_matrix) {
     const auto &instance_buffer = m_hexagon_instance_buffers.get_buffer();
     const auto num_instances = instance_buffer.num_elements();
     if (num_instances > 0) {
+        m_graphics_pipeline.bind_push_constants(
+            command_buffer, VK_SHADER_STAGE_VERTEX_BIT, camera_matrix);
         auto descriptor_set = m_hexagon_descriptor_set.get();
         m_graphics_pipeline.render(command_buffer, m_quad_vertex_buffer,
                                    m_quad_index_buffer, descriptor_set, num_instances);

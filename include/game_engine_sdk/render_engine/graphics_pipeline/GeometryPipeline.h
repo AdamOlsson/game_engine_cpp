@@ -126,10 +126,12 @@ class GeometryPipeline {
     StorageBuffer<GeometryInstanceBufferObject> &get_rectangle_instance_buffer();
     StorageBuffer<GeometryInstanceBufferObject> &get_hexagon_instance_buffer();
 
-    void render_circles(const VkCommandBuffer &command_buffer);
-    void render_triangles(const VkCommandBuffer &command_buffer);
-    void render_rectangles(const VkCommandBuffer &command_buffer);
-    void render_hexagons(const VkCommandBuffer &command_buffer);
+    void render_circles(const VkCommandBuffer &command_buffer, glm::mat4 &camera_matrix);
+    void render_triangles(const VkCommandBuffer &command_buffer,
+                          glm::mat4 &camera_matrix);
+    void render_rectangles(const VkCommandBuffer &command_buffer,
+                           glm::mat4 &camera_matrix);
+    void render_hexagons(const VkCommandBuffer &command_buffer, glm::mat4 &camera_matrix);
 };
 
 } // namespace graphics_pipeline

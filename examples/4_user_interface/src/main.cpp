@@ -1,5 +1,6 @@
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
+#include "game_engine_sdk/render_engine/Camera.h"
 #include "game_engine_sdk/render_engine/PerformanceWindow.h"
 #include "game_engine_sdk/render_engine/RenderPass.h"
 #include "game_engine_sdk/render_engine/colors.h"
@@ -266,13 +267,14 @@ class UserInterfaceExample : public Game {
                 graphics_pipeline::GeometryInstanceBufferObject{
                     .center = button->properties.container.center,
                     .dimension = button->properties.container.dimension,
-                    .color = button->properties.container.background_color,
                     .rotation = 0.0f,
+                    .color = button->properties.container.background_color,
                     .uvwt = glm::vec4(-1.0f),
-                    .border.color = button->properties.container.border.color,
-                    .border.thickness = button->properties.container.border.thickness,
-                    .border.radius = button->properties.container.border.radius,
-                });
+                    .border = {
+                        .color = button->properties.container.border.color,
+                        .thickness = button->properties.container.border.thickness,
+                        .radius = button->properties.container.border.radius,
+                    }});
 
             m_text_pipeline->text_kerning(button->text, button->properties);
         }
@@ -288,7 +290,8 @@ class UserInterfaceExample : public Game {
         character_instance_buffer.transfer();
         text_segment_buffer.transfer();
 
-        m_geometry_pipeline->render_rectangles(command_buffer);
+        auto camera_transform_matrix = Camera2D::get_default_transform_matrix();
+        m_geometry_pipeline->render_rectangles(command_buffer, camera_transform_matrix);
         m_text_pipeline->render_text(command_buffer);
 
         render_pass.end_submit_present();

@@ -27,7 +27,7 @@ class GraphicsPipeline {
 
     template <typename T>
     void bind_push_constants(const VkCommandBuffer &command_buffer,
-                             VkShaderStageFlags stage_flags, T values) {
+                             VkShaderStageFlags stage_flags, T &values) {
         vkCmdPushConstants(command_buffer, m_pipeline_layout, stage_flags, 0,
                            sizeof(values), &values);
     }
