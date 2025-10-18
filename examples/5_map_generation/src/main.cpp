@@ -3,6 +3,7 @@
 #include "game_engine_sdk/render_engine/Camera.h"
 #include "game_engine_sdk/render_engine/TilesetUVWT.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
+#include "game_engine_sdk/render_engine/graphics_pipeline/quad/QuadPipeline.h"
 #include "game_engine_sdk/render_engine/window/WindowConfig.h"
 #include <memory>
 
@@ -190,6 +191,26 @@ class MapGeneration : public Game {
             /* m_tileset_uvwt.uvwt_for_tile_at(0, 3)},*/
 
         };
+
+        /*auto tile_storage_buffer =
+         * SwapStorageBuffer<graphics_pipeline::QuadPipelineUBO>(*/
+        /*    ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1024);*/
+        /**/
+        /*auto descriptor_pool = DescriptorPool(*/
+        /*    ctx, DescriptorPoolOpts{.max_num_descriptor_sets =*/
+        /*                                graphics_pipeline::MAX_FRAMES_IN_FLIGHT,*/
+        /*                            .num_storage_buffers = 2,*/
+        /*                            .num_uniform_buffers = 0,*/
+        /*                            .num_combined_image_samplers = 1});*/
+        /*auto quad_descriptor_set = graphics_pipeline::QuadPipelineDescriptorSet(*/
+        /*    ctx, descriptor_pool,*/
+        /*    graphics_pipeline::QuadPipelineDescriptorSetOpts{*/
+        /*        .storage_buffer_refs = vulkan::DescriptorBufferInfo::from_vector(*/
+        /*            tile_storage_buffer.get_buffer_references()),*/
+        /*    });*/
+        /**/
+        /*auto quad_pipeline =*/
+        /*    graphics_pipeline::QuadPipeline(ctx, m_command_buffer_manager.get());*/
 
         m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(
             ctx, m_command_buffer_manager.get(), *m_swap_chain_manager,

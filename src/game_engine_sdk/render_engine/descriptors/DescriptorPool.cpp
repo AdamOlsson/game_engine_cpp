@@ -7,6 +7,12 @@ DescriptorPool::DescriptorPool(std::shared_ptr<graphics_context::GraphicsContext
     : m_ctx(ctx), m_descriptor_pool(create_descriptor_pool(
                       capacity, num_storage_bufs, num_uniform_bufs, num_samplers)) {}
 
+DescriptorPool::DescriptorPool(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+                               const DescriptorPoolOpts &&opts)
+    : m_ctx(ctx), m_descriptor_pool(create_descriptor_pool(
+                      opts.max_num_descriptor_sets, opts.num_storage_buffers,
+                      opts.num_uniform_buffers, opts.num_combined_image_sampelrs)) {}
+
 DescriptorPool::~DescriptorPool() {
     if (m_descriptor_pool != nullptr) {
         vkDestroyDescriptorPool(m_ctx->logical_device, m_descriptor_pool, nullptr);
