@@ -5,13 +5,14 @@
 
 Camera2D::Camera2D()
     : m_position(glm::vec2(0.0f)), m_rotation(0.0f), m_zoom(1.0f), m_viewport_width(1.0f),
-      m_viewport_height(1.0f), m_view_matrix(glm::mat4(1.0f)), m_base_orho_height(100.0f),
+      m_viewport_height(1.0f), m_view_matrix(glm::mat4(1.0f)), m_base_orho_height(2.0f),
       m_projection_matrix(glm::mat4(1.0f)) {}
 
 Camera2D::Camera2D(const float viewport_width, const float viewport_height,
                    const float base_ortho_height)
     : m_position(glm::vec2(0.0f)), m_rotation(0.0f), m_zoom(1.0f),
-      m_viewport_width(viewport_width), m_viewport_height(viewport_height) {}
+      m_viewport_width(viewport_width), m_viewport_height(viewport_height),
+      m_base_orho_height(base_ortho_height) {}
 
 void Camera2D::set_position(glm::vec2 &new_pos) { m_position = new_pos; }
 void Camera2D::set_position(glm::vec2 &&new_pos) { m_position = std::move(new_pos); }

@@ -12,8 +12,8 @@ class PipelineLayout {
     VkPipelineLayout m_pipeline_layout;
 
     VkPipelineLayout create_graphics_pipeline_layout(
-        const std::optional<vulkan::DescriptorSetLayout> &descriptor_set_layout,
-        const std::optional<vulkan::PushConstantRange> &push_constant_range);
+        const vulkan::DescriptorSetLayout *descriptor_set_layout,
+        const vulkan::PushConstantRange *push_constant_range);
 
     VkPipelineLayout create_graphics_pipeline_layout(
         const vulkan::DescriptorSetLayout *descriptor_set_layout,
@@ -22,10 +22,9 @@ class PipelineLayout {
   public:
     PipelineLayout() = default;
 
-    PipelineLayout(
-        std::shared_ptr<graphics_context::GraphicsContext> ctx,
-        const std::optional<vulkan::DescriptorSetLayout> &descriptor_set_layout,
-        const std::optional<vulkan::PushConstantRange> &push_constant_range);
+    PipelineLayout(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+                   const vulkan::DescriptorSetLayout *descriptor_set_layout,
+                   const vulkan::PushConstantRange *push_constant_range);
 
     // Deprecated
     PipelineLayout(std::shared_ptr<graphics_context::GraphicsContext> ctx,

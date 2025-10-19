@@ -10,6 +10,10 @@
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 
+// TODO:
+// 1. Reason about what 1 unit in the world space coordinate should be, sprites are 24x24
+//      so maybe something related to that?
+
 enum class CellType : uint8_t {
     None,
     Wall,
@@ -51,7 +55,13 @@ class MapGeneration : public Game {
     std::unique_ptr<CommandBufferManager> m_command_buffer_manager;
 
     vulkan::Sampler m_sampler;
+
     std::unique_ptr<graphics_pipeline::GeometryPipeline> m_geometry_pipeline;
+
+    vulkan::DescriptorPool m_descriptor_pool;
+    std::unique_ptr<SwapStorageBuffer<graphics_pipeline::QuadPipelineSBO>>
+        m_quad_storage_buffer;
+    std::unique_ptr<graphics_pipeline::QuadPipelineDescriptorSet> m_quad_descriptor_set;
     std::unique_ptr<graphics_pipeline::QuadPipeline> m_quad_pipeline;
 
     std::vector<graphics_pipeline::GeometryInstanceBufferObject> m_render_cells;
@@ -194,29 +204,38 @@ class MapGeneration : public Game {
 
         };
 
-        /*auto tile_storage_buffer =
-         * SwapStorageBuffer<graphics_pipeline::QuadPipelineUBO>(*/
-        /*    ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1024);*/
+        m_quad_storage_buffer =
+            std::make_unique<SwapStorageBuffer<graphics_pipeline::QuadPipelineSBO>>(
+                ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1024);
 
-        /*auto descriptor_pool = vulkan::DescriptorPool(*/
-        /*    ctx, vulkan::DescriptorPoolOpts{.max_num_descriptor_sets =*/
-        /*                                        graphics_pipeline::MAX_FRAMES_IN_FLIGHT,*/
-        /*                                    .num_storage_buffers = 0,*/
-        /*                                    .num_uniform_buffers = 0,*/
-        /*                                    .num_combined_image_samplers = 0});*/
+        auto model_matrix = glm::mat4(1.0f);
+        model_matrix[0].x = 100.0f;
+        model_matrix[1].y = 100.f;
+        auto quad_sbo = graphics_pipeline::QuadPipelineSBO{.model_matrix = model_matrix};
+        m_quad_storage_buffer->write(quad_sbo);
 
-        /*auto quad_descriptor_set = graphics_pipeline::QuadPipelineDescriptorSet(*/
-        /*    ctx, descriptor_pool,*/
-        /*    graphics_pipeline::QuadPipelineDescriptorSetOpts{*/
-        /*        .storage_buffer_refs = vulkan::DescriptorBufferInfo::from_vector(*/
-        /*            tile_storage_buffer.get_buffer_references()),*/
-        /*    });*/
-        /*auto &quad_descriptor_set_layout = quad_descriptor_set.get_layout();*/
-        m_quad_pipeline = std::make_unique<graphics_pipeline::QuadPipeline>(
-            ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(), std::nullopt,
+        m_descriptor_pool = vulkan::DescriptorPool(
+            ctx, vulkan::DescriptorPoolOpts{.max_num_descriptor_sets =
+                                                graphics_pipeline::MAX_FRAMES_IN_FLIGHT,
+                                            .num_storage_buffers = 1,
+                                            .num_uniform_buffers = 0,
+                                            .num_combined_image_samplers = 0});
+
+        m_quad_descriptor_set =
+            std::make_unique<graphics_pipeline::QuadPipelineDescriptorSet>(
+                ctx, m_descriptor_pool,
+                graphics_pipeline::QuadPipelineDescriptorSetOpts{
+                    .storage_buffer_refs = vulkan::DescriptorBufferInfo::from_vector(
+                        m_quad_storage_buffer->get_buffer_references()),
+                });
+        auto &quad_descriptor_set_layout = m_quad_descriptor_set->get_layout();
+        auto quad_push_constant_range =
             vulkan::PushConstantRange{.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
                                       .offset = 0,
-                                      .size = Camera2D::matrix_size()});
+                                      .size = Camera2D::matrix_size()};
+        m_quad_pipeline = std::make_unique<graphics_pipeline::QuadPipeline>(
+            ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
+            &quad_descriptor_set_layout, &quad_push_constant_range);
 
         /*m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(*/
         /*    ctx, m_command_buffer_manager.get(), *m_swap_chain_manager,*/
@@ -234,8 +253,8 @@ class MapGeneration : public Game {
 
         register_mouse_event_handler(ctx.get());
 
-        compute_clip_pos(WorldPoint(0.0f, 0.0f));
-        compute_clip_pos(WorldPoint(-0.5f, 0.0f));
+        /*compute_clip_pos(WorldPoint(0.0f, 0.0f));*/
+        /*compute_clip_pos(WorldPoint(-0.5f, 0.0f));*/
     }
 
     void compute_clip_pos(WorldPoint &&camera_pos) {
@@ -311,9 +330,9 @@ class MapGeneration : public Game {
 
         /*rectangle_instance_buffer.transfer();*/
 
-        std::optional<graphics_pipeline::QuadPipelineDescriptorSet> no_descriptor;
-        std::optional<glm::mat4> no_push_constant = m_camera.get_view_projection_matrix();
-        m_quad_pipeline->render(command_buffer, no_descriptor, no_push_constant, 1);
+        auto no_descriptor = m_quad_descriptor_set.get();
+        glm::mat4 no_push_constant = m_camera.get_view_projection_matrix();
+        m_quad_pipeline->render(command_buffer, no_descriptor, &no_push_constant, 1);
         /*m_geometry_pipeline->render_rectangles(command_buffer,*/
         /*                                       camera_transform_projection);*/
 

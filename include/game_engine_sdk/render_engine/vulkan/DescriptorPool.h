@@ -32,10 +32,10 @@ class DescriptorPool {
 
     ~DescriptorPool();
     DescriptorPool(const DescriptorPool &other) = delete;
-    DescriptorPool(DescriptorPool &&other) noexcept = default;
+    DescriptorPool(DescriptorPool &&other) noexcept;
 
     DescriptorPool &operator=(const DescriptorPool &other) = delete;
-    DescriptorPool &operator=(DescriptorPool &&other) noexcept = default;
+    DescriptorPool &operator=(DescriptorPool &&other) noexcept;
 
     operator VkDescriptorPool() const { return m_descriptor_pool; }
 };

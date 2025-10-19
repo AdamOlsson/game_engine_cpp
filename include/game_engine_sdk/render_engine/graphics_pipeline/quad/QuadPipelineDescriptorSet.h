@@ -17,12 +17,17 @@ class QuadPipelineDescriptorSet {
   private:
     SwapDescriptorSet m_descriptor_set;
 
+    SwapDescriptorSet
+    build_descriptor_set(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+                         vulkan::DescriptorPool &descriptor_pool,
+                         QuadPipelineDescriptorSetOpts &&opts);
+
   public:
     QuadPipelineDescriptorSet(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
                               vulkan::DescriptorPool &descriptor_pool,
                               QuadPipelineDescriptorSetOpts &&opts);
 
-    const vulkan::DescriptorSetLayout &get_layout();
+    vulkan::DescriptorSetLayout &get_layout();
     SwapDescriptorSet *handle();
     vulkan::DescriptorSet get_next();
 };

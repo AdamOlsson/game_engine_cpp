@@ -1,4 +1,5 @@
 #pragma once
+#include "game_engine_sdk/io.h"
 #include "game_engine_sdk/render_engine/buffers/IndexBuffer.h"
 #include "game_engine_sdk/render_engine/buffers/VertexBuffer.h"
 #include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
@@ -12,13 +13,18 @@
 
 namespace graphics_pipeline {
 
-struct QuadPipelineUBO {
+struct QuadPipelineSBO {
+    glm::mat4 model_matrix = glm::mat4(1.0f);
+
     std::string to_string() const {
-        return std::format("QuadPipelineUBO {{\n"
-                           "}}");
+        std::ostringstream oss;
+        oss << "QuadPipelineUBO {\n"
+            << "  model_matrix: " << model_matrix << "\n"
+            << "}";
+        return oss.str();
     }
 
-    friend std::ostream &operator<<(std::ostream &os, const QuadPipelineUBO &obj) {
+    friend std::ostream &operator<<(std::ostream &os, const QuadPipelineSBO &obj) {
         return os << obj.to_string();
     }
 };
@@ -39,8 +45,8 @@ class QuadPipeline {
     QuadPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
                  CommandBufferManager *command_buffer_manager,
                  SwapChainManager *swap_chain_manager,
-                 const std::optional<vulkan::DescriptorSetLayout> &descriptor_set_layout,
-                 const std::optional<vulkan::PushConstantRange> &push_constant_range);
+                 const vulkan::DescriptorSetLayout *descriptor_set_layout,
+                 const vulkan::PushConstantRange *push_constant_range);
 
     /*static QuadPipeline create(std::shared_ptr<graphics_context::GraphicsContext> ctx,*/
     /*                           CommandBufferManager *command_buffer_manager,*/
@@ -48,17 +54,17 @@ class QuadPipeline {
 
     template <typename PushConstantType>
     void render(const vulkan::CommandBuffer &command_buffer,
-                std::optional<QuadPipelineDescriptorSet> &descriptor_set,
-                std::optional<PushConstantType> &push_constant, const int num_instances) {
+                QuadPipelineDescriptorSet *descriptor_set,
+                PushConstantType *push_constant, const int num_instances) {
 
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 
-        if (push_constant.has_value()) {
+        if (push_constant) {
             vkCmdPushConstants(command_buffer, m_pipeline_layout, m_push_constant_stage,
-                               0, sizeof(push_constant.value()), &push_constant.value());
+                               0, sizeof(*push_constant), push_constant);
         }
 
-        if (descriptor_set.has_value()) {
+        if (descriptor_set) {
             const vulkan::DescriptorSet set = descriptor_set->get_next();
             vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                                     m_pipeline_layout, 0, 1, &set, 0, nullptr);
