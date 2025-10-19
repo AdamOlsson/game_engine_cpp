@@ -6,6 +6,7 @@
 #include "game_engine_sdk/render_engine/resources/ResourceManager.h"
 #include "game_engine_sdk/render_engine/resources/shaders/fragment/geometry/geometry.h"
 #include "game_engine_sdk/render_engine/resources/shaders/vertex/geometry/geometry.h"
+#include "game_engine_sdk/render_engine/vulkan/PushConstantRange.h"
 #include "vulkan/vulkan_core.h"
 #include <cstring>
 #include <memory>
@@ -133,7 +134,7 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
             // clang-format off
                 .set_vertex_shader(ResourceManager::get_instance().get_resource<ShaderResource>("GeometryVertex"))
                 .set_fragment_shader(ResourceManager::get_instance().get_resource<ShaderResource>("GeometryFragment"))
-                .set_push_constants(VkPushConstantRange{
+                .set_push_constants(vulkan::PushConstantRange{
                         .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
                         .offset = 0,
                         .size = sizeof(glm::mat4) })

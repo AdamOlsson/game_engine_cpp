@@ -1,4 +1,5 @@
 #include "game_engine_sdk/render_engine/window/Window.h"
+#include "game_engine_sdk/logger.h"
 #include "game_engine_sdk/render_engine/window/WindowConfig.h"
 using namespace window;
 

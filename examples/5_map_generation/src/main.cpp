@@ -5,6 +5,7 @@
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/quad/QuadPipeline.h"
 #include "game_engine_sdk/render_engine/window/WindowConfig.h"
+#include "vulkan/vulkan_core.h"
 #include <memory>
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
@@ -212,8 +213,10 @@ class MapGeneration : public Game {
         /*    });*/
         /*auto &quad_descriptor_set_layout = quad_descriptor_set.get_layout();*/
         m_quad_pipeline = std::make_unique<graphics_pipeline::QuadPipeline>(
-            ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
-            std::nullopt);
+            ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(), std::nullopt,
+            vulkan::PushConstantRange{.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+                                      .offset = 0,
+                                      .size = Camera2D::matrix_size()});
 
         /*m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(*/
         /*    ctx, m_command_buffer_manager.get(), *m_swap_chain_manager,*/
@@ -225,8 +228,27 @@ class MapGeneration : public Game {
         wang_tiling();
 
         auto window_size = ctx->window->get_framebuffer_size<float>();
-        m_camera = Camera2D(window_size.width, window_size.height);
+        const float num_pixels_at_default_zoom = 200.0f;
+        m_camera =
+            Camera2D(window_size.width, window_size.height, num_pixels_at_default_zoom);
+
         register_mouse_event_handler(ctx.get());
+
+        compute_clip_pos(WorldPoint(0.0f, 0.0f));
+        compute_clip_pos(WorldPoint(-0.5f, 0.0f));
+    }
+
+    void compute_clip_pos(WorldPoint &&camera_pos) {
+        m_camera.set_position(camera_pos);
+        const auto local_space_position = glm::vec4(0.5, 0.5, 0.0, 1.0);
+
+        const auto model_matrix = glm::mat4(1.0f);
+        const auto world_space_position = model_matrix * local_space_position;
+
+        const auto clip_space_position =
+            m_camera.get_view_projection_matrix() * world_space_position;
+
+        logger::debug("Clip position: ", clip_space_position);
     }
 
     void register_mouse_event_handler(graphics_context::GraphicsContext *ctx) {
@@ -289,9 +311,9 @@ class MapGeneration : public Game {
 
         /*rectangle_instance_buffer.transfer();*/
 
-        auto camera_transform_projection = m_camera.get_transform_projection_matrix();
         std::optional<graphics_pipeline::QuadPipelineDescriptorSet> no_descriptor;
-        m_quad_pipeline->render(command_buffer, no_descriptor, 1);
+        std::optional<glm::mat4> no_push_constant = m_camera.get_view_projection_matrix();
+        m_quad_pipeline->render(command_buffer, no_descriptor, no_push_constant, 1);
         /*m_geometry_pipeline->render_rectangles(command_buffer,*/
         /*                                       camera_transform_projection);*/
 

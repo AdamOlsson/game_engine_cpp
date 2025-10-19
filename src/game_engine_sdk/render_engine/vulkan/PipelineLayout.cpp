@@ -3,7 +3,7 @@
 vulkan::PipelineLayout::PipelineLayout(
     std::shared_ptr<graphics_context::GraphicsContext> ctx,
     const std::optional<vulkan::DescriptorSetLayout> &descriptor_set_layout,
-    const std::vector<VkPushConstantRange> &push_constant_range)
+    const std::optional<vulkan::PushConstantRange> &push_constant_range)
     : m_ctx(ctx), m_pipeline_layout(create_graphics_pipeline_layout(
                       descriptor_set_layout, push_constant_range)) {}
 
@@ -45,7 +45,7 @@ vulkan::PipelineLayout::operator=(PipelineLayout &&other) noexcept {
 
 VkPipelineLayout vulkan::PipelineLayout::create_graphics_pipeline_layout(
     const std::optional<vulkan::DescriptorSetLayout> &descriptor_set_layout,
-    const std::vector<VkPushConstantRange> &push_constant_range) {
+    const std::optional<vulkan::PushConstantRange> &push_constant_range) {
 
     const VkDescriptorSetLayout *set_layout = nullptr;
     int set_layout_count = 0;
@@ -54,12 +54,19 @@ VkPipelineLayout vulkan::PipelineLayout::create_graphics_pipeline_layout(
         set_layout = descriptor_set_layout->get_handle();
     }
 
+    const VkPushConstantRange *push_constant = nullptr;
+    int push_constant_count = 0;
+    if (push_constant_range.has_value()) {
+        push_constant_count = 1;
+        push_constant = &push_constant_range.value();
+    }
+
     VkPipelineLayoutCreateInfo pipeline_layout_into{};
     pipeline_layout_into.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipeline_layout_into.setLayoutCount = set_layout_count;
     pipeline_layout_into.pSetLayouts = set_layout;
-    pipeline_layout_into.pushConstantRangeCount = push_constant_range.size();
-    pipeline_layout_into.pPushConstantRanges = push_constant_range.data();
+    pipeline_layout_into.pushConstantRangeCount = push_constant_count;
+    pipeline_layout_into.pPushConstantRanges = push_constant;
 
     VkPipelineLayout pipeline_layout;
     if (vkCreatePipelineLayout(m_ctx->logical_device, &pipeline_layout_into, nullptr,

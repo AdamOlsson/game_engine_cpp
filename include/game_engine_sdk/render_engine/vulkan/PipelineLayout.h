@@ -2,6 +2,7 @@
 
 #include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorSetLayout.h"
+#include "game_engine_sdk/render_engine/vulkan/PushConstantRange.h"
 #include "vulkan/vulkan_core.h"
 #include <vector>
 namespace vulkan {
@@ -12,7 +13,7 @@ class PipelineLayout {
 
     VkPipelineLayout create_graphics_pipeline_layout(
         const std::optional<vulkan::DescriptorSetLayout> &descriptor_set_layout,
-        const std::vector<VkPushConstantRange> &push_constant_range);
+        const std::optional<vulkan::PushConstantRange> &push_constant_range);
 
     VkPipelineLayout create_graphics_pipeline_layout(
         const vulkan::DescriptorSetLayout *descriptor_set_layout,
@@ -24,7 +25,7 @@ class PipelineLayout {
     PipelineLayout(
         std::shared_ptr<graphics_context::GraphicsContext> ctx,
         const std::optional<vulkan::DescriptorSetLayout> &descriptor_set_layout,
-        const std::vector<VkPushConstantRange> &push_constant_range);
+        const std::optional<vulkan::PushConstantRange> &push_constant_range);
 
     // Deprecated
     PipelineLayout(std::shared_ptr<graphics_context::GraphicsContext> ctx,

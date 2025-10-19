@@ -207,7 +207,7 @@ class ShapeRendering : public Game {
         rectangle_instance_buffer.transfer();
         hexagon_instance_buffer.transfer();
 
-        auto camera_transform_matrix = Camera2D::get_default_transform_matrix();
+        auto camera_transform_matrix = Camera2D::get_default_view_matrix();
         m_geometry_pipeline->render_circles(command_buffer, camera_transform_matrix);
         m_geometry_pipeline->render_triangles(command_buffer, camera_transform_matrix);
         m_geometry_pipeline->render_rectangles(command_buffer, camera_transform_matrix);
