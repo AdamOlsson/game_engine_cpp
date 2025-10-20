@@ -10,10 +10,6 @@
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 
-// TODO:
-// 1. Reason about what 1 unit in the world space coordinate should be, sprites are 24x24
-//      so maybe something related to that?
-
 enum class CellType : uint8_t {
     None,
     Wall,
@@ -55,8 +51,6 @@ class MapGeneration : public Game {
     std::unique_ptr<CommandBufferManager> m_command_buffer_manager;
 
     vulkan::Sampler m_sampler;
-
-    std::unique_ptr<graphics_pipeline::GeometryPipeline> m_geometry_pipeline;
 
     vulkan::DescriptorPool m_descriptor_pool;
     std::unique_ptr<SwapStorageBuffer<graphics_pipeline::QuadPipelineSBO>>
@@ -208,9 +202,8 @@ class MapGeneration : public Game {
             std::make_unique<SwapStorageBuffer<graphics_pipeline::QuadPipelineSBO>>(
                 ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1024);
 
-        auto model_matrix = glm::mat4(1.0f);
-        model_matrix[0].x = 100.0f;
-        model_matrix[1].y = 100.f;
+        const auto model_matrix =
+            glm::scale(glm::mat4(1.0f), glm::vec3(24.0f, 24.0f, 1.0f));
         auto quad_sbo = graphics_pipeline::QuadPipelineSBO{.model_matrix = model_matrix};
         m_quad_storage_buffer->write(quad_sbo);
 
@@ -237,13 +230,6 @@ class MapGeneration : public Game {
             ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
             &quad_descriptor_set_layout, &quad_push_constant_range);
 
-        /*m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(*/
-        /*    ctx, m_command_buffer_manager.get(), *m_swap_chain_manager,*/
-        /*    graphics_pipeline::GeometryPipelineOptions{*/
-        /*        .combined_image_samplers = {*/
-        /*            vulkan::DescriptorImageInfo(m_tileset.view(), &m_sampler),*/
-        /*        }});*/
-
         wang_tiling();
 
         auto window_size = ctx->window->get_framebuffer_size<float>();
@@ -252,22 +238,6 @@ class MapGeneration : public Game {
             Camera2D(window_size.width, window_size.height, num_pixels_at_default_zoom);
 
         register_mouse_event_handler(ctx.get());
-
-        /*compute_clip_pos(WorldPoint(0.0f, 0.0f));*/
-        /*compute_clip_pos(WorldPoint(-0.5f, 0.0f));*/
-    }
-
-    void compute_clip_pos(WorldPoint &&camera_pos) {
-        m_camera.set_position(camera_pos);
-        const auto local_space_position = glm::vec4(0.5, 0.5, 0.0, 1.0);
-
-        const auto model_matrix = glm::mat4(1.0f);
-        const auto world_space_position = model_matrix * local_space_position;
-
-        const auto clip_space_position =
-            m_camera.get_view_projection_matrix() * world_space_position;
-
-        logger::debug("Clip position: ", clip_space_position);
     }
 
     void register_mouse_event_handler(graphics_context::GraphicsContext *ctx) {
@@ -282,9 +252,9 @@ class MapGeneration : public Game {
                     break;
                 case window::MouseEvent::CURSOR_MOVED:
                     if (m_is_right_mouse_pressed) {
-                        logger::debug("Mouse position: ", point);
-                        auto position_change = point - m_mouse_last_position;
-                        m_camera.set_relative_position(position_change);
+                        auto world_delta = m_camera.viewport_delta_to_world(
+                            point - m_mouse_last_position);
+                        m_camera.set_relative_position(world_delta);
                     }
                     m_mouse_last_position = point;
                     break;

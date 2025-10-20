@@ -8,6 +8,9 @@ layout(binding = 0) readonly buffer QuadStorageBuffer {
     QuadSBO instances[]; 
 } storage_buffer;
 
+// layout(binding = 1) readonly uniform QuadUniformBuffer {
+// } uniform_buffer;
+
 layout(push_constant) uniform CameraMatrix {
     mat4 view_projection;
 } pc_camera;
