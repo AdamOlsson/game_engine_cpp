@@ -27,9 +27,7 @@ layout(binding = 3) readonly uniform VertexData {
         int shape;
 } vertices;
 
-
 layout(location = 0) out vec4 out_color;
-
 
 float unsigned_distance_to_segment(
     const vec2 point, const vec2 a, const vec2 b

@@ -4,11 +4,14 @@
 #include "game_engine_sdk/render_engine/TilesetUVWT.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/quad/QuadPipeline.h"
+#include "game_engine_sdk/render_engine/graphics_pipeline/quad/QuadPipelineSBO.h"
 #include "game_engine_sdk/render_engine/window/WindowConfig.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
+
+// Continue: Restore this sample to its previous state using the quad buffer
 
 enum class CellType : uint8_t {
     None,
@@ -204,7 +207,11 @@ class MapGeneration : public Game {
 
         const auto model_matrix =
             glm::scale(glm::mat4(1.0f), glm::vec3(24.0f, 24.0f, 1.0f));
-        auto quad_sbo = graphics_pipeline::QuadPipelineSBO{.model_matrix = model_matrix};
+        auto quad_sbo = graphics_pipeline::QuadPipelineSBO{
+            .model_matrix = model_matrix,
+            .uvwt = m_tileset_uvwt.uvwt_for_tile_at(2, 3),
+            .texture_id = 0,
+        };
         m_quad_storage_buffer->write(quad_sbo);
 
         m_descriptor_pool = vulkan::DescriptorPool(
@@ -212,7 +219,7 @@ class MapGeneration : public Game {
                                                 graphics_pipeline::MAX_FRAMES_IN_FLIGHT,
                                             .num_storage_buffers = 1,
                                             .num_uniform_buffers = 0,
-                                            .num_combined_image_samplers = 0});
+                                            .num_combined_image_samplers = 1});
 
         m_quad_descriptor_set =
             std::make_unique<graphics_pipeline::QuadPipelineDescriptorSet>(
@@ -220,7 +227,8 @@ class MapGeneration : public Game {
                 graphics_pipeline::QuadPipelineDescriptorSetOpts{
                     .storage_buffer_refs = vulkan::DescriptorBufferInfo::from_vector(
                         m_quad_storage_buffer->get_buffer_references()),
-                });
+                    .combined_image_sampler_infos = {
+                        vulkan::DescriptorImageInfo(m_tileset.view(), &m_sampler)}});
         auto &quad_descriptor_set_layout = m_quad_descriptor_set->get_layout();
         auto quad_push_constant_range =
             vulkan::PushConstantRange{.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,

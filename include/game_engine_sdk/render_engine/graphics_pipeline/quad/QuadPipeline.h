@@ -1,5 +1,4 @@
 #pragma once
-#include "game_engine_sdk/io.h"
 #include "game_engine_sdk/render_engine/buffers/IndexBuffer.h"
 #include "game_engine_sdk/render_engine/buffers/VertexBuffer.h"
 #include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
@@ -12,22 +11,6 @@
 #include <memory>
 
 namespace graphics_pipeline {
-
-struct QuadPipelineSBO {
-    glm::mat4 model_matrix = glm::mat4(1.0f);
-
-    std::string to_string() const {
-        std::ostringstream oss;
-        oss << "QuadPipelineUBO {\n"
-            << "  model_matrix: " << model_matrix << "\n"
-            << "}";
-        return oss.str();
-    }
-
-    friend std::ostream &operator<<(std::ostream &os, const QuadPipelineSBO &obj) {
-        return os << obj.to_string();
-    }
-};
 
 class QuadPipeline {
   private:
