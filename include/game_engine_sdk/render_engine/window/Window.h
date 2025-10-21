@@ -58,6 +58,7 @@ class Window {
     std::optional<KeyboardEventCallbackFn> keyboard_event_cb;
 
     static void cursor_position_callback(GLFWwindow *window, double xpos, double ypos);
+    static void mouse_scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
     static void mouse_button_callback(GLFWwindow *window, int button, int action,
                                       int mods);
     static void keyboard_callback(GLFWwindow *window, int key, int scancode, int action,

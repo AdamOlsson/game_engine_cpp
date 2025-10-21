@@ -86,6 +86,8 @@ ui::State &UI::update_state_from_mouse_event(const window::MouseEvent mouse_even
     case window::MouseEvent::RIGHT_BUTTON_UP:
         return update_state_using_click_event(mouse_event, cursor_pos);
         break;
+    case window::MouseEvent::SCROLL:
+        break;
     }
     return m_current_menu_state;
 }
@@ -120,6 +122,8 @@ ui::State &UI::update_state_using_click_event(const window::MouseEvent mouse_eve
     case window::MouseEvent::RIGHT_BUTTON_DOWN:
         break;
     case window::MouseEvent::RIGHT_BUTTON_UP:
+        break;
+    case window::MouseEvent::SCROLL:
         break;
     };
 

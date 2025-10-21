@@ -8,7 +8,8 @@ enum class MouseEvent {
     LEFT_BUTTON_DOWN,
     LEFT_BUTTON_UP,
     RIGHT_BUTTON_DOWN,
-    RIGHT_BUTTON_UP
+    RIGHT_BUTTON_UP,
+    SCROLL,
 };
 
 inline std::ostream &operator<<(std::ostream &os, MouseEvent type) {
@@ -23,6 +24,8 @@ inline std::ostream &operator<<(std::ostream &os, MouseEvent type) {
         return os << "MouseEvent::RIGHT_BUTTON_DOWN";
     case MouseEvent::RIGHT_BUTTON_UP:
         return os << "MouseEvent::RIGHT_BUTTON_UP";
+    case MouseEvent::SCROLL:
+        return os << "MouseEvent::SCROLL";
     }
 }
 using MouseEventCallbackFn = std::function<void(MouseEvent, ViewportPoint &)>;

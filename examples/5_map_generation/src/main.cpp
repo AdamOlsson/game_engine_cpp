@@ -11,7 +11,7 @@
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 
-// Continue: Restore this sample to its previous state using the quad buffer
+// CONTINUE: Render Wang tiling
 
 enum class CellType : uint8_t {
     None,
@@ -265,6 +265,9 @@ class MapGeneration : public Game {
                         m_camera.set_relative_position(world_delta);
                     }
                     m_mouse_last_position = point;
+                    break;
+                case window::MouseEvent::SCROLL:
+                    m_camera.set_relative_zoom(point.y);
                     break;
                 case window::MouseEvent::LEFT_BUTTON_DOWN:
                 case window::MouseEvent::LEFT_BUTTON_UP:

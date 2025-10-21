@@ -32,6 +32,7 @@ void Window::register_mouse_event_callback(MouseEventCallbackFn cb) {
     this->mouse_event_cb = cb;
     glfwSetMouseButtonCallback(m_window, this->mouse_button_callback);
     glfwSetCursorPosCallback(m_window, this->cursor_position_callback);
+    glfwSetScrollCallback(m_window, this->mouse_scroll_callback);
 }
 
 void Window::register_keyboard_event_callback(KeyboardEventCallbackFn cb) {
@@ -42,6 +43,14 @@ void Window::register_keyboard_event_callback(KeyboardEventCallbackFn cb) {
 /* ######################################### */
 /* ---------! PRIVATE FUNCTIONS !------------*/
 /* ######################################### */
+
+void Window::mouse_scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+    auto w = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
+    if (w->mouse_event_cb.has_value()) {
+        auto scroll_offset = ViewportPoint(xoffset, yoffset);
+        w->mouse_event_cb.value()(MouseEvent::SCROLL, scroll_offset);
+    }
+}
 
 void Window::cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
     auto w = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));

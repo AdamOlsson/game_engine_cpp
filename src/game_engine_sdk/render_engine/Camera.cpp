@@ -26,8 +26,10 @@ void Camera2D::set_relative_position(WorldPoint2D &&delta) {
 void Camera2D::set_rotation(float new_rot) { m_rotation = new_rot; }
 void Camera2D::set_relative_rotation(float delta) { m_rotation += delta; }
 
-void Camera2D::set_zoom(float new_zoom) { m_zoom = new_zoom; }
-void Camera2D::set_relative_zoom(float delta) { m_zoom += delta; }
+void Camera2D::set_zoom(float new_zoom) { m_zoom = glm::clamp(new_zoom, 0.1f, 10.0f); }
+void Camera2D::set_relative_zoom(float delta) {
+    m_zoom = glm::clamp(m_zoom + delta, 0.1f, 10.0f);
+}
 
 void Camera2D::update_view_matrix() {
     m_view_matrix = glm::mat4(1.0f);
