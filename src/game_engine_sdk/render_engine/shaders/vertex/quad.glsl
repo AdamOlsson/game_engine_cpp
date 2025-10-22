@@ -4,6 +4,7 @@ struct QuadSBO {
     mat4 model_matrix;
     vec4 uvwt;
     uint texture_id; // 32 bit
+    vec4 color;
 };
 
 layout(binding = 0) readonly buffer QuadStorageBuffer {
@@ -20,7 +21,8 @@ layout(push_constant) uniform CameraMatrix {
 layout(location = 0) in vec3 in_local_position; // -0.5 to 0.5
 
 layout(location = 0) out vec2 out_uv;
-layout(location = 1) out highp uint out_texture_id;
+layout(location = 1) out uint out_texture_id;
+layout(location = 2) out vec4 out_color;
 
 vec2 uv_from_uvwt(vec4 uvwt) {
     vec2 offset_local_position = in_local_position.xy + vec2(0.5, 0.5); // 0.0 to 1.0
@@ -43,4 +45,5 @@ void main() {
     gl_Position = clip_space_position;
     out_uv = uv_from_uvwt(instance.uvwt);
     out_texture_id = instance.texture_id;
+    out_color = instance.color;
 }

@@ -1,6 +1,7 @@
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
 #include "game_engine_sdk/render_engine/Camera.h"
+#include "game_engine_sdk/render_engine/ModelMatrix.h"
 #include "game_engine_sdk/render_engine/TilesetUVWT.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/quad/QuadPipeline.h"
@@ -205,14 +206,19 @@ class MapGeneration : public Game {
             std::make_unique<SwapStorageBuffer<graphics_pipeline::QuadPipelineSBO>>(
                 ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1024);
 
-        const auto model_matrix =
-            glm::scale(glm::mat4(1.0f), glm::vec3(24.0f, 24.0f, 1.0f));
-        auto quad_sbo = graphics_pipeline::QuadPipelineSBO{
-            .model_matrix = model_matrix,
+        const auto cell_size = glm::vec2(24.0f, 24.0f);
+        auto base_model_matrix = ModelMatrix().scale(cell_size.x, cell_size.y, 1.0f);
+
+        m_quad_storage_buffer->write(graphics_pipeline::QuadPipelineSBO{
+            .model_matrix = ModelMatrix(base_model_matrix).translate(-1.0f, 0.0f, 0.0f),
             .uvwt = m_tileset_uvwt.uvwt_for_tile_at(2, 3),
             .texture_id = 0,
-        };
-        m_quad_storage_buffer->write(quad_sbo);
+        });
+
+        m_quad_storage_buffer->write(graphics_pipeline::QuadPipelineSBO{
+            .model_matrix = ModelMatrix(base_model_matrix).translate(1.0f, 0.0f, 0.0f),
+            .uvwt = m_tileset_uvwt.uvwt_for_tile_at(2, 3),
+        });
 
         m_descriptor_pool = vulkan::DescriptorPool(
             ctx, vulkan::DescriptorPoolOpts{.max_num_descriptor_sets =
@@ -282,40 +288,9 @@ class MapGeneration : public Game {
         RenderPass render_pass = m_swap_chain_manager->get_render_pass(command_buffer);
         render_pass.begin();
 
-        /*auto &rectangle_instance_buffer =*/
-        /*    m_geometry_pipeline->get_rectangle_instance_buffer();*/
-
-        /*rectangle_instance_buffer.clear();*/
-
-        /*const size_t num_geometries = m_render_cells.size();*/
-        /*for (auto i = 0; i < num_geometries; i++) {*/
-        /*    rectangle_instance_buffer.push_back(m_render_cells[i]);*/
-        /*}*/
-
-        /*const int cell_width = 50;*/
-        /*const int cell_height = 50;*/
-        /*const WorldPoint center_offset =*/
-        /*    WorldPoint((noise_map_width / 2.0f) * cell_width,*/
-        /*               (noise_map_height / 2.0f) * cell_height);*/
-
-        /*m_render_cells.reserve(cell_sprites.size());*/
-        /*for (auto i = 0; i < cell_sprites.size(); i++) {*/
-        /*    const int x = (i % noise_map_width) * cell_width;*/
-        /*    const int y = (i / noise_map_width) * cell_height;*/
-        /*    m_render_cells.push_back(graphics_pipeline::GeometryInstanceBufferObject{*/
-        /*        .center = WorldPoint(x, y) - center_offset,*/
-        /*        .dimension = Dimension(cell_width, cell_height),*/
-        /*        .uvwt = cell_sprites[i],*/
-        /*    });*/
-        /*}*/
-
-        /*rectangle_instance_buffer.transfer();*/
-
         auto no_descriptor = m_quad_descriptor_set.get();
         glm::mat4 no_push_constant = m_camera.get_view_projection_matrix();
-        m_quad_pipeline->render(command_buffer, no_descriptor, &no_push_constant, 1);
-        /*m_geometry_pipeline->render_rectangles(command_buffer,*/
-        /*                                       camera_transform_projection);*/
+        m_quad_pipeline->render(command_buffer, no_descriptor, &no_push_constant, 2);
 
         render_pass.end_submit_present();
     };

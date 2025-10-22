@@ -31,10 +31,6 @@ class QuadPipeline {
                  const vulkan::DescriptorSetLayout *descriptor_set_layout,
                  const vulkan::PushConstantRange *push_constant_range);
 
-    /*static QuadPipeline create(std::shared_ptr<graphics_context::GraphicsContext> ctx,*/
-    /*                           CommandBufferManager *command_buffer_manager,*/
-    /*                           SwapChainManager *swap_chain_manager);*/
-
     template <typename PushConstantType>
     void render(const vulkan::CommandBuffer &command_buffer,
                 QuadPipelineDescriptorSet *descriptor_set,
