@@ -2,6 +2,7 @@
 
 #include "game_engine_sdk/io.h"
 #include "game_engine_sdk/render_engine/tiling/NoiseMap.h"
+#include "glm/glm.hpp"
 #include <vector>
 
 namespace tiling {
@@ -46,17 +47,37 @@ class WangTiles {
     unsigned int m_grid_height;
     std::vector<CellType> m_cells;
 
+    std::unordered_map<std::tuple<tiling::CellType, tiling::CellType, tiling::CellType,
+                                  tiling::CellType>,
+                       glm::vec4, tiling::ConstraintHash>
+        m_tileset_constraints;
+
+    // TODO: glm::vec4 in a UVWT class?
+    std::vector<glm::vec4> m_cell_sprites; // uvwt
+
     std::vector<CellType>
     assign_cell_types(const tiling::NoiseMap &noise_map,
                       std::function<CellType(float)> tile_assign_rule);
 
+    std::vector<glm::vec4> assign_cell_sprites(std::vector<CellType> &cell_types);
+
   public:
     WangTiles() = default;
     ~WangTiles() = default;
-    WangTiles(const tiling::NoiseMap &noise_map,
-              std::function<CellType(float)> tile_assign_rule);
+    WangTiles(
+        const tiling::NoiseMap &noise_map,
+        std::function<CellType(float)> tile_assign_rule,
+        std::unordered_map<std::tuple<tiling::CellType, tiling::CellType,
+                                      tiling::CellType, tiling::CellType>,
+                           glm::vec4, tiling::ConstraintHash> &&tileset_constraints);
 
-    std::vector<CellType> get_cells();
+    unsigned int width();
+    unsigned int height();
+
     void print_cell_type();
+
+    // Temporary?
+    std::vector<CellType> get_cells();
+    std::vector<glm::vec4> get_cell_uvwt();
 };
 } // namespace tiling
