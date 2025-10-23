@@ -6,6 +6,8 @@
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/quad/QuadPipeline.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/quad/QuadPipelineSBO.h"
+#include "game_engine_sdk/render_engine/tiling/NoiseMap.h"
+#include "game_engine_sdk/render_engine/tiling/WangTiles.h"
 #include "game_engine_sdk/render_engine/window/WindowConfig.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
@@ -13,41 +15,9 @@
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 
 // CONTINUE: Render Wang tiling
+// - Load the noise map and use it to render tiles
 
-enum class CellType : uint8_t {
-    None,
-    Wall,
-    Grass,
-};
-
-std::ostream &operator<<(std::ostream &os, CellType type) {
-    switch (type) {
-    case CellType::None:
-        return os << "CellType::None";
-    case CellType::Wall:
-        return os << "CellType::Wall";
-    case CellType::Grass:
-        return os << "CellType::Grass";
-    default:
-        return os << "Unknown";
-    }
-}
-
-std::ostream &operator<<(std::ostream &os,
-                         std::tuple<CellType, CellType, CellType, CellType> type) {
-    return os << "(" << std::get<0>(type) << ", " << std::get<1>(type) << ", "
-              << std::get<2>(type) << ", " << std::get<3>(type) << ")";
-}
-
-struct ConstraintHash {
-    std::size_t
-    operator()(const std::tuple<CellType, CellType, CellType, CellType> t) const {
-        return (static_cast<size_t>(std::get<0>(t)) << 24) |
-               (static_cast<size_t>(std::get<1>(t)) << 16) |
-               (static_cast<size_t>(std::get<2>(t)) << 8) |
-               (static_cast<size_t>(std::get<3>(t)));
-    }
-};
+using namespace tiling;
 
 class MapGeneration : public Game {
   private:
@@ -66,14 +36,21 @@ class MapGeneration : public Game {
 
     Texture m_tileset;
     TilesetUVWT m_tileset_uvwt;
-    std::unordered_map<std::tuple<CellType, CellType, CellType, CellType>, glm::vec4,
-                       ConstraintHash>
+    std::unordered_map<std::tuple<tiling::CellType, tiling::CellType, tiling::CellType,
+                                  tiling::CellType>,
+                       glm::vec4, tiling::ConstraintHash>
         m_tileset_constraints;
 
-    const int noise_map_width = 4;
-    const int noise_map_height = 3;
-    const std::vector<float> noise_map = {0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-                                          1.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    /*const int noise_map_width = 4;*/
+    /*const int noise_map_height = 3;*/
+
+    // clang-format off
+    /*const std::vector<float> noise_map = {*/
+    /*    0.0, 0.0, 0.0, 0.0,*/
+    /*    0.0, 1.0, 1.0, 0.0,*/
+    /*    0.0, 0.0, 0.0, 0.0,*/
+    /*};*/
+    // clang-format on
 
     bool m_is_right_mouse_pressed = false;
     window::ViewportPoint m_mouse_last_position = window::ViewportPoint();
@@ -85,35 +62,41 @@ class MapGeneration : public Game {
     MapGeneration() {}
 
     void wang_tiling() {
-        auto rule = [](float value) -> CellType {
+        auto rule = [](float value) -> tiling::CellType {
             if (value > 0.5) {
-                return CellType::Wall;
+                return tiling::CellType::Wall;
             } else {
-                return CellType::Grass;
+                return tiling::CellType::Grass;
             }
         };
 
-        std::vector<CellType> cell_types;
-        cell_types.reserve(noise_map.size());
-        for (auto c : noise_map) {
-            cell_types.push_back(rule(c));
-        }
+        auto noise_map = tiling::NoiseMap();
+        auto cell_types = tiling::WangTiles(noise_map, std::move(rule)).get_cells();
+        const int map_grid_width = noise_map.width;
+        const int map_grid_height = noise_map.height;
+        /*std::vector<CellType> cell_types;*/
+        /*cell_types.reserve(noise_map.size());*/
+        /*for (auto c : noise_map) {*/
+        /*    cell_types.push_back(rule(c));*/
+        /*}*/
+        /**/
+        /*print_cell_type(cell_types, noise_map_width, noise_map_height);*/
 
-        const int map_grid_width = noise_map_width;
-        const int map_grid_height = noise_map_height;
         cell_sprites.reserve(map_grid_width * map_grid_height);
         for (auto i = 0; i < cell_types.size(); i++) {
+            const int x = i % map_grid_width;
+            const int y = i / map_grid_width;
 
-            int current = i;
-            int left = current - 1;
-            int right = current + 1;
-            int top = current - map_grid_width;
-            int bottom = current + map_grid_width;
+            const int current = i;
+            const int left = x - 1;
+            const int right = x + 1;
+            const int top = current - map_grid_width;
+            const int bottom = current + map_grid_width;
 
             // For each cell, find the constraints based on bordering cells
             CellType left_constraint = CellType::None;
             if (left >= 0) {
-                left_constraint = cell_types[left];
+                left_constraint = cell_types[i - 1];
             }
 
             CellType top_constraint = CellType::None;
@@ -122,8 +105,8 @@ class MapGeneration : public Game {
             }
 
             CellType right_constraint = CellType::None;
-            if (right < map_grid_width * map_grid_height) {
-                right_constraint = cell_types[right];
+            if (right < map_grid_width) {
+                right_constraint = cell_types[i + 1];
             }
 
             CellType bottom_constraint = CellType::None;
@@ -136,9 +119,10 @@ class MapGeneration : public Game {
                            left_constraint);
 
             // TODO: A problem is that the outer most tiles will always have a "None"
-            // constraint towards the edge of the map. Either I would need to have a this
-            // "None" to a wildcard match or even easier, the outer most tiles always have
-            // no texture.
+            // constraint towards the edge of the map. Either I would need to have a
+            // this "None" to a wildcard match or even easier, the outer most tiles
+            // always have no texture.
+            logger::debug(i, ": looking for constraint ", constraints);
             if (m_tileset_constraints.find(constraints) != m_tileset_constraints.end()) {
                 cell_sprites.push_back(m_tileset_constraints[constraints]);
 
@@ -164,6 +148,7 @@ class MapGeneration : public Game {
         m_tileset = Texture::from_filepath(ctx, m_command_buffer_manager.get(),
                                            ASSET_FILE("forest_tileset_24x24.png"));
         m_tileset_uvwt = TilesetUVWT(m_tileset, TileSize(24, 24));
+        // Constraints()
         m_tileset_constraints = {
             // Walls
             {std::tuple(CellType::Grass, CellType::Grass, CellType::Wall,
@@ -206,20 +191,6 @@ class MapGeneration : public Game {
             std::make_unique<SwapStorageBuffer<graphics_pipeline::QuadPipelineSBO>>(
                 ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1024);
 
-        const auto cell_size = glm::vec2(24.0f, 24.0f);
-        auto base_model_matrix = ModelMatrix().scale(cell_size.x, cell_size.y, 1.0f);
-
-        m_quad_storage_buffer->write(graphics_pipeline::QuadPipelineSBO{
-            .model_matrix = ModelMatrix(base_model_matrix).translate(-1.0f, 0.0f, 0.0f),
-            .uvwt = m_tileset_uvwt.uvwt_for_tile_at(2, 3),
-            .texture_id = 0,
-        });
-
-        m_quad_storage_buffer->write(graphics_pipeline::QuadPipelineSBO{
-            .model_matrix = ModelMatrix(base_model_matrix).translate(1.0f, 0.0f, 0.0f),
-            .uvwt = m_tileset_uvwt.uvwt_for_tile_at(2, 3),
-        });
-
         m_descriptor_pool = vulkan::DescriptorPool(
             ctx, vulkan::DescriptorPoolOpts{.max_num_descriptor_sets =
                                                 graphics_pipeline::MAX_FRAMES_IN_FLIGHT,
@@ -252,6 +223,20 @@ class MapGeneration : public Game {
             Camera2D(window_size.width, window_size.height, num_pixels_at_default_zoom);
 
         register_mouse_event_handler(ctx.get());
+
+        const auto cell_size = glm::vec2(24.0f, 24.0f);
+        auto base_model_matrix = ModelMatrix().scale(cell_size.x, cell_size.y, 1.0f);
+
+        // CONTINUE: Fix this automatic tile placement
+        for (auto i = 0; i < cell_sprites.size(); i++) {
+            const auto x = i % noise_map_width;
+            const auto y = i / noise_map_width;
+            /*logger::debug(x, ", ", y, " ", cell_sprites[i]);*/
+            m_quad_storage_buffer->write(graphics_pipeline::QuadPipelineSBO{
+                .model_matrix = ModelMatrix(base_model_matrix).translate(x, y, 0),
+                .uvwt = cell_sprites[i],
+            });
+        }
     }
 
     void register_mouse_event_handler(graphics_context::GraphicsContext *ctx) {
@@ -290,7 +275,8 @@ class MapGeneration : public Game {
 
         auto no_descriptor = m_quad_descriptor_set.get();
         glm::mat4 no_push_constant = m_camera.get_view_projection_matrix();
-        m_quad_pipeline->render(command_buffer, no_descriptor, &no_push_constant, 2);
+        m_quad_pipeline->render(command_buffer, no_descriptor, &no_push_constant,
+                                cell_sprites.size());
 
         render_pass.end_submit_present();
     };
