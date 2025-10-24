@@ -9,6 +9,7 @@
 #include "game_engine_sdk/render_engine/tiling/NoiseMap.h"
 #include "game_engine_sdk/render_engine/tiling/wang/WangTiles.h"
 #include "game_engine_sdk/render_engine/window/WindowConfig.h"
+#include "tiles.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
@@ -39,16 +40,15 @@ class MapGeneration : public Game {
 
     Texture m_tileset;
     TilesetUVWT m_tileset_uvwt;
-    std::unordered_map<std::tuple<tiling::CellType, tiling::CellType, tiling::CellType,
-                                  tiling::CellType>,
-                       glm::vec4, tiling::ConstraintHash>
+    std::unordered_map<std::tuple<CellType, CellType, CellType, CellType>, glm::vec4,
+                       tiling::ConstraintHash<CellType>>
         m_tileset_constraints;
 
     bool m_is_right_mouse_pressed = false;
     window::ViewportPoint m_mouse_last_position = window::ViewportPoint();
     Camera2D m_camera;
 
-    std::vector<glm::vec4> m_cell_sprites;
+    std::vector<UVWT> m_cell_sprites;
 
   public:
     MapGeneration() {}
@@ -134,16 +134,16 @@ class MapGeneration : public Game {
             ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
             &quad_descriptor_set_layout, &quad_push_constant_range);
 
-        auto rule = [](float value) -> tiling::CellType {
+        auto rule = [](float value) -> CellType {
             if (value > 0.5) {
-                return tiling::CellType::Wall;
+                return CellType::Wall;
             } else {
-                return tiling::CellType::Grass;
+                return CellType::Grass;
             }
         };
         auto noise_map = tiling::NoiseMap();
-        auto wang_tiles = tiling::WangTiles(noise_map, std::move(rule),
-                                            std::move(m_tileset_constraints));
+        auto wang_tiles = tiling::WangTiles<CellType>(noise_map, std::move(rule),
+                                                      std::move(m_tileset_constraints));
         m_cell_sprites = wang_tiles.get_cell_uvwt();
 
         auto window_size = ctx->window->get_framebuffer_size<float>();
