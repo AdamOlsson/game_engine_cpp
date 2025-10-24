@@ -16,9 +16,10 @@
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 
 // CONTINUE: Render Wang tiling
+// - Build the tileset constraints in TilesetConstraints class and use them in
+// assign_cell_sprites() function in WangTiles class.
 // - How do I want to transfer the assigned UVWT in the WangTiles class to the storage
 // buffer?
-// - How can I build tileset constraints for WangTiling efficiently?
 // - Load the noise map and use it to render tiles
 
 using namespace tiling;
@@ -68,6 +69,11 @@ class MapGeneration : public Game {
                                            ASSET_FILE("forest_tileset_24x24.png"));
         m_tileset_uvwt = TilesetUVWT(m_tileset, TileSize(24, 24));
         // Constraints()
+        // tileset_constraints.add_constraint(0,0, TileConstraint<CellType>{
+        //  .north = {},
+        //  .east = {},
+        //  .south = {},
+        //  .west = {}});
         m_tileset_constraints = {
             // Walls
             {std::tuple(CellType::Grass, CellType::Grass, CellType::Wall,

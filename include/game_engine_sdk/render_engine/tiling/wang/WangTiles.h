@@ -2,31 +2,20 @@
 
 #include "game_engine_sdk/render_engine/UVWT.h"
 #include "game_engine_sdk/render_engine/tiling/NoiseMap.h"
+#include "game_engine_sdk/render_engine/tiling/wang/traits.h"
 #include "game_engine_sdk/traits.h"
 #include "glm/glm.hpp"
 #include <vector>
 
 namespace tiling {
 
-template <typename T>
-concept EnumUint8 = std::is_enum_v<T> &&
-                    std::is_same_v<std::underlying_type_t<T>, uint8_t> && Printable<T>;
-
-template <EnumUint8 T> struct ConstraintHash {
-    std::size_t operator()(const std::tuple<T, T, T, T> &t) const {
-        return (static_cast<size_t>(std::get<0>(t)) << 24) |
-               (static_cast<size_t>(std::get<1>(t)) << 16) |
-               (static_cast<size_t>(std::get<2>(t)) << 8) |
-               (static_cast<size_t>(std::get<3>(t)));
-    }
-};
-
-template <EnumUint8 T> class WangTiles {
+template <WangEnumUint8 T> class WangTiles {
   private:
     unsigned int m_grid_width;
     unsigned int m_grid_height;
     std::vector<T> m_cells;
 
+    /*TilesetConstraints m_constraints;*/
     std::unordered_map<std::tuple<T, T, T, T>, glm::vec4, ConstraintHash<T>>
         m_tileset_constraints;
 
@@ -85,13 +74,16 @@ template <EnumUint8 T> class WangTiles {
             // this "None" to a wildcard match or even easier, the outer most tiles
             // always have no texture.
             /*logger::debug(i, ": looking for constraint ", constraints);*/
+
+            // auto constraint = m_tileset_constraints.lookup_sprite(top_constraint,
+            // right_constraint, bottom_constraint, left_constraint);
             if (m_tileset_constraints.find(constraints) != m_tileset_constraints.end()) {
                 cell_sprites.push_back(m_tileset_constraints[constraints]);
 
             } else {
                 // TODO: Create some wrapper around uvwt coordinates have this be "no
                 // uvwt"
-                cell_sprites.push_back(glm::vec4(-1.0f));
+                cell_sprites.push_back(UVWT::none());
             }
         }
         return cell_sprites;

@@ -11,6 +11,8 @@ struct UVWT : public glm::vec4 {
     UVWT(float u, float v, float w, float t) : glm::vec4(u, v, w, t) {}
     UVWT(const glm::vec4 &vec) : glm::vec4(vec) {}
 
+    static UVWT none() { return glm::vec4(-1.0); }
+
     friend std::ostream &operator<<(std::ostream &os, const UVWT &uvwt) {
         os << "UVWT(" << uvwt.x << ", " << uvwt.y << ", " << uvwt.z << ", " << uvwt.w
            << ")";
