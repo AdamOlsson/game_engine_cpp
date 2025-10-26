@@ -3,6 +3,7 @@
 #include "tiling/NoiseMap.h"
 #include "tiling/traits.h"
 #include "tiling/wang/TilesetConstraints.h"
+#include <iostream>
 #include <vector>
 
 namespace tiling::wang {
@@ -70,9 +71,9 @@ template <WangEnumUint8 T> class WangTiles {
             // this "None" to a wildcard match or even easier, the outer most tiles
             // always have no texture.
             /*logger::debug(i, ": looking for constraint ", constraints);*/
-            auto sprite_index = m_constraints.lookup_sprite(constraints);
-            if (sprite_index) {
-                cell_sprites.push_back(sprite_index.value());
+            auto tileset_index = m_constraints.lookup_constraint(constraints);
+            if (tileset_index) {
+                cell_sprites.push_back(tileset_index.value());
             } else {
                 cell_sprites.push_back(std::nullopt);
             }
