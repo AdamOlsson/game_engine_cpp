@@ -38,6 +38,15 @@ foreach(source_file ${GAME_ENGINE_MODULES})
 endforeach()
 endif()
 
+if(GAME_ENGINE_SDK_BUILD_TEST)
+    include(cmake/gtest.cmake)
+    enable_testing()
+endif()
+
+set(GAME_ENGINE_SDK_BUILD_RENDER_ENGINE ON CACHE BOOL "" FORCE)
+set(RENDER_ENGINE_BUILD_TILING ON CACHE BOOL "" FORCE)
+add_subdirectory(sdk/game_engine_sdk)
+
 add_library(${PROJECT_NAME}
     STATIC 
         ${GAME_ENGINE_SOURCES} 
@@ -55,10 +64,12 @@ target_include_directories(${PROJECT_NAME}
         ${glfw_SOURCE_DIR}/include
 )
 
+
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
         ${VULKAN_LIBRARY}
         glfw
+        render_engine::tiling
 )
 
 set_target_properties(${PROJECT_NAME}

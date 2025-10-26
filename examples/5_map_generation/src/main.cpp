@@ -6,18 +6,17 @@
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/quad/QuadPipeline.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/quad/QuadPipelineSBO.h"
-#include "game_engine_sdk/render_engine/tiling/NoiseMap.h"
-#include "game_engine_sdk/render_engine/tiling/wang/WangTiles.h"
 #include "game_engine_sdk/render_engine/window/WindowConfig.h"
 #include "tiles.h"
+#include "tiling/wang/TilesetConstraints.h"
+#include "tiling/wang/WangTiles.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 
 // CONTINUE: Render Wang tiling
-// - Build the tileset constraints in TilesetConstraints class and use them in
-// assign_cell_sprites() function in WangTiles class.
+// -
 // - How do I want to transfer the assigned UVWT in the WangTiles class to the storage
 // buffer?
 // - Load the noise map and use it to render tiles
@@ -42,14 +41,15 @@ class MapGeneration : public Game {
     Texture m_tileset;
     TilesetUVWT m_tileset_uvwt;
     std::unordered_map<std::tuple<CellType, CellType, CellType, CellType>, glm::vec4,
-                       tiling::ConstraintHash<CellType>>
+                       wang::ConstraintHash<CellType>>
         m_tileset_constraints;
 
     bool m_is_right_mouse_pressed = false;
     window::ViewportPoint m_mouse_last_position = window::ViewportPoint();
     Camera2D m_camera;
 
-    std::vector<UVWT> m_cell_sprites;
+    wang::WangTiles<CellType> m_wang_tiles;
+    /*std::vector<UVWT> m_cell_sprites;*/
 
   public:
     MapGeneration() {}
@@ -147,10 +147,11 @@ class MapGeneration : public Game {
                 return CellType::Grass;
             }
         };
+
         auto noise_map = tiling::NoiseMap();
-        auto wang_tiles = tiling::WangTiles<CellType>(noise_map, std::move(rule),
-                                                      std::move(m_tileset_constraints));
-        m_cell_sprites = wang_tiles.get_cell_uvwt();
+        auto tileset_constraints = wang::TilesetConstraints<CellType>();
+        m_wang_tiles = wang::WangTiles<CellType>(noise_map, std::move(rule),
+                                                 std::move(tileset_constraints));
 
         auto window_size = ctx->window->get_framebuffer_size<float>();
         const float num_pixels_at_default_zoom = 200.0f;
@@ -161,14 +162,20 @@ class MapGeneration : public Game {
 
         const auto cell_size = glm::vec2(24.0f, 24.0f);
         auto base_model_matrix = ModelMatrix().scale(cell_size.x, cell_size.y, 1.0f);
-
-        for (auto i = 0; i < m_cell_sprites.size(); i++) {
-            const int x = i % wang_tiles.width();
-            const int y = i / wang_tiles.width();
+        const auto num_tiles = m_wang_tiles.width() * m_wang_tiles.height();
+        for (auto i = 0; i < num_tiles; i++) {
+            const int x = i % m_wang_tiles.width();
+            const int y = i / m_wang_tiles.width();
             /*logger::debug(x, ", ", y, " ", cell_sprites[i]);*/
+            const auto tileset_index = m_wang_tiles.lookup_tile(x, y);
+
+            const auto uvwt =
+                tileset_index.has_value()
+                    ? m_tileset_uvwt.uvwt_for_tile_at(tileset_index->x, tileset_index->y)
+                    : m_tileset_uvwt.uvwt_for_tile_at(0, 0);
             m_quad_storage_buffer->write(graphics_pipeline::QuadPipelineSBO{
                 .model_matrix = ModelMatrix(base_model_matrix).translate(x, y, 0),
-                .uvwt = m_cell_sprites[i],
+                .uvwt = uvwt,
             });
         }
     }
@@ -210,7 +217,7 @@ class MapGeneration : public Game {
         auto no_descriptor = m_quad_descriptor_set.get();
         glm::mat4 no_push_constant = m_camera.get_view_projection_matrix();
         m_quad_pipeline->render(command_buffer, no_descriptor, &no_push_constant,
-                                m_cell_sprites.size());
+                                m_wang_tiles.width() * m_wang_tiles.height());
 
         render_pass.end_submit_present();
     };

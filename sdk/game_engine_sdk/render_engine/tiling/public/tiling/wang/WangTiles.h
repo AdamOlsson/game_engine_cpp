@@ -1,27 +1,23 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/UVWT.h"
-#include "game_engine_sdk/render_engine/tiling/NoiseMap.h"
-#include "game_engine_sdk/render_engine/tiling/wang/traits.h"
-#include "game_engine_sdk/traits.h"
-#include "glm/glm.hpp"
+#include "tiling/NoiseMap.h"
+#include "tiling/traits.h"
+#include "tiling/wang/TilesetConstraints.h"
 #include <vector>
 
-namespace tiling {
+namespace tiling::wang {
 
 template <WangEnumUint8 T> class WangTiles {
   private:
     unsigned int m_grid_width;
     unsigned int m_grid_height;
-    std::vector<T> m_cells;
+    std::vector<T> m_tiles;
 
-    /*TilesetConstraints m_constraints;*/
-    std::unordered_map<std::tuple<T, T, T, T>, glm::vec4, ConstraintHash<T>>
-        m_tileset_constraints;
+    TilesetConstraints<T> m_constraints;
 
-    std::vector<UVWT> m_cell_sprites;
+    std::vector<std::optional<TilesetIndex>> m_tile_sprites;
 
-    std::vector<T> assign_cell_types(const tiling::NoiseMap &noise_map,
+    std::vector<T> assign_tile_types(const tiling::NoiseMap &noise_map,
                                      std::function<T(float)> tile_assign_rule) {
         std::vector<T> cell_types;
         cell_types.reserve(noise_map.size());
@@ -31,8 +27,9 @@ template <WangEnumUint8 T> class WangTiles {
         return cell_types;
     }
 
-    std::vector<UVWT> assign_cell_sprites(std::vector<T> &cell_types) {
-        std::vector<UVWT> cell_sprites;
+    std::vector<std::optional<TilesetIndex>>
+    assign_tile_sprites(std::vector<T> &cell_types) {
+        std::vector<std::optional<TilesetIndex>> cell_sprites;
         cell_sprites.reserve(m_grid_width * m_grid_height);
         for (auto i = 0; i < cell_types.size(); i++) {
             const int x = i % m_grid_width;
@@ -45,7 +42,6 @@ template <WangEnumUint8 T> class WangTiles {
             const int bottom = current + m_grid_width;
 
             // For each cell, find the constraints based on bordering cells
-            // TODO: How can I use the "none" value from the template enum?
             T left_constraint = static_cast<T>(0xFF);
             if (left >= 0) {
                 left_constraint = cell_types[i - 1];
@@ -74,16 +70,11 @@ template <WangEnumUint8 T> class WangTiles {
             // this "None" to a wildcard match or even easier, the outer most tiles
             // always have no texture.
             /*logger::debug(i, ": looking for constraint ", constraints);*/
-
-            // auto constraint = m_tileset_constraints.lookup_sprite(top_constraint,
-            // right_constraint, bottom_constraint, left_constraint);
-            if (m_tileset_constraints.find(constraints) != m_tileset_constraints.end()) {
-                cell_sprites.push_back(m_tileset_constraints[constraints]);
-
+            auto sprite_index = m_constraints.lookup_sprite(constraints);
+            if (sprite_index) {
+                cell_sprites.push_back(sprite_index.value());
             } else {
-                // TODO: Create some wrapper around uvwt coordinates have this be "no
-                // uvwt"
-                cell_sprites.push_back(UVWT::none());
+                cell_sprites.push_back(std::nullopt);
             }
         }
         return cell_sprites;
@@ -93,20 +84,19 @@ template <WangEnumUint8 T> class WangTiles {
     WangTiles() = default;
     ~WangTiles() = default;
     WangTiles(const tiling::NoiseMap &noise_map, std::function<T(float)> tile_assign_rule,
-              std::unordered_map<std::tuple<T, T, T, T>, glm::vec4, ConstraintHash<T>>
-                  &&tileset_constraints)
+              TilesetConstraints<T> &&constraints)
         : m_grid_width(noise_map.width), m_grid_height(noise_map.height),
-          m_tileset_constraints(std::move(tileset_constraints)) {
-        m_cells = assign_cell_types(std::move(noise_map), std::move(tile_assign_rule));
-        m_cell_sprites = assign_cell_sprites(m_cells);
+          m_constraints(std::move(constraints)) {
+        m_tiles = assign_tile_types(std::move(noise_map), std::move(tile_assign_rule));
+        m_tile_sprites = assign_tile_sprites(m_tiles);
     }
 
     unsigned int width() { return m_grid_width; }
     unsigned int height() { return m_grid_height; }
 
     void print_cell_type() {
-        for (auto i = 0; i < m_cells.size(); i++) {
-            std::cout << m_cells[i] << " ";
+        for (auto i = 0; i < m_tiles.size(); i++) {
+            std::cout << m_tiles[i] << " ";
             if ((i + 1) % m_grid_width == 0) {
                 std::cout << std::endl;
             }
@@ -114,8 +104,8 @@ template <WangEnumUint8 T> class WangTiles {
         std::cout << std::endl;
     }
 
-    // Temporary?
-    std::vector<T> get_cells() { return m_cells; }
-    std::vector<UVWT> get_cell_uvwt() { return m_cell_sprites; }
+    std::optional<TilesetIndex> lookup_tile(const unsigned int x, const unsigned int y) {
+        return m_tile_sprites[y * m_grid_width + x];
+    }
 };
-} // namespace tiling
+} // namespace tiling::wang

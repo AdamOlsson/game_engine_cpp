@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+
 namespace tiling {
 class NoiseMap {
   private:
