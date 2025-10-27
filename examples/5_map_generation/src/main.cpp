@@ -8,6 +8,7 @@
 #include "game_engine_sdk/render_engine/graphics_pipeline/quad/QuadPipelineSBO.h"
 #include "game_engine_sdk/render_engine/window/WindowConfig.h"
 #include "tiles.h"
+#include "tiling/NoiseMap.h"
 #include "tiling/wang/TilesetConstraints.h"
 #include "tiling/wang/WangTiles.h"
 #include "vulkan/vulkan_core.h"
@@ -16,9 +17,7 @@
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 
 // CONTINUE: Render Wang tiling
-// -
-// - How do I want to transfer the assigned UVWT in the WangTiles class to the storage
-// buffer?
+// - Implement the WangTiles test
 // - Load the noise map and use it to render tiles
 
 using namespace tiling;
@@ -40,16 +39,15 @@ class MapGeneration : public Game {
 
     Texture m_tileset;
     TilesetUVWT m_tileset_uvwt;
-    std::unordered_map<std::tuple<CellType, CellType, CellType, CellType>, glm::vec4,
-                       wang::ConstraintHash<CellType>>
-        m_tileset_constraints;
+    /*std::unordered_map<std::tuple<CellType, CellType, CellType, CellType, CellType>,*/
+    /*                   glm::vec4, wang::ConstraintHash<CellType>>*/
+    /*    m_tileset_constraints;*/
 
     bool m_is_right_mouse_pressed = false;
     window::ViewportPoint m_mouse_last_position = window::ViewportPoint();
     Camera2D m_camera;
 
     wang::WangTiles<CellType> m_wang_tiles;
-    /*std::vector<UVWT> m_cell_sprites;*/
 
   public:
     MapGeneration() {}
@@ -74,43 +72,50 @@ class MapGeneration : public Game {
         //  .east = {},
         //  .south = {},
         //  .west = {}});
-        m_tileset_constraints = {
-            // Walls
-            {std::tuple(CellType::Grass, CellType::Grass, CellType::Wall,
-                        CellType::Grass),
-             m_tileset_uvwt.uvwt_for_tile_at(2, 0)},
-            {std::tuple(CellType::Grass, CellType::Wall, CellType::Wall, CellType::Grass),
-             m_tileset_uvwt.uvwt_for_tile_at(1, 1)},
-            {std::tuple(CellType::Grass, CellType::Wall, CellType::Wall, CellType::Wall),
-             m_tileset_uvwt.uvwt_for_tile_at(2, 1)},
-            {std::tuple(CellType::Grass, CellType::Grass, CellType::Wall, CellType::Wall),
-             m_tileset_uvwt.uvwt_for_tile_at(3, 1)},
-            {std::tuple(CellType::Wall, CellType::Wall, CellType::Wall, CellType::Grass),
-             m_tileset_uvwt.uvwt_for_tile_at(1, 2)},
-            {std::tuple(CellType::Wall, CellType::Grass, CellType::Wall, CellType::Wall),
-             m_tileset_uvwt.uvwt_for_tile_at(3, 2)},
-            {std::tuple(CellType::Wall, CellType::Wall, CellType::Grass, CellType::Grass),
-             m_tileset_uvwt.uvwt_for_tile_at(1, 3)},
-
-            // Same uvwt for multiple scenarios
-            {std::tuple(CellType::Wall, CellType::Wall, CellType::Grass, CellType::Wall),
-             m_tileset_uvwt.uvwt_for_tile_at(2, 3)},
-            {std::tuple(CellType::Grass, CellType::Wall, CellType::Grass,
-                        CellType::Grass),
-             m_tileset_uvwt.uvwt_for_tile_at(2, 3)},
-            {std::tuple(CellType::Grass, CellType::Grass, CellType::Grass,
-                        CellType::Wall),
-             m_tileset_uvwt.uvwt_for_tile_at(2, 3)},
-
-            {std::tuple(CellType::Wall, CellType::Grass, CellType::Grass, CellType::Wall),
-             m_tileset_uvwt.uvwt_for_tile_at(3, 3)},
-
-            // Grass
-            /*{std::tuple(CellType::Wall, CellType::Grass, CellType::Wall,
-               CellType::Wall),*/
-            /* m_tileset_uvwt.uvwt_for_tile_at(0, 3)},*/
-
-        };
+        /*m_tileset_constraints = {*/
+        /*    // Walls*/
+        /*    {std::tuple(CellType::Grass, CellType::Grass, CellType::Wall,*/
+        /*                CellType::Grass),*/
+        /*     m_tileset_uvwt.uvwt_for_tile_at(2, 0)},*/
+        /*    {std::tuple(CellType::Grass, CellType::Wall, CellType::Wall,
+         * CellType::Grass),*/
+        /*     m_tileset_uvwt.uvwt_for_tile_at(1, 1)},*/
+        /*    {std::tuple(CellType::Grass, CellType::Wall, CellType::Wall,
+         * CellType::Wall),*/
+        /*     m_tileset_uvwt.uvwt_for_tile_at(2, 1)},*/
+        /*    {std::tuple(CellType::Grass, CellType::Grass, CellType::Wall,
+         * CellType::Wall),*/
+        /*     m_tileset_uvwt.uvwt_for_tile_at(3, 1)},*/
+        /*    {std::tuple(CellType::Wall, CellType::Wall, CellType::Wall,
+         * CellType::Grass),*/
+        /*     m_tileset_uvwt.uvwt_for_tile_at(1, 2)},*/
+        /*    {std::tuple(CellType::Wall, CellType::Grass, CellType::Wall,
+         * CellType::Wall),*/
+        /*     m_tileset_uvwt.uvwt_for_tile_at(3, 2)},*/
+        /*    {std::tuple(CellType::Wall, CellType::Wall, CellType::Grass,
+         * CellType::Grass),*/
+        /*     m_tileset_uvwt.uvwt_for_tile_at(1, 3)},*/
+        /**/
+        /*    // Same uvwt for multiple scenarios*/
+        /*    {std::tuple(CellType::Wall, CellType::Wall, CellType::Grass,
+         * CellType::Wall),*/
+        /*     m_tileset_uvwt.uvwt_for_tile_at(2, 3)},*/
+        /*    {std::tuple(CellType::Grass, CellType::Wall, CellType::Grass,*/
+        /*                CellType::Grass),*/
+        /*     m_tileset_uvwt.uvwt_for_tile_at(2, 3)},*/
+        /*    {std::tuple(CellType::Grass, CellType::Grass, CellType::Grass,*/
+        /*                CellType::Wall),*/
+        /*     m_tileset_uvwt.uvwt_for_tile_at(2, 3)},*/
+        /**/
+        /*    {std::tuple(CellType::Wall, CellType::Grass, CellType::Grass,
+         * CellType::Wall),*/
+        /*     m_tileset_uvwt.uvwt_for_tile_at(3, 3)},*/
+        /**/
+        /*    // Grass */
+        /*    {std::tuple(CellType::Wall, CellType::Grass, CellType::Wall, */
+        /*       CellType::Wall), */
+        /*     m_tileset_uvwt.uvwt_for_tile_at(0, 3)}, */
+        /*};*/
 
         m_quad_storage_buffer =
             std::make_unique<SwapStorageBuffer<graphics_pipeline::QuadPipelineSBO>>(

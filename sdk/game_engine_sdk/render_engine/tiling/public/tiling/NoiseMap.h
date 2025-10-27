@@ -16,7 +16,9 @@ class NoiseMap {
     };
     // clang-format on
 
-    /*NoiseMap() = default;*/
+    NoiseMap() = default;
+    NoiseMap(std::vector<float> &&noise, const size_t width, const size_t height)
+        : noise(std::move(noise)), width(width), height(height) {}
     ~NoiseMap() = default;
 
     size_t size() const { return noise.size(); }
