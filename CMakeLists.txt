@@ -70,6 +70,7 @@ target_link_libraries(${PROJECT_NAME}
         ${VULKAN_LIBRARY}
         glfw
         render_engine::tiling
+        logger::logger
 )
 
 set_target_properties(${PROJECT_NAME}

@@ -64,15 +64,13 @@ template <WangEnumUint8 T> class WangTiles {
                 bottom_constraint = cell_types[bottom];
             }
 
-            const std::tuple<T, T, T, T, T> constraints =
-                std::tuple(current_type, top_constraint, right_constraint,
-                           bottom_constraint, left_constraint);
-
             // TODO: A problem is that the outer most tiles will always have a "None"
             // constraint towards the edge of the map. Either I would need to have a
             // this "None" to a wildcard match or even easier, the outer most tiles
             // always have no texture.
-            auto tileset_index = m_constraints.lookup_constraint(constraints);
+            auto tileset_index = m_constraints.lookup_constraint(
+                current_type, top_constraint, right_constraint, bottom_constraint,
+                left_constraint);
             if (tileset_index) {
                 cell_sprites.push_back(tileset_index.value());
             } else {

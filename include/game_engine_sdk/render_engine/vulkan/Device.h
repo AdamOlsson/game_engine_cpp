@@ -2,7 +2,7 @@
 
 #include "Instance.h"
 #include "Surface.h"
-#include "game_engine_sdk/logger.h"
+#include "logger/logger.h"
 
 namespace vulkan {
 namespace device {

@@ -40,13 +40,14 @@ TEST(WangTilesetConstraintTest, Test_BasicTileSetup) {
 
     auto constraints = tiling::wang::TilesetConstraints<CellType>();
 
-    const auto wall_constraints = tiling::wang::TileConstraint<CellType>{
+    const auto wall_constraints = tiling::wang::TilesetTile<CellType>{
         .type = CellType::Wall,
-        .north = {CellType::Wall, CellType::Grass},
-        .east = {CellType::Wall, CellType::Grass},
-        .south = {CellType::Wall, CellType::Grass},
-        .west = {CellType::Wall, CellType::Grass},
-    };
+        .constraints = {
+            .north = {CellType::Wall, CellType::Grass},
+            .east = {CellType::Wall, CellType::Grass},
+            .south = {CellType::Wall, CellType::Grass},
+            .west = {CellType::Wall, CellType::Grass},
+        }};
     constraints.add_constraint(tiling::wang::TilesetIndex(0, 0),
                                std::move(wall_constraints));
 

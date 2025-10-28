@@ -1,6 +1,6 @@
 #include "game_engine_sdk/render_engine/vulkan/Instance.h"
-#include "game_engine_sdk/logger.h"
 #include "game_engine_sdk/render_engine/graphics_context/validation_layers.h"
+#include "logger/logger.h"
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 

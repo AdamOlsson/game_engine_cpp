@@ -1,16 +1,11 @@
 #pragma once
 
-#include <ostream>
 #include <type_traits>
 
 namespace tiling {
 
 template <typename T>
-concept Printable = requires(T t, std::ostream &os) { os << t; };
-
-template <typename T>
 concept WangEnumUint8 =
-    std::is_enum_v<T> && std::is_same_v<std::underlying_type_t<T>, uint8_t> &&
-    Printable<T>;
+    std::is_enum_v<T> && std::is_same_v<std::underlying_type_t<T>, uint8_t>;
 
 } // namespace tiling

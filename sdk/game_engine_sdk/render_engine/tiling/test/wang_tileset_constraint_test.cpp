@@ -25,14 +25,15 @@ inline std::ostream &operator<<(std::ostream &os, CellType type) {
 
 TEST(WangTilesetConstraintTest, Test_AddSingleConstraint) {
     auto constraints = tiling::wang::TilesetConstraints<CellType>();
-    constraints.add_constraint(tiling::wang::TilesetIndex(0, 0),
-                               tiling::wang::TileConstraint<CellType>{
-                                   .type = CellType::Wall,
-                                   .north = {CellType::Wall},
-                                   .east = {CellType::Wall},
-                                   .south = {CellType::Wall},
-                                   .west = {CellType::Wall},
-                               });
+    constraints.add_constraint(
+        tiling::wang::TilesetIndex(0, 0),
+        tiling::wang::TilesetTile<CellType>{.type = CellType::Wall,
+                                            .constraints = {
+                                                .north = {CellType::Wall},
+                                                .east = {CellType::Wall},
+                                                .south = {CellType::Wall},
+                                                .west = {CellType::Wall},
+                                            }});
     auto tileset_index = constraints.lookup_constraint(
         CellType::Wall, CellType::Wall, CellType::Wall, CellType::Wall, CellType::Wall);
     EXPECT_TRUE(tileset_index.has_value());
@@ -43,13 +44,14 @@ TEST(WangTilesetConstraintTest, Test_AllPermutationsGenerated) {
     {
         auto constraints = tiling::wang::TilesetConstraints<CellType>();
         constraints.add_constraint(tiling::wang::TilesetIndex(0, 0),
-                                   tiling::wang::TileConstraint<CellType>{
+                                   tiling::wang::TilesetTile<CellType>{
                                        .type = CellType::Wall,
-                                       .north = {CellType::Wall, CellType::Grass},
-                                       .east = {CellType::Wall},
-                                       .south = {CellType::Wall},
-                                       .west = {CellType::Wall},
-                                   });
+                                       .constraints = {
+                                           .north = {CellType::Wall, CellType::Grass},
+                                           .east = {CellType::Wall},
+                                           .south = {CellType::Wall},
+                                           .west = {CellType::Wall},
+                                       }});
 
         ASSERT_EQ(2, constraints.count());
 
@@ -69,13 +71,14 @@ TEST(WangTilesetConstraintTest, Test_AllPermutationsGenerated) {
     {
         auto constraints = tiling::wang::TilesetConstraints<CellType>();
         constraints.add_constraint(tiling::wang::TilesetIndex(0, 0),
-                                   tiling::wang::TileConstraint<CellType>{
+                                   tiling::wang::TilesetTile<CellType>{
                                        .type = CellType::Wall,
-                                       .north = {CellType::Wall},
-                                       .east = {CellType::Wall, CellType::Grass},
-                                       .south = {CellType::Wall},
-                                       .west = {CellType::Wall},
-                                   });
+                                       .constraints = {
+                                           .north = {CellType::Wall},
+                                           .east = {CellType::Wall, CellType::Grass},
+                                           .south = {CellType::Wall},
+                                           .west = {CellType::Wall},
+                                       }});
 
         ASSERT_EQ(2, constraints.count());
 
@@ -95,13 +98,14 @@ TEST(WangTilesetConstraintTest, Test_AllPermutationsGenerated) {
     {
         auto constraints = tiling::wang::TilesetConstraints<CellType>();
         constraints.add_constraint(tiling::wang::TilesetIndex(0, 0),
-                                   tiling::wang::TileConstraint<CellType>{
+                                   tiling::wang::TilesetTile<CellType>{
                                        .type = CellType::Wall,
-                                       .north = {CellType::Wall},
-                                       .east = {CellType::Wall},
-                                       .south = {CellType::Wall, CellType::Grass},
-                                       .west = {CellType::Wall},
-                                   });
+                                       .constraints = {
+                                           .north = {CellType::Wall},
+                                           .east = {CellType::Wall},
+                                           .south = {CellType::Wall, CellType::Grass},
+                                           .west = {CellType::Wall},
+                                       }});
 
         ASSERT_EQ(2, constraints.count());
 
@@ -121,13 +125,14 @@ TEST(WangTilesetConstraintTest, Test_AllPermutationsGenerated) {
     {
         auto constraints = tiling::wang::TilesetConstraints<CellType>();
         constraints.add_constraint(tiling::wang::TilesetIndex(0, 0),
-                                   tiling::wang::TileConstraint<CellType>{
+                                   tiling::wang::TilesetTile<CellType>{
                                        .type = CellType::Wall,
-                                       .north = {CellType::Wall},
-                                       .east = {CellType::Wall},
-                                       .south = {CellType::Wall},
-                                       .west = {CellType::Wall, CellType::Grass},
-                                   });
+                                       .constraints = {
+                                           .north = {CellType::Wall},
+                                           .east = {CellType::Wall},
+                                           .south = {CellType::Wall},
+                                           .west = {CellType::Wall, CellType::Grass},
+                                       }});
 
         ASSERT_EQ(2, constraints.count());
 
@@ -147,13 +152,14 @@ TEST(WangTilesetConstraintTest, Test_AllPermutationsGenerated) {
     {
         auto constraints = tiling::wang::TilesetConstraints<CellType>();
         constraints.add_constraint(tiling::wang::TilesetIndex(0, 0),
-                                   tiling::wang::TileConstraint<CellType>{
+                                   tiling::wang::TilesetTile<CellType>{
                                        .type = CellType::Wall,
-                                       .north = {CellType::Wall, CellType::Grass},
-                                       .east = {CellType::Wall},
-                                       .south = {CellType::Wall},
-                                       .west = {CellType::Wall, CellType::Water},
-                                   });
+                                       .constraints = {
+                                           .north = {CellType::Wall, CellType::Grass},
+                                           .east = {CellType::Wall},
+                                           .south = {CellType::Wall},
+                                           .west = {CellType::Wall, CellType::Water},
+                                       }});
 
         ASSERT_EQ(4, constraints.count());
 
@@ -187,22 +193,28 @@ TEST(WangTilesetConstraintTest,
      Test_TwoTileWithDifferentClassificationButSameConstraints) {
     auto constraints = tiling::wang::TilesetConstraints<CellType>();
 
-    auto wall_constraint = tiling::wang::TileConstraint<CellType>{
+    auto wall_constraint = tiling::wang::TilesetTile<CellType>{
         .type = CellType::Wall,
-        .north = {CellType::Wall},
-        .east = {CellType::Wall},
-        .south = {CellType::Wall},
-        .west = {CellType::Wall},
+        .constraints =
+            {
+                .north = {CellType::Wall},
+                .east = {CellType::Wall},
+                .south = {CellType::Wall},
+                .west = {CellType::Wall},
+            },
     };
     constraints.add_constraint(tiling::wang::TilesetIndex(0, 0),
                                std::move(wall_constraint));
 
-    auto grass_constraint = tiling::wang::TileConstraint<CellType>{
+    auto grass_constraint = tiling::wang::TilesetTile<CellType>{
         .type = CellType::Grass,
-        .north = {CellType::Wall},
-        .east = {CellType::Wall},
-        .south = {CellType::Wall},
-        .west = {CellType::Wall},
+        .constraints =
+            {
+                .north = {CellType::Wall},
+                .east = {CellType::Wall},
+                .south = {CellType::Wall},
+                .west = {CellType::Wall},
+            },
     };
     constraints.add_constraint(tiling::wang::TilesetIndex(1, 1),
                                std::move(grass_constraint));

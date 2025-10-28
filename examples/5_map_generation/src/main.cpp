@@ -10,6 +10,7 @@
 #include "tiles.h"
 #include "tiling/NoiseMap.h"
 #include "tiling/wang/TilesetConstraints.h"
+#include "tiling/wang/TilesetIndex.h"
 #include "tiling/wang/WangTiles.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
@@ -17,7 +18,9 @@
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 
 // CONTINUE: Render Wang tiling
-// - Implement the WangTiles test
+// - Test various setups of noise maps
+// - Fix import path to prefix with "game_engine_sdk" for modules
+// - Center tiles on screen
 // - Load the noise map and use it to render tiles
 
 using namespace tiling;
@@ -39,9 +42,6 @@ class MapGeneration : public Game {
 
     Texture m_tileset;
     TilesetUVWT m_tileset_uvwt;
-    /*std::unordered_map<std::tuple<CellType, CellType, CellType, CellType, CellType>,*/
-    /*                   glm::vec4, wang::ConstraintHash<CellType>>*/
-    /*    m_tileset_constraints;*/
 
     bool m_is_right_mouse_pressed = false;
     window::ViewportPoint m_mouse_last_position = window::ViewportPoint();
@@ -66,56 +66,6 @@ class MapGeneration : public Game {
         m_tileset = Texture::from_filepath(ctx, m_command_buffer_manager.get(),
                                            ASSET_FILE("forest_tileset_24x24.png"));
         m_tileset_uvwt = TilesetUVWT(m_tileset, TileSize(24, 24));
-        // Constraints()
-        // tileset_constraints.add_constraint(0,0, TileConstraint<CellType>{
-        //  .north = {},
-        //  .east = {},
-        //  .south = {},
-        //  .west = {}});
-        /*m_tileset_constraints = {*/
-        /*    // Walls*/
-        /*    {std::tuple(CellType::Grass, CellType::Grass, CellType::Wall,*/
-        /*                CellType::Grass),*/
-        /*     m_tileset_uvwt.uvwt_for_tile_at(2, 0)},*/
-        /*    {std::tuple(CellType::Grass, CellType::Wall, CellType::Wall,
-         * CellType::Grass),*/
-        /*     m_tileset_uvwt.uvwt_for_tile_at(1, 1)},*/
-        /*    {std::tuple(CellType::Grass, CellType::Wall, CellType::Wall,
-         * CellType::Wall),*/
-        /*     m_tileset_uvwt.uvwt_for_tile_at(2, 1)},*/
-        /*    {std::tuple(CellType::Grass, CellType::Grass, CellType::Wall,
-         * CellType::Wall),*/
-        /*     m_tileset_uvwt.uvwt_for_tile_at(3, 1)},*/
-        /*    {std::tuple(CellType::Wall, CellType::Wall, CellType::Wall,
-         * CellType::Grass),*/
-        /*     m_tileset_uvwt.uvwt_for_tile_at(1, 2)},*/
-        /*    {std::tuple(CellType::Wall, CellType::Grass, CellType::Wall,
-         * CellType::Wall),*/
-        /*     m_tileset_uvwt.uvwt_for_tile_at(3, 2)},*/
-        /*    {std::tuple(CellType::Wall, CellType::Wall, CellType::Grass,
-         * CellType::Grass),*/
-        /*     m_tileset_uvwt.uvwt_for_tile_at(1, 3)},*/
-        /**/
-        /*    // Same uvwt for multiple scenarios*/
-        /*    {std::tuple(CellType::Wall, CellType::Wall, CellType::Grass,
-         * CellType::Wall),*/
-        /*     m_tileset_uvwt.uvwt_for_tile_at(2, 3)},*/
-        /*    {std::tuple(CellType::Grass, CellType::Wall, CellType::Grass,*/
-        /*                CellType::Grass),*/
-        /*     m_tileset_uvwt.uvwt_for_tile_at(2, 3)},*/
-        /*    {std::tuple(CellType::Grass, CellType::Grass, CellType::Grass,*/
-        /*                CellType::Wall),*/
-        /*     m_tileset_uvwt.uvwt_for_tile_at(2, 3)},*/
-        /**/
-        /*    {std::tuple(CellType::Wall, CellType::Grass, CellType::Grass,
-         * CellType::Wall),*/
-        /*     m_tileset_uvwt.uvwt_for_tile_at(3, 3)},*/
-        /**/
-        /*    // Grass */
-        /*    {std::tuple(CellType::Wall, CellType::Grass, CellType::Wall, */
-        /*       CellType::Wall), */
-        /*     m_tileset_uvwt.uvwt_for_tile_at(0, 3)}, */
-        /*};*/
 
         m_quad_storage_buffer =
             std::make_unique<SwapStorageBuffer<graphics_pipeline::QuadPipelineSBO>>(
@@ -145,6 +95,99 @@ class MapGeneration : public Game {
             ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
             &quad_descriptor_set_layout, &quad_push_constant_range);
 
+        auto tileset_constraints = wang::TilesetConstraints<CellType>();
+        tileset_constraints.add_constraint(
+            wang::TilesetIndex(2, 0),
+            tiling::wang::TilesetTile<CellType>{.type = CellType::Wall,
+                                                .constraints = {
+                                                    .north = {CellType::Grass},
+                                                    .east = {CellType::Grass},
+                                                    .south = {CellType::Wall},
+                                                    .west = {CellType::Grass},
+                                                }});
+
+        tileset_constraints.add_constraint(
+            wang::TilesetIndex(1, 1),
+            tiling::wang::TilesetTile<CellType>{.type = CellType::Wall,
+                                                .constraints = {
+                                                    .north = {CellType::Grass},
+                                                    .east = {CellType::Wall},
+                                                    .south = {CellType::Wall},
+                                                    .west = {CellType::Grass},
+                                                }});
+
+        tileset_constraints.add_constraint(
+            wang::TilesetIndex(2, 1),
+            tiling::wang::TilesetTile<CellType>{.type = CellType::Wall,
+                                                .constraints = {
+                                                    .north = {CellType::Grass},
+                                                    .east = {CellType::Wall},
+                                                    .south = {CellType::Wall},
+                                                    .west = {CellType::Wall},
+                                                }});
+
+        tileset_constraints.add_constraint(
+            wang::TilesetIndex(3, 1),
+            tiling::wang::TilesetTile<CellType>{.type = CellType::Wall,
+                                                .constraints = {
+                                                    .north = {CellType::Grass},
+                                                    .east = {CellType::Grass},
+                                                    .south = {CellType::Wall},
+                                                    .west = {CellType::Wall},
+                                                }});
+
+        tileset_constraints.add_constraint(
+            wang::TilesetIndex(1, 2),
+            tiling::wang::TilesetTile<CellType>{.type = CellType::Wall,
+                                                .constraints = {
+                                                    .north = {CellType::Wall},
+                                                    .east = {CellType::Wall},
+                                                    .south = {CellType::Wall},
+                                                    .west = {CellType::Grass},
+                                                }});
+
+        tileset_constraints.add_constraint(
+            wang::TilesetIndex(3, 2),
+            tiling::wang::TilesetTile<CellType>{.type = CellType::Wall,
+                                                .constraints = {
+                                                    .north = {CellType::Wall},
+                                                    .east = {CellType::Grass},
+                                                    .south = {CellType::Wall},
+                                                    .west = {CellType::Wall},
+                                                }});
+
+        tileset_constraints.add_constraint(
+            wang::TilesetIndex(1, 3), tiling::wang::TilesetTile<CellType>{
+                                          .type = CellType::Wall,
+                                          .constraints = {
+                                              .north = {CellType::Wall, CellType::Grass},
+                                              .east = {CellType::Wall},
+                                              .south = {CellType::Grass},
+                                              .west = {CellType::Grass},
+                                          }});
+
+        tileset_constraints.add_constraint(
+            wang::TilesetIndex(2, 3), tiling::wang::TilesetTile<CellType>{
+                                          .type = CellType::Wall,
+                                          .constraints = {
+                                              .north = {CellType::Wall, CellType::Grass},
+                                              .east = {CellType::Wall, CellType::Grass},
+                                              .south = {CellType::Grass},
+                                              .west = {CellType::Wall},
+                                          }});
+
+        /*tileset_constraints.add_constraint(wang::TilesetIndex(3, 3),*/
+        /*                                   tiling::wang::TileConstraint<CellType>{*/
+        /*                                       .type = CellType::Wall,*/
+        /*                                       .north = {CellType::Wall,
+         * CellType::Grass},*/
+        /*                                       .east = {CellType::Grass},*/
+        /*                                       .south = {CellType::Grass},*/
+        /*                                       .west = {CellType::Wall},*/
+        /*                                   });*/
+
+        auto noise_map = tiling::NoiseMap();
+
         auto rule = [](float value) -> CellType {
             if (value > 0.5) {
                 return CellType::Wall;
@@ -153,8 +196,6 @@ class MapGeneration : public Game {
             }
         };
 
-        auto noise_map = tiling::NoiseMap();
-        auto tileset_constraints = wang::TilesetConstraints<CellType>();
         m_wang_tiles = wang::WangTiles<CellType>(noise_map, std::move(rule),
                                                  std::move(tileset_constraints));
 
