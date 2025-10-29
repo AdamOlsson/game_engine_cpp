@@ -173,7 +173,7 @@ class MapGeneration : public Game {
                                               .north = {CellType::Wall, CellType::Grass},
                                               .east = {CellType::Wall, CellType::Grass},
                                               .south = {CellType::Grass},
-                                              .west = {CellType::Wall},
+                                              .west = {CellType::Wall, CellType::Grass},
                                           }});
 
         /*tileset_constraints.add_constraint(wang::TilesetIndex(3, 3),*/

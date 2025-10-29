@@ -13,10 +13,10 @@ namespace tiling::wang {
 template <WangEnumUint8 T> struct TilesetTile {
     T type;
     struct TilesetTileConstraints {
-        std::set<T> north;
-        std::set<T> east;
-        std::set<T> south;
-        std::set<T> west;
+        std::vector<T> north;
+        std::vector<T> east;
+        std::vector<T> south;
+        std::vector<T> west;
     } constraints;
 };
 
@@ -73,23 +73,32 @@ template <WangEnumUint8 T> class TilesetConstraints {
     TilesetConstraints<T> &add_constraint(const TilesetIndex &&index,
                                           const TilesetTile<T> &&tile) {
 
-        for (const auto &n : tile.constraints.north) {
-            for (const auto &e : tile.constraints.east) {
-                for (const auto &s : tile.constraints.south) {
-                    for (const auto &w : tile.constraints.west) {
-                        const auto key = TilesetKey<T>(tile.type, n, e, s, w);
-                        const auto it = m_constraints.find(key);
-                        if (it != m_constraints.end()) {
-                            const auto old_index = it->second;
-                            logger::warning("Overwriting existing constraint ", key,
-                                            " and tileset index ", old_index,
-                                            " for new tileset index ", index);
-                        }
-                        m_constraints[key] = std::move(index);
-                        m_count++;
-                    }
-                }
+        const auto n_size = tile.constraints.north.size();
+        const auto e_size = tile.constraints.east.size();
+        const auto s_size = tile.constraints.south.size();
+        const auto w_size = tile.constraints.west.size();
+        if (n_size != e_size && e_size != s_size && s_size != w_size) {
+            throw std::runtime_error(
+                std::format("Error: The vector of constraints for each cardinal "
+                            "direction needs to be equal in size for {}",
+                            index.to_string()));
+        }
+
+        for (auto i = 0; i < n_size; i++) {
+            const auto n = tile.constraints.north[i];
+            const auto e = tile.constraints.east[i];
+            const auto s = tile.constraints.south[i];
+            const auto w = tile.constraints.west[i];
+            const auto key = TilesetKey<T>(tile.type, n, e, s, w);
+            const auto it = m_constraints.find(key);
+            if (it != m_constraints.end()) {
+                const auto old_index = it->second;
+                logger::warning("Overwriting existing constraint ", key,
+                                " and tileset index ", old_index,
+                                " for new tileset index ", index);
             }
+            m_constraints[key] = std::move(index);
+            m_count++;
         }
         return *this;
     }
