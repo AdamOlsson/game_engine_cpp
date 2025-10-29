@@ -1,12 +1,10 @@
 #pragma once
 
-/*#include "logger/logger.h"*/
 #include "logger/logger.h"
 #include "tiling/traits.h"
 #include "tiling/wang/TilesetIndex.h"
 #include <iostream>
 #include <optional>
-#include <set>
 
 namespace tiling::wang {
 
@@ -77,7 +75,7 @@ template <WangEnumUint8 T> class TilesetConstraints {
         const auto e_size = tile.constraints.east.size();
         const auto s_size = tile.constraints.south.size();
         const auto w_size = tile.constraints.west.size();
-        if (n_size != e_size && e_size != s_size && s_size != w_size) {
+        if (n_size != e_size || e_size != s_size || s_size != w_size) {
             throw std::runtime_error(
                 std::format("Error: The vector of constraints for each cardinal "
                             "direction needs to be equal in size for {}",

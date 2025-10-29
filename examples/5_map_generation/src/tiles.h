@@ -1,5 +1,6 @@
 #pragma once
 
+#include "tiling/wang/TilesetConstraints.h"
 #include <cstdint>
 #include <ostream>
 enum class CellType : uint8_t {
@@ -20,3 +21,5 @@ inline std::ostream &operator<<(std::ostream &os, CellType type) {
         return os << "Unknown";
     }
 }
+
+tiling::wang::TilesetConstraints<CellType> create_tileset_constraints();

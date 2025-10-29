@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.28)
 
 option(GAME_ENGINE_SDK_BUILD_TEST "Build the unit tests" OFF)
 option(GAME_ENGINE_SDK_BUILD_EXAMPLES "Build the examples" OFF)
-option(CMAKE_LOG_LEVEL_DEBUG "Confgure using debug log level" OFF)
+option(CMAKE_LOG_LEVEL_DEBUG "Configure using debug log level" OFF)
 
 message(STATUS "Building game engine SDK with the following options:")
 message(STATUS "    Build type: ${CMAKE_BUILD_TYPE}")
@@ -44,6 +44,7 @@ if(GAME_ENGINE_SDK_BUILD_TEST)
 endif()
 
 set(GAME_ENGINE_SDK_BUILD_RENDER_ENGINE ON CACHE BOOL "" FORCE)
+set(RENDER_ENGINE_BUILD_IMAGE ON CACHE BOOL "" FORCE)
 set(RENDER_ENGINE_BUILD_TILING ON CACHE BOOL "" FORCE)
 add_subdirectory(sdk/game_engine_sdk)
 
@@ -69,6 +70,7 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC
         ${VULKAN_LIBRARY}
         glfw
+        render_engine::image
         render_engine::tiling
         logger::logger
 )

@@ -1,9 +1,9 @@
 #pragma once
 
 #include "game_engine_sdk/render_engine/CommandBufferManager.h"
-#include "game_engine_sdk/render_engine/ImageData.h"
 #include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/ImageView.h"
+#include "image/Image.h"
 #include "vulkan/vulkan_core.h"
 
 namespace vulkan {
@@ -11,7 +11,7 @@ struct TextureImageDimension {
     unsigned int width;
     unsigned int height;
 
-    static TextureImageDimension from(const ImageDimension &image_dim) {
+    static TextureImageDimension from(const image::ImageDimensions &image_dim) {
         return TextureImageDimension{image_dim.width, image_dim.height};
     }
 };

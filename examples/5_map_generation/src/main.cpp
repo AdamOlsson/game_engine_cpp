@@ -9,7 +9,6 @@
 #include "game_engine_sdk/render_engine/window/WindowConfig.h"
 #include "tiles.h"
 #include "tiling/NoiseMap.h"
-#include "tiling/wang/TilesetConstraints.h"
 #include "tiling/wang/TilesetIndex.h"
 #include "tiling/wang/WangTiles.h"
 #include "vulkan/vulkan_core.h"
@@ -18,10 +17,9 @@
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 
 // CONTINUE: Render Wang tiling
-// - Test various setups of noise maps
+// - Load the noise map and use it to render tiles
 // - Fix import path to prefix with "game_engine_sdk" for modules
 // - Center tiles on screen
-// - Load the noise map and use it to render tiles
 
 using namespace tiling;
 
@@ -95,97 +93,7 @@ class MapGeneration : public Game {
             ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
             &quad_descriptor_set_layout, &quad_push_constant_range);
 
-        auto tileset_constraints = wang::TilesetConstraints<CellType>();
-        tileset_constraints.add_constraint(
-            wang::TilesetIndex(2, 0),
-            tiling::wang::TilesetTile<CellType>{.type = CellType::Wall,
-                                                .constraints = {
-                                                    .north = {CellType::Grass},
-                                                    .east = {CellType::Grass},
-                                                    .south = {CellType::Wall},
-                                                    .west = {CellType::Grass},
-                                                }});
-
-        tileset_constraints.add_constraint(
-            wang::TilesetIndex(1, 1),
-            tiling::wang::TilesetTile<CellType>{.type = CellType::Wall,
-                                                .constraints = {
-                                                    .north = {CellType::Grass},
-                                                    .east = {CellType::Wall},
-                                                    .south = {CellType::Wall},
-                                                    .west = {CellType::Grass},
-                                                }});
-
-        tileset_constraints.add_constraint(
-            wang::TilesetIndex(2, 1),
-            tiling::wang::TilesetTile<CellType>{.type = CellType::Wall,
-                                                .constraints = {
-                                                    .north = {CellType::Grass},
-                                                    .east = {CellType::Wall},
-                                                    .south = {CellType::Wall},
-                                                    .west = {CellType::Wall},
-                                                }});
-
-        tileset_constraints.add_constraint(
-            wang::TilesetIndex(3, 1),
-            tiling::wang::TilesetTile<CellType>{.type = CellType::Wall,
-                                                .constraints = {
-                                                    .north = {CellType::Grass},
-                                                    .east = {CellType::Grass},
-                                                    .south = {CellType::Wall},
-                                                    .west = {CellType::Wall},
-                                                }});
-
-        tileset_constraints.add_constraint(
-            wang::TilesetIndex(1, 2),
-            tiling::wang::TilesetTile<CellType>{.type = CellType::Wall,
-                                                .constraints = {
-                                                    .north = {CellType::Wall},
-                                                    .east = {CellType::Wall},
-                                                    .south = {CellType::Wall},
-                                                    .west = {CellType::Grass},
-                                                }});
-
-        tileset_constraints.add_constraint(
-            wang::TilesetIndex(3, 2),
-            tiling::wang::TilesetTile<CellType>{.type = CellType::Wall,
-                                                .constraints = {
-                                                    .north = {CellType::Wall},
-                                                    .east = {CellType::Grass},
-                                                    .south = {CellType::Wall},
-                                                    .west = {CellType::Wall},
-                                                }});
-
-        tileset_constraints.add_constraint(
-            wang::TilesetIndex(1, 3), tiling::wang::TilesetTile<CellType>{
-                                          .type = CellType::Wall,
-                                          .constraints = {
-                                              .north = {CellType::Wall, CellType::Grass},
-                                              .east = {CellType::Wall},
-                                              .south = {CellType::Grass},
-                                              .west = {CellType::Grass},
-                                          }});
-
-        tileset_constraints.add_constraint(
-            wang::TilesetIndex(2, 3), tiling::wang::TilesetTile<CellType>{
-                                          .type = CellType::Wall,
-                                          .constraints = {
-                                              .north = {CellType::Wall, CellType::Grass},
-                                              .east = {CellType::Wall, CellType::Grass},
-                                              .south = {CellType::Grass},
-                                              .west = {CellType::Wall, CellType::Grass},
-                                          }});
-
-        /*tileset_constraints.add_constraint(wang::TilesetIndex(3, 3),*/
-        /*                                   tiling::wang::TileConstraint<CellType>{*/
-        /*                                       .type = CellType::Wall,*/
-        /*                                       .north = {CellType::Wall,
-         * CellType::Grass},*/
-        /*                                       .east = {CellType::Grass},*/
-        /*                                       .south = {CellType::Grass},*/
-        /*                                       .west = {CellType::Wall},*/
-        /*                                   });*/
-
+        auto tileset_constraints = create_tileset_constraints();
         auto noise_map = tiling::NoiseMap();
 
         auto rule = [](float value) -> CellType {

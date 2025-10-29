@@ -11,7 +11,7 @@ StagingBuffer::~StagingBuffer() {
     vkFreeMemory(m_ctx->logical_device, m_staging_buffer.buffer_memory, nullptr);
 }
 
-void StagingBuffer::map_memory(const ImageData &image) {
+void StagingBuffer::map_memory(const image::Image &image) {
     void *data;
     vkMapMemory(m_ctx->logical_device, m_staging_buffer.buffer_memory, 0, image.size, 0,
                 &data);
@@ -20,11 +20,11 @@ void StagingBuffer::map_memory(const ImageData &image) {
 }
 
 void StagingBuffer::transfer_image_to_device_image(
-    CommandBufferManager *command_buffer_manager, const ImageData &src,
+    CommandBufferManager *command_buffer_manager, const image::Image &src,
     const vulkan::TextureImage &dst) {
 
     map_memory(src);
-    copy_buffer_to_image(command_buffer_manager, dst.m_image, src.dimension);
+    copy_buffer_to_image(command_buffer_manager, dst.m_image, src.dimensions);
 }
 
 Buffer StagingBuffer::create_staging_buffer() {
@@ -38,7 +38,7 @@ Buffer StagingBuffer::create_staging_buffer() {
 
 void StagingBuffer::copy_buffer_to_image(CommandBufferManager *command_buffer_manager,
                                          const VkImage &image,
-                                         const ImageDimension &dim) {
+                                         const image::ImageDimensions &dim) {
     SingleTimeCommandBuffer command_buffer =
         command_buffer_manager->get_single_time_command_buffer();
     command_buffer.begin();

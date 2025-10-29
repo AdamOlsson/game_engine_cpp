@@ -4,6 +4,7 @@
 #include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/resources/images/ImageResource.h"
 #include "game_engine_sdk/render_engine/vulkan/TextureImage.h"
+#include "image/Image.h"
 #include <memory>
 
 class Texture {
@@ -18,7 +19,7 @@ class Texture {
     // As the make_unique needs to have access to the constructor it needs to be left
     // public
     Texture(std::shared_ptr<graphics_context::GraphicsContext> ctx,
-            CommandBufferManager *command_buffer_manager, const ImageData &image_data);
+            CommandBufferManager *command_buffer_manager, const image::Image &image_data);
 
     static Texture from_filepath(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
                                  CommandBufferManager *command_buffer_manager,

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 
 option(GAME_ENGINE_SDK_BUILD_TEST "Build the unit tests" OFF)
-option(CMAKE_LOG_LEVEL_DEBUG "Confgure using debug log level" OFF)
+option(CMAKE_LOG_LEVEL_DEBUG "Configure using debug log level" OFF)
 
 message(STATUS "Building tiling module with the following options:")
 message(STATUS "    Log level: ${CMAKE_LOG_LEVEL_DEBUG}")

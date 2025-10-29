@@ -11,7 +11,7 @@ class NoiseMap {
     // clang-format off
     std::vector<float> noise = {
         0.0, 0.0, 0.0, 0.0, 0.0, 
-        0.0, 0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0, 0.0,
         0.0, 1.0, 1.0, 1.0, 0.0,
         0.0, 0.0, 1.0, 0.0, 0.0,
         0.0, 0.0, 0.0, 0.0, 0.0,
@@ -22,6 +22,8 @@ class NoiseMap {
     NoiseMap(std::vector<float> &&noise, const size_t width, const size_t height)
         : noise(std::move(noise)), width(width), height(height) {}
     ~NoiseMap() = default;
+
+    static NoiseMap unique_from_filepath();
 
     size_t size() const { return noise.size(); }
 };

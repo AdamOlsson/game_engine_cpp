@@ -1,7 +1,6 @@
 #pragma once
 
 #include "game_engine_sdk/render_engine/CommandBufferManager.h"
-#include "game_engine_sdk/render_engine/ImageData.h"
 #include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/TextureImage.h"
 #include "logger/logger.h"
@@ -19,9 +18,9 @@ class StagingBuffer {
     Buffer m_staging_buffer;
 
     Buffer create_staging_buffer();
-    void map_memory(const ImageData &image);
+    void map_memory(const image::Image &image);
     void copy_buffer_to_image(CommandBufferManager *command_buffer_manager,
-                              const VkImage &image, const ImageDimension &dim);
+                              const VkImage &image, const image::ImageDimensions &dim);
 
     void copy_buffer_to_buffer(CommandBufferManager *command_buffer_manager,
                                const VkBuffer &dst_buffer);
@@ -37,7 +36,7 @@ class StagingBuffer {
     ~StagingBuffer();
 
     void transfer_image_to_device_image(CommandBufferManager *command_buffer_manager,
-                                        const ImageData &src,
+                                        const image::Image &src,
                                         const vulkan::TextureImage &dst);
 
     template <typename T>
