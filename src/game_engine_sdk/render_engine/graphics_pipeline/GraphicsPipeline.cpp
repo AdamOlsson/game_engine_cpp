@@ -30,8 +30,7 @@ std::vector<char> graphics_pipeline::readFile(const std::string filename) {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
     if (!file.is_open()) {
-        logger::error("Failed to open file ", filename);
-        throw std::runtime_error("Failed to open file!");
+        throw std::runtime_error(std::format("Failed to open file {}", filename));
     }
 
     size_t fileSize = (size_t)file.tellg();

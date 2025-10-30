@@ -23,6 +23,7 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     INTERFACE 
         logger::logger
+        render_engine::image
 )
 
 if(GAME_ENGINE_SDK_BUILD_TEST)

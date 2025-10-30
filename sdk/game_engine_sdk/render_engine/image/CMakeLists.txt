@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.28)
 
 option(CMAKE_LOG_LEVEL_DEBUG "Configure using debug log level" OFF)
 
-message(STATUS "Building tiling module with the following options:")
+message(STATUS "Building image module with the following options:")
 message(STATUS "    Log level: ${CMAKE_LOG_LEVEL_DEBUG}")
 message(STATUS "    Build type: ${CMAKE_BUILD_TYPE}")
 
@@ -26,5 +26,6 @@ target_include_directories(${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/third_party
 )
 
-
-
+# target_link_libraries(${PROJECT_NAME}
+#     PRIVATE 
+# )

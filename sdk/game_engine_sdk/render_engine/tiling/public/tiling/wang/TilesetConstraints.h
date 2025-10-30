@@ -29,8 +29,8 @@ template <WangEnumUint8 T> struct TilesetKey {
         : type(type), north(n), east(e), south(s), west(w) {}
 
     friend std::ostream &operator<<(std::ostream &os, const TilesetKey<T> &obj) {
-        return os << "(" << obj.type << ", " << obj.north << ", " << obj.east << ", "
-                  << obj.south << ", " << obj.west << ")";
+        return os << "TilesetKey(" << obj.type << ", " << obj.north << ", " << obj.east
+                  << ", " << obj.south << ", " << obj.west << ")";
     }
 
     bool operator==(const TilesetKey &other) const = default;
