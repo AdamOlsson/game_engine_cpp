@@ -15,13 +15,18 @@
 #include <memory>
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
-
+std::ostream &operator<<(std::ostream &os, const glm::vec4 &vec) {
+    os << "glm::vec4(" << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w << ")";
+    return os;
+}
 // CONTINUE: Render Wang tiling
 // - Look into the artifacts and how to solve them
+// - Zooming should be towards center of camera
 // - Make rendering agnostic to window size
 // - Fix import path to prefix with "game_engine_sdk" for modules
 // - Center tiles on screen
-
+// - Make vulkan its own module
+// - Make graphics_pipeline its own module (maybe with vulkan?)
 using namespace tiling;
 
 class MapGeneration : public Game {
@@ -119,8 +124,6 @@ class MapGeneration : public Game {
             ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
             &quad_descriptor_set_layout, &quad_push_constant_range);
 
-        const auto cell_size = glm::vec2(24.0f, 24.0f);
-        auto base_model_matrix = ModelMatrix().scale(cell_size.x, cell_size.y, 1.0f);
         const auto num_tiles = m_wang_tiles.width() * m_wang_tiles.height();
         m_num_instances = 0;
         for (auto i = 0; i < num_tiles; i++) {
@@ -128,15 +131,17 @@ class MapGeneration : public Game {
             const int y = i / m_wang_tiles.width();
             const auto tileset_index = m_wang_tiles.lookup_tile(x, y);
 
-            const auto uvwt =
+            const glm::vec4 uvwt =
                 tileset_index.has_value()
                     ? m_tileset_uvwt.uvwt_for_tile_at(tileset_index->x, tileset_index->y)
                     : m_tileset_uvwt.uvwt_for_tile_at(0, 0);
+
             m_quad_storage_buffer->write(graphics_pipeline::QuadPipelineSBO{
-                .model_matrix = ModelMatrix(base_model_matrix).translate(x, y, 0),
+                .model_matrix = ModelMatrix().translate(x, y, 0),
                 .uvwt = uvwt,
             });
             m_num_instances++;
+            logger::debug(std::format("{}. UVWT: {}", i, io::to_string(uvwt)));
         }
     }
 
@@ -175,12 +180,17 @@ class MapGeneration : public Game {
         render_pass.begin();
 
         auto descriptor = m_quad_descriptor_set.get();
-        glm::mat4 push_constant = m_camera.get_view_projection_matrix();
+        const float cell_size = 24.0f;
+        const auto scaled_cell_size = cell_size * m_camera.get_zoom();
+        glm::mat4 push_constant =
+            glm::scale(m_camera.get_view_projection_matrix(),
+                       glm::vec3(scaled_cell_size, scaled_cell_size, 1.0f));
+
         m_quad_pipeline->render(command_buffer, descriptor, &push_constant,
                                 m_num_instances);
 
         render_pass.end_submit_present();
-    };
+    }
 };
 
 int main() {

@@ -2,6 +2,7 @@
 
 #include "glm/fwd.hpp"
 #include <iostream>
+#include <sstream>
 #include <string>
 
 #ifdef NDEBUG
@@ -18,10 +19,6 @@
         }                                                                                \
     } while (false)
 #endif
-
-std::string vec_to_string(const glm::vec3 &vec);
-std::string vec_to_string(const glm::vec2 &vec);
-std::string mat_to_string(const glm::mat3 &mat);
 
 std::ostream &operator<<(std::ostream &os, const glm::vec2 &vec);
 std::ostream &operator<<(std::ostream &os, const glm::vec3 &vec);
@@ -44,3 +41,11 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec) {
     os << "]";
     return os;
 }
+
+namespace io {
+template <typename T> std::string to_string(const T &t) {
+    std::ostringstream oss;
+    oss << t;
+    return oss.str();
+}
+} // namespace io

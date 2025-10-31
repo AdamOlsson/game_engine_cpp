@@ -26,14 +26,14 @@ TEST(RigidBodyTest, GivenRectangleAtOrigoCreatesExpectedVertices) {
         glm::vec3(5.0, 5.0, 0.0),
     };
 
-    EXPECT_EQ(expected[0], output[0]) << "Expected " << vec_to_string(expected[0])
-                                      << " found " << vec_to_string(output[0]);
-    EXPECT_EQ(expected[1], output[1]) << "Expected " << vec_to_string(expected[1])
-                                      << " found " << vec_to_string(output[1]);
-    EXPECT_EQ(expected[2], output[2]) << "Expected " << vec_to_string(expected[2])
-                                      << " found " << vec_to_string(output[2]);
-    EXPECT_EQ(expected[3], output[3]) << "Expected " << vec_to_string(expected[3])
-                                      << " found " << vec_to_string(output[3]);
+    EXPECT_EQ(expected[0], output[0]) << "Expected " << io::to_string(expected[0])
+                                      << " found " << io::to_string(output[0]);
+    EXPECT_EQ(expected[1], output[1]) << "Expected " << io::to_string(expected[1])
+                                      << " found " << io::to_string(output[1]);
+    EXPECT_EQ(expected[2], output[2]) << "Expected " << io::to_string(expected[2])
+                                      << " found " << io::to_string(output[2]);
+    EXPECT_EQ(expected[3], output[3]) << "Expected " << io::to_string(expected[3])
+                                      << " found " << io::to_string(output[3]);
 }
 
 TEST(RigidBodyTest, GivenRectangleIsOffsetCreatesExpectedVertices) {
@@ -54,14 +54,14 @@ TEST(RigidBodyTest, GivenRectangleIsOffsetCreatesExpectedVertices) {
         glm::vec3(9.0, 10.0, 0.0),
     };
 
-    EXPECT_EQ(expected[0], output[0]) << "Expected " << vec_to_string(expected[0])
-                                      << " found " << vec_to_string(output[0]);
-    EXPECT_EQ(expected[1], output[1]) << "Expected " << vec_to_string(expected[1])
-                                      << " found " << vec_to_string(output[1]);
-    EXPECT_EQ(expected[2], output[2]) << "Expected " << vec_to_string(expected[2])
-                                      << " found " << vec_to_string(output[2]);
-    EXPECT_EQ(expected[3], output[3]) << "Expected " << vec_to_string(expected[3])
-                                      << " found " << vec_to_string(output[3]);
+    EXPECT_EQ(expected[0], output[0]) << "Expected " << io::to_string(expected[0])
+                                      << " found " << io::to_string(output[0]);
+    EXPECT_EQ(expected[1], output[1]) << "Expected " << io::to_string(expected[1])
+                                      << " found " << io::to_string(output[1]);
+    EXPECT_EQ(expected[2], output[2]) << "Expected " << io::to_string(expected[2])
+                                      << " found " << io::to_string(output[2]);
+    EXPECT_EQ(expected[3], output[3]) << "Expected " << io::to_string(expected[3])
+                                      << " found " << io::to_string(output[3]);
 }
 
 TEST(RigidBodyTest, GivenRectangleAtOrigoAndRotatedCreatesExpectedVertices) {
@@ -82,14 +82,14 @@ TEST(RigidBodyTest, GivenRectangleAtOrigoAndRotatedCreatesExpectedVertices) {
         glm::vec3(0.0, 7.071, 0.0),
     };
 
-    EXPECT_EQ(expected[0], output[0]) << "Expected " << vec_to_string(expected[0])
-                                      << " found " << vec_to_string(output[0]);
-    EXPECT_EQ(expected[1], output[1]) << "Expected " << vec_to_string(expected[1])
-                                      << " found " << vec_to_string(output[1]);
-    EXPECT_EQ(expected[2], output[2]) << "Expected " << vec_to_string(expected[2])
-                                      << " found " << vec_to_string(output[2]);
-    EXPECT_EQ(expected[3], output[3]) << "Expected " << vec_to_string(expected[3])
-                                      << " found " << vec_to_string(output[3]);
+    EXPECT_EQ(expected[0], output[0]) << "Expected " << io::to_string(expected[0])
+                                      << " found " << io::to_string(output[0]);
+    EXPECT_EQ(expected[1], output[1]) << "Expected " << io::to_string(expected[1])
+                                      << " found " << io::to_string(output[1]);
+    EXPECT_EQ(expected[2], output[2]) << "Expected " << io::to_string(expected[2])
+                                      << " found " << io::to_string(output[2]);
+    EXPECT_EQ(expected[3], output[3]) << "Expected " << io::to_string(expected[3])
+                                      << " found " << io::to_string(output[3]);
 }
 
 TEST(RigidBodyTest, GivenRectangleIsOffsetAndRotatedCreatesExpectedVertices) {
@@ -110,14 +110,14 @@ TEST(RigidBodyTest, GivenRectangleIsOffsetAndRotatedCreatesExpectedVertices) {
         glm::vec3(1.0, 9.071, 0.0),
     };
 
-    EXPECT_EQ(expected[0], output[0]) << "Expected " << vec_to_string(expected[0])
-                                      << " found " << vec_to_string(output[0]);
-    EXPECT_EQ(expected[1], output[1]) << "Expected " << vec_to_string(expected[1])
-                                      << " found " << vec_to_string(output[1]);
-    EXPECT_EQ(expected[2], output[2]) << "Expected " << vec_to_string(expected[2])
-                                      << " found " << vec_to_string(output[2]);
-    EXPECT_EQ(expected[3], output[3]) << "Expected " << vec_to_string(expected[3])
-                                      << " found " << vec_to_string(output[3]);
+    EXPECT_EQ(expected[0], output[0]) << "Expected " << io::to_string(expected[0])
+                                      << " found " << io::to_string(output[0]);
+    EXPECT_EQ(expected[1], output[1]) << "Expected " << io::to_string(expected[1])
+                                      << " found " << io::to_string(output[1]);
+    EXPECT_EQ(expected[2], output[2]) << "Expected " << io::to_string(expected[2])
+                                      << " found " << io::to_string(output[2]);
+    EXPECT_EQ(expected[3], output[3]) << "Expected " << io::to_string(expected[3])
+                                      << " found " << io::to_string(output[3]);
 }
 
 TEST(RigidBodyTest, GivenTriangleAtOrigoCreatesExpectedVertices) {
@@ -133,12 +133,12 @@ TEST(RigidBodyTest, GivenTriangleAtOrigoCreatesExpectedVertices) {
     std::vector<glm::vec3> expected = {glm::vec3(0.0, 0.577, 0),
                                        glm::vec3(-0.5, -0.289, 0.0),
                                        glm::vec3(0.5, -0.289, 0)};
-    EXPECT_EQ(expected[0], output[0]) << "Expected " << vec_to_string(expected[0])
-                                      << " found " << vec_to_string(output[0]);
-    EXPECT_EQ(expected[1], output[1]) << "Expected " << vec_to_string(expected[1])
-                                      << " found " << vec_to_string(output[1]);
-    EXPECT_EQ(expected[2], output[2]) << "Expected " << vec_to_string(expected[2])
-                                      << " found " << vec_to_string(output[2]);
+    EXPECT_EQ(expected[0], output[0]) << "Expected " << io::to_string(expected[0])
+                                      << " found " << io::to_string(output[0]);
+    EXPECT_EQ(expected[1], output[1]) << "Expected " << io::to_string(expected[1])
+                                      << " found " << io::to_string(output[1]);
+    EXPECT_EQ(expected[2], output[2]) << "Expected " << io::to_string(expected[2])
+                                      << " found " << io::to_string(output[2]);
 }
 
 /*TEST(RigidBodyTest, GivenTriangleAtOrigoCreatesExpectedVertices2) {*/
@@ -156,12 +156,12 @@ TEST(RigidBodyTest, GivenTriangleAtOrigoCreatesExpectedVertices) {
 /*    std::vector<glm::vec3> expected = {*/
 /*        glm::vec3(0, 230.94, 0), glm::vec3(-200, -115.47, 0), glm::vec3(200, -115.47,
  * 0)};*/
-/*    EXPECT_EQ(expected[0], output[0]) << "Expected " << vec_to_string(expected[0])*/
-/*                                      << " found " << vec_to_string(output[0]);*/
-/*    EXPECT_EQ(expected[1], output[1]) << "Expected " << vec_to_string(expected[1])*/
-/*                                      << " found " << vec_to_string(output[1]);*/
-/*    EXPECT_EQ(expected[2], output[2]) << "Expected " << vec_to_string(expected[2])*/
-/*                                      << " found " << vec_to_string(output[2]);*/
+/*    EXPECT_EQ(expected[0], output[0]) << "Expected " << io::to_string(expected[0])*/
+/*                                      << " found " << io::to_string(output[0]);*/
+/*    EXPECT_EQ(expected[1], output[1]) << "Expected " << io::to_string(expected[1])*/
+/*                                      << " found " << io::to_string(output[1]);*/
+/*    EXPECT_EQ(expected[2], output[2]) << "Expected " << io::to_string(expected[2])*/
+/*                                      << " found " << io::to_string(output[2]);*/
 /*}*/
 
 TEST(RigidBodyTest, GivenTriangleOffsetCreatesExpectedVertices) {
@@ -177,12 +177,12 @@ TEST(RigidBodyTest, GivenTriangleOffsetCreatesExpectedVertices) {
     std::vector<glm::vec3> expected = {glm::vec3(-10.0, 15.577, 0),
                                        glm::vec3(-10.5, 14.711, 0.0),
                                        glm::vec3(-9.5, 14.711, 0)};
-    EXPECT_EQ(expected[0], output[0]) << "Expected " << vec_to_string(expected[0])
-                                      << " found " << vec_to_string(output[0]);
-    EXPECT_EQ(expected[1], output[1]) << "Expected " << vec_to_string(expected[1])
-                                      << " found " << vec_to_string(output[1]);
-    EXPECT_EQ(expected[2], output[2]) << "Expected " << vec_to_string(expected[2])
-                                      << " found " << vec_to_string(output[2]);
+    EXPECT_EQ(expected[0], output[0]) << "Expected " << io::to_string(expected[0])
+                                      << " found " << io::to_string(output[0]);
+    EXPECT_EQ(expected[1], output[1]) << "Expected " << io::to_string(expected[1])
+                                      << " found " << io::to_string(output[1]);
+    EXPECT_EQ(expected[2], output[2]) << "Expected " << io::to_string(expected[2])
+                                      << " found " << io::to_string(output[2]);
 }
 
 TEST(RigidBodyTest, GivenTriangleAtOrigoAndRotatedCreatesExpectedVertices) {
@@ -199,12 +199,12 @@ TEST(RigidBodyTest, GivenTriangleAtOrigoAndRotatedCreatesExpectedVertices) {
     std::vector<glm::vec3> expected = {glm::vec3(-0.289, 0.500, 0.0),
                                        glm::vec3(-0.289, -0.500, 0.0),
                                        glm::vec3(0.577, 0.0, 0.0)};
-    EXPECT_EQ(expected[0], output[0]) << "Expected " << vec_to_string(expected[0])
-                                      << " found " << vec_to_string(output[0]);
-    EXPECT_EQ(expected[1], output[1]) << "Expected " << vec_to_string(expected[1])
-                                      << " found " << vec_to_string(output[1]);
-    EXPECT_EQ(expected[2], output[2]) << "Expected " << vec_to_string(expected[2])
-                                      << " found " << vec_to_string(output[2]);
+    EXPECT_EQ(expected[0], output[0]) << "Expected " << io::to_string(expected[0])
+                                      << " found " << io::to_string(output[0]);
+    EXPECT_EQ(expected[1], output[1]) << "Expected " << io::to_string(expected[1])
+                                      << " found " << io::to_string(output[1]);
+    EXPECT_EQ(expected[2], output[2]) << "Expected " << io::to_string(expected[2])
+                                      << " found " << io::to_string(output[2]);
 }
 
 TEST(RigidBodyTest, GivenTriangleIsOffsetAndRotatedCreatesExpectedVertices) {
@@ -221,12 +221,12 @@ TEST(RigidBodyTest, GivenTriangleIsOffsetAndRotatedCreatesExpectedVertices) {
     std::vector<glm::vec3> expected = {glm::vec3(14.711, -9.500, 0.0),
                                        glm::vec3(14.711, -10.500, 0.0),
                                        glm::vec3(15.577, -10.0, 0.0)};
-    EXPECT_EQ(expected[0], output[0]) << "Expected " << vec_to_string(expected[0])
-                                      << " found " << vec_to_string(output[0]);
-    EXPECT_EQ(expected[1], output[1]) << "Expected " << vec_to_string(expected[1])
-                                      << " found " << vec_to_string(output[1]);
-    EXPECT_EQ(expected[2], output[2]) << "Expected " << vec_to_string(expected[2])
-                                      << " found " << vec_to_string(output[2]);
+    EXPECT_EQ(expected[0], output[0]) << "Expected " << io::to_string(expected[0])
+                                      << " found " << io::to_string(output[0]);
+    EXPECT_EQ(expected[1], output[1]) << "Expected " << io::to_string(expected[1])
+                                      << " found " << io::to_string(output[1]);
+    EXPECT_EQ(expected[2], output[2]) << "Expected " << io::to_string(expected[2])
+                                      << " found " << io::to_string(output[2]);
 }
 
 TEST(RigidBodyTest, GivenPointAtOrigoWhenRectangleIsAtOrigoExpectTrue) {
@@ -447,14 +447,14 @@ TEST(RigidBodyTest, GivenRectangleWhenOffsetProducesExpectedNormals) {
         glm::vec3(1.0, 0.0, 0.0),
         glm::vec3(0.0, 1.0, 0.0),
     };
-    EXPECT_EQ(expected[0], normals[0]) << "Expected " << vec_to_string(expected[0])
-                                       << " found " << vec_to_string(normals[0]);
-    EXPECT_EQ(expected[1], normals[1]) << "Expected " << vec_to_string(expected[1])
-                                       << " found " << vec_to_string(normals[1]);
-    EXPECT_EQ(expected[2], normals[2]) << "Expected " << vec_to_string(expected[2])
-                                       << " found " << vec_to_string(normals[2]);
-    EXPECT_EQ(expected[3], normals[3]) << "Expected " << vec_to_string(expected[3])
-                                       << " found " << vec_to_string(normals[3]);
+    EXPECT_EQ(expected[0], normals[0]) << "Expected " << io::to_string(expected[0])
+                                       << " found " << io::to_string(normals[0]);
+    EXPECT_EQ(expected[1], normals[1]) << "Expected " << io::to_string(expected[1])
+                                       << " found " << io::to_string(normals[1]);
+    EXPECT_EQ(expected[2], normals[2]) << "Expected " << io::to_string(expected[2])
+                                       << " found " << io::to_string(normals[2]);
+    EXPECT_EQ(expected[3], normals[3]) << "Expected " << io::to_string(expected[3])
+                                       << " found " << io::to_string(normals[3]);
 
     auto magnitude0 = Round::round(glm::length(expected[0]));
     auto magnitude1 = Round::round(glm::length(expected[1]));
@@ -482,14 +482,14 @@ TEST(RigidBodyTest, GivenRectangleWhenIsOffsetAndRotatedProducesExpectedNormals)
         glm::vec3(0.707, 0.707, 0.0),
         glm::vec3(-0.707, 0.707, 0.0),
     };
-    EXPECT_EQ(expected[0], normals[0]) << "Expected " << vec_to_string(expected[0])
-                                       << " found " << vec_to_string(normals[0]);
-    EXPECT_EQ(expected[1], normals[1]) << "Expected " << vec_to_string(expected[1])
-                                       << " found " << vec_to_string(normals[1]);
-    EXPECT_EQ(expected[2], normals[2]) << "Expected " << vec_to_string(expected[2])
-                                       << " found " << vec_to_string(normals[2]);
-    EXPECT_EQ(expected[3], normals[3]) << "Expected " << vec_to_string(expected[3])
-                                       << " found " << vec_to_string(normals[3]);
+    EXPECT_EQ(expected[0], normals[0]) << "Expected " << io::to_string(expected[0])
+                                       << " found " << io::to_string(normals[0]);
+    EXPECT_EQ(expected[1], normals[1]) << "Expected " << io::to_string(expected[1])
+                                       << " found " << io::to_string(normals[1]);
+    EXPECT_EQ(expected[2], normals[2]) << "Expected " << io::to_string(expected[2])
+                                       << " found " << io::to_string(normals[2]);
+    EXPECT_EQ(expected[3], normals[3]) << "Expected " << io::to_string(expected[3])
+                                       << " found " << io::to_string(normals[3]);
 
     auto magnitude0 = Round::round(glm::length(expected[0]));
     auto magnitude1 = Round::round(glm::length(expected[1]));
@@ -540,12 +540,12 @@ TEST(RigidBodyTest, GivenTriangleWhenAtOrigoAndRotatedProducesExpectedNormals) {
         glm::vec3(0.5, -0.866, 0),
         glm::vec3(0.5, 0.866, 0.0),
     };
-    EXPECT_EQ(expected[0], normals[0]) << "Expected " << vec_to_string(expected[0])
-                                       << " found " << vec_to_string(normals[0]);
-    EXPECT_EQ(expected[1], normals[1]) << "Expected " << vec_to_string(expected[1])
-                                       << " found " << vec_to_string(normals[1]);
-    EXPECT_EQ(expected[2], normals[2]) << "Expected " << vec_to_string(expected[2])
-                                       << " found " << vec_to_string(normals[2]);
+    EXPECT_EQ(expected[0], normals[0]) << "Expected " << io::to_string(expected[0])
+                                       << " found " << io::to_string(normals[0]);
+    EXPECT_EQ(expected[1], normals[1]) << "Expected " << io::to_string(expected[1])
+                                       << " found " << io::to_string(normals[1]);
+    EXPECT_EQ(expected[2], normals[2]) << "Expected " << io::to_string(expected[2])
+                                       << " found " << io::to_string(normals[2]);
 
     auto magnitude0 = Round::round(glm::length(expected[0]));
     auto magnitude1 = Round::round(glm::length(expected[1]));
@@ -569,12 +569,12 @@ TEST(RigidBodyTest, GivenTriangleWhenIsOffsetAndRotatedProducesExpectedNormals) 
         glm::vec3(0.5, -0.866, 0),
         glm::vec3(0.5, 0.866, 0.0),
     };
-    EXPECT_EQ(expected[0], normals[0]) << "Expected " << vec_to_string(expected[0])
-                                       << " found " << vec_to_string(normals[0]);
-    EXPECT_EQ(expected[1], normals[1]) << "Expected " << vec_to_string(expected[1])
-                                       << " found " << vec_to_string(normals[1]);
-    EXPECT_EQ(expected[2], normals[2]) << "Expected " << vec_to_string(expected[2])
-                                       << " found " << vec_to_string(normals[2]);
+    EXPECT_EQ(expected[0], normals[0]) << "Expected " << io::to_string(expected[0])
+                                       << " found " << io::to_string(normals[0]);
+    EXPECT_EQ(expected[1], normals[1]) << "Expected " << io::to_string(expected[1])
+                                       << " found " << io::to_string(normals[1]);
+    EXPECT_EQ(expected[2], normals[2]) << "Expected " << io::to_string(expected[2])
+                                       << " found " << io::to_string(normals[2]);
 
     auto magnitude0 = Round::round(glm::length(expected[0]));
     auto magnitude1 = Round::round(glm::length(expected[1]));

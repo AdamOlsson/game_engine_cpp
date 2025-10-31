@@ -101,3 +101,7 @@ glm::mat4 Camera2D::get_view_projection_matrix() {
     update_projection_matrix();
     return m_projection_matrix * m_view_matrix;
 }
+
+glm::vec2 Camera2D::get_position() { return m_position; }
+float Camera2D::get_rotation() { return m_rotation; }
+float Camera2D::get_zoom() { return m_zoom; }
