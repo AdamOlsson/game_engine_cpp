@@ -2,7 +2,7 @@
 #include "vulkan/vulkan_core.h"
 
 SingleTimeCommandBuffer::SingleTimeCommandBuffer(
-    std::shared_ptr<graphics_context::GraphicsContext> ctx, VkCommandPool &command_pool)
+    std::shared_ptr<vulkan::GraphicsContext> ctx, VkCommandPool &command_pool)
     : m_ctx(ctx), m_command_pool(command_pool), m_command_buffer(allocate_buffer()) {}
 
 SingleTimeCommandBuffer::~SingleTimeCommandBuffer() {

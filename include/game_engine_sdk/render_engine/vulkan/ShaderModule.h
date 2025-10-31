@@ -1,20 +1,20 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/resources/shaders/ShaderResource.h"
+#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 
 namespace vulkan {
 class ShaderModule {
   private:
-    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
+    std::shared_ptr<vulkan::GraphicsContext> m_ctx;
     VkShaderModule m_shader_module;
 
     VkShaderModule create_shader_module(const uint8_t *data, const size_t len);
 
   public:
     ShaderModule() = default;
-    ShaderModule(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+    ShaderModule(std::shared_ptr<vulkan::GraphicsContext> ctx,
                  const ShaderResource &shader);
     ~ShaderModule();
 

@@ -7,11 +7,11 @@
 #include "game_engine_sdk/render_engine/colors.h"
 #include "game_engine_sdk/render_engine/descriptors/SwapDescriptorSet.h"
 #include "game_engine_sdk/render_engine/fonts/Font.h"
-#include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GraphicsPipeline.h"
 #include "game_engine_sdk/render_engine/ui/ElementProperties.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorImageInfo.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorPool.h"
+#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
 #include "glm/fwd.hpp"
 #include "vulkan/vulkan_core.h"
 #include <memory>
@@ -56,7 +56,7 @@ class TextPipeline {
     const uint32_t m_num_samplers = 2 * 1;
     const uint32_t m_descriptor_pool_capacity = 2;
 
-    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
+    std::shared_ptr<vulkan::GraphicsContext> m_ctx;
 
     std::unique_ptr<Font> m_font;
     TextPipelineOptions m_opts;
@@ -71,7 +71,7 @@ class TextPipeline {
     graphics_pipeline::GraphicsPipeline m_graphics_pipeline;
 
   public:
-    TextPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+    TextPipeline(std::shared_ptr<vulkan::GraphicsContext> ctx,
                  CommandBufferManager *command_buffer_manager,
                  SwapChainManager &swap_chain_manager, std::unique_ptr<Font> font);
     ~TextPipeline();

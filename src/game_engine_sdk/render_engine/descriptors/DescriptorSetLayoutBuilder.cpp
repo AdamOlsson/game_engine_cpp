@@ -7,8 +7,8 @@ DescriptorSetLayoutBuilder::add(const VkDescriptorSetLayoutBinding &&binding) {
     return *this;
 }
 
-vulkan::DescriptorSetLayout DescriptorSetLayoutBuilder::build(
-    std::shared_ptr<graphics_context::GraphicsContext> &ctx) {
+vulkan::DescriptorSetLayout
+DescriptorSetLayoutBuilder::build(std::shared_ptr<vulkan::GraphicsContext> &ctx) {
     VkDescriptorSetLayoutCreateInfo layout_info{};
     layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     layout_info.bindingCount = m_bindings.size();

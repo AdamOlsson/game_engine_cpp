@@ -1,6 +1,6 @@
 #include "game_engine_sdk/render_engine/vulkan/ShaderModule.h"
 
-vulkan::ShaderModule::ShaderModule(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+vulkan::ShaderModule::ShaderModule(std::shared_ptr<vulkan::GraphicsContext> ctx,
                                    const ShaderResource &shader)
     : m_ctx(ctx), m_shader_module(create_shader_module(shader.bytes(), shader.length())) {
 }

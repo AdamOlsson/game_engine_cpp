@@ -33,8 +33,7 @@ graphics_pipeline::GraphicsPipelineBuilder::set_descriptor_set_layout(
 }
 
 graphics_pipeline::GraphicsPipeline graphics_pipeline::GraphicsPipelineBuilder::build(
-    std::shared_ptr<graphics_context::GraphicsContext> &ctx,
-    SwapChainManager &swap_chain_manager) {
+    std::shared_ptr<vulkan::GraphicsContext> &ctx, SwapChainManager &swap_chain_manager) {
 
     if (m_vertex_shader_resource == nullptr || m_fragment_shader_resource == nullptr) {
         throw std::runtime_error(

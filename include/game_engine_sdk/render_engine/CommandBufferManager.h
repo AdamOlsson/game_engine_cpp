@@ -1,15 +1,15 @@
 #pragma once
 
 #include "game_engine_sdk/render_engine/SingleTimeCommandBuffer.h"
-#include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/CommandBuffer.h"
 #include "game_engine_sdk/render_engine/vulkan/CommandPool.h"
+#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
 class CommandBufferManager {
   private:
-    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
+    std::shared_ptr<vulkan::GraphicsContext> m_ctx;
     vulkan::CommandPool m_command_pool;
 
     size_t m_num_buffers;
@@ -20,7 +20,7 @@ class CommandBufferManager {
 
   public:
     CommandBufferManager() = default;
-    CommandBufferManager(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+    CommandBufferManager(std::shared_ptr<vulkan::GraphicsContext> ctx,
                          const size_t num_buffers);
     ~CommandBufferManager();
 

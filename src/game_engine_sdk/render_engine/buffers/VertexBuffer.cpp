@@ -5,7 +5,7 @@
 
 VertexBuffer::VertexBuffer() {}
 
-VertexBuffer::VertexBuffer(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+VertexBuffer::VertexBuffer(std::shared_ptr<vulkan::GraphicsContext> ctx,
                            const std::vector<Vertex> &vertices,
                            CommandBufferManager *command_buffer_manager)
     : m_ctx(ctx), size(sizeof(Vertex) * vertices.size()),

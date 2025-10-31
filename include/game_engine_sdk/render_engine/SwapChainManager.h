@@ -3,15 +3,15 @@
 #include "game_engine_sdk/render_engine/RenderPass.h"
 #include "game_engine_sdk/render_engine/SwapChain.h"
 #include "game_engine_sdk/render_engine/buffers/GpuBuffer.h"
-#include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/CommandBuffer.h"
 #include "game_engine_sdk/render_engine/vulkan/Fence.h"
+#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/Semaphore.h"
 #include <memory>
 
 class SwapChainManager {
   private:
-    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
+    std::shared_ptr<vulkan::GraphicsContext> m_ctx;
 
     size_t m_next_frame_buffer;
 
@@ -25,7 +25,7 @@ class SwapChainManager {
     SwapChain m_swap_chain;
 
     SwapChainManager() = default;
-    SwapChainManager(std::shared_ptr<graphics_context::GraphicsContext> ctx);
+    SwapChainManager(std::shared_ptr<vulkan::GraphicsContext> ctx);
 
     SwapChainManager(SwapChainManager &&other) noexcept = default;
     SwapChainManager &operator=(SwapChainManager &&other) noexcept = default;

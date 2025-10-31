@@ -20,7 +20,7 @@ class GameEngine {
     Duration m_tick_delta;
 
     std::unique_ptr<window::Window> m_window;
-    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
+    std::shared_ptr<vulkan::GraphicsContext> m_ctx;
     std::unique_ptr<Game> m_game;
 
   public:

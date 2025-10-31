@@ -23,7 +23,7 @@ class Font {
 
     Font() = default;
 
-    Font(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+    Font(std::shared_ptr<vulkan::GraphicsContext> &ctx,
          CommandBufferManager *command_buffer_manager, const std::string &font_name,
          vulkan::Sampler *sampler)
         : sampler(sampler) {

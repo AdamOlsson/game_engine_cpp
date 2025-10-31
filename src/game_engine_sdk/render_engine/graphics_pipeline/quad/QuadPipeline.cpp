@@ -5,7 +5,7 @@
 
 using namespace graphics_pipeline;
 
-QuadPipeline::QuadPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+QuadPipeline::QuadPipeline(std::shared_ptr<vulkan::GraphicsContext> ctx,
                            CommandBufferManager *command_buffer_manager,
                            SwapChainManager *swap_chain_manager,
                            const vulkan::DescriptorSetLayout *descriptor_set_layout,
@@ -23,6 +23,6 @@ QuadPipeline::QuadPipeline(std::shared_ptr<graphics_context::GraphicsContext> ct
                            vulkan::ShaderModule(ctx, *QuadFragment::create_resource()),
                            *swap_chain_manager)) {}
 
-/*static QuadPipeline create(std::shared_ptr<graphics_context::GraphicsContext> ctx,*/
+/*static QuadPipeline create(std::shared_ptr<vulkan::GraphicsContext> ctx,*/
 /*                           CommandBufferManager *command_buffer_manager,*/
 /*                           SwapChainManager *swap_chain_manager) {}*/

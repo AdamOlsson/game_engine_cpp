@@ -1,12 +1,12 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
+#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/ImageView.h"
 #include <memory>
 namespace vulkan {
 class Framebuffer {
   private:
-    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
+    std::shared_ptr<vulkan::GraphicsContext> m_ctx;
     VkFramebuffer m_frame_buffer;
 
     VkFramebuffer create_framebuffers(ImageView &view, VkRenderPass &render_pass,
@@ -14,7 +14,7 @@ class Framebuffer {
 
   public:
     Framebuffer();
-    Framebuffer(std::shared_ptr<graphics_context::GraphicsContext> ctx, ImageView &view,
+    Framebuffer(std::shared_ptr<vulkan::GraphicsContext> ctx, ImageView &view,
                 VkRenderPass &render_pass, VkExtent2D &extent);
 
     ~Framebuffer();

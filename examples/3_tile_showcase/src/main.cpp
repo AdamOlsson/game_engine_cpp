@@ -34,7 +34,7 @@ class TileShowcase : public Game {
 
     void update(float dt) override {};
 
-    void setup(std::shared_ptr<graphics_context::GraphicsContext> &ctx) override {
+    void setup(std::shared_ptr<vulkan::GraphicsContext> &ctx) override {
         m_swap_chain_manager = std::make_unique<SwapChainManager>(ctx);
         m_command_buffer_manager = std::make_unique<CommandBufferManager>(
             ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);

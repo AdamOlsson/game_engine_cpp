@@ -2,8 +2,8 @@
 
 #include "game_engine_sdk/Dimension.h"
 #include "game_engine_sdk/render_engine/SwapChain.h"
-#include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/CommandBuffer.h"
+#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
 class RenderPass {
   private:
     vulkan::CommandBuffer m_command_buffer;
@@ -17,7 +17,7 @@ class RenderPass {
     VkSemaphore m_submit_completed;
     VkFence m_in_flight_fence;
     uint32_t m_image_index;
-    graphics_context::DeviceQueues m_device_queues;
+    vulkan::DeviceQueues m_device_queues;
 
     RenderPass(vulkan::CommandBuffer &command_buffer, SwapChain *swap_chain);
     ~RenderPass() = default;

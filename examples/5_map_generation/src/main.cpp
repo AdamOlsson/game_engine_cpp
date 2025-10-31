@@ -61,7 +61,7 @@ class MapGeneration : public Game {
 
     void update(float dt) override {};
 
-    void setup(std::shared_ptr<graphics_context::GraphicsContext> &ctx) override {
+    void setup(std::shared_ptr<vulkan::GraphicsContext> &ctx) override {
 
         auto tileset_constraints = create_tileset_constraints();
         auto noise_map =
@@ -145,7 +145,7 @@ class MapGeneration : public Game {
         }
     }
 
-    void register_mouse_event_handler(graphics_context::GraphicsContext *ctx) {
+    void register_mouse_event_handler(vulkan::GraphicsContext *ctx) {
         ctx->window->register_mouse_event_callback(
             [this](window::MouseEvent mouse_event, window::ViewportPoint &point) -> void {
                 switch (mouse_event) {

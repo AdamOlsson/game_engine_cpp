@@ -1,7 +1,7 @@
 #pragma once
 
 #include "game_engine_sdk/render_engine/SwapChainManager.h"
-#include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
+#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/PipelineLayout.h"
 #include "game_engine_sdk/render_engine/vulkan/ShaderModule.h"
 #include "vulkan/vulkan_core.h"
@@ -10,7 +10,7 @@
 namespace vulkan {
 class Pipeline {
   private:
-    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
+    std::shared_ptr<vulkan::GraphicsContext> m_ctx;
 
     VkPipeline m_pipeline;
 
@@ -21,8 +21,8 @@ class Pipeline {
 
   public:
     Pipeline() = default;
-    Pipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
-             PipelineLayout &layout, const ShaderModule &vertex_shader_module,
+    Pipeline(std::shared_ptr<vulkan::GraphicsContext> ctx, PipelineLayout &layout,
+             const ShaderModule &vertex_shader_module,
              const ShaderModule &fragment_shader_module,
              SwapChainManager &swap_chain_manager);
 

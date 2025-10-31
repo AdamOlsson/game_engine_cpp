@@ -10,7 +10,7 @@
 #include <cstring>
 
 graphics_pipeline::TextPipeline::TextPipeline(
-    std::shared_ptr<graphics_context::GraphicsContext> ctx,
+    std::shared_ptr<vulkan::GraphicsContext> ctx,
     CommandBufferManager *command_buffer_manager, SwapChainManager &swap_chain_manager,
     std::unique_ptr<Font> font)
     : m_ctx(ctx), m_font(std::move(font)),

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "game_engine_sdk/render_engine/CommandBufferManager.h"
-#include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
+#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/ImageView.h"
 #include "image/Image.h"
 #include "vulkan/vulkan_core.h"
@@ -19,7 +19,7 @@ struct TextureImageDimension {
 class TextureImage {
   private:
     const VkFormat m_format = VK_FORMAT_R8G8B8A8_SRGB;
-    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
+    std::shared_ptr<vulkan::GraphicsContext> m_ctx;
 
     void destroy();
 
@@ -29,7 +29,7 @@ class TextureImage {
     TextureImageDimension m_dimension;
 
     TextureImage();
-    TextureImage(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+    TextureImage(std::shared_ptr<vulkan::GraphicsContext> ctx,
                  const TextureImageDimension &dim);
     TextureImage(TextureImage &&other) noexcept;
     TextureImage(const TextureImage &other) = delete;

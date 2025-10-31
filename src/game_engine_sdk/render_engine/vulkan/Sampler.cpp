@@ -2,11 +2,11 @@
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
-vulkan::Sampler::Sampler(std::shared_ptr<graphics_context::GraphicsContext> ctx)
+vulkan::Sampler::Sampler(std::shared_ptr<vulkan::GraphicsContext> ctx)
     : m_ctx(ctx), m_sampler(create_sampler(vulkan::Filter::LINEAR,
                                            vulkan::SamplerAddressMode::REPEAT)) {}
 
-vulkan::Sampler::Sampler(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+vulkan::Sampler::Sampler(std::shared_ptr<vulkan::GraphicsContext> ctx,
                          vulkan::Filter filter, SamplerAddressMode address_mode)
     : m_ctx(ctx), m_sampler(create_sampler(filter, address_mode)) {}
 

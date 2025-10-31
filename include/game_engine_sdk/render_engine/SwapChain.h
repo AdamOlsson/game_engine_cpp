@@ -1,7 +1,7 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/Framebuffer.h"
+#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/ImageView.h"
 #include "game_engine_sdk/render_engine/vulkan/SwapChainImage.h"
 #include "vulkan/vulkan_core.h"
@@ -9,7 +9,7 @@
 
 class SwapChain {
   private:
-    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
+    std::shared_ptr<vulkan::GraphicsContext> m_ctx;
     size_t m_next_frame_buffer;
 
     std::vector<vulkan::SwapChainImage> m_images;
@@ -36,8 +36,8 @@ class SwapChain {
     VkRenderPass m_render_pass;
 
     SwapChain();
-    SwapChain(std::shared_ptr<graphics_context::GraphicsContext> ctx);
-    SwapChain(std::shared_ptr<graphics_context::GraphicsContext> ctx, SwapChain &old);
+    SwapChain(std::shared_ptr<vulkan::GraphicsContext> ctx);
+    SwapChain(std::shared_ptr<vulkan::GraphicsContext> ctx, SwapChain &old);
     ~SwapChain();
 
     SwapChain(SwapChain &&other) noexcept;

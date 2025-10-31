@@ -3,15 +3,14 @@
 
 SwapChain::SwapChain() : m_swap_chain(VK_NULL_HANDLE), m_render_pass(VK_NULL_HANDLE) {}
 
-SwapChain::SwapChain(std::shared_ptr<graphics_context::GraphicsContext> ctx)
+SwapChain::SwapChain(std::shared_ptr<vulkan::GraphicsContext> ctx)
     : m_ctx(ctx), m_next_frame_buffer(0) {
 
     VkSwapchainKHR old_swap_chain = VK_NULL_HANDLE;
     setup(old_swap_chain);
 }
 
-SwapChain::SwapChain(std::shared_ptr<graphics_context::GraphicsContext> ctx,
-                     SwapChain &old)
+SwapChain::SwapChain(std::shared_ptr<vulkan::GraphicsContext> ctx, SwapChain &old)
     : m_ctx(ctx), m_next_frame_buffer(old.m_next_frame_buffer) {
     VkSwapchainKHR old_swap_chain = old.m_swap_chain;
     setup(old_swap_chain);

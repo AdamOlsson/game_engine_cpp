@@ -139,7 +139,7 @@ class ShapeRendering : public Game {
 
     void update(float dt) override {};
 
-    void setup(std::shared_ptr<graphics_context::GraphicsContext> &ctx) override {
+    void setup(std::shared_ptr<vulkan::GraphicsContext> &ctx) override {
         register_all_shaders();
         register_all_fonts();
         register_all_images();

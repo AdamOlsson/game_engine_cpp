@@ -1,7 +1,7 @@
 #include "game_engine_sdk/render_engine/vulkan/CommandPool.h"
 #include "vulkan/vulkan_core.h"
 
-vulkan::CommandPool::CommandPool(std::shared_ptr<graphics_context::GraphicsContext> ctx)
+vulkan::CommandPool::CommandPool(std::shared_ptr<vulkan::GraphicsContext> ctx)
     : m_ctx(ctx), m_command_pool(create_command_pool()) {}
 
 vulkan::CommandPool::~CommandPool() {

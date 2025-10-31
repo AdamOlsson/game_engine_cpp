@@ -7,7 +7,7 @@
 #include "game_engine_sdk/render_engine/window/Window.h"
 #include "vulkan/vulkan_core.h"
 
-namespace graphics_context {
+namespace vulkan {
 struct DeviceQueues {
     VkQueue graphics_queue;
     VkQueue present_queue;
@@ -36,4 +36,4 @@ class GraphicsContext {
     DeviceQueues get_device_queues();
 };
 
-} // namespace graphics_context
+} // namespace vulkan

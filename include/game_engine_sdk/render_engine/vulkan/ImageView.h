@@ -1,19 +1,19 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
+#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
 #include <memory>
 namespace vulkan {
 class ImageView {
   private:
-    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
+    std::shared_ptr<vulkan::GraphicsContext> m_ctx;
     VkImageView m_image_view;
 
     VkImageView create_image_view(const VkImage &image, const VkFormat &format);
 
   public:
     ImageView();
-    ImageView(std::shared_ptr<graphics_context::GraphicsContext> ctx,
-              const VkImage &image, const VkFormat format);
+    ImageView(std::shared_ptr<vulkan::GraphicsContext> ctx, const VkImage &image,
+              const VkFormat format);
     ~ImageView();
 
     ImageView(ImageView &&other) noexcept;

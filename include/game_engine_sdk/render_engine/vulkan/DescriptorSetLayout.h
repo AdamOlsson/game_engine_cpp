@@ -1,16 +1,16 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
+#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 namespace vulkan {
 class DescriptorSetLayout {
   private:
-    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
+    std::shared_ptr<vulkan::GraphicsContext> m_ctx;
     VkDescriptorSetLayout m_layout;
 
   public:
     DescriptorSetLayout() = default;
-    DescriptorSetLayout(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+    DescriptorSetLayout(std::shared_ptr<vulkan::GraphicsContext> ctx,
                         VkDescriptorSetLayout &layout);
 
     ~DescriptorSetLayout();

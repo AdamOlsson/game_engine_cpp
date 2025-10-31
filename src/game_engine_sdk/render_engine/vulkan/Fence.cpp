@@ -1,8 +1,7 @@
 #include "game_engine_sdk/render_engine/vulkan/Fence.h"
 #include <memory>
 
-vulkan::Fence::Fence(std::shared_ptr<graphics_context::GraphicsContext> ctx,
-                     const size_t size)
+vulkan::Fence::Fence(std::shared_ptr<vulkan::GraphicsContext> ctx, const size_t size)
     : m_ctx(ctx), m_size(size), m_next(0), m_current(size) {
     m_fences.resize(size);
 

@@ -3,7 +3,7 @@
 
 vulkan::ImageView::ImageView() : m_image_view(VK_NULL_HANDLE) {}
 
-vulkan::ImageView::ImageView(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+vulkan::ImageView::ImageView(std::shared_ptr<vulkan::GraphicsContext> ctx,
                              const VkImage &image, const VkFormat format)
     : m_ctx(ctx), m_image_view(create_image_view(image, format)) {}
 

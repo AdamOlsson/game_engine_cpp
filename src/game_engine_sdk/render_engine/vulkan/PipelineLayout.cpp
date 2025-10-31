@@ -1,14 +1,14 @@
 #include "game_engine_sdk/render_engine/vulkan/PipelineLayout.h"
 
 vulkan::PipelineLayout::PipelineLayout(
-    std::shared_ptr<graphics_context::GraphicsContext> ctx,
+    std::shared_ptr<vulkan::GraphicsContext> ctx,
     const vulkan::DescriptorSetLayout *descriptor_set_layout,
     const vulkan::PushConstantRange *push_constant_range)
     : m_ctx(ctx), m_pipeline_layout(create_graphics_pipeline_layout(
                       descriptor_set_layout, push_constant_range)) {}
 
 vulkan::PipelineLayout::PipelineLayout(
-    std::shared_ptr<graphics_context::GraphicsContext> ctx,
+    std::shared_ptr<vulkan::GraphicsContext> ctx,
     const vulkan::DescriptorSetLayout *descriptor_set_layout,
     const std::vector<VkPushConstantRange> &push_constant_range)
 

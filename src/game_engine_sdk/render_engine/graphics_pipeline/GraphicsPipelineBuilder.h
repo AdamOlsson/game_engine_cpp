@@ -1,10 +1,10 @@
 #pragma once
 
 #include "game_engine_sdk/render_engine/SwapChainManager.h"
-#include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GraphicsPipeline.h"
 #include "game_engine_sdk/render_engine/resources/shaders/ShaderResource.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorSetLayout.h"
+#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <optional>
 
@@ -29,7 +29,7 @@ class GraphicsPipelineBuilder {
     GraphicsPipelineBuilder &
     set_descriptor_set_layout(vulkan::DescriptorSetLayout *value);
 
-    GraphicsPipeline build(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+    GraphicsPipeline build(std::shared_ptr<vulkan::GraphicsContext> &ctx,
                            SwapChainManager &swap_chain_manager);
 };
 } // namespace graphics_pipeline

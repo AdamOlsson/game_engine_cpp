@@ -6,7 +6,7 @@ vulkan::TextureImage::TextureImage()
     : m_ctx(nullptr), m_image(nullptr), m_image_memory(nullptr),
       m_dimension(TextureImageDimension{0, 0}) {}
 
-vulkan::TextureImage::TextureImage(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+vulkan::TextureImage::TextureImage(std::shared_ptr<vulkan::GraphicsContext> ctx,
                                    const TextureImageDimension &dim)
     : m_ctx(ctx), m_dimension(dim) {
 

@@ -2,7 +2,7 @@
 #include "game_engine_sdk/render_engine/Vertex.h"
 #include "vulkan/vulkan_core.h"
 
-vulkan::Pipeline::Pipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
+vulkan::Pipeline::Pipeline(std::shared_ptr<vulkan::GraphicsContext> ctx,
                            PipelineLayout &layout,
                            const ShaderModule &vertex_shader_module,
                            const ShaderModule &fragment_shader_module,

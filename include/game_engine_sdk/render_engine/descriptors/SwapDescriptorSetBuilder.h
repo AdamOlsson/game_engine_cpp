@@ -2,10 +2,10 @@
 
 #include "SwapDescriptorSet.h"
 #include "game_engine_sdk/render_engine/descriptors/DescriptorSetLayoutBuilder.h"
-#include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorBufferInfo.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorImageInfo.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorPool.h"
+#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 
 struct SwapDescriptorSetBuilderOptions {
@@ -28,7 +28,7 @@ class SwapDescriptorSetBuilder {
     size_t m_combined_image_sampler_binding;
 
     std::vector<VkDescriptorSet>
-    allocate_descriptor_sets(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+    allocate_descriptor_sets(std::shared_ptr<vulkan::GraphicsContext> &ctx,
                              vulkan::DescriptorPool &descriptor_pool,
                              const VkDescriptorSetLayout &descriptor_set_layout);
 
@@ -67,6 +67,6 @@ class SwapDescriptorSetBuilder {
                        std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos,
                        SwapDescriptorSetBuilderOptions &&options);
 
-    SwapDescriptorSet build(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
+    SwapDescriptorSet build(std::shared_ptr<vulkan::GraphicsContext> &ctx,
                             vulkan::DescriptorPool &descriptor_pool);
 };

@@ -1,7 +1,7 @@
-#include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
+#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 
-graphics_context::GraphicsContext::GraphicsContext(window::Window *window)
+vulkan::GraphicsContext::GraphicsContext(window::Window *window)
     : m_enable_validation_layers(true), window(window),
       instance(vulkan::Instance(m_validation_layers)),
       surface(vulkan::Surface(&instance, window)),
@@ -14,7 +14,7 @@ graphics_context::GraphicsContext::GraphicsContext(window::Window *window)
     }
 }
 
-graphics_context::GraphicsContext::~GraphicsContext() {
+vulkan::GraphicsContext::~GraphicsContext() {
     if (logical_device != VK_NULL_HANDLE) {
         logical_device.wait_idle();
     }
@@ -22,9 +22,9 @@ graphics_context::GraphicsContext::~GraphicsContext() {
     m_debug_messenger.reset();
 }
 
-void graphics_context::GraphicsContext::wait_idle() { logical_device.wait_idle(); }
+void vulkan::GraphicsContext::wait_idle() { logical_device.wait_idle(); }
 
-graphics_context::DeviceQueues graphics_context::GraphicsContext::get_device_queues() {
+vulkan::DeviceQueues vulkan::GraphicsContext::get_device_queues() {
     vulkan::device::QueueFamilyIndices indices_ =
         physical_device.find_queue_families(surface);
     VkQueue graphics_queue;
