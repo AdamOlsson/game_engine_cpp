@@ -34,7 +34,7 @@ template <Printable T, GpuBufferType BufferType> class GpuBuffer {
     void *m_buffer_mapped;
 
     void check_buffer_size() {
-        if (m_staging_buffer.size() + 1 > m_capacity) {
+        if (m_staging_buffer.size() > m_capacity) {
             logger::warning("Exceeding the GPU buffers size!");
         }
     }

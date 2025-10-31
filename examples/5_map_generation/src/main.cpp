@@ -17,7 +17,8 @@
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 
 // CONTINUE: Render Wang tiling
-// - Load the noise map and use it to render tiles
+// - Look into the artifacts and how to solve them
+// - Make rendering agnostic to window size
 // - Fix import path to prefix with "game_engine_sdk" for modules
 // - Center tiles on screen
 
