@@ -26,17 +26,24 @@ template <Printable T, GpuBufferType BufferType> class GpuBuffer {
     std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
 
     std::vector<T> m_staging_buffer;
+    size_t m_capacity;
 
     VkDeviceSize m_size; // number of bytes
     VkBuffer m_buffer;
     VkDeviceMemory m_buffer_memory;
     void *m_buffer_mapped;
 
+    void check_buffer_size() {
+        if (m_staging_buffer.size() + 1 > m_capacity) {
+            logger::warning("Exceeding the GPU buffers size!");
+        }
+    }
+
   public:
     GpuBuffer() = default;
 
     GpuBuffer(std::shared_ptr<graphics_context::GraphicsContext> ctx, size_t capacity)
-        : m_ctx(ctx), m_size(capacity * sizeof(T)) {
+        : m_ctx(ctx), m_capacity(capacity), m_size(capacity * sizeof(T)) {
 
         if constexpr (BufferType == GpuBufferType::Storage) {
             create_buffer(m_ctx.get(), m_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
@@ -105,14 +112,22 @@ template <Printable T, GpuBufferType BufferType> class GpuBuffer {
     void clear() { m_staging_buffer.clear(); }
     void transfer() { memcpy(m_buffer_mapped, m_staging_buffer.data(), m_size); }
 
-    void push_back(T &t) { return m_staging_buffer.push_back(t); }
-    void push_back(const T &t) { return m_staging_buffer.push_back(t); }
+    void push_back(T &t) {
+        check_buffer_size();
+        return m_staging_buffer.push_back(t);
+    }
+    void push_back(const T &t) {
+        check_buffer_size();
+        return m_staging_buffer.push_back(t);
+    }
 
     decltype(auto) push_back(T &&t) {
+        check_buffer_size();
         return m_staging_buffer.push_back(std::forward<T>(t));
     }
 
     template <typename... Args> decltype(auto) emplace_back(Args &&...args) {
+        check_buffer_size();
         return m_staging_buffer.emplace_back(std::forward<Args>(args)...);
     }
 
