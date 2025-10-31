@@ -46,10 +46,10 @@ graphics_pipeline::GraphicsPipeline graphics_pipeline::GraphicsPipelineBuilder::
             "GraphicsPipelineBuilder::Descriptor set layout needs to be set");
     }
 
-    vulkan::ShaderModule vertex_shader =
-        vulkan::ShaderModule(ctx, *m_vertex_shader_resource);
-    vulkan::ShaderModule fragment_shader =
-        vulkan::ShaderModule(ctx, *m_fragment_shader_resource);
+    vulkan::ShaderModule vertex_shader = vulkan::ShaderModule(
+        ctx, m_vertex_shader_resource->bytes(), m_vertex_shader_resource->length());
+    vulkan::ShaderModule fragment_shader = vulkan::ShaderModule(
+        ctx, m_fragment_shader_resource->bytes(), m_fragment_shader_resource->length());
 
     std::vector<VkPushConstantRange> push_constant_ranges = {};
     if (m_push_constant_range.has_value()) {

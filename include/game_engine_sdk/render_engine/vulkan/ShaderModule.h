@@ -1,7 +1,6 @@
 #pragma once
 
 #include "context/GraphicsContext.h"
-#include "game_engine_sdk/render_engine/resources/shaders/ShaderResource.h"
 #include "vulkan/vulkan_core.h"
 
 namespace vulkan {
@@ -14,8 +13,8 @@ class ShaderModule {
 
   public:
     ShaderModule() = default;
-    ShaderModule(std::shared_ptr<context::GraphicsContext> ctx,
-                 const ShaderResource &shader);
+    ShaderModule(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
+                 const uint8_t *data, const size_t len);
     ~ShaderModule();
 
     ShaderModule(ShaderModule &&other) noexcept = default;

@@ -16,12 +16,17 @@ QuadPipeline::QuadPipeline(std::shared_ptr<vulkan::context::GraphicsContext> ctx
           IndexBuffer(m_ctx, Geometry::quad_indices, command_buffer_manager)),
       m_push_constant_stage(push_constant_range ? push_constant_range->stageFlags : 0),
       m_pipeline_layout(
-          vulkan::PipelineLayout(ctx, descriptor_set_layout, push_constant_range)),
-      m_pipeline(
-          vulkan::Pipeline(ctx, m_pipeline_layout,
-                           vulkan::ShaderModule(ctx, *QuadVertex::create_resource()),
-                           vulkan::ShaderModule(ctx, *QuadFragment::create_resource()),
-                           *swap_chain_manager)) {}
+          vulkan::PipelineLayout(ctx, descriptor_set_layout, push_constant_range)) {
+
+    auto quad_vert = QuadVertex::create_resource();
+    auto quad_frag = QuadFragment::create_resource();
+
+    m_pipeline = vulkan::Pipeline(
+        ctx, m_pipeline_layout,
+        vulkan::ShaderModule(ctx, quad_vert->bytes(), quad_vert->length()),
+        vulkan::ShaderModule(ctx, quad_frag->bytes(), quad_frag->length()),
+        *swap_chain_manager);
+}
 
 /*static QuadPipeline create(std::shared_ptr<vulkan::GraphicsContext> ctx,*/
 /*                           CommandBufferManager *command_buffer_manager,*/

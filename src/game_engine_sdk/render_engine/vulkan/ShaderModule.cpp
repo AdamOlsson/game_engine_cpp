@@ -1,9 +1,8 @@
 #include "game_engine_sdk/render_engine/vulkan/ShaderModule.h"
 
 vulkan::ShaderModule::ShaderModule(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
-                                   const ShaderResource &shader)
-    : m_ctx(ctx), m_shader_module(create_shader_module(shader.bytes(), shader.length())) {
-}
+                                   const uint8_t *data, const size_t len)
+    : m_ctx(ctx), m_shader_module(create_shader_module(data, len)) {}
 
 vulkan::ShaderModule::~ShaderModule() {
     vkDestroyShaderModule(m_ctx->logical_device, m_shader_module, nullptr);
