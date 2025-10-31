@@ -1,6 +1,6 @@
-#include "game_engine_sdk/render_engine/vulkan/buffers/VertexBuffer.h"
-#include "game_engine_sdk/render_engine/vulkan/buffers/StagingBuffer.h"
-#include "game_engine_sdk/render_engine/vulkan/buffers/common.h"
+#include "vulkan/buffers/VertexBuffer.h"
+#include "vulkan/buffers/StagingBuffer.h"
+#include "vulkan/buffers/common.h"
 #include <vector>
 
 vulkan::buffers::VertexBuffer::VertexBuffer() {}

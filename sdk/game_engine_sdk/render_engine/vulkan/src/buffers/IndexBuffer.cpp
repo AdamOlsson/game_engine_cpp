@@ -1,6 +1,6 @@
-#include "game_engine_sdk/render_engine/vulkan/buffers/IndexBuffer.h"
-#include "game_engine_sdk/render_engine/vulkan/buffers/StagingBuffer.h"
-#include "game_engine_sdk/render_engine/vulkan/buffers/common.h"
+#include "vulkan/buffers/IndexBuffer.h"
+#include "vulkan/buffers/StagingBuffer.h"
+#include "vulkan/buffers/common.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
 #include <vector>

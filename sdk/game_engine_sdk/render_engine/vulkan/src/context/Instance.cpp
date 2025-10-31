@@ -1,6 +1,6 @@
-#include "game_engine_sdk/render_engine/vulkan/context/Instance.h"
-#include "game_engine_sdk/render_engine/vulkan/context/DebugMessenger.h"
+#include "vulkan/context/Instance.h"
 #include "logger/logger.h"
+#include "vulkan/context/DebugMessenger.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>

@@ -1,4 +1,4 @@
-#include "game_engine_sdk/render_engine/vulkan/DescriptorSetLayout.h"
+#include "vulkan/DescriptorSetLayout.h"
 #include "vulkan/vulkan_core.h"
 
 vulkan::DescriptorSetLayout::DescriptorSetLayout(

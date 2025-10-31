@@ -1,4 +1,4 @@
-#include "game_engine_sdk/render_engine/vulkan/ShaderModule.h"
+#include "vulkan/ShaderModule.h"
 
 vulkan::ShaderModule::ShaderModule(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
                                    const uint8_t *data, const size_t len)

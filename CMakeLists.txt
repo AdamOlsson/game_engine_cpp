@@ -77,6 +77,7 @@ target_link_libraries(${PROJECT_NAME}
         render_engine::image
         render_engine::tiling
         render_engine::window
+        # render_engine::vulkan
         logger::logger
 )
 

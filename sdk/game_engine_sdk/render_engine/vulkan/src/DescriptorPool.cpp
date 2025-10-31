@@ -1,4 +1,4 @@
-#include "game_engine_sdk/render_engine/vulkan/DescriptorPool.h"
+#include "vulkan/DescriptorPool.h"
 
 vulkan::DescriptorPool::DescriptorPool(
     std::shared_ptr<vulkan::context::GraphicsContext> &ctx, const uint32_t capacity,

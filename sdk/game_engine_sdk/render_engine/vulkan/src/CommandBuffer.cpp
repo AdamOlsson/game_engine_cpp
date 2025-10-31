@@ -1,4 +1,4 @@
-#include "game_engine_sdk/render_engine/vulkan/CommandBuffer.h"
+#include "vulkan/CommandBuffer.h"
 #include <stdexcept>
 
 vulkan::CommandBuffer::CommandBuffer(VkCommandBuffer &command_buffer)

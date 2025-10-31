@@ -1,7 +1,7 @@
 #include "game_engine_sdk/render_engine/PerformanceWindow.h"
 #include "game_engine_sdk/render_engine/ui/Menu.h"
 #include "game_engine_sdk/render_engine/ui/UI.h"
-#include <glm/glm.hpp>
+#include "glm/glm.hpp"
 
 PerformanceWindow::PerformanceWindow() {
     const glm::vec3 header_dimension = glm::vec3(150.0f, 20.0f, 0.0f);

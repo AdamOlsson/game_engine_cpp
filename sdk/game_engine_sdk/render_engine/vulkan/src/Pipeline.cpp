@@ -1,5 +1,5 @@
-#include "game_engine_sdk/render_engine/vulkan/Pipeline.h"
-#include "game_engine_sdk/render_engine/Vertex.h"
+#include "vulkan/Pipeline.h"
+#include "vulkan/Vertex.h"
 #include "vulkan/vulkan_core.h"
 
 vulkan::Pipeline::Pipeline(std::shared_ptr<vulkan::context::GraphicsContext> ctx,

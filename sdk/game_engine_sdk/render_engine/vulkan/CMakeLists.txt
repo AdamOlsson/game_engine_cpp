@@ -32,7 +32,9 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE 
-        ${VULKAN_LIBRARY}
         logger::logger
+        glfw
+        ${VULKAN_LIBRARY}
+        render_engine::window
         render_engine::image
 )

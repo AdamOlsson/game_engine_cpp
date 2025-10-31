@@ -1,4 +1,4 @@
-#include "game_engine_sdk/render_engine/vulkan/DescriptorImageInfo.h"
+#include "vulkan/DescriptorImageInfo.h"
 
 vulkan::DescriptorImageInfo::DescriptorImageInfo(ImageView *image_view,
                                                  Sampler *image_sampler)

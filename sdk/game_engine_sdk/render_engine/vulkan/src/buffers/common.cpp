@@ -1,4 +1,4 @@
-#include "game_engine_sdk/render_engine/vulkan/buffers/common.h"
+#include "vulkan/buffers/common.h"
 #include "vulkan/vulkan_core.h"
 
 #include <stdexcept>

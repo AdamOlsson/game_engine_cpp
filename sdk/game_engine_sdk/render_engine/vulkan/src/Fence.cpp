@@ -1,4 +1,4 @@
-#include "game_engine_sdk/render_engine/vulkan/Fence.h"
+#include "vulkan/Fence.h"
 #include <memory>
 
 vulkan::Fence::Fence(std::shared_ptr<vulkan::context::GraphicsContext> ctx,

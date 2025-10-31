@@ -1,4 +1,4 @@
-#include "game_engine_sdk/render_engine/vulkan/PipelineLayout.h"
+#include "vulkan/PipelineLayout.h"
 
 vulkan::PipelineLayout::PipelineLayout(
     std::shared_ptr<vulkan::context::GraphicsContext> ctx,

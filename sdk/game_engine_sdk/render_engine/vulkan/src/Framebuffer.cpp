@@ -1,4 +1,4 @@
-#include "game_engine_sdk/render_engine/vulkan/Framebuffer.h"
+#include "vulkan/Framebuffer.h"
 
 vulkan::Framebuffer::Framebuffer() : m_frame_buffer(VK_NULL_HANDLE) {}
 

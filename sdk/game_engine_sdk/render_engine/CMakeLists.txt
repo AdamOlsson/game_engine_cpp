@@ -30,11 +30,10 @@ else()
     message(STATUS " Skipping window module")
 endif()
 
-# if(RENDER_ENGINE_BUILD_VULKAN)
-#     message(STATUS "Adding vulkan module")
-#     add_subdirectory(vulkan)
-# else()
-#     message(STATUS " Skipping vulkan module")
-# endif()
-#
+if(RENDER_ENGINE_BUILD_VULKAN)
+    message(STATUS "Adding vulkan module")
+    add_subdirectory(vulkan)
+else()
+    message(STATUS " Skipping vulkan module")
+endif()
 

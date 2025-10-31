@@ -1,4 +1,4 @@
-#include "game_engine_sdk/render_engine/vulkan/SingleTimeCommandBuffer.h"
+#include "vulkan/SingleTimeCommandBuffer.h"
 #include "vulkan/vulkan_core.h"
 
 vulkan::SingleTimeCommandBuffer::SingleTimeCommandBuffer(

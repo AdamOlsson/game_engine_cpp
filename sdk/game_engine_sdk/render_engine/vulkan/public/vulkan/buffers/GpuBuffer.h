@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common.h"
-#include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
+#include "vulkan/context/GraphicsContext.h"
 #include "vulkan/traits.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>

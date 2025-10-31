@@ -1,4 +1,4 @@
-#include "game_engine_sdk/render_engine/vulkan/Sampler.h"
+#include "vulkan/Sampler.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 

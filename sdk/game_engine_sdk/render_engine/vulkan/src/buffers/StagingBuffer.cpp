@@ -1,5 +1,5 @@
-#include "game_engine_sdk/render_engine/vulkan/buffers/StagingBuffer.h"
-#include "game_engine_sdk/render_engine/vulkan/buffers/common.h"
+#include "vulkan/buffers/StagingBuffer.h"
+#include "vulkan/buffers/common.h"
 
 vulkan::buffers::StagingBuffer::StagingBuffer(
     std::shared_ptr<vulkan::context::GraphicsContext> ctx, const size_t buffer_size)

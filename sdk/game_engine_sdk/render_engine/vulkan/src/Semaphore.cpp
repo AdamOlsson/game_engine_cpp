@@ -1,4 +1,4 @@
-#include "game_engine_sdk/render_engine/vulkan/Semaphore.h"
+#include "vulkan/Semaphore.h"
 #include <memory>
 
 vulkan::Semaphore::Semaphore(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
