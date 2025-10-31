@@ -3,7 +3,7 @@
 #include "KeyEvent.h"
 #include "MouseEvent.h"
 #include "WindowConfig.h"
-#include "game_engine_sdk/render_engine/window/WindowDimension.h"
+#include "WindowDimension.h"
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <optional>

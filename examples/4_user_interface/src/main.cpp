@@ -11,7 +11,7 @@
 #include "game_engine_sdk/render_engine/ui/ElementProperties.h"
 #include "game_engine_sdk/render_engine/ui/UI.h"
 #include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
-#include "game_engine_sdk/render_engine/window/WindowConfig.h"
+#include "window/WindowConfig.h"
 #include <memory>
 
 // FUTURE IMPROVEMENTS (without any particular order):

@@ -10,8 +10,8 @@
 #include "game_engine_sdk/render_engine/resources/ResourceManager.h"
 #include "game_engine_sdk/render_engine/ui/ElementProperties.h"
 #include "game_engine_sdk/render_engine/ui/TextBox.h"
-#include "game_engine_sdk/render_engine/window/WindowConfig.h"
 #include "game_engine_sdk/shape.h"
+#include "window/WindowConfig.h"
 #include <memory>
 
 class ShapeRendering : public Game {

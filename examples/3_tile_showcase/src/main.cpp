@@ -6,7 +6,7 @@
 #include "game_engine_sdk/render_engine/Camera.h"
 #include "game_engine_sdk/render_engine/TilesetUVWT.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
-#include "game_engine_sdk/render_engine/window/WindowConfig.h"
+#include "window/WindowConfig.h"
 #include <memory>
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename

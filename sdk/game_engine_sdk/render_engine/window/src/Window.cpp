@@ -1,5 +1,6 @@
-#include "game_engine_sdk/render_engine/window/Window.h"
-#include "game_engine_sdk/render_engine/window/WindowConfig.h"
+#include "window/Window.h"
+#include "window/WindowConfig.h"
+
 using namespace window;
 
 Window::Window(const WindowConfig &config) : m_config(config) {

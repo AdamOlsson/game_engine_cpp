@@ -19,6 +19,7 @@ project(game_engine_sdk CXX)
 
 include(cmake/cmake-global-settings.cmake)
 include(cmake/vulkan.cmake)
+include(cmake/glm.cmake)
 include(cmake/glfw.cmake)
 
 file(GLOB_RECURSE GAME_ENGINE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
@@ -46,6 +47,8 @@ endif()
 set(GAME_ENGINE_SDK_BUILD_RENDER_ENGINE ON CACHE BOOL "" FORCE)
 set(RENDER_ENGINE_BUILD_IMAGE ON CACHE BOOL "" FORCE)
 set(RENDER_ENGINE_BUILD_TILING ON CACHE BOOL "" FORCE)
+set(RENDER_ENGINE_BUILD_WINDOW ON CACHE BOOL "" FORCE)
+set(RENDER_ENGINE_BUILD_VULKAN ON CACHE BOOL "" FORCE)
 add_subdirectory(sdk/game_engine_sdk)
 
 add_library(${PROJECT_NAME}
@@ -69,9 +72,11 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
         ${VULKAN_LIBRARY}
+        glm
         glfw
         render_engine::image
         render_engine::tiling
+        render_engine::window
         logger::logger
 )
 

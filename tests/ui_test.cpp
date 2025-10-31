@@ -1,7 +1,7 @@
 #include "game_engine_sdk/render_engine/colors.h"
 #include "game_engine_sdk/render_engine/ui/Button.h"
 #include "game_engine_sdk/render_engine/ui/UI.h"
-#include "game_engine_sdk/render_engine/window/ViewportPoint.h"
+#include "window/ViewportPoint.h"
 #include <gtest/gtest.h>
 
 TEST(UITest, TestOnEnterAndOnLeaveWithSingleButton) {

@@ -7,11 +7,11 @@
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/quad/QuadPipeline.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/quad/QuadPipelineSBO.h"
-#include "game_engine_sdk/render_engine/window/WindowConfig.h"
 #include "tiles.h"
 #include "tiling/NoiseMap.h"
 #include "tiling/wang/WangTiles.h"
 #include "vulkan/vulkan_core.h"
+#include "window/WindowConfig.h"
 #include <memory>
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Instance.h"
+#include "game_engine_sdk/render_engine/window/Window.h"
 #include "vulkan/vulkan_core.h"
-#include "window/Window.h"
 
 namespace vulkan::context {
 class Surface {

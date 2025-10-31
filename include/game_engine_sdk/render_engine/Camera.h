@@ -1,8 +1,8 @@
 #pragma once
 
 #include "game_engine_sdk/WorldPoint.h"
-#include "game_engine_sdk/render_engine/window/ViewportPoint.h"
 #include "glm/glm.hpp"
+#include "window/ViewportPoint.h"
 
 class Camera2D {
   private:

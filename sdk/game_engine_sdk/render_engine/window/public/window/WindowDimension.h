@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game_engine_sdk/traits.h"
+#include "traits.h"
 #include <ostream>
 
 namespace window {
