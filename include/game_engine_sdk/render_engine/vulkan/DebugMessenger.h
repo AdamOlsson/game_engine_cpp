@@ -1,29 +1,12 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/vulkan/Instance.h"
+#include "Instance.h"
 #include "vulkan/vulkan_core.h"
-#include <iostream>
-#include <vector>
-
-namespace graphics_context {
-namespace validation_layers {
-const std::vector<const char *> validation_layers = {"VK_LAYER_KHRONOS_validation"};
-
-VKAPI_ATTR inline VkBool32 VKAPI_CALL debugCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData) {
-    std::cout << "validation layer: " << pCallbackData->pMessage << std::endl;
-    return VK_FALSE;
-}
-
-bool check_validation_layer_support();
-
-namespace messenger {
+namespace vulkan {
 
 class DebugMessenger {
   private:
-    vulkan::Instance *m_instance;
+    Instance *m_instance;
     VkDebugUtilsMessengerEXT m_debug_messenger;
 
     VkDebugUtilsMessengerEXT setup_debug_messenger();
@@ -61,7 +44,4 @@ class DebugMessenger {
     populate_debug_messenger_create_info(VkDebugUtilsMessengerCreateInfoEXT &create_info);
 };
 
-}; // namespace messenger
-
-}; // namespace validation_layers
-} // namespace graphics_context
+}; // namespace vulkan

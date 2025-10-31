@@ -1,5 +1,4 @@
 #include "game_engine_sdk/render_engine/vulkan/Device.h"
-#include "game_engine_sdk/render_engine/graphics_context/validation_layers.h"
 #include "vulkan/vulkan_beta.h"
 #include "vulkan/vulkan_core.h"
 #include <set>
@@ -212,12 +211,12 @@ uint32_t vulkan::device::PhysicalDevice::find_memory_type(
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
-vulkan::device::LogicalDevice::LogicalDevice(const bool enable_validation_layers,
-                                             const Surface &surface,
-                                             const PhysicalDevice &physical_device)
-    : m_enable_validation_layers(enable_validation_layers),
-      m_logical_device(
-          create_logical_device(surface, physical_device, device_extensions)) {}
+vulkan::device::LogicalDevice::LogicalDevice(
+    const std::vector<const char *> &validation_layers, const Surface &surface,
+    const PhysicalDevice &physical_device)
+    : m_enable_validation_layers(validation_layers.size() > 0),
+      m_logical_device(create_logical_device(surface, physical_device, device_extensions,
+                                             validation_layers)) {}
 
 vulkan::device::LogicalDevice::~LogicalDevice() {
     if (m_logical_device == VK_NULL_HANDLE) {
@@ -228,7 +227,8 @@ vulkan::device::LogicalDevice::~LogicalDevice() {
 
 VkDevice vulkan::device::LogicalDevice::create_logical_device(
     const Surface &surface, const PhysicalDevice &physical_device,
-    const std::vector<const char *> &device_extensions) {
+    const std::vector<const char *> &device_extensions,
+    const std::vector<const char *> &validation_layers) {
     QueueFamilyIndices indices = physical_device.find_queue_families(surface);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -279,10 +279,8 @@ VkDevice vulkan::device::LogicalDevice::create_logical_device(
     if (m_enable_validation_layers) {
         // Deprecated on new versions of vulkan, set them here for backwards
         // compatability
-        createInfo.enabledLayerCount = static_cast<uint32_t>(
-            graphics_context::validation_layers::validation_layers.size());
-        createInfo.ppEnabledLayerNames =
-            graphics_context::validation_layers::validation_layers.data();
+        createInfo.enabledLayerCount = static_cast<uint32_t>(validation_layers.size());
+        createInfo.ppEnabledLayerNames = validation_layers.data();
     } else {
         createInfo.enabledLayerCount = 0;
     }

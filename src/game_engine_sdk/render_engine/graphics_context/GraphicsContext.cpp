@@ -1,17 +1,16 @@
 #include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
-#include "game_engine_sdk/render_engine/graphics_context/validation_layers.h"
 #include "vulkan/vulkan_core.h"
 
 graphics_context::GraphicsContext::GraphicsContext(window::Window *window)
     : m_enable_validation_layers(true), window(window),
-      instance(vulkan::Instance(m_enable_validation_layers)),
+      instance(vulkan::Instance(m_validation_layers)),
       surface(vulkan::Surface(&instance, window)),
       physical_device(vulkan::device::PhysicalDevice(instance, surface)),
-      logical_device(vulkan::device::LogicalDevice(m_enable_validation_layers, surface,
-                                                   physical_device)) {
+      logical_device(
+          vulkan::device::LogicalDevice(m_validation_layers, surface, physical_device)) {
 
     if (m_enable_validation_layers) {
-        m_debug_messenger = validation_layers::messenger::DebugMessenger(&instance);
+        m_debug_messenger = vulkan::DebugMessenger(&instance);
     }
 }
 

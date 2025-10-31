@@ -1,10 +1,10 @@
 #pragma once
 
+#include "game_engine_sdk/render_engine/vulkan/DebugMessenger.h"
 #include "game_engine_sdk/render_engine/vulkan/Device.h"
 #include "game_engine_sdk/render_engine/vulkan/Instance.h"
 #include "game_engine_sdk/render_engine/vulkan/Surface.h"
 #include "game_engine_sdk/render_engine/window/Window.h"
-#include "validation_layers.h"
 #include "vulkan/vulkan_core.h"
 
 namespace graphics_context {
@@ -17,6 +17,8 @@ class GraphicsContext {
   private:
     bool m_enable_validation_layers;
 
+    const std::vector<const char *> m_validation_layers = {"VK_LAYER_KHRONOS_validation"};
+
   public:
     window::Window *window;
     vulkan::Instance instance;
@@ -24,7 +26,7 @@ class GraphicsContext {
     vulkan::device::PhysicalDevice physical_device;
     vulkan::device::LogicalDevice logical_device;
 
-    std::optional<validation_layers::messenger::DebugMessenger> m_debug_messenger;
+    std::optional<vulkan::DebugMessenger> m_debug_messenger;
 
     GraphicsContext(window::Window *window);
     ~GraphicsContext();

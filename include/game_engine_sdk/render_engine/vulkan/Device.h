@@ -119,11 +119,12 @@ class LogicalDevice {
     VkDevice m_logical_device;
     VkDevice create_logical_device(const Surface &surface,
                                    const PhysicalDevice &physical_device,
-                                   const std::vector<const char *> &device_extensions);
+                                   const std::vector<const char *> &device_extensions,
+                                   const std::vector<const char *> &validation_layers);
 
   public:
-    LogicalDevice(const bool enable_validation_layers, const Surface &surface,
-                  const PhysicalDevice &physical_device);
+    LogicalDevice(const std::vector<const char *> &validation_layers,
+                  const Surface &surface, const PhysicalDevice &physical_device);
     ~LogicalDevice();
 
     LogicalDevice(LogicalDevice &&) noexcept = default;

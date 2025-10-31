@@ -1,19 +1,21 @@
 #include "game_engine_sdk/render_engine/vulkan/Instance.h"
-#include "game_engine_sdk/render_engine/graphics_context/validation_layers.h"
+#include "game_engine_sdk/render_engine/vulkan/DebugMessenger.h"
 #include "logger/logger.h"
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-vulkan::Instance::Instance(bool enable_validation_layers)
-    : m_enable_validation_layers(enable_validation_layers),
-      m_instance(create_instance()) {}
+vulkan::Instance::Instance(const std::vector<const char *> &validation_layers)
+    : m_enable_validation_layers(validation_layers.size() > 0),
+      m_instance(create_instance(validation_layers)) {}
 
 vulkan::Instance::~Instance() { vkDestroyInstance(m_instance, nullptr); }
 
-VkInstance vulkan::Instance::create_instance() {
+VkInstance
+vulkan::Instance::create_instance(const std::vector<const char *> &validation_layers) {
     print_vulkan_version();
     if (m_enable_validation_layers &&
-        !graphics_context::validation_layers::check_validation_layer_support()) {
+        !check_validation_layer_support(validation_layers)) {
         throw std::runtime_error("validation layers requested, but not available!");
     }
 
@@ -32,12 +34,9 @@ VkInstance vulkan::Instance::create_instance() {
 
     VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
     if (m_enable_validation_layers) {
-        createInfo.enabledLayerCount = static_cast<uint32_t>(
-            graphics_context::validation_layers::validation_layers.size());
-        createInfo.ppEnabledLayerNames =
-            graphics_context::validation_layers::validation_layers.data();
-        graphics_context::validation_layers::messenger::DebugMessenger::
-            populate_debug_messenger_create_info(debugCreateInfo);
+        createInfo.enabledLayerCount = static_cast<uint32_t>(validation_layers.size());
+        createInfo.ppEnabledLayerNames = validation_layers.data();
+        DebugMessenger::populate_debug_messenger_create_info(debugCreateInfo);
         createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT *)&debugCreateInfo;
     } else {
         createInfo.enabledLayerCount = 0;
@@ -120,4 +119,30 @@ void vulkan::Instance::print_supported_extensions() {
     for (const auto &ext : extensions) {
         logger::info(ext.extensionName);
     }
+}
+
+bool vulkan::Instance::check_validation_layer_support(
+    const std::vector<const char *> &validation_layers) {
+    uint32_t layer_count;
+    vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
+
+    std::vector<VkLayerProperties> available_layers(layer_count);
+    vkEnumerateInstanceLayerProperties(&layer_count, available_layers.data());
+
+    for (const char *layer_name : validation_layers) {
+        bool layer_found = false;
+
+        for (const auto &layer_properties : available_layers) {
+            if (strcmp(layer_name, layer_properties.layerName) == 0) {
+                layer_found = true;
+                break;
+            }
+        }
+
+        if (!layer_found) {
+            return false;
+        }
+    }
+
+    return true;
 }

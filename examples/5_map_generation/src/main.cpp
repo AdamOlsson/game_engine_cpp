@@ -141,7 +141,7 @@ class MapGeneration : public Game {
                 .uvwt = uvwt,
             });
             m_num_instances++;
-            logger::debug(std::format("{}. UVWT: {}", i, io::to_string(uvwt)));
+            /*logger::debug(std::format("{}. UVWT: {}", i, io::to_string(uvwt)));*/
         }
     }
 

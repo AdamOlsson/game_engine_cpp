@@ -9,15 +9,18 @@ class Instance {
     bool m_enable_validation_layers;
     VkInstance m_instance;
 
-    VkInstance create_instance();
+    VkInstance create_instance(const std::vector<const char *> &validation_layers);
     std::vector<const char *> get_required_extensions();
+
+    bool
+    check_validation_layer_support(const std::vector<const char *> &validation_layers);
 
     void print_vulkan_version();
     void print_supported_extensions();
     void print_enabled_extensions(const std::vector<const char *> &extensions);
 
   public:
-    Instance(bool enable_validation_layers);
+    Instance(const std::vector<const char *> &validation_layers);
     ~Instance();
 
     Instance(Instance &&) noexcept = default;
