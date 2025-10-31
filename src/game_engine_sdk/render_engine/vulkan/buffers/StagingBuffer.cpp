@@ -1,17 +1,17 @@
-#include "game_engine_sdk/render_engine/buffers/StagingBuffer.h"
-#include "game_engine_sdk/render_engine/buffers/common.h"
+#include "game_engine_sdk/render_engine/vulkan/buffers/StagingBuffer.h"
+#include "game_engine_sdk/render_engine/vulkan/buffers/common.h"
 
-StagingBuffer::StagingBuffer(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
-                             const size_t buffer_size)
+vulkan::buffers::StagingBuffer::StagingBuffer(
+    std::shared_ptr<vulkan::context::GraphicsContext> ctx, const size_t buffer_size)
     : m_ctx(ctx), m_staging_buffer_size(buffer_size),
       m_staging_buffer(create_staging_buffer()) {}
 
-StagingBuffer::~StagingBuffer() {
+vulkan::buffers::StagingBuffer::~StagingBuffer() {
     vkDestroyBuffer(m_ctx->logical_device, m_staging_buffer.buffer, nullptr);
     vkFreeMemory(m_ctx->logical_device, m_staging_buffer.buffer_memory, nullptr);
 }
 
-void StagingBuffer::map_memory(const image::Image &image) {
+void vulkan::buffers::StagingBuffer::map_memory(const image::Image &image) {
     void *data;
     vkMapMemory(m_ctx->logical_device, m_staging_buffer.buffer_memory, 0, image.size, 0,
                 &data);
@@ -19,7 +19,7 @@ void StagingBuffer::map_memory(const image::Image &image) {
     vkUnmapMemory(m_ctx->logical_device, m_staging_buffer.buffer_memory);
 }
 
-void StagingBuffer::transfer_image_to_device_image(
+void vulkan::buffers::StagingBuffer::transfer_image_to_device_image(
     CommandBufferManager *command_buffer_manager, const image::Image &src,
     const vulkan::TextureImage &dst) {
 
@@ -27,7 +27,7 @@ void StagingBuffer::transfer_image_to_device_image(
     copy_buffer_to_image(command_buffer_manager, dst.m_image, src.dimensions);
 }
 
-Buffer StagingBuffer::create_staging_buffer() {
+vulkan::buffers::Buffer vulkan::buffers::StagingBuffer::create_staging_buffer() {
     Buffer buf{};
     create_buffer(m_ctx.get(), m_staging_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
@@ -36,9 +36,9 @@ Buffer StagingBuffer::create_staging_buffer() {
     return buf;
 }
 
-void StagingBuffer::copy_buffer_to_image(CommandBufferManager *command_buffer_manager,
-                                         const VkImage &image,
-                                         const image::ImageDimensions &dim) {
+void vulkan::buffers::StagingBuffer::copy_buffer_to_image(
+    CommandBufferManager *command_buffer_manager, const VkImage &image,
+    const image::ImageDimensions &dim) {
     vulkan::SingleTimeCommandBuffer command_buffer =
         command_buffer_manager->get_single_time_command_buffer();
     command_buffer.begin();
@@ -62,8 +62,8 @@ void StagingBuffer::copy_buffer_to_image(CommandBufferManager *command_buffer_ma
     command_buffer.submit();
 }
 
-void StagingBuffer::copy_buffer_to_buffer(CommandBufferManager *command_buffer_manager,
-                                          const VkBuffer &dst_buffer) {
+void vulkan::buffers::StagingBuffer::copy_buffer_to_buffer(
+    CommandBufferManager *command_buffer_manager, const VkBuffer &dst_buffer) {
     vulkan::SingleTimeCommandBuffer command_buffer =
         command_buffer_manager->get_single_time_command_buffer();
     command_buffer.begin();

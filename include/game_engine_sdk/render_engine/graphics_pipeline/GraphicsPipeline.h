@@ -1,9 +1,9 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/buffers/IndexBuffer.h"
-#include "game_engine_sdk/render_engine/buffers/VertexBuffer.h"
 #include "game_engine_sdk/render_engine/vulkan/Pipeline.h"
 #include "game_engine_sdk/render_engine/vulkan/PipelineLayout.h"
+#include "game_engine_sdk/render_engine/vulkan/buffers/IndexBuffer.h"
+#include "game_engine_sdk/render_engine/vulkan/buffers/VertexBuffer.h"
 #include "vulkan/vulkan_core.h"
 
 namespace graphics_pipeline {
@@ -32,8 +32,9 @@ class GraphicsPipeline {
                            sizeof(values), &values);
     }
 
-    void render(const VkCommandBuffer &command_buffer, const VertexBuffer &vertex_buffer,
-                const IndexBuffer &index_buffer, const VkDescriptorSet &descriptor_set,
-                const size_t num_instances);
+    void render(const VkCommandBuffer &command_buffer,
+                const vulkan::buffers::VertexBuffer &vertex_buffer,
+                const vulkan::buffers::IndexBuffer &index_buffer,
+                const VkDescriptorSet &descriptor_set, const size_t num_instances);
 };
 } // namespace graphics_pipeline

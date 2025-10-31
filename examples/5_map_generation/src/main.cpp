@@ -32,12 +32,13 @@ using namespace tiling;
 class MapGeneration : public Game {
   private:
     std::unique_ptr<SwapChainManager> m_swap_chain_manager;
-    std::unique_ptr<CommandBufferManager> m_command_buffer_manager;
+    std::unique_ptr<vulkan::CommandBufferManager> m_command_buffer_manager;
 
     vulkan::Sampler m_sampler;
 
     vulkan::DescriptorPool m_descriptor_pool;
-    std::unique_ptr<SwapStorageBuffer<graphics_pipeline::QuadPipelineSBO>>
+    std::unique_ptr<
+        vulkan::buffers::SwapStorageBuffer<graphics_pipeline::QuadPipelineSBO>>
         m_quad_storage_buffer;
     std::unique_ptr<graphics_pipeline::QuadPipelineDescriptorSet> m_quad_descriptor_set;
     std::unique_ptr<graphics_pipeline::QuadPipeline> m_quad_pipeline;
@@ -86,7 +87,7 @@ class MapGeneration : public Game {
         register_mouse_event_handler(ctx.get());
 
         m_swap_chain_manager = std::make_unique<SwapChainManager>(ctx);
-        m_command_buffer_manager = std::make_unique<CommandBufferManager>(
+        m_command_buffer_manager = std::make_unique<vulkan::CommandBufferManager>(
             ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
 
         m_sampler = vulkan::Sampler(ctx, vulkan::Filter::NEAREST,
@@ -95,10 +96,10 @@ class MapGeneration : public Game {
                                            ASSET_FILE("forest_tileset_24x24.png"));
         m_tileset_uvwt = TilesetUVWT(m_tileset, TileSize(24, 24));
 
-        m_quad_storage_buffer =
-            std::make_unique<SwapStorageBuffer<graphics_pipeline::QuadPipelineSBO>>(
-                ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT,
-                m_wang_tiles.width() * m_wang_tiles.height());
+        m_quad_storage_buffer = std::make_unique<
+            vulkan::buffers::SwapStorageBuffer<graphics_pipeline::QuadPipelineSBO>>(
+            ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT,
+            m_wang_tiles.width() * m_wang_tiles.height());
 
         m_descriptor_pool = vulkan::DescriptorPool(
             ctx, vulkan::DescriptorPoolOpts{.max_num_descriptor_sets =

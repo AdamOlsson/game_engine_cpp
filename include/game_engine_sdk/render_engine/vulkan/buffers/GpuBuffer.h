@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/buffers/common.h"
+#include "common.h"
 #include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
@@ -12,6 +12,7 @@
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #include <glm/glm.hpp>
 
+namespace vulkan::buffers {
 enum class GpuBufferType { Uniform, Storage };
 
 struct GpuBufferRef {
@@ -270,3 +271,4 @@ template <typename T, GpuBufferType BufferType> class SwapGpuBuffer {
 
 template <typename T> using SwapStorageBuffer = SwapGpuBuffer<T, GpuBufferType::Storage>;
 template <typename T> using SwapUniformBuffer = SwapGpuBuffer<T, GpuBufferType::Uniform>;
+} // namespace vulkan::buffers

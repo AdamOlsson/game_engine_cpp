@@ -11,15 +11,18 @@
 
 graphics_pipeline::TextPipeline::TextPipeline(
     std::shared_ptr<vulkan::context::GraphicsContext> ctx,
-    CommandBufferManager *command_buffer_manager, SwapChainManager &swap_chain_manager,
-    std::unique_ptr<Font> font)
+    vulkan::CommandBufferManager *command_buffer_manager,
+    SwapChainManager &swap_chain_manager, std::unique_ptr<Font> font)
     : m_ctx(ctx), m_font(std::move(font)),
-      m_character_buffers(SwapStorageBuffer<CharacterInstanceBufferObject>(
-          ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1024)),
-      m_text_segment_buffers(SwapStorageBuffer<TextSegmentBufferObject>(
+      m_character_buffers(
+          vulkan::buffers::SwapStorageBuffer<CharacterInstanceBufferObject>(
+              ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1024)),
+      m_text_segment_buffers(vulkan::buffers::SwapStorageBuffer<TextSegmentBufferObject>(
           ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 16)),
-      m_vertex_buffer(VertexBuffer(ctx, Geometry::quad_vertices, command_buffer_manager)),
-      m_index_buffer(IndexBuffer(ctx, Geometry::quad_indices, command_buffer_manager)),
+      m_vertex_buffer(vulkan::buffers::VertexBuffer(ctx, Geometry::quad_vertices,
+                                                    command_buffer_manager)),
+      m_index_buffer(vulkan::buffers::IndexBuffer(ctx, Geometry::quad_indices,
+                                                  command_buffer_manager)),
       m_descriptor_pool(vulkan::DescriptorPool(m_ctx, m_descriptor_pool_capacity,
                                                m_num_storage_buffers,
                                                m_num_uniform_buffers, m_num_samplers)) {
@@ -54,12 +57,12 @@ graphics_pipeline::TextPipeline::TextPipeline(
 
 graphics_pipeline::TextPipeline::~TextPipeline() {}
 
-StorageBuffer<graphics_pipeline::CharacterInstanceBufferObject> &
+vulkan::buffers::StorageBuffer<graphics_pipeline::CharacterInstanceBufferObject> &
 graphics_pipeline::TextPipeline::get_character_buffer() {
     return m_character_buffers.get_buffer();
 }
 
-StorageBuffer<graphics_pipeline::TextSegmentBufferObject> &
+vulkan::buffers::StorageBuffer<graphics_pipeline::TextSegmentBufferObject> &
 graphics_pipeline::TextPipeline::get_text_segment_buffer() {
     return m_text_segment_buffers.get_buffer();
 }

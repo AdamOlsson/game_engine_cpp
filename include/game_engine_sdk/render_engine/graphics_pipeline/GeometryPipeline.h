@@ -3,15 +3,15 @@
 #include "game_engine_sdk/render_engine/SwapChainManager.h"
 #include "game_engine_sdk/render_engine/Texture.h"
 #include "game_engine_sdk/render_engine/Vertex.h"
-#include "game_engine_sdk/render_engine/buffers/GpuBuffer.h"
-#include "game_engine_sdk/render_engine/buffers/IndexBuffer.h"
-#include "game_engine_sdk/render_engine/buffers/VertexBuffer.h"
 #include "game_engine_sdk/render_engine/colors.h"
 #include "game_engine_sdk/render_engine/descriptors/SwapDescriptorSet.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GraphicsPipeline.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorImageInfo.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorPool.h"
 #include "game_engine_sdk/render_engine/vulkan/Sampler.h"
+#include "game_engine_sdk/render_engine/vulkan/buffers/GpuBuffer.h"
+#include "game_engine_sdk/render_engine/vulkan/buffers/IndexBuffer.h"
+#include "game_engine_sdk/render_engine/vulkan/buffers/VertexBuffer.h"
 #include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <iostream>
@@ -85,23 +85,27 @@ class GeometryPipeline {
     std::optional<vulkan::Sampler> m_empty_sampler;
 
     vulkan::DescriptorPool m_descriptor_pool;
-    VertexBuffer m_quad_vertex_buffer;
-    IndexBuffer m_quad_index_buffer;
+    vulkan::buffers::VertexBuffer m_quad_vertex_buffer;
+    vulkan::buffers::IndexBuffer m_quad_index_buffer;
 
-    SwapStorageBuffer<GeometryInstanceBufferObject> m_circle_instance_buffers;
-    SwapUniformBuffer<VertexUBO> m_circle_vertices_ubo;
+    vulkan::buffers::SwapStorageBuffer<GeometryInstanceBufferObject>
+        m_circle_instance_buffers;
+    vulkan::buffers::SwapUniformBuffer<VertexUBO> m_circle_vertices_ubo;
     SwapDescriptorSet m_circle_descriptor_set;
 
-    SwapStorageBuffer<GeometryInstanceBufferObject> m_triangle_instance_buffers;
-    SwapUniformBuffer<VertexUBO> m_triangle_vertices_ubo;
+    vulkan::buffers::SwapStorageBuffer<GeometryInstanceBufferObject>
+        m_triangle_instance_buffers;
+    vulkan::buffers::SwapUniformBuffer<VertexUBO> m_triangle_vertices_ubo;
     SwapDescriptorSet m_triangle_descriptor_set;
 
-    SwapStorageBuffer<GeometryInstanceBufferObject> m_rectangle_instance_buffers;
-    SwapUniformBuffer<VertexUBO> m_rectangle_vertices_ubo;
+    vulkan::buffers::SwapStorageBuffer<GeometryInstanceBufferObject>
+        m_rectangle_instance_buffers;
+    vulkan::buffers::SwapUniformBuffer<VertexUBO> m_rectangle_vertices_ubo;
     SwapDescriptorSet m_rectangle_descriptor_set;
 
-    SwapStorageBuffer<GeometryInstanceBufferObject> m_hexagon_instance_buffers;
-    SwapUniformBuffer<VertexUBO> m_hexagon_vertices_ubo;
+    vulkan::buffers::SwapStorageBuffer<GeometryInstanceBufferObject>
+        m_hexagon_instance_buffers;
+    vulkan::buffers::SwapUniformBuffer<VertexUBO> m_hexagon_vertices_ubo;
     SwapDescriptorSet m_hexagon_descriptor_set;
 
     graphics_pipeline::GraphicsPipeline m_graphics_pipeline;
@@ -115,16 +119,20 @@ class GeometryPipeline {
 
   public:
     GeometryPipeline(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
-                     CommandBufferManager *command_buffer_manager,
+                     vulkan::CommandBufferManager *command_buffer_manager,
                      SwapChainManager &swap_chain_manager,
                      std::optional<GeometryPipelineOptions> opts);
 
     ~GeometryPipeline();
 
-    StorageBuffer<GeometryInstanceBufferObject> &get_circle_instance_buffer();
-    StorageBuffer<GeometryInstanceBufferObject> &get_triangle_instance_buffer();
-    StorageBuffer<GeometryInstanceBufferObject> &get_rectangle_instance_buffer();
-    StorageBuffer<GeometryInstanceBufferObject> &get_hexagon_instance_buffer();
+    vulkan::buffers::StorageBuffer<GeometryInstanceBufferObject> &
+    get_circle_instance_buffer();
+    vulkan::buffers::StorageBuffer<GeometryInstanceBufferObject> &
+    get_triangle_instance_buffer();
+    vulkan::buffers::StorageBuffer<GeometryInstanceBufferObject> &
+    get_rectangle_instance_buffer();
+    vulkan::buffers::StorageBuffer<GeometryInstanceBufferObject> &
+    get_hexagon_instance_buffer();
 
     void render_circles(const VkCommandBuffer &command_buffer, glm::mat4 &camera_matrix);
     void render_triangles(const VkCommandBuffer &command_buffer,

@@ -1,17 +1,17 @@
-#include "game_engine_sdk/render_engine/buffers/IndexBuffer.h"
-#include "game_engine_sdk/render_engine/buffers/StagingBuffer.h"
-#include "game_engine_sdk/render_engine/buffers/common.h"
+#include "game_engine_sdk/render_engine/vulkan/buffers/IndexBuffer.h"
+#include "game_engine_sdk/render_engine/vulkan/buffers/StagingBuffer.h"
+#include "game_engine_sdk/render_engine/vulkan/buffers/common.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
 #include <vector>
 
-IndexBuffer::IndexBuffer()
+vulkan::buffers::IndexBuffer::IndexBuffer()
     : m_ctx(nullptr), buffer(VK_NULL_HANDLE), bufferMemory(VK_NULL_HANDLE), size(0),
       num_indices(0) {}
 
-IndexBuffer::IndexBuffer(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
-                         const std::vector<uint16_t> &indices,
-                         CommandBufferManager *command_buffer_manager)
+vulkan::buffers::IndexBuffer::IndexBuffer(
+    std::shared_ptr<vulkan::context::GraphicsContext> ctx,
+    const std::vector<uint16_t> &indices, CommandBufferManager *command_buffer_manager)
     : m_ctx(ctx), size(sizeof(uint16_t) * indices.size()),
       num_indices(size / sizeof(uint16_t)) {
 
@@ -27,7 +27,7 @@ IndexBuffer::IndexBuffer(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
                                                   buffer);
 }
 
-IndexBuffer::IndexBuffer(IndexBuffer &&other) noexcept
+vulkan::buffers::IndexBuffer::IndexBuffer(IndexBuffer &&other) noexcept
     : m_ctx(std::move(other.m_ctx)), buffer(other.buffer),
       bufferMemory(other.bufferMemory), size(other.size), num_indices(other.num_indices) {
     other.buffer = VK_NULL_HANDLE;
@@ -36,7 +36,8 @@ IndexBuffer::IndexBuffer(IndexBuffer &&other) noexcept
     other.num_indices = 0;
 }
 
-IndexBuffer &IndexBuffer::operator=(IndexBuffer &&other) noexcept {
+vulkan::buffers::IndexBuffer &
+vulkan::buffers::IndexBuffer::operator=(IndexBuffer &&other) noexcept {
     if (this != &other) {
         if (m_ctx && buffer != VK_NULL_HANDLE) {
             vkDestroyBuffer(m_ctx->logical_device, buffer, nullptr);
@@ -57,7 +58,7 @@ IndexBuffer &IndexBuffer::operator=(IndexBuffer &&other) noexcept {
     return *this;
 }
 
-IndexBuffer::~IndexBuffer() {
+vulkan::buffers::IndexBuffer::~IndexBuffer() {
     if (buffer == VK_NULL_HANDLE) {
         return;
     }

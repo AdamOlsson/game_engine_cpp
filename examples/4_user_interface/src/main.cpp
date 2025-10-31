@@ -36,7 +36,7 @@ class UserInterfaceExample : public Game {
   private:
     ui::UI m_ui;
     std::unique_ptr<SwapChainManager> m_swap_chain_manager;
-    std::unique_ptr<CommandBufferManager> m_command_buffer_manager;
+    std::unique_ptr<vulkan::CommandBufferManager> m_command_buffer_manager;
 
     vulkan::Sampler m_sampler;
     std::unique_ptr<graphics_pipeline::GeometryPipeline> m_geometry_pipeline;
@@ -302,7 +302,7 @@ class UserInterfaceExample : public Game {
         register_all_images();
         register_all_shaders();
         m_swap_chain_manager = std::make_unique<SwapChainManager>(ctx);
-        m_command_buffer_manager = std::make_unique<CommandBufferManager>(
+        m_command_buffer_manager = std::make_unique<vulkan::CommandBufferManager>(
             ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
 
         m_sampler = vulkan::Sampler(ctx);

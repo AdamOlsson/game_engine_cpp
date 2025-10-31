@@ -14,7 +14,7 @@
 class TileShowcase : public Game {
   private:
     std::unique_ptr<SwapChainManager> m_swap_chain_manager;
-    std::unique_ptr<CommandBufferManager> m_command_buffer_manager;
+    std::unique_ptr<vulkan::CommandBufferManager> m_command_buffer_manager;
 
     vulkan::Sampler m_sampler;
     std::unique_ptr<graphics_pipeline::GeometryPipeline> m_geometry_pipeline;
@@ -36,7 +36,7 @@ class TileShowcase : public Game {
 
     void setup(std::shared_ptr<vulkan::context::GraphicsContext> &ctx) override {
         m_swap_chain_manager = std::make_unique<SwapChainManager>(ctx);
-        m_command_buffer_manager = std::make_unique<CommandBufferManager>(
+        m_command_buffer_manager = std::make_unique<vulkan::CommandBufferManager>(
             ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
 
         m_sampler = vulkan::Sampler(ctx, vulkan::Filter::NEAREST,

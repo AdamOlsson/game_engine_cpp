@@ -2,7 +2,7 @@
 
 #include "ImageView.h"
 #include "context/GraphicsContext.h"
-#include "game_engine_sdk/render_engine/CommandBufferManager.h"
+#include "game_engine_sdk/render_engine/vulkan/CommandBufferManager.h"
 #include "image/Image.h"
 #include "vulkan/vulkan_core.h"
 

@@ -1,24 +1,25 @@
-#include "game_engine_sdk/render_engine/CommandBufferManager.h"
+#include "game_engine_sdk/render_engine/vulkan/CommandBufferManager.h"
 #include "vulkan/vulkan_core.h"
 
-CommandBufferManager::CommandBufferManager(
+vulkan::CommandBufferManager::CommandBufferManager(
     std::shared_ptr<vulkan::context::GraphicsContext> ctx, const size_t num_buffers)
     : m_ctx(ctx), m_num_buffers(num_buffers), m_command_pool(vulkan::CommandPool(m_ctx)),
       m_command_buffers(create_command_buffers()) {}
 
-CommandBufferManager::~CommandBufferManager() {}
+vulkan::CommandBufferManager::~CommandBufferManager() {}
 
-vulkan::CommandBuffer CommandBufferManager::get_command_buffer() {
+vulkan::CommandBuffer vulkan::CommandBufferManager::get_command_buffer() {
     vulkan::CommandBuffer buf = vulkan::CommandBuffer(m_command_buffers[m_next_buffer]);
     m_next_buffer = ++m_next_buffer % m_num_buffers;
     return buf;
 }
 
-vulkan::SingleTimeCommandBuffer CommandBufferManager::get_single_time_command_buffer() {
+vulkan::SingleTimeCommandBuffer
+vulkan::CommandBufferManager::get_single_time_command_buffer() {
     return m_command_pool.get_single_time_command_buffer();
 }
 
-std::vector<VkCommandBuffer> CommandBufferManager::create_command_buffers() {
+std::vector<VkCommandBuffer> vulkan::CommandBufferManager::create_command_buffers() {
     std::vector<VkCommandBuffer> command_buffers;
     command_buffers.resize(m_num_buffers);
 

@@ -1,11 +1,12 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/CommandBufferManager.h"
+#include "game_engine_sdk/render_engine/vulkan/CommandBufferManager.h"
 #include "game_engine_sdk/render_engine/vulkan/TextureImage.h"
 #include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
 #include "logger/logger.h"
 #include <memory>
 
+namespace vulkan::buffers {
 struct Buffer {
     VkBuffer buffer;
     VkDeviceMemory buffer_memory;
@@ -59,3 +60,5 @@ class StagingBuffer {
         copy_buffer_to_buffer(command_buffer_manager, dst);
     }
 };
+
+} // namespace vulkan::buffers

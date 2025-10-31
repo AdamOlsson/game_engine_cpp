@@ -1,9 +1,6 @@
 #pragma once
 
 #include "game_engine_sdk/render_engine/SwapChainManager.h"
-#include "game_engine_sdk/render_engine/buffers/GpuBuffer.h"
-#include "game_engine_sdk/render_engine/buffers/IndexBuffer.h"
-#include "game_engine_sdk/render_engine/buffers/VertexBuffer.h"
 #include "game_engine_sdk/render_engine/colors.h"
 #include "game_engine_sdk/render_engine/descriptors/SwapDescriptorSet.h"
 #include "game_engine_sdk/render_engine/fonts/Font.h"
@@ -11,6 +8,9 @@
 #include "game_engine_sdk/render_engine/ui/ElementProperties.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorImageInfo.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorPool.h"
+#include "game_engine_sdk/render_engine/vulkan/buffers/GpuBuffer.h"
+#include "game_engine_sdk/render_engine/vulkan/buffers/IndexBuffer.h"
+#include "game_engine_sdk/render_engine/vulkan/buffers/VertexBuffer.h"
 #include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
 #include "glm/fwd.hpp"
 #include "vulkan/vulkan_core.h"
@@ -61,10 +61,10 @@ class TextPipeline {
     std::unique_ptr<Font> m_font;
     TextPipelineOptions m_opts;
 
-    SwapStorageBuffer<CharacterInstanceBufferObject> m_character_buffers;
-    SwapStorageBuffer<TextSegmentBufferObject> m_text_segment_buffers;
-    VertexBuffer m_vertex_buffer;
-    IndexBuffer m_index_buffer;
+    vulkan::buffers::SwapStorageBuffer<CharacterInstanceBufferObject> m_character_buffers;
+    vulkan::buffers::SwapStorageBuffer<TextSegmentBufferObject> m_text_segment_buffers;
+    vulkan::buffers::VertexBuffer m_vertex_buffer;
+    vulkan::buffers::IndexBuffer m_index_buffer;
 
     vulkan::DescriptorPool m_descriptor_pool;
     SwapDescriptorSet m_descriptor_set;
@@ -72,12 +72,12 @@ class TextPipeline {
 
   public:
     TextPipeline(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
-                 CommandBufferManager *command_buffer_manager,
+                 vulkan::CommandBufferManager *command_buffer_manager,
                  SwapChainManager &swap_chain_manager, std::unique_ptr<Font> font);
     ~TextPipeline();
 
-    StorageBuffer<CharacterInstanceBufferObject> &get_character_buffer();
-    StorageBuffer<TextSegmentBufferObject> &get_text_segment_buffer();
+    vulkan::buffers::StorageBuffer<CharacterInstanceBufferObject> &get_character_buffer();
+    vulkan::buffers::StorageBuffer<TextSegmentBufferObject> &get_text_segment_buffer();
 
     void render_text(const VkCommandBuffer &command_buffer);
 

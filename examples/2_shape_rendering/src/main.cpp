@@ -17,7 +17,7 @@
 class ShapeRendering : public Game {
   private:
     std::unique_ptr<SwapChainManager> m_swap_chain_manager;
-    std::unique_ptr<CommandBufferManager> m_command_buffer_manager;
+    std::unique_ptr<vulkan::CommandBufferManager> m_command_buffer_manager;
 
     std::unique_ptr<Texture> m_dog_image;
     vulkan::Sampler m_sampler;
@@ -144,7 +144,7 @@ class ShapeRendering : public Game {
         register_all_fonts();
         register_all_images();
         m_swap_chain_manager = std::make_unique<SwapChainManager>(ctx);
-        m_command_buffer_manager = std::make_unique<CommandBufferManager>(
+        m_command_buffer_manager = std::make_unique<vulkan::CommandBufferManager>(
             ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
 
         m_sampler = vulkan::Sampler(ctx);

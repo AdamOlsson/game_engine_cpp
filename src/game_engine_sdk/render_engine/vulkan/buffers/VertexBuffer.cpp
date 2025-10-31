@@ -1,13 +1,13 @@
-#include "game_engine_sdk/render_engine/buffers/VertexBuffer.h"
-#include "game_engine_sdk/render_engine/buffers/StagingBuffer.h"
-#include "game_engine_sdk/render_engine/buffers/common.h"
+#include "game_engine_sdk/render_engine/vulkan/buffers/VertexBuffer.h"
+#include "game_engine_sdk/render_engine/vulkan/buffers/StagingBuffer.h"
+#include "game_engine_sdk/render_engine/vulkan/buffers/common.h"
 #include <vector>
 
-VertexBuffer::VertexBuffer() {}
+vulkan::buffers::VertexBuffer::VertexBuffer() {}
 
-VertexBuffer::VertexBuffer(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
-                           const std::vector<Vertex> &vertices,
-                           CommandBufferManager *command_buffer_manager)
+vulkan::buffers::VertexBuffer::VertexBuffer(
+    std::shared_ptr<vulkan::context::GraphicsContext> ctx,
+    const std::vector<Vertex> &vertices, CommandBufferManager *command_buffer_manager)
     : m_ctx(ctx), size(sizeof(Vertex) * vertices.size()),
       num_vertices(num_vertices = size / sizeof(Vertex)) {
 
@@ -23,7 +23,7 @@ VertexBuffer::VertexBuffer(std::shared_ptr<vulkan::context::GraphicsContext> ctx
                                                   buffer);
 }
 
-VertexBuffer::VertexBuffer(VertexBuffer &&other) noexcept
+vulkan::buffers::VertexBuffer::VertexBuffer(VertexBuffer &&other) noexcept
     : m_ctx(std::move(other.m_ctx)), buffer(other.buffer),
       bufferMemory(other.bufferMemory), size(other.size),
       num_vertices(other.num_vertices) {
@@ -33,7 +33,8 @@ VertexBuffer::VertexBuffer(VertexBuffer &&other) noexcept
     other.num_vertices = 0;
 }
 
-VertexBuffer &VertexBuffer::operator=(VertexBuffer &&other) noexcept {
+vulkan::buffers::VertexBuffer &
+vulkan::buffers::VertexBuffer::operator=(VertexBuffer &&other) noexcept {
     if (this != &other) {
         if (m_ctx && buffer != VK_NULL_HANDLE) {
             vkDestroyBuffer(m_ctx->logical_device, buffer, nullptr);
@@ -54,7 +55,7 @@ VertexBuffer &VertexBuffer::operator=(VertexBuffer &&other) noexcept {
     return *this;
 }
 
-VertexBuffer::~VertexBuffer() {
+vulkan::buffers::VertexBuffer::~VertexBuffer() {
     if (buffer == VK_NULL_HANDLE) {
         return;
     }
