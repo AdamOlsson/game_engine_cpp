@@ -3,7 +3,7 @@
 #include "vulkan/vulkan_core.h"
 #include <vector>
 
-namespace vulkan {
+namespace vulkan::context {
 class Instance {
   private:
     bool m_enable_validation_layers;
@@ -31,4 +31,4 @@ class Instance {
     operator VkInstance() const { return m_instance; }
 };
 
-} // namespace vulkan
+} // namespace vulkan::context

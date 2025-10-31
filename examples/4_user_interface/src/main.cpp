@@ -10,7 +10,7 @@
 #include "game_engine_sdk/render_engine/ui/Button.h"
 #include "game_engine_sdk/render_engine/ui/ElementProperties.h"
 #include "game_engine_sdk/render_engine/ui/UI.h"
-#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
+#include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/window/WindowConfig.h"
 #include <memory>
 
@@ -297,7 +297,7 @@ class UserInterfaceExample : public Game {
         render_pass.end_submit_present();
     };
 
-    void setup(std::shared_ptr<vulkan::GraphicsContext> &ctx) override {
+    void setup(std::shared_ptr<vulkan::context::GraphicsContext> &ctx) override {
         register_all_fonts();
         register_all_images();
         register_all_shaders();

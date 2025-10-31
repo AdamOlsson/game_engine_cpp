@@ -2,21 +2,21 @@
 
 #include "game_engine_sdk/render_engine/vulkan/DescriptorSet.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorSetLayout.h"
-#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
+#include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
 #include <cstddef>
 
 class SwapDescriptorSet {
     friend class SwapDescriptorSetBuilder;
 
   private:
-    std::shared_ptr<vulkan::GraphicsContext> m_ctx;
+    std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
     size_t m_capacity;
     size_t m_next;
 
     vulkan::DescriptorSetLayout m_layout;
     std::vector<vulkan::DescriptorSet> m_descriptor_sets;
 
-    SwapDescriptorSet(std::shared_ptr<vulkan::GraphicsContext> ctx,
+    SwapDescriptorSet(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
                       std::vector<vulkan::DescriptorSet> &descriptor_sets,
                       vulkan::DescriptorSetLayout &&layout);
 

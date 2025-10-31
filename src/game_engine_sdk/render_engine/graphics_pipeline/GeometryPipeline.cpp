@@ -13,7 +13,7 @@
 #include <optional>
 
 graphics_pipeline::GeometryPipeline::GeometryPipeline(
-    std::shared_ptr<vulkan::GraphicsContext> ctx,
+    std::shared_ptr<vulkan::context::GraphicsContext> ctx,
     CommandBufferManager *command_buffer_manager, SwapChainManager &swap_chain_manager,
     std::optional<GeometryPipelineOptions> opts)
     : m_ctx(ctx), m_opts(opts.has_value() ? opts.value() : GeometryPipelineOptions{}),

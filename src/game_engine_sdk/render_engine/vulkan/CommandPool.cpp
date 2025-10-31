@@ -1,7 +1,7 @@
 #include "game_engine_sdk/render_engine/vulkan/CommandPool.h"
 #include "vulkan/vulkan_core.h"
 
-vulkan::CommandPool::CommandPool(std::shared_ptr<vulkan::GraphicsContext> ctx)
+vulkan::CommandPool::CommandPool(std::shared_ptr<vulkan::context::GraphicsContext> ctx)
     : m_ctx(ctx), m_command_pool(create_command_pool()) {}
 
 vulkan::CommandPool::~CommandPool() {
@@ -30,12 +30,12 @@ vulkan::CommandPool &vulkan::CommandPool::operator=(CommandPool &&other) noexcep
     return *this;
 }
 
-SingleTimeCommandBuffer vulkan::CommandPool::get_single_time_command_buffer() {
+vulkan::SingleTimeCommandBuffer vulkan::CommandPool::get_single_time_command_buffer() {
     return SingleTimeCommandBuffer(m_ctx, m_command_pool);
 }
 
 VkCommandPool vulkan::CommandPool::create_command_pool() {
-    device::QueueFamilyIndices queue_family_indices =
+    context::device::QueueFamilyIndices queue_family_indices =
         m_ctx->physical_device.find_queue_families(m_ctx->surface);
 
     VkCommandPoolCreateInfo pool_info{};

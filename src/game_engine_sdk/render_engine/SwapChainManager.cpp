@@ -3,7 +3,7 @@
 #include "vulkan/vulkan_core.h"
 #include <optional>
 
-SwapChainManager::SwapChainManager(std::shared_ptr<vulkan::GraphicsContext> ctx)
+SwapChainManager::SwapChainManager(std::shared_ptr<vulkan::context::GraphicsContext> ctx)
     : m_ctx(ctx), m_next_frame_buffer(0), m_swap_chain(SwapChain(ctx)),
       m_image_available(
           vulkan::Semaphore(m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT)),

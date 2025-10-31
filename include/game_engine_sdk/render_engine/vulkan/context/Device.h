@@ -4,7 +4,7 @@
 #include "Surface.h"
 #include "logger/logger.h"
 
-namespace vulkan {
+namespace vulkan::context {
 namespace device {
 
 struct SwapChainSupportDetails {
@@ -141,4 +141,4 @@ class LogicalDevice {
 };
 
 } // namespace device
-} // namespace vulkan
+} // namespace vulkan::context

@@ -1,15 +1,15 @@
 #pragma once
 
 #include "game_engine_sdk/render_engine/vulkan/Framebuffer.h"
-#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/ImageView.h"
 #include "game_engine_sdk/render_engine/vulkan/SwapChainImage.h"
+#include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
 
 class SwapChain {
   private:
-    std::shared_ptr<vulkan::GraphicsContext> m_ctx;
+    std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
     size_t m_next_frame_buffer;
 
     std::vector<vulkan::SwapChainImage> m_images;
@@ -18,10 +18,10 @@ class SwapChain {
 
     void setup(VkSwapchainKHR &old_swap_chain);
 
-    VkSwapchainKHR
-    create_swap_chain(uint32_t image_count, VkSurfaceFormatKHR &surface_format,
-                      vulkan::device::SwapChainSupportDetails &swap_chain_support,
-                      VkSwapchainKHR &old_swap_chain);
+    VkSwapchainKHR create_swap_chain(
+        uint32_t image_count, VkSurfaceFormatKHR &surface_format,
+        vulkan::context::device::SwapChainSupportDetails &swap_chain_support,
+        VkSwapchainKHR &old_swap_chain);
 
     std::vector<vulkan::SwapChainImage> create_swap_chain_images(uint32_t image_count);
     std::vector<vulkan::ImageView> create_image_views(VkFormat &image_format);
@@ -36,8 +36,8 @@ class SwapChain {
     VkRenderPass m_render_pass;
 
     SwapChain();
-    SwapChain(std::shared_ptr<vulkan::GraphicsContext> ctx);
-    SwapChain(std::shared_ptr<vulkan::GraphicsContext> ctx, SwapChain &old);
+    SwapChain(std::shared_ptr<vulkan::context::GraphicsContext> ctx);
+    SwapChain(std::shared_ptr<vulkan::context::GraphicsContext> ctx, SwapChain &old);
     ~SwapChain();
 
     SwapChain(SwapChain &&other) noexcept;

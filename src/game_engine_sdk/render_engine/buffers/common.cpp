@@ -3,7 +3,7 @@
 
 #include <stdexcept>
 
-void create_buffer(const vulkan::GraphicsContext *ctx, const VkDeviceSize size,
+void create_buffer(const vulkan::context::GraphicsContext *ctx, const VkDeviceSize size,
                    const VkBufferUsageFlags usage, const VkMemoryPropertyFlags properties,
                    VkBuffer &buffer, VkDeviceMemory &buffer_memory) {
     VkBufferCreateInfo buffer_info{};

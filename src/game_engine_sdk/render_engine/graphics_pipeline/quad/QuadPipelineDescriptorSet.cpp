@@ -4,12 +4,12 @@
 using namespace graphics_pipeline;
 
 QuadPipelineDescriptorSet::QuadPipelineDescriptorSet(
-    std::shared_ptr<vulkan::GraphicsContext> &ctx,
+    std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
     vulkan::DescriptorPool &descriptor_pool, QuadPipelineDescriptorSetOpts &&opts)
     : m_descriptor_set(build_descriptor_set(ctx, descriptor_pool, std::move(opts))) {}
 
 SwapDescriptorSet QuadPipelineDescriptorSet::build_descriptor_set(
-    std::shared_ptr<vulkan::GraphicsContext> &ctx,
+    std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
     vulkan::DescriptorPool &descriptor_pool, QuadPipelineDescriptorSetOpts &&opts) {
     auto builder = SwapDescriptorSetBuilder(opts.num_sets);
     bool no_descriptors = true;

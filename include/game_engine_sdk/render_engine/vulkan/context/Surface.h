@@ -4,7 +4,7 @@
 #include "game_engine_sdk/render_engine/window/Window.h"
 #include "vulkan/vulkan_core.h"
 
-namespace vulkan {
+namespace vulkan::context {
 class Surface {
   private:
     const Instance *m_instance;
@@ -23,4 +23,4 @@ class Surface {
 
     operator VkSurfaceKHR() const { return m_surface; }
 };
-} // namespace vulkan
+} // namespace vulkan::context

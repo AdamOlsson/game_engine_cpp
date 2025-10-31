@@ -2,7 +2,7 @@
 #include "vulkan/vulkan_core.h"
 
 vulkan::DescriptorSetLayout::DescriptorSetLayout(
-    std::shared_ptr<vulkan::GraphicsContext> ctx, VkDescriptorSetLayout &layout)
+    std::shared_ptr<vulkan::context::GraphicsContext> ctx, VkDescriptorSetLayout &layout)
     : m_ctx(ctx), m_layout(layout) {}
 
 vulkan::DescriptorSetLayout::~DescriptorSetLayout() {

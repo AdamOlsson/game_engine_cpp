@@ -136,7 +136,7 @@ class Example1SpatialSubdivision : public Game {
         render_count++;
     };
 
-    void setup(std::shared_ptr<vulkan::GraphicsContext> &ctx) override {
+    void setup(std::shared_ptr<vulkan::context::GraphicsContext> &ctx) override {
         register_all_shaders();
         register_all_fonts();
         register_all_images();

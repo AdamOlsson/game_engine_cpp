@@ -2,7 +2,7 @@
 
 #include "Instance.h"
 #include "vulkan/vulkan_core.h"
-namespace vulkan {
+namespace vulkan::context {
 
 class DebugMessenger {
   private:
@@ -18,7 +18,7 @@ class DebugMessenger {
     void destroy_debug_messenger_ext();
 
   public:
-    DebugMessenger(vulkan::Instance *instance);
+    DebugMessenger(Instance *instance);
     ~DebugMessenger();
 
     DebugMessenger(DebugMessenger &&other) noexcept
@@ -44,4 +44,4 @@ class DebugMessenger {
     populate_debug_messenger_create_info(VkDebugUtilsMessengerCreateInfoEXT &create_info);
 };
 
-}; // namespace vulkan
+}; // namespace vulkan::context

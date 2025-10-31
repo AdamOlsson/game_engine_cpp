@@ -1,7 +1,7 @@
 #include "game_engine_sdk/render_engine/buffers/StagingBuffer.h"
 #include "game_engine_sdk/render_engine/buffers/common.h"
 
-StagingBuffer::StagingBuffer(std::shared_ptr<vulkan::GraphicsContext> ctx,
+StagingBuffer::StagingBuffer(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
                              const size_t buffer_size)
     : m_ctx(ctx), m_staging_buffer_size(buffer_size),
       m_staging_buffer(create_staging_buffer()) {}
@@ -39,7 +39,7 @@ Buffer StagingBuffer::create_staging_buffer() {
 void StagingBuffer::copy_buffer_to_image(CommandBufferManager *command_buffer_manager,
                                          const VkImage &image,
                                          const image::ImageDimensions &dim) {
-    SingleTimeCommandBuffer command_buffer =
+    vulkan::SingleTimeCommandBuffer command_buffer =
         command_buffer_manager->get_single_time_command_buffer();
     command_buffer.begin();
 
@@ -64,7 +64,7 @@ void StagingBuffer::copy_buffer_to_image(CommandBufferManager *command_buffer_ma
 
 void StagingBuffer::copy_buffer_to_buffer(CommandBufferManager *command_buffer_manager,
                                           const VkBuffer &dst_buffer) {
-    SingleTimeCommandBuffer command_buffer =
+    vulkan::SingleTimeCommandBuffer command_buffer =
         command_buffer_manager->get_single_time_command_buffer();
     command_buffer.begin();
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/vulkan/ImageView.h"
-#include "game_engine_sdk/render_engine/vulkan/Sampler.h"
+#include "ImageView.h"
+#include "Sampler.h"
 #include "vulkan/vulkan_core.h"
 
 namespace vulkan {

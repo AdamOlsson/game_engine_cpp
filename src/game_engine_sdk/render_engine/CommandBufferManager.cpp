@@ -1,9 +1,8 @@
 #include "game_engine_sdk/render_engine/CommandBufferManager.h"
-#include "game_engine_sdk/render_engine/SingleTimeCommandBuffer.h"
 #include "vulkan/vulkan_core.h"
 
-CommandBufferManager::CommandBufferManager(std::shared_ptr<vulkan::GraphicsContext> ctx,
-                                           const size_t num_buffers)
+CommandBufferManager::CommandBufferManager(
+    std::shared_ptr<vulkan::context::GraphicsContext> ctx, const size_t num_buffers)
     : m_ctx(ctx), m_num_buffers(num_buffers), m_command_pool(vulkan::CommandPool(m_ctx)),
       m_command_buffers(create_command_buffers()) {}
 
@@ -15,7 +14,7 @@ vulkan::CommandBuffer CommandBufferManager::get_command_buffer() {
     return buf;
 }
 
-SingleTimeCommandBuffer CommandBufferManager::get_single_time_command_buffer() {
+vulkan::SingleTimeCommandBuffer CommandBufferManager::get_single_time_command_buffer() {
     return m_command_pool.get_single_time_command_buffer();
 }
 

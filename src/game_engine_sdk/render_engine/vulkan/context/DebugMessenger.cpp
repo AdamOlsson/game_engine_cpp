@@ -1,4 +1,4 @@
-#include "game_engine_sdk/render_engine/vulkan/DebugMessenger.h"
+#include "game_engine_sdk/render_engine/vulkan/context/DebugMessenger.h"
 #include <iostream>
 
 VKAPI_ATTR inline VkBool32 VKAPI_CALL debug_callback(
@@ -9,10 +9,10 @@ VKAPI_ATTR inline VkBool32 VKAPI_CALL debug_callback(
     return VK_FALSE;
 }
 
-vulkan::DebugMessenger::DebugMessenger(vulkan::Instance *instance)
+vulkan::context::DebugMessenger::DebugMessenger(Instance *instance)
     : m_instance(instance), m_debug_messenger(setup_debug_messenger()) {}
 
-vulkan::DebugMessenger::~DebugMessenger() {
+vulkan::context::DebugMessenger::~DebugMessenger() {
     if (m_debug_messenger == VK_NULL_HANDLE) {
         return;
     }
@@ -22,10 +22,10 @@ vulkan::DebugMessenger::~DebugMessenger() {
     m_debug_messenger = VK_NULL_HANDLE;
 }
 
-VkDebugUtilsMessengerEXT vulkan::DebugMessenger::setup_debug_messenger() {
+VkDebugUtilsMessengerEXT vulkan::context::DebugMessenger::setup_debug_messenger() {
 
     VkDebugUtilsMessengerCreateInfoEXT create_info;
-    vulkan::DebugMessenger::populate_debug_messenger_create_info(create_info);
+    vulkan::context::DebugMessenger::populate_debug_messenger_create_info(create_info);
 
     VkDebugUtilsMessengerEXT debug_messenger;
     if (create_debug_utils_messenger_ext(&create_info, &debug_messenger) != VK_SUCCESS) {
@@ -34,7 +34,7 @@ VkDebugUtilsMessengerEXT vulkan::DebugMessenger::setup_debug_messenger() {
     return debug_messenger;
 }
 
-VkResult vulkan::DebugMessenger::create_debug_utils_messenger_ext(
+VkResult vulkan::context::DebugMessenger::create_debug_utils_messenger_ext(
     const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
     VkDebugUtilsMessengerEXT *pDebugMessenger) {
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
@@ -47,7 +47,7 @@ VkResult vulkan::DebugMessenger::create_debug_utils_messenger_ext(
     }
 }
 
-void vulkan::DebugMessenger::destroy_debug_messenger_ext() {
+void vulkan::context::DebugMessenger::destroy_debug_messenger_ext() {
     if (m_debug_messenger == VK_NULL_HANDLE) {
         return;
     }
@@ -59,7 +59,7 @@ void vulkan::DebugMessenger::destroy_debug_messenger_ext() {
     }
 }
 
-void vulkan::DebugMessenger::populate_debug_messenger_create_info(
+void vulkan::context::DebugMessenger::populate_debug_messenger_create_info(
     VkDebugUtilsMessengerCreateInfoEXT &create_info) {
     create_info = {};
     create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;

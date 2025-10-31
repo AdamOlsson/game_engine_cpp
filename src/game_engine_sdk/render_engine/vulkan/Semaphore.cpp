@@ -1,7 +1,7 @@
 #include "game_engine_sdk/render_engine/vulkan/Semaphore.h"
 #include <memory>
 
-vulkan::Semaphore::Semaphore(std::shared_ptr<vulkan::GraphicsContext> ctx,
+vulkan::Semaphore::Semaphore(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
                              const size_t size)
     : m_ctx(ctx), m_size(size), m_next(0) {
     m_semaphores.resize(size);

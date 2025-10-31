@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Filter.h"
-#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
+#include "context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
@@ -22,7 +22,7 @@ enum class SamplerMipmapMode {
 
 class Sampler {
   private:
-    std::shared_ptr<vulkan::GraphicsContext> m_ctx;
+    std::shared_ptr<context::GraphicsContext> m_ctx;
     VkSampler m_sampler;
 
     VkSampler create_sampler(vulkan::Filter filter,
@@ -30,8 +30,8 @@ class Sampler {
 
   public:
     Sampler() = default;
-    Sampler(std::shared_ptr<vulkan::GraphicsContext> ctx);
-    Sampler(std::shared_ptr<vulkan::GraphicsContext> ctx, vulkan::Filter filter,
+    Sampler(std::shared_ptr<context::GraphicsContext> ctx);
+    Sampler(std::shared_ptr<context::GraphicsContext> ctx, vulkan::Filter filter,
             vulkan::SamplerAddressMode address_mode);
     ~Sampler();
 

@@ -4,7 +4,7 @@
 #include "game_engine_sdk/render_engine/graphics_pipeline/GraphicsPipeline.h"
 #include "game_engine_sdk/render_engine/resources/shaders/ShaderResource.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorSetLayout.h"
-#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
+#include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <optional>
 
@@ -29,7 +29,7 @@ class GraphicsPipelineBuilder {
     GraphicsPipelineBuilder &
     set_descriptor_set_layout(vulkan::DescriptorSetLayout *value);
 
-    GraphicsPipeline build(std::shared_ptr<vulkan::GraphicsContext> &ctx,
+    GraphicsPipeline build(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
                            SwapChainManager &swap_chain_manager);
 };
 } // namespace graphics_pipeline

@@ -66,7 +66,7 @@ SwapDescriptorSetBuilder &SwapDescriptorSetBuilder::add_combined_image_sampler(
 }
 
 std::vector<VkDescriptorSet> SwapDescriptorSetBuilder::allocate_descriptor_sets(
-    std::shared_ptr<vulkan::GraphicsContext> &ctx,
+    std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
     vulkan::DescriptorPool &descriptor_pool,
     const VkDescriptorSetLayout &descriptor_set_layout) {
 
@@ -117,7 +117,7 @@ SwapDescriptorSetBuilder::create_texture_and_sampler_descriptor_write(
 }
 
 SwapDescriptorSet
-SwapDescriptorSetBuilder::build(std::shared_ptr<vulkan::GraphicsContext> &ctx,
+SwapDescriptorSetBuilder::build(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
                                 vulkan::DescriptorPool &descriptor_pool) {
 
     if (m_storage_buffers_infos.size() % m_capacity != 0) {

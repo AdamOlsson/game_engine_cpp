@@ -2,13 +2,13 @@
 
 #include "game_engine_sdk/render_engine/CommandBufferManager.h"
 #include "game_engine_sdk/render_engine/Vertex.h"
-#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
+#include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
 class VertexBuffer {
   private:
-    std::shared_ptr<vulkan::GraphicsContext> m_ctx;
+    std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
 
   public:
     VkBuffer buffer;
@@ -17,7 +17,7 @@ class VertexBuffer {
     size_t num_vertices;
 
     VertexBuffer();
-    VertexBuffer(std::shared_ptr<vulkan::GraphicsContext> ctx,
+    VertexBuffer(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
                  const std::vector<Vertex> &vertices,
                  CommandBufferManager *command_buffer_manager);
 

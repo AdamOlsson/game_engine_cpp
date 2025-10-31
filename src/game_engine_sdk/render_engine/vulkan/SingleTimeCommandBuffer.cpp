@@ -1,44 +1,45 @@
-#include "game_engine_sdk/render_engine/SingleTimeCommandBuffer.h"
+#include "game_engine_sdk/render_engine/vulkan/SingleTimeCommandBuffer.h"
 #include "vulkan/vulkan_core.h"
 
-SingleTimeCommandBuffer::SingleTimeCommandBuffer(
-    std::shared_ptr<vulkan::GraphicsContext> ctx, VkCommandPool &command_pool)
+vulkan::SingleTimeCommandBuffer::SingleTimeCommandBuffer(
+    std::shared_ptr<vulkan::context::GraphicsContext> ctx, VkCommandPool &command_pool)
     : m_ctx(ctx), m_command_pool(command_pool), m_command_buffer(allocate_buffer()) {}
 
-SingleTimeCommandBuffer::~SingleTimeCommandBuffer() {
+vulkan::SingleTimeCommandBuffer::~SingleTimeCommandBuffer() {
     vkFreeCommandBuffers(m_ctx->logical_device, m_command_pool, 1, &m_command_buffer);
 }
 
-void SingleTimeCommandBuffer::copy_buffer(const VkBuffer &src, const VkBuffer &dst,
-                                          const VkBufferCopy &region) {
+void vulkan::SingleTimeCommandBuffer::copy_buffer(const VkBuffer &src,
+                                                  const VkBuffer &dst,
+                                                  const VkBufferCopy &region) {
     vkCmdCopyBuffer(m_command_buffer, src, dst, 1, &region);
 }
 
-void SingleTimeCommandBuffer::copy_buffer_to_image(const VkBuffer &buffer,
-                                                   const VkImage &image,
-                                                   const VkImageLayout image_layout,
-                                                   const VkBufferImageCopy &region) {
+void vulkan::SingleTimeCommandBuffer::copy_buffer_to_image(
+    const VkBuffer &buffer, const VkImage &image, const VkImageLayout image_layout,
+    const VkBufferImageCopy &region) {
     vkCmdCopyBufferToImage(m_command_buffer, buffer, image,
                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 }
 
-void SingleTimeCommandBuffer::barrier(const VkPipelineStageFlagBits2 &source_stage,
-                                      const VkPipelineStageFlagBits2 &destination_stage,
-                                      const VkImageMemoryBarrier &barrier) {
+void vulkan::SingleTimeCommandBuffer::barrier(
+    const VkPipelineStageFlagBits2 &source_stage,
+    const VkPipelineStageFlagBits2 &destination_stage,
+    const VkImageMemoryBarrier &barrier) {
     vkCmdPipelineBarrier(m_command_buffer, source_stage, destination_stage, 0, 0, nullptr,
                          0, nullptr, 1, &barrier);
 }
 
-void SingleTimeCommandBuffer::begin() {
+void vulkan::SingleTimeCommandBuffer::begin() {
     VkCommandBufferBeginInfo begin_info{};
     begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(m_command_buffer, &begin_info);
 }
 
-void SingleTimeCommandBuffer::end() { vkEndCommandBuffer(m_command_buffer); }
+void vulkan::SingleTimeCommandBuffer::end() { vkEndCommandBuffer(m_command_buffer); }
 
-void SingleTimeCommandBuffer::submit() {
+void vulkan::SingleTimeCommandBuffer::submit() {
     VkSubmitInfo submit_info{};
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submit_info.commandBufferCount = 1;
@@ -50,7 +51,7 @@ void SingleTimeCommandBuffer::submit() {
     vkQueueWaitIdle(device_queues.graphics_queue);
 }
 
-VkCommandBuffer SingleTimeCommandBuffer::allocate_buffer() {
+VkCommandBuffer vulkan::SingleTimeCommandBuffer::allocate_buffer() {
     VkCommandBufferAllocateInfo alloc_info{};
     alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;

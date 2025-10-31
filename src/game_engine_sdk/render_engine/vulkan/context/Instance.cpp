@@ -1,18 +1,18 @@
-#include "game_engine_sdk/render_engine/vulkan/Instance.h"
-#include "game_engine_sdk/render_engine/vulkan/DebugMessenger.h"
+#include "game_engine_sdk/render_engine/vulkan/context/Instance.h"
+#include "game_engine_sdk/render_engine/vulkan/context/DebugMessenger.h"
 #include "logger/logger.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-vulkan::Instance::Instance(const std::vector<const char *> &validation_layers)
+vulkan::context::Instance::Instance(const std::vector<const char *> &validation_layers)
     : m_enable_validation_layers(validation_layers.size() > 0),
       m_instance(create_instance(validation_layers)) {}
 
-vulkan::Instance::~Instance() { vkDestroyInstance(m_instance, nullptr); }
+vulkan::context::Instance::~Instance() { vkDestroyInstance(m_instance, nullptr); }
 
-VkInstance
-vulkan::Instance::create_instance(const std::vector<const char *> &validation_layers) {
+VkInstance vulkan::context::Instance::create_instance(
+    const std::vector<const char *> &validation_layers) {
     print_vulkan_version();
     if (m_enable_validation_layers &&
         !check_validation_layer_support(validation_layers)) {
@@ -67,7 +67,7 @@ vulkan::Instance::create_instance(const std::vector<const char *> &validation_la
     return instance;
 }
 
-void vulkan::Instance::print_enabled_extensions(
+void vulkan::context::Instance::print_enabled_extensions(
     const std::vector<const char *> &extensions) {
     logger::debug("Enabled extensions are:");
     for (auto e : extensions) {
@@ -75,7 +75,7 @@ void vulkan::Instance::print_enabled_extensions(
     }
 }
 
-std::vector<const char *> vulkan::Instance::get_required_extensions() {
+std::vector<const char *> vulkan::context::Instance::get_required_extensions() {
     uint32_t glfwExtensionCount = 0;
     const char **glfwExtensions;
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
@@ -94,7 +94,7 @@ std::vector<const char *> vulkan::Instance::get_required_extensions() {
     return extensions;
 }
 
-void vulkan::Instance::print_vulkan_version() {
+void vulkan::context::Instance::print_vulkan_version() {
     uint32_t instanceVersion;
     VkResult result = vkEnumerateInstanceVersion(&instanceVersion);
 
@@ -107,7 +107,7 @@ void vulkan::Instance::print_vulkan_version() {
     }
 }
 
-void vulkan::Instance::print_supported_extensions() {
+void vulkan::context::Instance::print_supported_extensions() {
     uint32_t extensionCount = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 
@@ -121,7 +121,7 @@ void vulkan::Instance::print_supported_extensions() {
     }
 }
 
-bool vulkan::Instance::check_validation_layer_support(
+bool vulkan::context::Instance::check_validation_layer_support(
     const std::vector<const char *> &validation_layers) {
     uint32_t layer_count;
     vkEnumerateInstanceLayerProperties(&layer_count, nullptr);

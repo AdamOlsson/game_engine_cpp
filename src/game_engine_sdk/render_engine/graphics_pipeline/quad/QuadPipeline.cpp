@@ -5,7 +5,7 @@
 
 using namespace graphics_pipeline;
 
-QuadPipeline::QuadPipeline(std::shared_ptr<vulkan::GraphicsContext> ctx,
+QuadPipeline::QuadPipeline(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
                            CommandBufferManager *command_buffer_manager,
                            SwapChainManager *swap_chain_manager,
                            const vulkan::DescriptorSetLayout *descriptor_set_layout,

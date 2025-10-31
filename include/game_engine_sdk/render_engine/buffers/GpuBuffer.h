@@ -1,7 +1,7 @@
 #pragma once
 
 #include "game_engine_sdk/render_engine/buffers/common.h"
-#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
+#include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
 #include <iostream>
@@ -23,7 +23,7 @@ template <GpuBufferType BufferType> class BufferDescriptor;
 
 template <Printable T, GpuBufferType BufferType> class GpuBuffer {
   private:
-    std::shared_ptr<vulkan::GraphicsContext> m_ctx;
+    std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
 
     std::vector<T> m_staging_buffer;
     size_t m_capacity;
@@ -42,7 +42,7 @@ template <Printable T, GpuBufferType BufferType> class GpuBuffer {
   public:
     GpuBuffer() = default;
 
-    GpuBuffer(std::shared_ptr<vulkan::GraphicsContext> ctx, size_t capacity)
+    GpuBuffer(std::shared_ptr<vulkan::context::GraphicsContext> ctx, size_t capacity)
         : m_ctx(ctx), m_capacity(capacity), m_size(capacity * sizeof(T)) {
 
         if constexpr (BufferType == GpuBufferType::Storage) {
@@ -218,7 +218,7 @@ template <typename T, GpuBufferType BufferType> class SwapGpuBuffer {
   public:
     SwapGpuBuffer() = default;
 
-    SwapGpuBuffer(std::shared_ptr<vulkan::GraphicsContext> &ctx, size_t num_bufs,
+    SwapGpuBuffer(std::shared_ptr<vulkan::context::GraphicsContext> &ctx, size_t num_bufs,
                   size_t capacity)
         : m_idx(0) {
         // Initiate buffers

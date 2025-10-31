@@ -11,8 +11,8 @@
 #include "game_engine_sdk/render_engine/graphics_pipeline/GraphicsPipeline.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorImageInfo.h"
 #include "game_engine_sdk/render_engine/vulkan/DescriptorPool.h"
-#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/Sampler.h"
+#include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <iostream>
 #include <memory>
@@ -78,7 +78,7 @@ class GeometryPipeline {
     const uint32_t m_num_combined_image_samplers = MAX_FRAMES_IN_FLIGHT * 4 * 5;
     const uint32_t m_descriptor_pool_capacity = MAX_FRAMES_IN_FLIGHT * 4;
 
-    std::shared_ptr<vulkan::GraphicsContext> m_ctx;
+    std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
 
     GeometryPipelineOptions m_opts;
     std::optional<Texture> m_empty_texture;
@@ -114,7 +114,7 @@ class GeometryPipeline {
      * num_instances);*/
 
   public:
-    GeometryPipeline(std::shared_ptr<vulkan::GraphicsContext> ctx,
+    GeometryPipeline(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
                      CommandBufferManager *command_buffer_manager,
                      SwapChainManager &swap_chain_manager,
                      std::optional<GeometryPipelineOptions> opts);

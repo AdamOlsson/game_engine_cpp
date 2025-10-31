@@ -3,14 +3,15 @@
 
 SwapChain::SwapChain() : m_swap_chain(VK_NULL_HANDLE), m_render_pass(VK_NULL_HANDLE) {}
 
-SwapChain::SwapChain(std::shared_ptr<vulkan::GraphicsContext> ctx)
+SwapChain::SwapChain(std::shared_ptr<vulkan::context::GraphicsContext> ctx)
     : m_ctx(ctx), m_next_frame_buffer(0) {
 
     VkSwapchainKHR old_swap_chain = VK_NULL_HANDLE;
     setup(old_swap_chain);
 }
 
-SwapChain::SwapChain(std::shared_ptr<vulkan::GraphicsContext> ctx, SwapChain &old)
+SwapChain::SwapChain(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
+                     SwapChain &old)
     : m_ctx(ctx), m_next_frame_buffer(old.m_next_frame_buffer) {
     VkSwapchainKHR old_swap_chain = old.m_swap_chain;
     setup(old_swap_chain);
@@ -37,7 +38,7 @@ void SwapChain::recreate_swap_chain() {
 }
 
 void SwapChain::setup(VkSwapchainKHR &old_swap_chain) {
-    vulkan::device::SwapChainSupportDetails swap_chain_support =
+    vulkan::context::device::SwapChainSupportDetails swap_chain_support =
         m_ctx->physical_device.query_swap_chain_support(m_ctx->surface);
 
     uint32_t image_count = swap_chain_support.get_image_count();
@@ -103,7 +104,7 @@ SwapChain &SwapChain::operator=(SwapChain &&other) noexcept {
 
 VkSwapchainKHR
 SwapChain::create_swap_chain(uint32_t image_count, VkSurfaceFormatKHR &surface_format,
-                             vulkan::device::SwapChainSupportDetails &swap_chain_support,
+                             vulkan::context::device::SwapChainSupportDetails &swap_chain_support,
                              VkSwapchainKHR &old_swap_chain) {
     VkPresentModeKHR present_mode =
         swap_chain_support.choose_swap_present_mode(VK_PRESENT_MODE_MAILBOX_KHR);
@@ -118,7 +119,7 @@ SwapChain::create_swap_chain(uint32_t image_count, VkSurfaceFormatKHR &surface_f
     create_info.imageArrayLayers = 1;
     create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    vulkan::device::QueueFamilyIndices indices =
+    vulkan::context::device::QueueFamilyIndices indices =
         m_ctx->physical_device.find_queue_families(m_ctx->surface);
 
     uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(),

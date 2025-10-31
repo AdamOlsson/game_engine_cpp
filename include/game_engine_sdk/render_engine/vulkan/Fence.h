@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
+#include "context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <cstddef>
 #include <memory>
@@ -8,7 +8,7 @@
 namespace vulkan {
 class Fence {
   private:
-    std::shared_ptr<vulkan::GraphicsContext> m_ctx;
+    std::shared_ptr<context::GraphicsContext> m_ctx;
     size_t m_size;
 
     size_t m_current;
@@ -17,7 +17,7 @@ class Fence {
 
   public:
     Fence() = default;
-    Fence(std::shared_ptr<vulkan::GraphicsContext> ctx, const size_t size);
+    Fence(std::shared_ptr<context::GraphicsContext> ctx, const size_t size);
     ~Fence();
 
     Fence(Fence &&other) noexcept = default;

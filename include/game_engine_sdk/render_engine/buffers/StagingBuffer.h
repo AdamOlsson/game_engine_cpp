@@ -1,8 +1,8 @@
 #pragma once
 
 #include "game_engine_sdk/render_engine/CommandBufferManager.h"
-#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/TextureImage.h"
+#include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
 #include "logger/logger.h"
 #include <memory>
 
@@ -13,7 +13,7 @@ struct Buffer {
 
 class StagingBuffer {
   private:
-    std::shared_ptr<vulkan::GraphicsContext> m_ctx;
+    std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
     const size_t m_staging_buffer_size;
     Buffer m_staging_buffer;
 
@@ -27,7 +27,8 @@ class StagingBuffer {
 
   public:
     StagingBuffer() = delete;
-    StagingBuffer(std::shared_ptr<vulkan::GraphicsContext> ctx, const size_t buffer_size);
+    StagingBuffer(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
+                  const size_t buffer_size);
     StagingBuffer(StagingBuffer &&other) noexcept = delete;
     StagingBuffer(const StagingBuffer &other) = delete;
     StagingBuffer &operator=(StagingBuffer &&other) noexcept = delete;

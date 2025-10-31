@@ -3,18 +3,18 @@
 #include "game_engine_sdk/render_engine/buffers/VertexBuffer.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/quad/QuadPipelineDescriptorSet.h"
 #include "game_engine_sdk/render_engine/vulkan/CommandBuffer.h"
-#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/Pipeline.h"
 #include "game_engine_sdk/render_engine/vulkan/PipelineLayout.h"
 #include "game_engine_sdk/render_engine/vulkan/PushConstantRange.h"
 #include "game_engine_sdk/render_engine/vulkan/ShaderStage.h"
+#include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
 #include <memory>
 
 namespace graphics_pipeline {
 
 class QuadPipeline {
   private:
-    std::shared_ptr<vulkan::GraphicsContext> m_ctx;
+    std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
 
     VertexBuffer m_quad_vertex_buffer;
     IndexBuffer m_quad_index_buffer;
@@ -25,7 +25,7 @@ class QuadPipeline {
     vulkan::Pipeline m_pipeline;
 
   public:
-    QuadPipeline(std::shared_ptr<vulkan::GraphicsContext> ctx,
+    QuadPipeline(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
                  CommandBufferManager *command_buffer_manager,
                  SwapChainManager *swap_chain_manager,
                  const vulkan::DescriptorSetLayout *descriptor_set_layout,

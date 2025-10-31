@@ -1,14 +1,14 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/vulkan/DescriptorSetLayout.h"
-#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
-#include "game_engine_sdk/render_engine/vulkan/PushConstantRange.h"
+#include "DescriptorSetLayout.h"
+#include "PushConstantRange.h"
+#include "context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <vector>
 namespace vulkan {
 class PipelineLayout {
   private:
-    std::shared_ptr<vulkan::GraphicsContext> m_ctx;
+    std::shared_ptr<context::GraphicsContext> m_ctx;
     VkPipelineLayout m_pipeline_layout;
 
     VkPipelineLayout create_graphics_pipeline_layout(
@@ -22,12 +22,12 @@ class PipelineLayout {
   public:
     PipelineLayout() = default;
 
-    PipelineLayout(std::shared_ptr<vulkan::GraphicsContext> ctx,
+    PipelineLayout(std::shared_ptr<context::GraphicsContext> ctx,
                    const vulkan::DescriptorSetLayout *descriptor_set_layout,
                    const vulkan::PushConstantRange *push_constant_range);
 
     // Deprecated
-    PipelineLayout(std::shared_ptr<vulkan::GraphicsContext> ctx,
+    PipelineLayout(std::shared_ptr<context::GraphicsContext> ctx,
                    const vulkan::DescriptorSetLayout *descriptor_set_layout,
                    const std::vector<VkPushConstantRange> &push_constant_range);
 

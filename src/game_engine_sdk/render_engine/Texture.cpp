@@ -5,7 +5,7 @@
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
-Texture::Texture(std::shared_ptr<vulkan::GraphicsContext> ctx,
+Texture::Texture(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
                  CommandBufferManager *command_buffer_manager,
                  const image::Image &image_data)
     : m_ctx(ctx), m_texture_image(vulkan::TextureImage(
@@ -26,7 +26,7 @@ Texture::Texture(std::shared_ptr<vulkan::GraphicsContext> ctx,
                                             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
-Texture Texture::from_filepath(std::shared_ptr<vulkan::GraphicsContext> &ctx,
+Texture Texture::from_filepath(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
                                CommandBufferManager *command_buffer_manager,
                                const char *filepath) {
     const auto bytes = graphics_pipeline::readFile(filepath);
@@ -36,7 +36,7 @@ Texture Texture::from_filepath(std::shared_ptr<vulkan::GraphicsContext> &ctx,
 }
 
 std::unique_ptr<Texture>
-Texture::unique_from_filepath(std::shared_ptr<vulkan::GraphicsContext> &ctx,
+Texture::unique_from_filepath(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
                               CommandBufferManager *command_buffer_manager,
                               const char *filepath) {
     const auto bytes = graphics_pipeline::readFile(filepath);
@@ -45,7 +45,7 @@ Texture::unique_from_filepath(std::shared_ptr<vulkan::GraphicsContext> &ctx,
     return std::move(std::make_unique<Texture>(ctx, command_buffer_manager, image_data));
 }
 
-Texture Texture::from_bytes(std::shared_ptr<vulkan::GraphicsContext> &ctx,
+Texture Texture::from_bytes(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
                             CommandBufferManager *command_buffer_manager,
                             const uint8_t *bytes, const unsigned int length) {
     const auto image_data = image::Image::load_rgba_image(bytes, length);
@@ -53,34 +53,33 @@ Texture Texture::from_bytes(std::shared_ptr<vulkan::GraphicsContext> &ctx,
 }
 
 std::unique_ptr<Texture>
-Texture::unique_from_bytes(std::shared_ptr<vulkan::GraphicsContext> &ctx,
+Texture::unique_from_bytes(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
                            CommandBufferManager *command_buffer_manager,
                            const uint8_t *bytes, const unsigned int length) {
     const auto image_data = image::Image::load_rgba_image(bytes, length);
     return std::move(std::make_unique<Texture>(ctx, command_buffer_manager, image_data));
 }
 
-Texture Texture::from_image_resource(std::shared_ptr<vulkan::GraphicsContext> &ctx,
-                                     CommandBufferManager *command_buffer_manager,
-                                     const ImageResource *resource) {
+Texture
+Texture::from_image_resource(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
+                             CommandBufferManager *command_buffer_manager,
+                             const ImageResource *resource) {
     const auto image_data =
         image::Image::load_rgba_image(resource->bytes(), resource->length());
     return Texture(ctx, command_buffer_manager, image_data);
 }
 
-std::unique_ptr<Texture>
-Texture::unique_from_image_resource(std::shared_ptr<vulkan::GraphicsContext> &ctx,
-                                    CommandBufferManager *command_buffer_manager,
-                                    const ImageResource *resource) {
+std::unique_ptr<Texture> Texture::unique_from_image_resource(
+    std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
+    CommandBufferManager *command_buffer_manager, const ImageResource *resource) {
     const auto image_data =
         image::Image::load_rgba_image(resource->bytes(), resource->length());
     return std::move(std::make_unique<Texture>(ctx, command_buffer_manager, image_data));
 }
 
-std::unique_ptr<Texture>
-Texture::unique_from_image_resource_name(std::shared_ptr<vulkan::GraphicsContext> &ctx,
-                                         CommandBufferManager *command_buffer_manager,
-                                         const std::string &resource_name) {
+std::unique_ptr<Texture> Texture::unique_from_image_resource_name(
+    std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
+    CommandBufferManager *command_buffer_manager, const std::string &resource_name) {
     auto resource =
         ResourceManager::get_instance().get_resource<ImageResource>(resource_name);
     const auto image_data =
@@ -89,13 +88,13 @@ Texture::unique_from_image_resource_name(std::shared_ptr<vulkan::GraphicsContext
 }
 
 std::unique_ptr<Texture>
-Texture::unique_empty(std::shared_ptr<vulkan::GraphicsContext> &ctx,
+Texture::unique_empty(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
                       CommandBufferManager *command_buffer_manager) {
     const auto image_data = image::Image::empty();
     return std::move(std::make_unique<Texture>(ctx, command_buffer_manager, image_data));
 }
 
-Texture Texture::empty(std::shared_ptr<vulkan::GraphicsContext> &ctx,
+Texture Texture::empty(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
                        CommandBufferManager *command_buffer_manager) {
     const auto image_data = image::Image::empty();
     return std::move(Texture(ctx, command_buffer_manager, image_data));

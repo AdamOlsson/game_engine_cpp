@@ -2,7 +2,7 @@
 
 vulkan::Framebuffer::Framebuffer() : m_frame_buffer(VK_NULL_HANDLE) {}
 
-vulkan::Framebuffer::Framebuffer(std::shared_ptr<vulkan::GraphicsContext> ctx,
+vulkan::Framebuffer::Framebuffer(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
                                  ImageView &view, VkRenderPass &render_pass,
                                  VkExtent2D &extent)
     : m_ctx(ctx), m_frame_buffer(create_framebuffers(view, render_pass, extent)) {}

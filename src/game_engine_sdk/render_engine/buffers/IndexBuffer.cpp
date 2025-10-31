@@ -9,7 +9,7 @@ IndexBuffer::IndexBuffer()
     : m_ctx(nullptr), buffer(VK_NULL_HANDLE), bufferMemory(VK_NULL_HANDLE), size(0),
       num_indices(0) {}
 
-IndexBuffer::IndexBuffer(std::shared_ptr<vulkan::GraphicsContext> ctx,
+IndexBuffer::IndexBuffer(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
                          const std::vector<uint16_t> &indices,
                          CommandBufferManager *command_buffer_manager)
     : m_ctx(ctx), size(sizeof(uint16_t) * indices.size()),
