@@ -1,9 +1,9 @@
 #pragma once
 
 #include "game_engine_sdk/render_engine/descriptors/SwapDescriptorSet.h"
-#include "game_engine_sdk/render_engine/vulkan/DescriptorBufferInfo.h"
-#include "game_engine_sdk/render_engine/vulkan/DescriptorImageInfo.h"
-#include "game_engine_sdk/render_engine/vulkan/DescriptorPool.h"
+#include "vulkan/DescriptorBufferInfo.h"
+#include "vulkan/DescriptorImageInfo.h"
+#include "vulkan/DescriptorPool.h"
 
 namespace graphics_pipeline {
 struct QuadPipelineDescriptorSetOpts {

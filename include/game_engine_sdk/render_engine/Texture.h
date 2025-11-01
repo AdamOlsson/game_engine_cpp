@@ -1,10 +1,10 @@
 #pragma once
 
 #include "game_engine_sdk/render_engine/resources/images/ImageResource.h"
-#include "game_engine_sdk/render_engine/vulkan/CommandBufferManager.h"
-#include "game_engine_sdk/render_engine/vulkan/TextureImage.h"
-#include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
 #include "image/Image.h"
+#include "vulkan/CommandBufferManager.h"
+#include "vulkan/TextureImage.h"
+#include "vulkan/context/GraphicsContext.h"
 #include <memory>
 
 class Texture {

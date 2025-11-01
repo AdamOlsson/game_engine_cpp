@@ -31,7 +31,7 @@ using namespace tiling;
 
 class MapGeneration : public Game {
   private:
-    std::unique_ptr<SwapChainManager> m_swap_chain_manager;
+    std::unique_ptr<vulkan::SwapChainManager> m_swap_chain_manager;
     std::unique_ptr<vulkan::CommandBufferManager> m_command_buffer_manager;
 
     vulkan::Sampler m_sampler;
@@ -86,7 +86,7 @@ class MapGeneration : public Game {
 
         register_mouse_event_handler(ctx.get());
 
-        m_swap_chain_manager = std::make_unique<SwapChainManager>(ctx);
+        m_swap_chain_manager = std::make_unique<vulkan::SwapChainManager>(ctx);
         m_command_buffer_manager = std::make_unique<vulkan::CommandBufferManager>(
             ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
 
@@ -177,7 +177,8 @@ class MapGeneration : public Game {
     void render() override {
 
         auto command_buffer = m_command_buffer_manager->get_command_buffer();
-        RenderPass render_pass = m_swap_chain_manager->get_render_pass(command_buffer);
+        vulkan::RenderPass render_pass =
+            m_swap_chain_manager->get_render_pass(command_buffer);
         render_pass.begin();
 
         auto descriptor = m_quad_descriptor_set.get();

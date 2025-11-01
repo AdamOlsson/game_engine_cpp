@@ -7,7 +7,7 @@ using namespace graphics_pipeline;
 
 QuadPipeline::QuadPipeline(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
                            vulkan::CommandBufferManager *command_buffer_manager,
-                           SwapChainManager *swap_chain_manager,
+                           vulkan::SwapChainManager *swap_chain_manager,
                            const vulkan::DescriptorSetLayout *descriptor_set_layout,
                            const vulkan::PushConstantRange *push_constant_range)
     : m_ctx(ctx), m_quad_vertex_buffer(vulkan::buffers::VertexBuffer(

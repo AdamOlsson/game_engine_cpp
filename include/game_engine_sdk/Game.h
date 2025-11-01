@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
+#include "vulkan/context/GraphicsContext.h"
 class Game {
   public:
     virtual ~Game() = default;

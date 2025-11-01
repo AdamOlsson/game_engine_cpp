@@ -1,7 +1,7 @@
 #include "GraphicsPipelineBuilder.h"
-#include "game_engine_sdk/render_engine/vulkan/DescriptorSetLayout.h"
-#include "game_engine_sdk/render_engine/vulkan/Pipeline.h"
-#include "game_engine_sdk/render_engine/vulkan/ShaderModule.h"
+#include "vulkan/DescriptorSetLayout.h"
+#include "vulkan/Pipeline.h"
+#include "vulkan/ShaderModule.h"
 #include <stdexcept>
 
 graphics_pipeline::GraphicsPipelineBuilder &
@@ -34,7 +34,7 @@ graphics_pipeline::GraphicsPipelineBuilder::set_descriptor_set_layout(
 
 graphics_pipeline::GraphicsPipeline graphics_pipeline::GraphicsPipelineBuilder::build(
     std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
-    SwapChainManager &swap_chain_manager) {
+    vulkan::SwapChainManager &swap_chain_manager) {
 
     if (m_vertex_shader_resource == nullptr || m_fragment_shader_resource == nullptr) {
         throw std::runtime_error(

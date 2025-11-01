@@ -1,7 +1,7 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/vulkan/DescriptorSetLayout.h"
-#include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
+#include "vulkan/DescriptorSetLayout.h"
+#include "vulkan/context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <vector>
 class DescriptorSetLayoutBuilder {

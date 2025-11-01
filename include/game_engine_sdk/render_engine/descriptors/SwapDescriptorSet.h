@@ -1,8 +1,8 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/vulkan/DescriptorSet.h"
-#include "game_engine_sdk/render_engine/vulkan/DescriptorSetLayout.h"
-#include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
+#include "vulkan/DescriptorSet.h"
+#include "vulkan/DescriptorSetLayout.h"
+#include "vulkan/context/GraphicsContext.h"
 #include <cstddef>
 
 class SwapDescriptorSet {

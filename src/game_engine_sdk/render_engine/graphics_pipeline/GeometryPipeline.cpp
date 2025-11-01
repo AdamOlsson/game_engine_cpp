@@ -5,9 +5,9 @@
 #include "game_engine_sdk/render_engine/resources/ResourceManager.h"
 #include "game_engine_sdk/render_engine/resources/shaders/fragment/geometry/geometry.h"
 #include "game_engine_sdk/render_engine/resources/shaders/vertex/geometry/geometry.h"
-#include "game_engine_sdk/render_engine/vulkan/PushConstantRange.h"
-#include "game_engine_sdk/render_engine/vulkan/buffers/GpuBuffer.h"
-#include "game_engine_sdk/render_engine/vulkan/buffers/VertexBuffer.h"
+#include "vulkan/PushConstantRange.h"
+#include "vulkan/buffers/GpuBuffer.h"
+#include "vulkan/buffers/VertexBuffer.h"
 #include "vulkan/vulkan_core.h"
 #include <cstring>
 #include <memory>
@@ -16,7 +16,8 @@
 graphics_pipeline::GeometryPipeline::GeometryPipeline(
     std::shared_ptr<vulkan::context::GraphicsContext> ctx,
     vulkan::CommandBufferManager *command_buffer_manager,
-    SwapChainManager &swap_chain_manager, std::optional<GeometryPipelineOptions> opts)
+    vulkan::SwapChainManager &swap_chain_manager,
+    std::optional<GeometryPipelineOptions> opts)
     : m_ctx(ctx), m_opts(opts.has_value() ? opts.value() : GeometryPipelineOptions{}),
 
       m_circle_instance_buffers(

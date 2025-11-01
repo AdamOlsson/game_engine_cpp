@@ -1,5 +1,5 @@
 #include "game_engine_sdk/render_engine/descriptors/SwapDescriptorSet.h"
-#include "game_engine_sdk/render_engine/vulkan/DescriptorSet.h"
+#include "vulkan/DescriptorSet.h"
 #include <memory>
 
 SwapDescriptorSet::SwapDescriptorSet(

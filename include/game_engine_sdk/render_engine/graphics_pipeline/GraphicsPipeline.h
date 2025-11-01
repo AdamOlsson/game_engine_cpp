@@ -1,9 +1,9 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/vulkan/Pipeline.h"
-#include "game_engine_sdk/render_engine/vulkan/PipelineLayout.h"
-#include "game_engine_sdk/render_engine/vulkan/buffers/IndexBuffer.h"
-#include "game_engine_sdk/render_engine/vulkan/buffers/VertexBuffer.h"
+#include "vulkan/Pipeline.h"
+#include "vulkan/PipelineLayout.h"
+#include "vulkan/buffers/IndexBuffer.h"
+#include "vulkan/buffers/VertexBuffer.h"
 #include "vulkan/vulkan_core.h"
 
 namespace graphics_pipeline {

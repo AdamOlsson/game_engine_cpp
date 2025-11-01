@@ -4,7 +4,7 @@
 #include "game_engine_sdk/render_engine/fonts/KerningMap.h"
 #include "game_engine_sdk/render_engine/resources/ResourceManager.h"
 #include "game_engine_sdk/render_engine/resources/fonts/FontResource.h"
-#include "game_engine_sdk/render_engine/vulkan/Sampler.h"
+#include "vulkan/Sampler.h"
 #include <cstddef>
 
 class Font {

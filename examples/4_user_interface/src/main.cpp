@@ -2,7 +2,6 @@
 #include "game_engine_sdk/GameEngine.h"
 #include "game_engine_sdk/render_engine/Camera.h"
 #include "game_engine_sdk/render_engine/PerformanceWindow.h"
-#include "game_engine_sdk/render_engine/RenderPass.h"
 #include "game_engine_sdk/render_engine/colors.h"
 #include "game_engine_sdk/render_engine/fonts/Font.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
@@ -10,7 +9,8 @@
 #include "game_engine_sdk/render_engine/ui/Button.h"
 #include "game_engine_sdk/render_engine/ui/ElementProperties.h"
 #include "game_engine_sdk/render_engine/ui/UI.h"
-#include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
+#include "vulkan/RenderPass.h"
+#include "vulkan/context/GraphicsContext.h"
 #include "window/WindowConfig.h"
 #include <memory>
 
@@ -35,7 +35,7 @@ void on_leave_callback(ui::Button &self) {
 class UserInterfaceExample : public Game {
   private:
     ui::UI m_ui;
-    std::unique_ptr<SwapChainManager> m_swap_chain_manager;
+    std::unique_ptr<vulkan::SwapChainManager> m_swap_chain_manager;
     std::unique_ptr<vulkan::CommandBufferManager> m_command_buffer_manager;
 
     vulkan::Sampler m_sampler;
@@ -245,7 +245,8 @@ class UserInterfaceExample : public Game {
         }
 
         auto command_buffer = m_command_buffer_manager->get_command_buffer();
-        RenderPass render_pass = m_swap_chain_manager->get_render_pass(command_buffer);
+        vulkan::RenderPass render_pass =
+            m_swap_chain_manager->get_render_pass(command_buffer);
 
         render_pass.begin();
 
@@ -301,7 +302,7 @@ class UserInterfaceExample : public Game {
         register_all_fonts();
         register_all_images();
         register_all_shaders();
-        m_swap_chain_manager = std::make_unique<SwapChainManager>(ctx);
+        m_swap_chain_manager = std::make_unique<vulkan::SwapChainManager>(ctx);
         m_command_buffer_manager = std::make_unique<vulkan::CommandBufferManager>(
             ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
 

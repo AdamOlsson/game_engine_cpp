@@ -1,7 +1,7 @@
 #include "game_engine_sdk/render_engine/Texture.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GraphicsPipeline.h"
 #include "game_engine_sdk/render_engine/resources/ResourceManager.h"
-#include "game_engine_sdk/render_engine/vulkan/buffers/StagingBuffer.h"
+#include "vulkan/buffers/StagingBuffer.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 

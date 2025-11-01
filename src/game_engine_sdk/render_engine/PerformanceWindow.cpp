@@ -1,4 +1,5 @@
 #include "game_engine_sdk/render_engine/PerformanceWindow.h"
+#include "game_engine_sdk/Dimension.h"
 #include "game_engine_sdk/render_engine/ui/Menu.h"
 #include "game_engine_sdk/render_engine/ui/UI.h"
 #include "glm/glm.hpp"

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "game_engine_sdk/Game.h"
-/*#include "game_engine_sdk/render_engine/window/WindowConfig.h"*/
 #include <memory>
 
 struct GameEngineConfig {

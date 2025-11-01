@@ -6,13 +6,13 @@
 #include "game_engine_sdk/render_engine/resources/ResourceManager.h"
 #include "game_engine_sdk/render_engine/resources/shaders/fragment/text/text.h"
 #include "game_engine_sdk/render_engine/resources/shaders/vertex/text/text.h"
-#include "game_engine_sdk/render_engine/vulkan/DescriptorPool.h"
+#include "vulkan/DescriptorPool.h"
 #include <cstring>
 
 graphics_pipeline::TextPipeline::TextPipeline(
     std::shared_ptr<vulkan::context::GraphicsContext> ctx,
     vulkan::CommandBufferManager *command_buffer_manager,
-    SwapChainManager &swap_chain_manager, std::unique_ptr<Font> font)
+    vulkan::SwapChainManager &swap_chain_manager, std::unique_ptr<Font> font)
     : m_ctx(ctx), m_font(std::move(font)),
       m_character_buffers(
           vulkan::buffers::SwapStorageBuffer<CharacterInstanceBufferObject>(

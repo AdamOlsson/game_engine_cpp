@@ -13,7 +13,7 @@
 
 class TileShowcase : public Game {
   private:
-    std::unique_ptr<SwapChainManager> m_swap_chain_manager;
+    std::unique_ptr<vulkan::SwapChainManager> m_swap_chain_manager;
     std::unique_ptr<vulkan::CommandBufferManager> m_command_buffer_manager;
 
     vulkan::Sampler m_sampler;
@@ -35,7 +35,7 @@ class TileShowcase : public Game {
     void update(float dt) override {};
 
     void setup(std::shared_ptr<vulkan::context::GraphicsContext> &ctx) override {
-        m_swap_chain_manager = std::make_unique<SwapChainManager>(ctx);
+        m_swap_chain_manager = std::make_unique<vulkan::SwapChainManager>(ctx);
         m_command_buffer_manager = std::make_unique<vulkan::CommandBufferManager>(
             ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
 
@@ -66,7 +66,8 @@ class TileShowcase : public Game {
     void render() override {
 
         auto command_buffer = m_command_buffer_manager->get_command_buffer();
-        RenderPass render_pass = m_swap_chain_manager->get_render_pass(command_buffer);
+        vulkan::RenderPass render_pass =
+            m_swap_chain_manager->get_render_pass(command_buffer);
         render_pass.begin();
 
         auto &rectangle_instance_buffer =

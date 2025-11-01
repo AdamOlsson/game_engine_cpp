@@ -2,10 +2,10 @@
 
 #include "SwapDescriptorSet.h"
 #include "game_engine_sdk/render_engine/descriptors/DescriptorSetLayoutBuilder.h"
-#include "game_engine_sdk/render_engine/vulkan/DescriptorBufferInfo.h"
-#include "game_engine_sdk/render_engine/vulkan/DescriptorImageInfo.h"
-#include "game_engine_sdk/render_engine/vulkan/DescriptorPool.h"
-#include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
+#include "vulkan/DescriptorBufferInfo.h"
+#include "vulkan/DescriptorImageInfo.h"
+#include "vulkan/DescriptorPool.h"
+#include "vulkan/context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 
 struct SwapDescriptorSetBuilderOptions {

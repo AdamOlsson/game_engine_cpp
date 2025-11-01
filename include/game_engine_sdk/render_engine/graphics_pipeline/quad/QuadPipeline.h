@@ -1,13 +1,13 @@
 #pragma once
 #include "game_engine_sdk/render_engine/graphics_pipeline/quad/QuadPipelineDescriptorSet.h"
-#include "game_engine_sdk/render_engine/vulkan/CommandBuffer.h"
-#include "game_engine_sdk/render_engine/vulkan/Pipeline.h"
-#include "game_engine_sdk/render_engine/vulkan/PipelineLayout.h"
-#include "game_engine_sdk/render_engine/vulkan/PushConstantRange.h"
-#include "game_engine_sdk/render_engine/vulkan/ShaderStage.h"
-#include "game_engine_sdk/render_engine/vulkan/buffers/IndexBuffer.h"
-#include "game_engine_sdk/render_engine/vulkan/buffers/VertexBuffer.h"
-#include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
+#include "vulkan/CommandBuffer.h"
+#include "vulkan/Pipeline.h"
+#include "vulkan/PipelineLayout.h"
+#include "vulkan/PushConstantRange.h"
+#include "vulkan/ShaderStage.h"
+#include "vulkan/buffers/IndexBuffer.h"
+#include "vulkan/buffers/VertexBuffer.h"
+#include "vulkan/context/GraphicsContext.h"
 #include <memory>
 
 namespace graphics_pipeline {
@@ -27,7 +27,7 @@ class QuadPipeline {
   public:
     QuadPipeline(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
                  vulkan::CommandBufferManager *command_buffer_manager,
-                 SwapChainManager *swap_chain_manager,
+                 vulkan::SwapChainManager *swap_chain_manager,
                  const vulkan::DescriptorSetLayout *descriptor_set_layout,
                  const vulkan::PushConstantRange *push_constant_range);
 

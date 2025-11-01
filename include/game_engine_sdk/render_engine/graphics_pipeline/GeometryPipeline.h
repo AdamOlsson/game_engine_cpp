@@ -1,18 +1,18 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/SwapChainManager.h"
 #include "game_engine_sdk/render_engine/Texture.h"
-#include "game_engine_sdk/render_engine/Vertex.h"
 #include "game_engine_sdk/render_engine/colors.h"
 #include "game_engine_sdk/render_engine/descriptors/SwapDescriptorSet.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GraphicsPipeline.h"
-#include "game_engine_sdk/render_engine/vulkan/DescriptorImageInfo.h"
-#include "game_engine_sdk/render_engine/vulkan/DescriptorPool.h"
-#include "game_engine_sdk/render_engine/vulkan/Sampler.h"
-#include "game_engine_sdk/render_engine/vulkan/buffers/GpuBuffer.h"
-#include "game_engine_sdk/render_engine/vulkan/buffers/IndexBuffer.h"
-#include "game_engine_sdk/render_engine/vulkan/buffers/VertexBuffer.h"
-#include "game_engine_sdk/render_engine/vulkan/context/GraphicsContext.h"
+#include "vulkan/DescriptorImageInfo.h"
+#include "vulkan/DescriptorPool.h"
+#include "vulkan/Sampler.h"
+#include "vulkan/SwapChainManager.h"
+#include "vulkan/Vertex.h"
+#include "vulkan/buffers/GpuBuffer.h"
+#include "vulkan/buffers/IndexBuffer.h"
+#include "vulkan/buffers/VertexBuffer.h"
+#include "vulkan/context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <iostream>
 #include <memory>
@@ -120,7 +120,7 @@ class GeometryPipeline {
   public:
     GeometryPipeline(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
                      vulkan::CommandBufferManager *command_buffer_manager,
-                     SwapChainManager &swap_chain_manager,
+                     vulkan::SwapChainManager &swap_chain_manager,
                      std::optional<GeometryPipelineOptions> opts);
 
     ~GeometryPipeline();
