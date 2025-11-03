@@ -46,6 +46,7 @@ endif()
 
 set(GAME_ENGINE_SDK_BUILD_RENDER_ENGINE ON CACHE BOOL "" FORCE)
 set(RENDER_ENGINE_BUILD_IMAGE ON CACHE BOOL "" FORCE)
+set(RENDER_ENGINE_BUILD_CAMERA ON CACHE BOOL "" FORCE)
 set(RENDER_ENGINE_BUILD_TILING ON CACHE BOOL "" FORCE)
 set(RENDER_ENGINE_BUILD_WINDOW ON CACHE BOOL "" FORCE)
 set(RENDER_ENGINE_BUILD_VULKAN ON CACHE BOOL "" FORCE)
@@ -75,6 +76,7 @@ target_link_libraries(${PROJECT_NAME}
         glm
         glfw
         render_engine::image
+        render_engine::camera
         render_engine::tiling
         render_engine::window
         render_engine::vulkan

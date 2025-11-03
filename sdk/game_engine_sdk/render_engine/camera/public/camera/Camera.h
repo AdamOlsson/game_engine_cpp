@@ -1,8 +1,10 @@
 #pragma once
 
-#include "game_engine_sdk/WorldPoint.h"
 #include "glm/glm.hpp"
-#include "window/ViewportPoint.h"
+
+namespace camera {
+using ViewportPoint = glm::vec2;
+using WorldPoint2D = glm::vec2;
 
 class Camera2D {
   private:
@@ -35,8 +37,8 @@ class Camera2D {
     void set_rotation(const float new_rot);
     void set_relative_rotation(const float delta);
 
-    void set_zoom(const float new_zoom, const window::ViewportPoint &zoom_target);
-    void set_relative_zoom(const float delta, const window::ViewportPoint &zoom_target);
+    void set_zoom(const float new_zoom, const ViewportPoint &zoom_target);
+    void set_relative_zoom(const float delta, const ViewportPoint &zoom_target);
 
     glm::mat4 get_view_matrix();
     glm::mat4 get_projection_matrix();
@@ -46,13 +48,12 @@ class Camera2D {
     float get_rotation();
     float get_zoom();
 
-    WorldPoint2D
-    viewport_delta_to_world(const window::ViewportPoint &viewport_delta) const;
-    WorldPoint2D
-    viewport_delta_to_world(const window::ViewportPoint &&viewport_delta) const;
-    WorldPoint2D viewport_to_world(const window::ViewportPoint &viewport_pos) const;
+    WorldPoint2D viewport_delta_to_world(const ViewportPoint &viewport_delta) const;
+    WorldPoint2D viewport_delta_to_world(const ViewportPoint &&viewport_delta) const;
+    WorldPoint2D viewport_to_world(const ViewportPoint &viewport_pos) const;
 
     static uint32_t matrix_size();
 
     static glm::mat4 get_default_view_matrix();
 };
+} // namespace camera

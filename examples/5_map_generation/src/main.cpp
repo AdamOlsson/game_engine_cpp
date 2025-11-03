@@ -1,6 +1,6 @@
+#include "camera/Camera.h"
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
-#include "game_engine_sdk/render_engine/Camera.h"
 #include "game_engine_sdk/render_engine/ModelMatrix.h"
 #include "game_engine_sdk/render_engine/TilesetUVWT.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
@@ -16,9 +16,7 @@
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 // CONTINUE: Render Wang tiling
 // - Zooming should be towards center of camera
-// - Make rendering agnostic to window size
 // - Fix import path to prefix with "game_engine_sdk" for modules
-// - Center tiles on screen
 // - Make graphics_pipeline its own module (maybe with vulkan?)
 using namespace tiling;
 
@@ -44,7 +42,7 @@ class MapGeneration : public Game {
 
     bool m_is_right_mouse_pressed = false;
     window::ViewportPoint m_mouse_last_position = window::ViewportPoint();
-    Camera2D m_camera;
+    camera::Camera2D m_camera;
 
     wang::WangTiles<CellType> m_wang_tiles;
 
@@ -74,8 +72,8 @@ class MapGeneration : public Game {
 
         auto window_size = ctx->window->get_framebuffer_size<float>();
         const float num_pixels_at_default_zoom = 200.0f;
-        m_camera =
-            Camera2D(window_size.width, window_size.height, num_pixels_at_default_zoom);
+        m_camera = camera::Camera2D(window_size.width, window_size.height,
+                                    num_pixels_at_default_zoom);
 
         register_mouse_event_handler(ctx.get());
 
@@ -113,7 +111,7 @@ class MapGeneration : public Game {
         auto quad_push_constant_range =
             vulkan::PushConstantRange{.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
                                       .offset = 0,
-                                      .size = Camera2D::matrix_size()};
+                                      .size = camera::Camera2D::matrix_size()};
         m_quad_pipeline = std::make_unique<graphics_pipeline::QuadPipeline>(
             ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
             &quad_descriptor_set_layout, &quad_push_constant_range);
@@ -190,7 +188,7 @@ class MapGeneration : public Game {
 int main() {
 
     GameEngineConfig config{
-        .window_config = window::WindowConfig{.dims = window::WindowDimension(800, 800),
+        .window_config = window::WindowConfig{.dims = window::WindowDimension(1920, 1080),
                                               .title = "5_map_generation"},
     };
 

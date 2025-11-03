@@ -1,6 +1,6 @@
+#include "camera/Camera.h"
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
-#include "game_engine_sdk/render_engine/Camera.h"
 #include "game_engine_sdk/render_engine/PerformanceWindow.h"
 #include "game_engine_sdk/render_engine/colors.h"
 #include "game_engine_sdk/render_engine/fonts/Font.h"
@@ -291,7 +291,7 @@ class UserInterfaceExample : public Game {
         character_instance_buffer.transfer();
         text_segment_buffer.transfer();
 
-        auto camera_transform_matrix = Camera2D::get_default_view_matrix();
+        auto camera_transform_matrix = camera::Camera2D::get_default_view_matrix();
         m_geometry_pipeline->render_rectangles(command_buffer, camera_transform_matrix);
         m_text_pipeline->render_text(command_buffer);
 

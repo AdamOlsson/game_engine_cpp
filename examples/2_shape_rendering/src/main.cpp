@@ -1,8 +1,8 @@
+#include "camera/Camera.h"
 #include "game_engine_sdk/Dimension.h"
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
 #include "game_engine_sdk/WorldPoint.h"
-#include "game_engine_sdk/render_engine/Camera.h"
 #include "game_engine_sdk/render_engine/colors.h"
 #include "game_engine_sdk/render_engine/fonts/Font.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
@@ -208,7 +208,7 @@ class ShapeRendering : public Game {
         rectangle_instance_buffer.transfer();
         hexagon_instance_buffer.transfer();
 
-        auto camera_transform_matrix = Camera2D::get_default_view_matrix();
+        auto camera_transform_matrix = camera::Camera2D::get_default_view_matrix();
         m_geometry_pipeline->render_circles(command_buffer, camera_transform_matrix);
         m_geometry_pipeline->render_triangles(command_buffer, camera_transform_matrix);
         m_geometry_pipeline->render_rectangles(command_buffer, camera_transform_matrix);
