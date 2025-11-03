@@ -1,6 +1,7 @@
 #include "game_engine_sdk/render_engine/Camera.h"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
+#include "logger/logger.h"
 #include <utility>
 
 Camera2D::Camera2D()
@@ -23,12 +24,31 @@ void Camera2D::set_relative_position(WorldPoint2D &&delta) {
     m_position = m_position + delta;
 }
 
-void Camera2D::set_rotation(float new_rot) { m_rotation = new_rot; }
-void Camera2D::set_relative_rotation(float delta) { m_rotation += delta; }
+void Camera2D::set_rotation(const float new_rot) { m_rotation = new_rot; }
 
-void Camera2D::set_zoom(float new_zoom) { m_zoom = glm::clamp(new_zoom, 0.1f, 10.0f); }
-void Camera2D::set_relative_zoom(float delta) {
+void Camera2D::set_relative_rotation(const float delta) { m_rotation += delta; }
+
+void Camera2D::set_zoom(const float new_zoom, const window::ViewportPoint &zoom_target) {
+    m_zoom = glm::clamp(new_zoom, 0.1f, 10.0f);
+}
+
+void Camera2D::set_relative_zoom(const float delta,
+                                 const window::ViewportPoint &zoom_target) {
+
+    const auto world_pos_before_zoom = viewport_to_world(zoom_target);
+    float old_zoom = m_zoom;
     m_zoom = glm::clamp(m_zoom + delta, 0.1f, 10.0f);
+
+    if (old_zoom == m_zoom) {
+        return;
+    }
+
+    update_projection_matrix();
+
+    const auto world_pos_after_zoom = viewport_to_world(zoom_target);
+    const auto offset = world_pos_before_zoom - world_pos_after_zoom;
+    m_position += offset;
+    update_view_matrix();
 }
 
 void Camera2D::update_view_matrix() {
@@ -82,8 +102,8 @@ Camera2D::viewport_delta_to_world(const window::ViewportPoint &viewport_delta) c
 
 WorldPoint2D
 Camera2D::viewport_to_world(const window::ViewportPoint &viewport_pos) const {
-    const auto normalized = glm::vec2(viewport_pos.x / m_viewport_width / 2.0f,
-                                      viewport_pos.y / m_viewport_height / 2.0f);
+    const auto normalized = glm::vec2(viewport_pos.x / (m_viewport_width / 2.0f),
+                                      viewport_pos.y / (m_viewport_height / 2.0f));
     auto world_position = glm::inverse(m_projection_matrix * m_view_matrix) *
                           glm::vec4(normalized, 0.0f, 1.0f);
     return glm::vec2(world_position.x, world_position.y);

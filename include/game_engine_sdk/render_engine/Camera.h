@@ -32,11 +32,11 @@ class Camera2D {
     void set_relative_position(WorldPoint2D &delta);
     void set_relative_position(WorldPoint2D &&delta);
 
-    void set_rotation(float new_rot);
-    void set_relative_rotation(float delta);
+    void set_rotation(const float new_rot);
+    void set_relative_rotation(const float delta);
 
-    void set_zoom(float new_zoom);
-    void set_relative_zoom(float delta);
+    void set_zoom(const float new_zoom, const window::ViewportPoint &zoom_target);
+    void set_relative_zoom(const float delta, const window::ViewportPoint &zoom_target);
 
     glm::mat4 get_view_matrix();
     glm::mat4 get_projection_matrix();

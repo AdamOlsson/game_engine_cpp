@@ -1,6 +1,5 @@
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
-#include "game_engine_sdk/io.h"
 #include "game_engine_sdk/render_engine/Camera.h"
 #include "game_engine_sdk/render_engine/ModelMatrix.h"
 #include "game_engine_sdk/render_engine/TilesetUVWT.h"
@@ -15,17 +14,11 @@
 #include <memory>
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
-std::ostream &operator<<(std::ostream &os, const glm::vec4 &vec) {
-    os << "glm::vec4(" << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w << ")";
-    return os;
-}
 // CONTINUE: Render Wang tiling
-// - Look into the artifacts and how to solve them
 // - Zooming should be towards center of camera
 // - Make rendering agnostic to window size
 // - Fix import path to prefix with "game_engine_sdk" for modules
 // - Center tiles on screen
-// - Make vulkan its own module
 // - Make graphics_pipeline its own module (maybe with vulkan?)
 using namespace tiling;
 
@@ -142,7 +135,6 @@ class MapGeneration : public Game {
                 .uvwt = uvwt,
             });
             m_num_instances++;
-            /*logger::debug(std::format("{}. UVWT: {}", i, io::to_string(uvwt)));*/
         }
     }
 
@@ -165,7 +157,7 @@ class MapGeneration : public Game {
                     m_mouse_last_position = point;
                     break;
                 case window::MouseEvent::SCROLL:
-                    m_camera.set_relative_zoom(point.y);
+                    m_camera.set_relative_zoom(point.y * 0.1, m_mouse_last_position);
                     break;
                 case window::MouseEvent::LEFT_BUTTON_DOWN:
                 case window::MouseEvent::LEFT_BUTTON_UP:
