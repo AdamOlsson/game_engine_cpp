@@ -10,7 +10,7 @@ struct QuadPipelineSBO {
     alignas(16) glm::mat4 model_matrix = glm::mat4(1.0f);
     alignas(16) glm::vec4 uvwt = glm::vec4(-1.0f);
     alignas(4) glm::uint32 texture_id = 0;
-    alignas(16) glm::vec4 color = colors::TRANSPARENT;
+    alignas(16) glm::vec4 color = util::colors::TRANSPARENT;
 
     std::string to_string() const {
         std::ostringstream oss;

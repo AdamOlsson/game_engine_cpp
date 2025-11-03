@@ -23,13 +23,13 @@
 // render some text I need to set it to an empty string.
 
 void on_enter_callback(ui::Button &self) {
-    self.properties.container.background_color = colors::WHITE;
-    self.properties.font.color = colors::BLACK;
+    self.properties.container.background_color = util::colors::WHITE;
+    self.properties.font.color = util::colors::BLACK;
 }
 
 void on_leave_callback(ui::Button &self) {
-    self.properties.container.background_color = colors::BLACK;
-    self.properties.font.color = colors::WHITE;
+    self.properties.container.background_color = util::colors::BLACK;
+    self.properties.font.color = util::colors::WHITE;
 }
 
 class UserInterfaceExample : public Game {
@@ -56,10 +56,10 @@ class UserInterfaceExample : public Game {
     const glm::vec3 square_button_offset =
         glm::vec3((base_width - square_button_dimension.x) / 2.0, 0.0f, 0.0f);
     const glm::vec3 next_button_offset = glm::vec3(0.0f, 120.0f, 0.0f);
-    const glm::vec4 button_background_color = colors::BLACK;
-    const glm::vec4 button_font_color = colors::WHITE;
+    const glm::vec4 button_background_color = util::colors::BLACK;
+    const glm::vec4 button_font_color = util::colors::WHITE;
     const uint32_t button_font_size = 96;
-    const glm::vec4 button_border_color = colors::WHITE;
+    const glm::vec4 button_border_color = util::colors::WHITE;
     const float button_border_thickness = 5.0f;
     const float button_border_radius = 15.0f;
 

@@ -22,7 +22,7 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     INTERFACE 
-        logger::logger
+        sdk::logger
         render_engine::image
 )
 

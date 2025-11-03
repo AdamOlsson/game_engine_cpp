@@ -33,10 +33,10 @@ class ShapeRendering : public Game {
         m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
             .center = WorldPoint(-300, 300),
             .dimension = Dimension(80.0f),
-            .color = colors::RED,
+            .color = util::colors::RED,
             .border =
                 {
-                    .color = colors::YELLOW,
+                    .color = util::colors::YELLOW,
                     .thickness = 10.0f,
                 },
         });
@@ -45,9 +45,9 @@ class ShapeRendering : public Game {
         m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
             .center = WorldPoint(-200, 300),
             .dimension = Dimension(80.0f),
-            .color = colors::RED,
+            .color = util::colors::RED,
             .border = {
-                .color = colors::YELLOW,
+                .color = util::colors::YELLOW,
                 .thickness = 5.0f,
             }});
 
@@ -55,32 +55,32 @@ class ShapeRendering : public Game {
         m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
             .center = WorldPoint(-100, 300),
             .dimension = Dimension(80.0f, 80.0f),
-            .color = colors::BLUE,
+            .color = util::colors::BLUE,
             .uvwt = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f),
             .border = {
-                .color = colors::YELLOW,
+                .color = util::colors::YELLOW,
                 .thickness = 5.0f,
                 .radius = 5.0f,
             }});
 
         m_shape_ids.push_back(shape::Shape::Hexagon);
-        m_geometries.push_back(
-            graphics_pipeline::GeometryInstanceBufferObject{.center = WorldPoint(0, 300),
-                                                            .dimension = Dimension(80.0f),
-                                                            .color = colors::RED,
-                                                            .border = {
-                                                                .color = colors::YELLOW,
-                                                                .thickness = 5.0f,
-                                                            }});
+        m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
+            .center = WorldPoint(0, 300),
+            .dimension = Dimension(80.0f),
+            .color = util::colors::RED,
+            .border = {
+                .color = util::colors::YELLOW,
+                .thickness = 5.0f,
+            }});
 
         m_shape_ids.push_back(shape::Shape::Rectangle);
         m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
             .center = WorldPoint(-292, 192),
             .dimension = Dimension(80.0f, 80.0f),
-            .color = colors::BLUE,
+            .color = util::colors::BLUE,
             .uvwt = glm::vec4(0.0f, 0.0f, 0.5f, 0.5f),
             .border = {
-                .color = colors::YELLOW,
+                .color = util::colors::YELLOW,
                 .thickness = 5.0f,
                 .radius = 5.0f,
             }});
@@ -89,10 +89,10 @@ class ShapeRendering : public Game {
         m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
             .center = WorldPoint(-208, 192),
             .dimension = Dimension(80.0f, 80.0f),
-            .color = colors::BLUE,
+            .color = util::colors::BLUE,
             .uvwt = glm::vec4(0.5f, 0.0f, 1.0f, 0.5f),
             .border = {
-                .color = colors::YELLOW,
+                .color = util::colors::YELLOW,
                 .thickness = 5.0f,
                 .radius = 5.0f,
             }});
@@ -101,11 +101,11 @@ class ShapeRendering : public Game {
         m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
             .center = WorldPoint(-292, 108),
             .dimension = Dimension(80.0f, 80.0f),
-            .color = colors::BLUE,
+            .color = util::colors::BLUE,
             .uvwt = glm::vec4(0.0f, 0.5f, 0.5f, 1.0f),
             .border =
                 {
-                    .color = colors::YELLOW,
+                    .color = util::colors::YELLOW,
                     .thickness = 5.0f,
                     .radius = 5.0f,
                 }
@@ -116,10 +116,10 @@ class ShapeRendering : public Game {
         m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
             .center = WorldPoint(-208, 108),
             .dimension = Dimension(80.0f, 80.0f),
-            .color = colors::WHITE,
+            .color = util::colors::WHITE,
             .uvwt = glm::vec4(0.5f, 0.5f, 1.0f, 1.0f),
             .border = {
-                .color = colors::YELLOW,
+                .color = util::colors::YELLOW,
                 .thickness = 5.0f,
                 .radius = 5.0f,
             }});
@@ -128,9 +128,9 @@ class ShapeRendering : public Game {
         m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
             .center = WorldPoint(150.0f, 200.0f, 0.0),
             .dimension = Dimension(400.0f, 100.0f),
-            .color = colors::TRANSPARENT,
+            .color = util::colors::TRANSPARENT,
             .uvwt = glm::vec4(-1.0f),
-            .border = {.color = colors::WHITE, .thickness = 10.0f, .radius = 15.0f}
+            .border = {.color = util::colors::WHITE, .thickness = 10.0f, .radius = 15.0f}
 
         });
     };

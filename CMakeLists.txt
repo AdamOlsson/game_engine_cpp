@@ -80,7 +80,7 @@ target_link_libraries(${PROJECT_NAME}
         render_engine::tiling
         render_engine::window
         render_engine::vulkan
-        logger::logger
+        sdk::logger
 )
 
 set_target_properties(${PROJECT_NAME}

@@ -10,7 +10,7 @@ message(STATUS "    Build type: ${CMAKE_BUILD_TYPE}")
 project(logger CXX)
 
 add_library(${PROJECT_NAME} INTERFACE)
-add_library(logger::logger ALIAS ${PROJECT_NAME})
+add_library(sdk::logger ALIAS ${PROJECT_NAME})
 
 target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
 
@@ -18,4 +18,3 @@ target_include_directories(${PROJECT_NAME}
     INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/public
 )
-

@@ -174,7 +174,8 @@ TEST(ECSTest, TestIteratoringOverAllValues) {
     EXPECT_EQ(2, count2);
 
     EntityId e3 = ecs.create_entity();
-    ecs.add_component<RenderBody>(e3, std::move(RenderBody{.color = colors::WHITE}));
+    ecs.add_component<RenderBody>(e3,
+                                  std::move(RenderBody{.color = util::colors::WHITE}));
     EXPECT_EQ(2, ecs.size<RigidBody>());
     EXPECT_EQ(1, ecs.size<RenderBody>());
 

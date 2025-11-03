@@ -24,7 +24,7 @@
 namespace graphics_pipeline {
 
 struct TextSegmentBufferObject {
-    alignas(16) glm::vec4 font_color = colors::WHITE;
+    alignas(16) glm::vec4 font_color = util::colors::WHITE;
     alignas(4) uint32_t font_size = 128;
     alignas(4) float font_rotation = 0.0f;
     alignas(4) float font_weight = 0.5f;

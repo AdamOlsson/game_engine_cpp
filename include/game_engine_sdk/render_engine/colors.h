@@ -1,6 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
-namespace colors {
+namespace util::colors {
 // Primary Colors
 constexpr glm::vec4 RED = glm::vec4(0.8f, 0.0f, 0.0f, 1.0f);
 constexpr glm::vec4 GREEN = glm::vec4(0.0f, 0.8f, 0.0f, 1.0f);
@@ -66,4 +66,4 @@ consteval glm::vec4 hexa(uint32_t color) noexcept {
     return glm::vec4(((color >> 24) & 0xFF) / 255.0f, ((color >> 16) & 0xFF) / 255.0f,
                      ((color >> 8) & 0xFF) / 255.0f, (color & 0xFF) / 255.0f);
 }
-} // namespace colors
+} // namespace util::colors
