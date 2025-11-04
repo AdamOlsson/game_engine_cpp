@@ -20,6 +20,7 @@ message(STATUS "Configuring game_engine_sdk modules:")
 
 
 add_subdirectory(logger)
+add_subdirectory(util)
 
 if(GAME_ENGINE_SDK_BUILD_RENDER_ENGINE)
     message(STATUS "  - Adding render_engine")

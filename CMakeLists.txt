@@ -81,6 +81,7 @@ target_link_libraries(${PROJECT_NAME}
         render_engine::window
         render_engine::vulkan
         sdk::logger
+        sdk::util
 )
 
 set_target_properties(${PROJECT_NAME}

@@ -1,5 +1,6 @@
 #pragma once
-#include <glm/glm.hpp>
+#include "glm/glm.hpp"
+
 namespace util::colors {
 // Primary Colors
 constexpr glm::vec4 RED = glm::vec4(0.8f, 0.0f, 0.0f, 1.0f);

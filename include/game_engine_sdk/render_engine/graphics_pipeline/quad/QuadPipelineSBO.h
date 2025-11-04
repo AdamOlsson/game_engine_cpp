@@ -1,7 +1,7 @@
 #pragma once
-#include "game_engine_sdk/io.h"
-#include "game_engine_sdk/render_engine/colors.h"
 #include "glm/glm.hpp"
+#include "util/colors.h"
+#include "util/io.h"
 #include <sstream>
 
 namespace graphics_pipeline {

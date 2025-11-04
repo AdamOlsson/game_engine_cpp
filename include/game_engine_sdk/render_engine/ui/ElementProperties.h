@@ -1,5 +1,5 @@
 #pragma once
-#include "game_engine_sdk/render_engine/colors.h"
+#include "util/colors.h"
 
 namespace ui {
 struct ElementProperties {

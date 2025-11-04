@@ -24,8 +24,7 @@ target_include_directories(${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/public
 )
 
-# target_link_libraries(${PROJECT_NAME}
-#     PRIVATE 
-#         # sdk::logger
-#         # glm::glm
-# )
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE 
+        glm::glm
+)

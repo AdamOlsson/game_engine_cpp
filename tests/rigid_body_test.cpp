@@ -1,11 +1,11 @@
 #include "game_engine_sdk/WorldPoint.h"
 #include "game_engine_sdk/equations/round.h"
-#include "game_engine_sdk/io.h"
 #include "game_engine_sdk/physics_engine/RigidBody.h"
 #include "game_engine_sdk/shape.h"
 #include "glm/ext/scalar_constants.hpp"
 #include "glm/glm.hpp"
 #include "test_utils.h"
+#include "util/io.h"
 #include <gtest/gtest.h>
 
 TEST(RigidBodyTest, GivenRectangleAtOrigoCreatesExpectedVertices) {

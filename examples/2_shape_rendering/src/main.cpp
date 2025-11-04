@@ -3,7 +3,6 @@
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
 #include "game_engine_sdk/WorldPoint.h"
-#include "game_engine_sdk/render_engine/colors.h"
 #include "game_engine_sdk/render_engine/fonts/Font.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/TextPipeline.h"
@@ -11,6 +10,7 @@
 #include "game_engine_sdk/render_engine/ui/ElementProperties.h"
 #include "game_engine_sdk/render_engine/ui/TextBox.h"
 #include "game_engine_sdk/shape.h"
+#include "util/colors.h"
 #include "window/WindowConfig.h"
 #include <memory>
 

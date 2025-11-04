@@ -1,10 +1,10 @@
 #include "game_engine_sdk/WorldPoint.h"
 #include "game_engine_sdk/equations/equations.h"
-#include "game_engine_sdk/io.h"
 #include "game_engine_sdk/physics_engine/RigidBody.h"
 #include "game_engine_sdk/physics_engine/SAT.h"
 #include "game_engine_sdk/physics_engine/collision_resolver.h"
 #include "test_utils.h"
+#include "util/io.h"
 #include <cfloat>
 #include <gtest/gtest.h>
 
