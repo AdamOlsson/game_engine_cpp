@@ -1,7 +1,7 @@
 #pragma once
 
-#include "glm/glm.hpp"
 #include "util/io.h"
+#include <glm/glm.hpp>
 #include <gtest/gtest.h>
 
 constexpr float MAX_DIFF = 1e-3;

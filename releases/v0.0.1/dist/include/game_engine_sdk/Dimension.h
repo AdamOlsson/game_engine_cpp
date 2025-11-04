@@ -1,7 +1,7 @@
 #pragma once
-#include "glm/glm.hpp"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
+#include <glm/glm.hpp>
 
 struct Dimension : public glm::vec2 {
     using glm::vec2::vec2;

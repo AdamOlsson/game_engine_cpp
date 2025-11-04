@@ -2,8 +2,8 @@
 
 #include "game_engine_sdk/physics_engine/RigidBody.h"
 #include "game_engine_sdk/physics_engine/collision_resolver.h"
-#include "glm/fwd.hpp"
 #include "util/colors.h"
+#include <glm/fwd.hpp>
 
 const std::vector<glm::vec4> COLORS{util::colors::RED, util::colors::GREEN,
                                     util::colors::BLUE, util::colors::YELLOW,

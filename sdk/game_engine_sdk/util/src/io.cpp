@@ -1,5 +1,5 @@
 #include "util/io.h"
-#include "glm/glm.hpp"
+#include <glm/glm.hpp>
 #include <iostream>
 
 std::ostream &operator<<(std::ostream &os, const glm::vec2 &vec) {

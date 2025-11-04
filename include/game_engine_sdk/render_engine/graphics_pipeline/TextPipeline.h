@@ -4,7 +4,6 @@
 #include "game_engine_sdk/render_engine/fonts/Font.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GraphicsPipeline.h"
 #include "game_engine_sdk/render_engine/ui/ElementProperties.h"
-#include "glm/fwd.hpp"
 #include "util/colors.h"
 #include "vulkan/DescriptorImageInfo.h"
 #include "vulkan/DescriptorPool.h"
@@ -14,6 +13,7 @@
 #include "vulkan/buffers/VertexBuffer.h"
 #include "vulkan/context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
+#include <glm/fwd.hpp>
 #include <memory>
 #include <vulkan/vulkan.h>
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES

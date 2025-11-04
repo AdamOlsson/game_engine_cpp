@@ -1,6 +1,6 @@
 #pragma once
 #include "game_engine_sdk/traits.h"
-#include "glm/glm.hpp"
+#include <glm/glm.hpp>
 #include <ostream>
 
 struct WorldPoint2D : public glm::vec2 {

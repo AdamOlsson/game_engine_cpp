@@ -2,8 +2,8 @@
 #include "game_engine_sdk/equations/equations.h"
 #include "game_engine_sdk/equations/projection.h"
 #include "game_engine_sdk/shape.h"
-#include "glm/geometric.hpp"
 #include "util/io.h"
+#include <glm/geometric.hpp>
 #include <iostream>
 #include <optional>
 #include <type_traits>

@@ -1,7 +1,7 @@
 #pragma once
 #include "game_engine_sdk/traits.h"
-#include "glm/ext/matrix_transform.hpp"
-#include "glm/glm.hpp"
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/glm.hpp>
 
 class ModelMatrix {
   private:

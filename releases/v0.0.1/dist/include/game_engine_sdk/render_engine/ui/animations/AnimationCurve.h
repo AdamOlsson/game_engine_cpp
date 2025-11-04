@@ -1,8 +1,8 @@
 #pragma once
 
-#include "glm/common.hpp"
 #include <cmath>
 #include <functional>
+#include <glm/common.hpp>
 namespace ui {
 namespace AnimationCurve {
 

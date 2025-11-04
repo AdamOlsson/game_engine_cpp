@@ -1,5 +1,5 @@
 #pragma once
-#include "glm/glm.hpp"
+#include <glm/glm.hpp>
 #include <ostream>
 
 struct WorldPoint : public glm::vec3 {

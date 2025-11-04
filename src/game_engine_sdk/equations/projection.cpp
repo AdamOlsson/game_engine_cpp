@@ -1,5 +1,5 @@
 #include "game_engine_sdk/equations/projection.h"
-#include "glm/geometric.hpp"
+#include <glm/geometric.hpp>
 #include <iostream>
 
 bool operator==(const Projection &lhs, const Projection &rhs) {

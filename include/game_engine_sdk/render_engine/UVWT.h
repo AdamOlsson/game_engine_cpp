@@ -1,6 +1,6 @@
 #pragma once
 
-#include "glm/glm.hpp"
+#include <glm/glm.hpp>
 #include <ostream>
 
 struct UVWT : public glm::vec4 {

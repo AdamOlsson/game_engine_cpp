@@ -1,7 +1,7 @@
 #pragma once
-#include "glm/glm.hpp"
 #include "util/colors.h"
 #include "util/io.h"
+#include <glm/glm.hpp>
 #include <sstream>
 
 namespace graphics_pipeline::quad {
