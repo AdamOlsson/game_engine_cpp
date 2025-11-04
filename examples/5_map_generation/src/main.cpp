@@ -18,7 +18,6 @@
 // - Zooming should be towards center of camera
 // - Fix import path to prefix with "game_engine_sdk" for modules
 // - Make graphics_pipeline its own module (maybe with vulkan?)
-//      - Move colors.h and io.h to util modules
 //      - Move Quadpipeline and SwapDescriptorSet to its own module and link with util
 //          module
 using namespace tiling;

@@ -18,7 +18,6 @@ option(GAME_ENGINE_SDK_BUILD_RENDER_ENGINE "Build the render engine" ON)
 message(STATUS "")
 message(STATUS "Configuring game_engine_sdk modules:")
 
-
 add_subdirectory(logger)
 add_subdirectory(util)
 
