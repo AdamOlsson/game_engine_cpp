@@ -31,6 +31,9 @@ target_link_libraries(${TEST_EXEC_NAME}
     PRIVATE
         render_engine::camera
         GTest::gtest_main
+        sdk::logger
+        sdk::util
+        glm::glm
 )
 
 target_compile_features(${TEST_EXEC_NAME} PRIVATE cxx_std_20)

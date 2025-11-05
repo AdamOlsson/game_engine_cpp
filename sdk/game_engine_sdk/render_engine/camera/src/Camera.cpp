@@ -14,11 +14,11 @@ camera::Camera2D::Camera2D(const float viewport_width, const float viewport_heig
       m_viewport_width(viewport_width), m_viewport_height(viewport_height),
       m_base_orho_height(base_ortho_height) {}
 
-void camera::Camera2D::set_position(WorldPoint2D &new_pos) { m_position = new_pos; }
+void camera::Camera2D::set_position(const WorldPoint2D &new_pos) { m_position = new_pos; }
 void camera::Camera2D::set_position(WorldPoint2D &&new_pos) {
     m_position = std::move(new_pos);
 }
-void camera::Camera2D::set_relative_position(WorldPoint2D &delta) {
+void camera::Camera2D::set_relative_position(const WorldPoint2D &delta) {
     m_position = m_position + delta;
 }
 

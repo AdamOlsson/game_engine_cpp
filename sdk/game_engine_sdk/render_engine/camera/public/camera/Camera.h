@@ -28,10 +28,10 @@ class Camera2D {
              const float base_ortho_height);
     ~Camera2D() = default;
 
-    void set_position(WorldPoint2D &new_pos);
+    void set_position(const WorldPoint2D &new_pos);
     void set_position(WorldPoint2D &&new_pos);
 
-    void set_relative_position(WorldPoint2D &delta);
+    void set_relative_position(const WorldPoint2D &delta);
     void set_relative_position(WorldPoint2D &&delta);
 
     void set_rotation(const float new_rot);
