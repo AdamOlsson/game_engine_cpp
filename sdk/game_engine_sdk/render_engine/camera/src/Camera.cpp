@@ -1,4 +1,5 @@
 #include "camera/Camera.h"
+#include "logger/logger.h"
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <utility>
@@ -57,7 +58,7 @@ void camera::Camera2D::update_view_matrix() {
     m_view_matrix = glm::mat4(1.0f);
     m_view_matrix = glm::rotate(m_view_matrix, -m_rotation, glm::vec3(0.0f, 0.0f, 1.0f));
     m_view_matrix =
-        glm::translate(m_view_matrix, glm::vec3(m_position.x, -m_position.y, 0.0f));
+        glm::translate(m_view_matrix, glm::vec3(-m_position.x, -m_position.y, 0.0f));
 }
 
 glm::mat4 camera::Camera2D::get_view_matrix() {
