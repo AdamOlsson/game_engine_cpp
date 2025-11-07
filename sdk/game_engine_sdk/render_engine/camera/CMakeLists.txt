@@ -27,6 +27,7 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PRIVATE 
         sdk::logger
+        sdk::util # only for debug
         glm::glm
 )
 

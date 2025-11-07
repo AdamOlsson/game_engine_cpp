@@ -56,8 +56,7 @@ void Window::cursor_position_callback(GLFWwindow *window, double xpos, double yp
     auto w = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
     if (w->mouse_event_cb.has_value()) {
         WindowDimension dims = w->m_config.dims;
-        auto p =
-            ViewportPoint(xpos - dims.width / 2.0f, -1.0f * (ypos - dims.height / 2.0f));
+        auto p = ViewportPoint(xpos - dims.width / 2.0f, (ypos - dims.height / 2.0f));
         w->mouse_event_cb.value()(MouseEvent::CURSOR_MOVED, p);
     }
 }

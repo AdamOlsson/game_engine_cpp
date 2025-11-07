@@ -16,11 +16,21 @@
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 // CONTINUE: Render Wang tiling
 // - Zooming should be towards center of camera
+//      - It is the viewport_to_world function that does not function correctly. I think
+//      it is because it expects the viewpoint to be in view space which it is not, it
+//      in pixel space.
+// - Logger module should have io.h and io.cpp
 // - Fix import path to prefix with "game_engine_sdk" for modules
 // - Make graphics_pipeline its own module (maybe with vulkan?)
 //      - Move Quadpipeline and SwapDescriptorSet to its own module and link with util
 //          module
 using namespace tiling;
+
+constexpr float CELL_SIZE = 24.0f;
+constexpr float ZOOM_SCALE_FACTOR = 0.1f;
+constexpr glm::vec2 INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
+constexpr glm::vec2 INVERT_X_AXIS = glm::vec2(-1.0f, 1.0f);
+constexpr glm::vec2 INVERT_Y_AXIS = glm::vec2(1.0f, -1.0f);
 
 class MapGeneration : public Game {
   private:
@@ -152,12 +162,13 @@ class MapGeneration : public Game {
                     if (m_is_right_mouse_pressed) {
                         auto world_delta = m_camera.viewport_delta_to_world(
                             point - m_mouse_last_position);
-                        m_camera.set_relative_position(world_delta);
+                        m_camera.set_relative_position(world_delta * INVERT_AXISES);
                     }
                     m_mouse_last_position = point;
                     break;
                 case window::MouseEvent::SCROLL:
-                    m_camera.set_relative_zoom(point.y * 0.1, m_mouse_last_position);
+                    m_camera.set_relative_zoom(point.y * ZOOM_SCALE_FACTOR,
+                                               m_mouse_last_position);
                     break;
                 case window::MouseEvent::LEFT_BUTTON_DOWN:
                 case window::MouseEvent::LEFT_BUTTON_UP:
@@ -174,8 +185,7 @@ class MapGeneration : public Game {
         render_pass.begin();
 
         auto descriptor = m_quad_descriptor_set.get();
-        const float cell_size = 24.0f;
-        const auto scaled_cell_size = cell_size * m_camera.get_zoom();
+        const auto scaled_cell_size = CELL_SIZE * m_camera.get_zoom();
         glm::mat4 push_constant =
             glm::scale(m_camera.get_view_projection_matrix(),
                        glm::vec3(scaled_cell_size, scaled_cell_size, 1.0f));
