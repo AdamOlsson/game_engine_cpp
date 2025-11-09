@@ -15,11 +15,6 @@
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 // CONTINUE: Render Wang tiling
-// - Zooming should be towards center of camera
-//      - It is the viewport_to_world function that does not function correctly. I think
-//      it is because it expects the viewpoint to be in view space which it is not, it
-//      in pixel space.
-// - Logger module should have io.h and io.cpp
 // - Fix import path to prefix with "game_engine_sdk" for modules
 // - Make graphics_pipeline its own module (maybe with vulkan?)
 //      - Move Quadpipeline and SwapDescriptorSet to its own module and link with util
@@ -141,7 +136,9 @@ class MapGeneration : public Game {
                     : m_tileset_uvwt.uvwt_for_tile_at(0, 0);
 
             m_quad_storage_buffer->write(graphics_pipeline::QuadPipelineSBO{
-                .model_matrix = ModelMatrix().translate(x, y, 0),
+                .model_matrix = ModelMatrix()
+                                    .scale(glm::vec3(CELL_SIZE, CELL_SIZE, 1.0))
+                                    .translate(x, y, 0),
                 .uvwt = uvwt,
             });
             m_num_instances++;
@@ -167,10 +164,12 @@ class MapGeneration : public Game {
                     m_mouse_last_position = point;
                     break;
                 case window::MouseEvent::SCROLL:
-                    m_camera.set_relative_zoom(point.y * ZOOM_SCALE_FACTOR,
-                                               m_mouse_last_position);
+                    m_camera.set_relative_zoom(point.y * ZOOM_SCALE_FACTOR);
+
                     break;
                 case window::MouseEvent::LEFT_BUTTON_DOWN:
+                    logger::debug("mouse last position: ", m_mouse_last_position);
+                    break;
                 case window::MouseEvent::LEFT_BUTTON_UP:
                     break;
                 }
@@ -185,11 +184,7 @@ class MapGeneration : public Game {
         render_pass.begin();
 
         auto descriptor = m_quad_descriptor_set.get();
-        const auto scaled_cell_size = CELL_SIZE * m_camera.get_zoom();
-        glm::mat4 push_constant =
-            glm::scale(m_camera.get_view_projection_matrix(),
-                       glm::vec3(scaled_cell_size, scaled_cell_size, 1.0f));
-
+        glm::mat4 push_constant = m_camera.get_view_projection_matrix();
         m_quad_pipeline->render(command_buffer, descriptor, &push_constant,
                                 m_num_instances);
 
@@ -200,7 +195,7 @@ class MapGeneration : public Game {
 int main() {
 
     GameEngineConfig config{
-        .window_config = window::WindowConfig{.dims = window::WindowDimension(1920, 1080),
+        .window_config = window::WindowConfig{.dims = window::WindowDimension(960, 960),
                                               .title = "5_map_generation"},
     };
 

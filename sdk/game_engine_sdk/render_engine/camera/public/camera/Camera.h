@@ -37,8 +37,8 @@ class Camera2D {
     void set_rotation(const float new_rot);
     void set_relative_rotation(const float delta);
 
-    void set_zoom(const float new_zoom, const ViewportPoint &zoom_target);
-    void set_relative_zoom(const float delta, const ViewportPoint &zoom_target);
+    void set_zoom(const float new_zoom);
+    void set_relative_zoom(const float delta);
 
     glm::mat4 get_view_matrix();
     glm::mat4 get_projection_matrix();

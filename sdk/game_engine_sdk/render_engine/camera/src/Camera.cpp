@@ -1,11 +1,22 @@
 #include "camera/Camera.h"
-// clang-format off
-#include "util/io.h"
-#include "logger/logger.h"
-// clang-format on
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <utility>
+
+#ifndef NDEBUG
+#include <cstdlib>
+
+#define DEBUG_ASSERT(expr)                                                               \
+    do {                                                                                 \
+        if (!(expr)) {                                                                   \
+            std::cerr << "Assertion failed: (" #expr "), " << "function " << __func__    \
+                      << ", file " << __FILE__ << ", line " << __LINE__ << std::endl;    \
+            std::abort();                                                                \
+        }                                                                                \
+    } while (false)
+#else
+#define DEBUG_ASSERT(expr) ((void)0)
+#endif
 
 camera::Camera2D::Camera2D()
     : m_position(glm::vec2(0.0f)), m_rotation(0.0f), m_zoom(1.0f), m_viewport_width(1.0f),
@@ -40,43 +51,27 @@ void camera::Camera2D::set_rotation(const float new_rot) { m_rotation = new_rot;
 
 void camera::Camera2D::set_relative_rotation(const float delta) { m_rotation += delta; }
 
-void camera::Camera2D::set_zoom(const float new_zoom, const ViewportPoint &zoom_target) {
+void camera::Camera2D::set_zoom(const float new_zoom) {
     m_zoom = glm::clamp(new_zoom, 0.1f, 10.0f);
 }
 
-void camera::Camera2D::set_relative_zoom(const float delta,
-                                         const ViewportPoint &zoom_target) {
-
-    const auto world_pos_before_zoom = viewport_to_world(zoom_target);
-    float old_zoom = m_zoom;
+void camera::Camera2D::set_relative_zoom(const float delta) {
     m_zoom = glm::clamp(m_zoom + delta, 0.1f, 10.0f);
-
-    if (old_zoom == m_zoom) {
-        return;
-    }
-
-    update_projection_matrix();
-
-    const auto world_pos_after_zoom = viewport_to_world(zoom_target);
-    const auto offset = world_pos_before_zoom - world_pos_after_zoom;
-
-    logger::debug("zoom target viewport pos: ", world_pos_before_zoom);
-    logger::debug("zoom target world pos before zoom: ", world_pos_before_zoom);
-    logger::debug("zoom target world pos after zoom: ", world_pos_after_zoom);
-    logger::debug("camera old position: ", m_position);
-    logger::debug("camera new position: ", m_position + offset);
-    logger::debug("camera position offset: ", offset);
-    logger::debug("camera zoom: ", m_zoom);
-    logger::debug("");
-    m_position += offset;
-    update_view_matrix();
 }
 
 void camera::Camera2D::update_view_matrix() {
+
+    float pixel_size = (m_base_orho_height / m_zoom) / m_viewport_height;
+
+    // Snap camera position to pixel boundaries
+    glm::vec2 snapped_position;
+    snapped_position.x = std::round(m_position.x / pixel_size) * pixel_size;
+    snapped_position.y = std::round(m_position.y / pixel_size) * pixel_size;
+
     m_view_matrix = glm::mat4(1.0f);
     m_view_matrix = glm::rotate(m_view_matrix, -m_rotation, glm::vec3(0.0f, 0.0f, 1.0f));
-    m_view_matrix =
-        glm::translate(m_view_matrix, glm::vec3(-m_position.x, -m_position.y, 0.0f));
+    m_view_matrix = glm::translate(
+        m_view_matrix, glm::vec3(-snapped_position.x, -snapped_position.y, 0.0f));
 }
 
 glm::mat4 camera::Camera2D::get_view_matrix() {
@@ -123,12 +118,12 @@ camera::Camera2D::viewport_delta_to_world(const ViewportPoint &viewport_delta) c
 
 camera::WorldPoint2D
 camera::Camera2D::viewport_to_world(const ViewportPoint &viewport_pos) const {
-    const auto normalized = glm::vec2(viewport_pos.x / (m_viewport_width / 2.0f),
+    const auto view_space = glm::vec2(viewport_pos.x / (m_viewport_width / 2.0f),
                                       viewport_pos.y / (m_viewport_height / 2.0f));
-    const auto world_position = glm::inverse(m_projection_matrix * m_view_matrix) *
-                                glm::vec4(normalized, 0.0f, 1.0f);
+    const auto world_space = glm::inverse(m_projection_matrix * m_view_matrix) *
+                             glm::vec4(view_space, 0.0f, 1.0f);
 
-    return glm::vec2(world_position.x, world_position.y);
+    return glm::vec2(world_space.x, world_space.y);
 }
 
 glm::mat4 camera::Camera2D::get_projection_matrix() {
