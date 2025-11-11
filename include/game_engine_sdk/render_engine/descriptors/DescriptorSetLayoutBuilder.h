@@ -1,7 +1,7 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/descriptors/DescriptorSetLayout.h"
-#include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
+#include "vulkan/DescriptorSetLayout.h"
+#include "vulkan/context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <vector>
 class DescriptorSetLayoutBuilder {
@@ -26,5 +26,6 @@ class DescriptorSetLayoutBuilder {
     add_storage_buffer_binding(uint32_t binding, VkShaderStageFlags stage_flags);
     DescriptorSetLayoutBuilder &
     add_uniform_buffer_binding(uint32_t binding, VkShaderStageFlags stage_flags);
-    DescriptorSetLayout build(std::shared_ptr<graphics_context::GraphicsContext> &ctx);
+    vulkan::DescriptorSetLayout
+    build(std::shared_ptr<vulkan::context::GraphicsContext> &ctx);
 };

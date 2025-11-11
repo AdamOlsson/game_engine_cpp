@@ -1,11 +1,11 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/resources/Resource.h"
+#include "graphics_pipeline/Resource.h"
 #include <cstdint>
 #include <memory>
 #include <vector>
 
-class FontResource : public Resource {
+class FontResource : public graphics_pipeline::Resource {
 
   private:
     // All resources

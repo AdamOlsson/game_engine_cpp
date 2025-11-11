@@ -1,1 +1,1 @@
-ctest --test-dir build --output-on-failure 
+ctest --test-dir build/debug --output-on-failure 

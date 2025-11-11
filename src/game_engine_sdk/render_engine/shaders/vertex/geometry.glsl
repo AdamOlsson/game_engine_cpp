@@ -32,6 +32,10 @@ layout(binding = 1) readonly uniform WindowDimensions {
         vec2 dims;
 } window;
 
+layout(push_constant) uniform CameraMatrix {
+    mat4 view_projection;
+} pc_camera;
+
 layout(location = 0) in vec3 in_position;
 
 layout(location = 0) out vec3 out_position_px;
@@ -93,11 +97,14 @@ vec2 compute_uv(vec2 vertex, vec4 bbox) {
 void main() {
     InstanceData instance = instance_data_block.instances[gl_InstanceIndex];
     
+    // To world space
     vec3 in_position_px = scale_vertex(in_position, instance.dimension.x, instance.dimension.y);
-        
+    
+    // Rotate in world space around origo
     mat3 rotation_matrix = create_rotation_matrix_z(-instance.rotation);
     in_position_px = rotation_matrix * in_position_px;
-
+    
+    // To view space
     vec2 viewport_position = positions_to_viewport(instance.center.xy, window.dims);
     vec2 vertex_in_viewport = in_position_px.xy / vec2(window.dims.x, window.dims.y) * 2.0;
     

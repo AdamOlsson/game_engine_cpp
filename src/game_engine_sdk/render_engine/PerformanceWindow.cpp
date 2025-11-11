@@ -1,6 +1,8 @@
 #include "game_engine_sdk/render_engine/PerformanceWindow.h"
+#include "game_engine_sdk/Dimension.h"
 #include "game_engine_sdk/render_engine/ui/Menu.h"
 #include "game_engine_sdk/render_engine/ui/UI.h"
+#include "util/colors.h"
 #include <glm/glm.hpp>
 
 PerformanceWindow::PerformanceWindow() {
@@ -16,18 +18,18 @@ PerformanceWindow::PerformanceWindow() {
     const glm::vec3 body_position = header_position - header_body_position_offset;
 
     const auto font_props = ui::ElementProperties::FontProperties{
-        .color = colors::WHITE, .size = 24, .weight = 1.0f};
+        .color = util::colors::WHITE, .size = 24, .weight = 1.0f};
 
     m_components.push_back(graphics_pipeline::GeometryInstanceBufferObject{
         .center = header_position,
         .dimension = Dimension(header_dimension.x, header_dimension.y),
-        .color = colors::BLUE,
+        .color = util::colors::BLUE,
     });
 
     m_components.push_back(graphics_pipeline::GeometryInstanceBufferObject{
         .center = body_position,
         .dimension = Dimension(body_dimension.x, body_dimension.y),
-        .color = colors::rgba(0.2f, 0.2f, 0.2f, 0.2f),
+        .color = util::colors::rgba(0.2f, 0.2f, 0.2f, 0.2f),
     });
 
     auto m_menu = ui::Menu();

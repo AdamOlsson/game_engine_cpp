@@ -1,12 +1,11 @@
 #pragma once
-#include "glm/glm.hpp"
 #include "vulkan/vulkan_core.h"
+#include <glm/glm.hpp>
 
 struct Dimension : public glm::vec2 {
     using glm::vec2::vec2;
 
     constexpr Dimension(float width, float height) : glm::vec2(width, height) {}
-
     constexpr Dimension(float diameter) : glm::vec2(diameter, diameter) {}
 
     template <typename T>

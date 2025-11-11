@@ -2,7 +2,6 @@
 
 #include "game_engine_sdk/WorldPoint.h"
 #include "game_engine_sdk/shape.h"
-#include "glm/fwd.hpp"
 #include <glm/glm.hpp>
 #include <vector>
 

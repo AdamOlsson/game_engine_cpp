@@ -651,8 +651,8 @@ unsigned int text_spv_len = 7688;
 
 } // namespace
 
-std::unique_ptr<ShaderResource> TextVertex::create_resource() {
-    return ShaderResourceBuilder()
+std::unique_ptr<graphics_pipeline::ShaderResource> TextVertex::create_resource() {
+    return graphics_pipeline::ShaderResourceBuilder()
         .name(std::move(resource_name))
         .length(text_spv_len)
         .bytes(&text_spv[0])

@@ -274,12 +274,12 @@ std::string resource_name = "{resource_name}";
     # Template for shader header files
     SHADER_HEADER_TEMPLATE = '''\
 #pragma once
-#include "game_engine_sdk/render_engine/resources/shaders/ShaderResource.h"
+#include "graphics_pipeline/ShaderResource.h"
 #include <memory>
 
 class {class_name} {{
   public:
-    static std::unique_ptr<ShaderResource> create_resource();
+  static std::unique_ptr<graphics_pipeline::ShaderResource> create_resource();
 }};
 '''
     
@@ -380,6 +380,12 @@ std::unique_ptr<{resource_type}> {class_name}::create_resource() {{
                 atlas_height=asset.atlas_dims[1],
                 char_width=asset.char_dims[0],
                 char_height=asset.char_dims[1]
+            )
+        elif asset.resource_type == AssetType.SHADER:
+            return self.STANDARD_CREATE_TEMPLATE.format(
+                    resource_type="graphics_pipeline::" + asset.resource_type,
+                class_name=asset.resource_name,
+                var_name=asset.variable_name
             )
         else:
             return self.STANDARD_CREATE_TEMPLATE.format(

@@ -1,16 +1,17 @@
+#include "camera/Camera.h"
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
 #include "game_engine_sdk/render_engine/PerformanceWindow.h"
-#include "game_engine_sdk/render_engine/RenderPass.h"
-#include "game_engine_sdk/render_engine/colors.h"
 #include "game_engine_sdk/render_engine/fonts/Font.h"
-#include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "game_engine_sdk/render_engine/resources/ResourceManager.h"
 #include "game_engine_sdk/render_engine/ui/Button.h"
 #include "game_engine_sdk/render_engine/ui/ElementProperties.h"
 #include "game_engine_sdk/render_engine/ui/UI.h"
-#include "game_engine_sdk/render_engine/window/WindowConfig.h"
+#include "util/colors.h"
+#include "vulkan/RenderPass.h"
+#include "vulkan/context/GraphicsContext.h"
+#include "window/WindowConfig.h"
 #include <memory>
 
 // FUTURE IMPROVEMENTS (without any particular order):
@@ -22,20 +23,20 @@
 // render some text I need to set it to an empty string.
 
 void on_enter_callback(ui::Button &self) {
-    self.properties.container.background_color = colors::WHITE;
-    self.properties.font.color = colors::BLACK;
+    self.properties.container.background_color = util::colors::WHITE;
+    self.properties.font.color = util::colors::BLACK;
 }
 
 void on_leave_callback(ui::Button &self) {
-    self.properties.container.background_color = colors::BLACK;
-    self.properties.font.color = colors::WHITE;
+    self.properties.container.background_color = util::colors::BLACK;
+    self.properties.font.color = util::colors::WHITE;
 }
 
 class UserInterfaceExample : public Game {
   private:
     ui::UI m_ui;
-    std::unique_ptr<SwapChainManager> m_swap_chain_manager;
-    std::unique_ptr<CommandBufferManager> m_command_buffer_manager;
+    std::unique_ptr<vulkan::SwapChainManager> m_swap_chain_manager;
+    std::unique_ptr<vulkan::CommandBufferManager> m_command_buffer_manager;
 
     vulkan::Sampler m_sampler;
     std::unique_ptr<graphics_pipeline::GeometryPipeline> m_geometry_pipeline;
@@ -55,10 +56,10 @@ class UserInterfaceExample : public Game {
     const glm::vec3 square_button_offset =
         glm::vec3((base_width - square_button_dimension.x) / 2.0, 0.0f, 0.0f);
     const glm::vec3 next_button_offset = glm::vec3(0.0f, 120.0f, 0.0f);
-    const glm::vec4 button_background_color = colors::BLACK;
-    const glm::vec4 button_font_color = colors::WHITE;
+    const glm::vec4 button_background_color = util::colors::BLACK;
+    const glm::vec4 button_font_color = util::colors::WHITE;
     const uint32_t button_font_size = 96;
-    const glm::vec4 button_border_color = colors::WHITE;
+    const glm::vec4 button_border_color = util::colors::WHITE;
     const float button_border_thickness = 5.0f;
     const float button_border_radius = 15.0f;
 
@@ -244,7 +245,8 @@ class UserInterfaceExample : public Game {
         }
 
         auto command_buffer = m_command_buffer_manager->get_command_buffer();
-        RenderPass render_pass = m_swap_chain_manager->get_render_pass(command_buffer);
+        vulkan::RenderPass render_pass =
+            m_swap_chain_manager->get_render_pass(command_buffer);
 
         render_pass.begin();
 
@@ -266,13 +268,14 @@ class UserInterfaceExample : public Game {
                 graphics_pipeline::GeometryInstanceBufferObject{
                     .center = button->properties.container.center,
                     .dimension = button->properties.container.dimension,
-                    .color = button->properties.container.background_color,
                     .rotation = 0.0f,
+                    .color = button->properties.container.background_color,
                     .uvwt = glm::vec4(-1.0f),
-                    .border.color = button->properties.container.border.color,
-                    .border.thickness = button->properties.container.border.thickness,
-                    .border.radius = button->properties.container.border.radius,
-                });
+                    .border = {
+                        .color = button->properties.container.border.color,
+                        .thickness = button->properties.container.border.thickness,
+                        .radius = button->properties.container.border.radius,
+                    }});
 
             m_text_pipeline->text_kerning(button->text, button->properties);
         }
@@ -288,18 +291,19 @@ class UserInterfaceExample : public Game {
         character_instance_buffer.transfer();
         text_segment_buffer.transfer();
 
-        m_geometry_pipeline->render_rectangles(command_buffer);
+        auto camera_transform_matrix = camera::Camera2D::get_default_view_matrix();
+        m_geometry_pipeline->render_rectangles(command_buffer, camera_transform_matrix);
         m_text_pipeline->render_text(command_buffer);
 
         render_pass.end_submit_present();
     };
 
-    void setup(std::shared_ptr<graphics_context::GraphicsContext> &ctx) override {
+    void setup(std::shared_ptr<vulkan::context::GraphicsContext> &ctx) override {
         register_all_fonts();
         register_all_images();
         register_all_shaders();
-        m_swap_chain_manager = std::make_unique<SwapChainManager>(ctx);
-        m_command_buffer_manager = std::make_unique<CommandBufferManager>(
+        m_swap_chain_manager = std::make_unique<vulkan::SwapChainManager>(ctx);
+        m_command_buffer_manager = std::make_unique<vulkan::CommandBufferManager>(
             ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
 
         m_sampler = vulkan::Sampler(ctx);

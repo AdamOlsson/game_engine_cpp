@@ -1,19 +1,19 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/SwapChainManager.h"
-#include "game_engine_sdk/render_engine/buffers/GpuBuffer.h"
-#include "game_engine_sdk/render_engine/buffers/IndexBuffer.h"
-#include "game_engine_sdk/render_engine/buffers/VertexBuffer.h"
-#include "game_engine_sdk/render_engine/colors.h"
-#include "game_engine_sdk/render_engine/descriptors/DescriptorPool.h"
-#include "game_engine_sdk/render_engine/descriptors/DescriptorSet.h"
+#include "game_engine_sdk/render_engine/descriptors/SwapDescriptorSet.h"
 #include "game_engine_sdk/render_engine/fonts/Font.h"
-#include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GraphicsPipeline.h"
 #include "game_engine_sdk/render_engine/ui/ElementProperties.h"
-#include "game_engine_sdk/render_engine/vulkan/DescriptorImageInfo.h"
-#include "glm/fwd.hpp"
+#include "util/colors.h"
+#include "vulkan/DescriptorImageInfo.h"
+#include "vulkan/DescriptorPool.h"
+#include "vulkan/SwapChainManager.h"
+#include "vulkan/buffers/GpuBuffer.h"
+#include "vulkan/buffers/IndexBuffer.h"
+#include "vulkan/buffers/VertexBuffer.h"
+#include "vulkan/context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
+#include <glm/fwd.hpp>
 #include <memory>
 #include <vulkan/vulkan.h>
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
@@ -24,7 +24,7 @@
 namespace graphics_pipeline {
 
 struct TextSegmentBufferObject {
-    alignas(16) glm::vec4 font_color = colors::WHITE;
+    alignas(16) glm::vec4 font_color = util::colors::WHITE;
     alignas(4) uint32_t font_size = 128;
     alignas(4) float font_rotation = 0.0f;
     alignas(4) float font_weight = 0.5f;
@@ -56,28 +56,29 @@ class TextPipeline {
     const uint32_t m_num_samplers = 2 * 1;
     const uint32_t m_descriptor_pool_capacity = 2;
 
-    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
+    std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
 
     std::unique_ptr<Font> m_font;
     TextPipelineOptions m_opts;
 
-    SwapStorageBuffer<CharacterInstanceBufferObject> m_character_buffers;
-    SwapStorageBuffer<TextSegmentBufferObject> m_text_segment_buffers;
-    VertexBuffer m_vertex_buffer;
-    IndexBuffer m_index_buffer;
+    vulkan::buffers::SwapStorageBuffer<CharacterInstanceBufferObject> m_character_buffers;
+    vulkan::buffers::SwapStorageBuffer<TextSegmentBufferObject> m_text_segment_buffers;
+    vulkan::buffers::VertexBuffer m_vertex_buffer;
+    vulkan::buffers::IndexBuffer m_index_buffer;
 
-    DescriptorPool m_descriptor_pool;
-    DescriptorSet m_descriptor_set;
+    vulkan::DescriptorPool m_descriptor_pool;
+    SwapDescriptorSet m_descriptor_set;
     graphics_pipeline::GraphicsPipeline m_graphics_pipeline;
 
   public:
-    TextPipeline(std::shared_ptr<graphics_context::GraphicsContext> ctx,
-                 CommandBufferManager *command_buffer_manager,
-                 SwapChainManager &swap_chain_manager, std::unique_ptr<Font> font);
+    TextPipeline(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
+                 vulkan::CommandBufferManager *command_buffer_manager,
+                 vulkan::SwapChainManager &swap_chain_manager,
+                 std::unique_ptr<Font> font);
     ~TextPipeline();
 
-    StorageBuffer<CharacterInstanceBufferObject> &get_character_buffer();
-    StorageBuffer<TextSegmentBufferObject> &get_text_segment_buffer();
+    vulkan::buffers::StorageBuffer<CharacterInstanceBufferObject> &get_character_buffer();
+    vulkan::buffers::StorageBuffer<TextSegmentBufferObject> &get_text_segment_buffer();
 
     void render_text(const VkCommandBuffer &command_buffer);
 

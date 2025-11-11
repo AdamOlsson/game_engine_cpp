@@ -2,11 +2,12 @@
 
 #include "game_engine_sdk/physics_engine/RigidBody.h"
 #include "game_engine_sdk/physics_engine/collision_resolver.h"
-#include "game_engine_sdk/render_engine/colors.h"
-#include "glm/fwd.hpp"
+#include "util/colors.h"
+#include <glm/fwd.hpp>
 
-const std::vector<glm::vec4> COLORS{colors::RED, colors::GREEN, colors::BLUE,
-                                    colors::YELLOW, colors::CYAN};
+const std::vector<glm::vec4> COLORS{util::colors::RED, util::colors::GREEN,
+                                    util::colors::BLUE, util::colors::YELLOW,
+                                    util::colors::CYAN};
 
 // TODO: Make the RigidBodyBuilder be able to produce constexpr (low priority)
 const RigidBody BOTTOM_BORDER = RigidBodyBuilder()

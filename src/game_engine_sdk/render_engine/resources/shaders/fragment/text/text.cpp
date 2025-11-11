@@ -149,8 +149,8 @@ unsigned int text_spv_len = 1664;
 
 } // namespace
 
-std::unique_ptr<ShaderResource> TextFragment::create_resource() {
-    return ShaderResourceBuilder()
+std::unique_ptr<graphics_pipeline::ShaderResource> TextFragment::create_resource() {
+    return graphics_pipeline::ShaderResourceBuilder()
         .name(std::move(resource_name))
         .length(text_spv_len)
         .bytes(&text_spv[0])

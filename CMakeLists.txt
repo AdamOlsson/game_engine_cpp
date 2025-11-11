@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.28)
 
 option(GAME_ENGINE_SDK_BUILD_TEST "Build the unit tests" OFF)
 option(GAME_ENGINE_SDK_BUILD_EXAMPLES "Build the examples" OFF)
-option(CMAKE_LOG_LEVEL_DEBUG "Confgure using debug log level" OFF)
+option(CMAKE_LOG_LEVEL_DEBUG "Configure using debug log level" OFF)
 
 message(STATUS "Building game engine SDK with the following options:")
 message(STATUS "    Build type: ${CMAKE_BUILD_TYPE}")
@@ -19,6 +19,7 @@ project(game_engine_sdk CXX)
 
 include(cmake/cmake-global-settings.cmake)
 include(cmake/vulkan.cmake)
+include(cmake/glm.cmake)
 include(cmake/glfw.cmake)
 
 file(GLOB_RECURSE GAME_ENGINE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
@@ -38,6 +39,20 @@ foreach(source_file ${GAME_ENGINE_MODULES})
 endforeach()
 endif()
 
+if(GAME_ENGINE_SDK_BUILD_TEST)
+    include(cmake/gtest.cmake)
+    enable_testing()
+endif()
+
+set(GAME_ENGINE_SDK_BUILD_RENDER_ENGINE ON CACHE BOOL "" FORCE)
+set(RENDER_ENGINE_BUILD_IMAGE ON CACHE BOOL "" FORCE)
+set(RENDER_ENGINE_BUILD_CAMERA ON CACHE BOOL "" FORCE)
+set(RENDER_ENGINE_BUILD_TILING ON CACHE BOOL "" FORCE)
+set(RENDER_ENGINE_BUILD_WINDOW ON CACHE BOOL "" FORCE)
+set(RENDER_ENGINE_BUILD_VULKAN ON CACHE BOOL "" FORCE)
+set(RENDER_ENGINE_BUILD_GRAPHICS_PIPELINE ON CACHE BOOL "" FORCE)
+add_subdirectory(sdk/game_engine_sdk)
+
 add_library(${PROJECT_NAME}
     STATIC 
         ${GAME_ENGINE_SOURCES} 
@@ -55,10 +70,20 @@ target_include_directories(${PROJECT_NAME}
         ${glfw_SOURCE_DIR}/include
 )
 
+
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
         ${VULKAN_LIBRARY}
+        glm
         glfw
+        sdk::logger
+        sdk::util
+        render_engine::image
+        render_engine::camera
+        render_engine::tiling
+        render_engine::window
+        render_engine::vulkan
+        render_engine::graphics_pipeline
 )
 
 set_target_properties(${PROJECT_NAME}
@@ -76,6 +101,7 @@ if(GAME_ENGINE_SDK_BUILD_EXAMPLES)
     add_subdirectory(examples/2_shape_rendering)
     add_subdirectory(examples/3_tile_showcase)
     add_subdirectory(examples/4_user_interface)
+    add_subdirectory(examples/5_map_generation)
     message(STATUS "Configuring examples... DONE!")
 endif()
 

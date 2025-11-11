@@ -1,19 +1,20 @@
 #include "Tileset16x16.h"
 #include "Tileset24x24.h"
+#include "camera/Camera.h"
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
 #include "game_engine_sdk/Grid.h"
 #include "game_engine_sdk/render_engine/TilesetUVWT.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
-#include "game_engine_sdk/render_engine/window/WindowConfig.h"
+#include "window/WindowConfig.h"
 #include <memory>
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 
 class TileShowcase : public Game {
   private:
-    std::unique_ptr<SwapChainManager> m_swap_chain_manager;
-    std::unique_ptr<CommandBufferManager> m_command_buffer_manager;
+    std::unique_ptr<vulkan::SwapChainManager> m_swap_chain_manager;
+    std::unique_ptr<vulkan::CommandBufferManager> m_command_buffer_manager;
 
     vulkan::Sampler m_sampler;
     std::unique_ptr<graphics_pipeline::GeometryPipeline> m_geometry_pipeline;
@@ -33,9 +34,9 @@ class TileShowcase : public Game {
 
     void update(float dt) override {};
 
-    void setup(std::shared_ptr<graphics_context::GraphicsContext> &ctx) override {
-        m_swap_chain_manager = std::make_unique<SwapChainManager>(ctx);
-        m_command_buffer_manager = std::make_unique<CommandBufferManager>(
+    void setup(std::shared_ptr<vulkan::context::GraphicsContext> &ctx) override {
+        m_swap_chain_manager = std::make_unique<vulkan::SwapChainManager>(ctx);
+        m_command_buffer_manager = std::make_unique<vulkan::CommandBufferManager>(
             ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
 
         m_sampler = vulkan::Sampler(ctx, vulkan::Filter::NEAREST,
@@ -65,7 +66,8 @@ class TileShowcase : public Game {
     void render() override {
 
         auto command_buffer = m_command_buffer_manager->get_command_buffer();
-        RenderPass render_pass = m_swap_chain_manager->get_render_pass(command_buffer);
+        vulkan::RenderPass render_pass =
+            m_swap_chain_manager->get_render_pass(command_buffer);
         render_pass.begin();
 
         auto &rectangle_instance_buffer =
@@ -80,7 +82,8 @@ class TileShowcase : public Game {
 
         rectangle_instance_buffer.transfer();
 
-        m_geometry_pipeline->render_rectangles(command_buffer);
+        auto camera_view_matrix = camera::Camera2D::get_default_view_matrix();
+        m_geometry_pipeline->render_rectangles(command_buffer, camera_view_matrix);
 
         render_pass.end_submit_present();
     };

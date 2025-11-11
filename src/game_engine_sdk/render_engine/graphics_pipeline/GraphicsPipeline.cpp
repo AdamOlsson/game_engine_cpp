@@ -8,11 +8,11 @@ graphics_pipeline::GraphicsPipeline::GraphicsPipeline(vulkan::PipelineLayout &&l
                                                       vulkan::Pipeline &&pipeline)
     : m_pipeline(std::move(pipeline)), m_pipeline_layout(std::move(layout)) {}
 
-void graphics_pipeline::GraphicsPipeline::render(const VkCommandBuffer &command_buffer,
-                                                 const VertexBuffer &vertex_buffer,
-                                                 const IndexBuffer &index_buffer,
-                                                 const VkDescriptorSet &descriptor_set,
-                                                 const size_t num_instances) {
+void graphics_pipeline::GraphicsPipeline::render(
+    const VkCommandBuffer &command_buffer,
+    const vulkan::buffers::VertexBuffer &vertex_buffer,
+    const vulkan::buffers::IndexBuffer &index_buffer,
+    const VkDescriptorSet &descriptor_set, const size_t num_instances) {
 
     const VkDeviceSize vertex_buffers_offset = 0;
     vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
@@ -30,8 +30,7 @@ std::vector<char> graphics_pipeline::readFile(const std::string filename) {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
     if (!file.is_open()) {
-        logger::error("Failed to open file ", filename);
-        throw std::runtime_error("Failed to open file!");
+        throw std::runtime_error(std::format("Failed to open file {}", filename));
     }
 
     size_t fileSize = (size_t)file.tellg();

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
+#include "game_engine_sdk/render_engine/vulkan/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 class DescriptorPool {
   private:
-    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
+    std::shared_ptr<vulkan::GraphicsContext> m_ctx;
     VkDescriptorPool m_descriptor_pool;
 
     VkDescriptorPool create_descriptor_pool(const uint32_t capacity,
@@ -14,9 +14,9 @@ class DescriptorPool {
 
   public:
     DescriptorPool() = default;
-    DescriptorPool(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
-                   const uint32_t capacity, const uint32_t num_storage_bufs,
-                   const uint32_t num_uniform_bufs, const uint32_t num_samplers);
+    DescriptorPool(std::shared_ptr<vulkan::GraphicsContext> &ctx, const uint32_t capacity,
+                   const uint32_t num_storage_bufs, const uint32_t num_uniform_bufs,
+                   const uint32_t num_samplers);
 
     ~DescriptorPool();
     DescriptorPool(const DescriptorPool &other) = delete;

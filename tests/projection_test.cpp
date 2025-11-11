@@ -1,7 +1,7 @@
 #include "game_engine_sdk/equations/projection.h"
 #include "game_engine_sdk/equations/round.h"
 #include "game_engine_sdk/physics_engine/RigidBody.h"
-#include "glm/ext/scalar_constants.hpp"
+#include <glm/ext/scalar_constants.hpp>
 #include <gtest/gtest.h>
 
 TEST(ProjectionTest, GivenCircleAtOrigo) {

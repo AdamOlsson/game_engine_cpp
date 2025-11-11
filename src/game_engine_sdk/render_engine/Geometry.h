@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/Vertex.h"
+#include "vulkan/Vertex.h"
 #include <vector>
 
 inline std::vector<Vertex> generate_circle_vertices(int num_points) {
@@ -46,7 +46,7 @@ inline VertexUBO generate_circle_vertices_ubo_direct() {
     ubo.vertices[0] = {0.0f, 0.0f, 0.0f};
 
     const float radius = 0.5f;
-    const int num_points = vertex::MAX_VERTICES - 1;
+    const int num_points = vulkan::MAX_VERTICES - 1;
     const float angle_increment = -2.0f * M_PI / num_points;
 
     for (int i = 0; i < num_points; ++i) {
@@ -56,8 +56,8 @@ inline VertexUBO generate_circle_vertices_ubo_direct() {
         ubo.vertices[i + 1] = {x, y, 0.0f};
     }
 
-    ubo.num_vertices = vertex::MAX_VERTICES;
-    ubo.shape = static_cast<uint32_t>(vertex::VertexShape::Circle);
+    ubo.num_vertices = vulkan::MAX_VERTICES;
+    ubo.shape = static_cast<uint32_t>(vulkan::VertexShape::Circle);
 
     return ubo;
 }
@@ -77,7 +77,7 @@ constexpr VertexUBO triangle_vertices_ubo = VertexUBO{
         Vertex{ -0.5f,   0.433013f, 0.0f },
         Vertex{  0.5f,   0.433013f, 0.0f }},
     .num_vertices = 3,
-    .shape = static_cast<uint32_t>(vertex::VertexShape::Polygon),
+    .shape = static_cast<uint32_t>(vulkan::VertexShape::Polygon),
 };
 // clang-format on
 
@@ -89,7 +89,7 @@ constexpr VertexUBO rectangle_vertices_ubo = VertexUBO{
         Vertex{ 0.5f,  0.5f, 0.0f}, 
         Vertex{ 0.5f, -0.5f, 0.0f}},
     .num_vertices = 4,
-    .shape = static_cast<uint32_t>(vertex::VertexShape::Rectangle),
+    .shape = static_cast<uint32_t>(vulkan::VertexShape::Rectangle),
 };
 // clang-format on
 
@@ -105,7 +105,7 @@ constexpr VertexUBO hexagon_vertices_ubo = VertexUBO{
 
 },
     .num_vertices = 6,
-    .shape = static_cast<uint32_t>(vertex::VertexShape::Polygon),
+    .shape = static_cast<uint32_t>(vulkan::VertexShape::Polygon),
 };
 // clang-format on
 

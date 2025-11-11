@@ -1,7 +1,7 @@
 #include "game_engine_sdk/entity_component_storage/ComponentStore.h"
 #include "game_engine_sdk/entity_component_storage/EntityComponentStorage.h"
 #include "game_engine_sdk/physics_engine/RigidBody.h"
-#include "game_engine_sdk/render_engine/colors.h"
+#include "util/colors.h"
 #include <gtest/gtest.h>
 
 TEST(ECSTest, TestAdd) {
@@ -174,7 +174,8 @@ TEST(ECSTest, TestIteratoringOverAllValues) {
     EXPECT_EQ(2, count2);
 
     EntityId e3 = ecs.create_entity();
-    ecs.add_component<RenderBody>(e3, std::move(RenderBody{.color = colors::WHITE}));
+    ecs.add_component<RenderBody>(e3,
+                                  std::move(RenderBody{.color = util::colors::WHITE}));
     EXPECT_EQ(2, ecs.size<RigidBody>());
     EXPECT_EQ(1, ecs.size<RenderBody>());
 

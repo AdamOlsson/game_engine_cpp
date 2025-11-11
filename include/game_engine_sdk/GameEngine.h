@@ -1,7 +1,6 @@
 #pragma once
 
 #include "game_engine_sdk/Game.h"
-#include "game_engine_sdk/render_engine/window/WindowConfig.h"
 #include <memory>
 
 struct GameEngineConfig {
@@ -20,7 +19,7 @@ class GameEngine {
     Duration m_tick_delta;
 
     std::unique_ptr<window::Window> m_window;
-    std::shared_ptr<graphics_context::GraphicsContext> m_ctx;
+    std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
     std::unique_ptr<Game> m_game;
 
   public:

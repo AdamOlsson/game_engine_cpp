@@ -4,7 +4,7 @@
 #include "game_engine_sdk/render_engine/fonts/KerningMap.h"
 #include "game_engine_sdk/render_engine/resources/ResourceManager.h"
 #include "game_engine_sdk/render_engine/resources/fonts/FontResource.h"
-#include "game_engine_sdk/render_engine/vulkan/Sampler.h"
+#include "vulkan/Sampler.h"
 #include <cstddef>
 
 class Font {
@@ -23,9 +23,9 @@ class Font {
 
     Font() = default;
 
-    Font(std::shared_ptr<graphics_context::GraphicsContext> &ctx,
-         CommandBufferManager *command_buffer_manager, const std::string &font_name,
-         vulkan::Sampler *sampler)
+    Font(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
+         vulkan::CommandBufferManager *command_buffer_manager,
+         const std::string &font_name, vulkan::Sampler *sampler)
         : sampler(sampler) {
         auto resource =
             ResourceManager::get_instance().get_resource<FontResource>("DefaultFont");

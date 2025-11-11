@@ -3,8 +3,8 @@
 #include "game_engine_sdk/render_engine/ui/Menu.h"
 #include "game_engine_sdk/render_engine/ui/State.h"
 #include "game_engine_sdk/render_engine/ui/TextBox.h"
-#include "game_engine_sdk/render_engine/window/MouseEvent.h"
-#include "game_engine_sdk/render_engine/window/ViewportPoint.h"
+#include "window/MouseEvent.h"
+#include "window/ViewportPoint.h"
 #include <unordered_map>
 namespace ui {
 

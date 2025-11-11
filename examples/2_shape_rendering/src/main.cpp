@@ -1,22 +1,23 @@
+#include "camera/Camera.h"
 #include "game_engine_sdk/Dimension.h"
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
 #include "game_engine_sdk/WorldPoint.h"
-#include "game_engine_sdk/render_engine/colors.h"
 #include "game_engine_sdk/render_engine/fonts/Font.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/TextPipeline.h"
 #include "game_engine_sdk/render_engine/resources/ResourceManager.h"
 #include "game_engine_sdk/render_engine/ui/ElementProperties.h"
 #include "game_engine_sdk/render_engine/ui/TextBox.h"
-#include "game_engine_sdk/render_engine/window/WindowConfig.h"
 #include "game_engine_sdk/shape.h"
+#include "util/colors.h"
+#include "window/WindowConfig.h"
 #include <memory>
 
 class ShapeRendering : public Game {
   private:
-    std::unique_ptr<SwapChainManager> m_swap_chain_manager;
-    std::unique_ptr<CommandBufferManager> m_command_buffer_manager;
+    std::unique_ptr<vulkan::SwapChainManager> m_swap_chain_manager;
+    std::unique_ptr<vulkan::CommandBufferManager> m_command_buffer_manager;
 
     std::unique_ptr<Texture> m_dog_image;
     vulkan::Sampler m_sampler;
@@ -32,10 +33,10 @@ class ShapeRendering : public Game {
         m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
             .center = WorldPoint(-300, 300),
             .dimension = Dimension(80.0f),
-            .color = colors::RED,
+            .color = util::colors::RED,
             .border =
                 {
-                    .color = colors::YELLOW,
+                    .color = util::colors::YELLOW,
                     .thickness = 10.0f,
                 },
         });
@@ -44,9 +45,9 @@ class ShapeRendering : public Game {
         m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
             .center = WorldPoint(-200, 300),
             .dimension = Dimension(80.0f),
-            .color = colors::RED,
+            .color = util::colors::RED,
             .border = {
-                .color = colors::YELLOW,
+                .color = util::colors::YELLOW,
                 .thickness = 5.0f,
             }});
 
@@ -54,32 +55,32 @@ class ShapeRendering : public Game {
         m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
             .center = WorldPoint(-100, 300),
             .dimension = Dimension(80.0f, 80.0f),
-            .color = colors::BLUE,
+            .color = util::colors::BLUE,
             .uvwt = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f),
             .border = {
-                .color = colors::YELLOW,
+                .color = util::colors::YELLOW,
                 .thickness = 5.0f,
                 .radius = 5.0f,
             }});
 
         m_shape_ids.push_back(shape::Shape::Hexagon);
-        m_geometries.push_back(
-            graphics_pipeline::GeometryInstanceBufferObject{.center = WorldPoint(0, 300),
-                                                            .dimension = Dimension(80.0f),
-                                                            .color = colors::RED,
-                                                            .border = {
-                                                                .color = colors::YELLOW,
-                                                                .thickness = 5.0f,
-                                                            }});
+        m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
+            .center = WorldPoint(0, 300),
+            .dimension = Dimension(80.0f),
+            .color = util::colors::RED,
+            .border = {
+                .color = util::colors::YELLOW,
+                .thickness = 5.0f,
+            }});
 
         m_shape_ids.push_back(shape::Shape::Rectangle);
         m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
             .center = WorldPoint(-292, 192),
             .dimension = Dimension(80.0f, 80.0f),
-            .color = colors::BLUE,
+            .color = util::colors::BLUE,
             .uvwt = glm::vec4(0.0f, 0.0f, 0.5f, 0.5f),
             .border = {
-                .color = colors::YELLOW,
+                .color = util::colors::YELLOW,
                 .thickness = 5.0f,
                 .radius = 5.0f,
             }});
@@ -88,10 +89,10 @@ class ShapeRendering : public Game {
         m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
             .center = WorldPoint(-208, 192),
             .dimension = Dimension(80.0f, 80.0f),
-            .color = colors::BLUE,
+            .color = util::colors::BLUE,
             .uvwt = glm::vec4(0.5f, 0.0f, 1.0f, 0.5f),
             .border = {
-                .color = colors::YELLOW,
+                .color = util::colors::YELLOW,
                 .thickness = 5.0f,
                 .radius = 5.0f,
             }});
@@ -100,11 +101,11 @@ class ShapeRendering : public Game {
         m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
             .center = WorldPoint(-292, 108),
             .dimension = Dimension(80.0f, 80.0f),
-            .color = colors::BLUE,
+            .color = util::colors::BLUE,
             .uvwt = glm::vec4(0.0f, 0.5f, 0.5f, 1.0f),
             .border =
                 {
-                    .color = colors::YELLOW,
+                    .color = util::colors::YELLOW,
                     .thickness = 5.0f,
                     .radius = 5.0f,
                 }
@@ -115,10 +116,10 @@ class ShapeRendering : public Game {
         m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
             .center = WorldPoint(-208, 108),
             .dimension = Dimension(80.0f, 80.0f),
-            .color = colors::WHITE,
+            .color = util::colors::WHITE,
             .uvwt = glm::vec4(0.5f, 0.5f, 1.0f, 1.0f),
             .border = {
-                .color = colors::YELLOW,
+                .color = util::colors::YELLOW,
                 .thickness = 5.0f,
                 .radius = 5.0f,
             }});
@@ -127,9 +128,9 @@ class ShapeRendering : public Game {
         m_geometries.push_back(graphics_pipeline::GeometryInstanceBufferObject{
             .center = WorldPoint(150.0f, 200.0f, 0.0),
             .dimension = Dimension(400.0f, 100.0f),
-            .color = colors::TRANSPARENT,
+            .color = util::colors::TRANSPARENT,
             .uvwt = glm::vec4(-1.0f),
-            .border = {.color = colors::WHITE, .thickness = 10.0f, .radius = 15.0f}
+            .border = {.color = util::colors::WHITE, .thickness = 10.0f, .radius = 15.0f}
 
         });
     };
@@ -138,12 +139,12 @@ class ShapeRendering : public Game {
 
     void update(float dt) override {};
 
-    void setup(std::shared_ptr<graphics_context::GraphicsContext> &ctx) override {
+    void setup(std::shared_ptr<vulkan::context::GraphicsContext> &ctx) override {
         register_all_shaders();
         register_all_fonts();
         register_all_images();
-        m_swap_chain_manager = std::make_unique<SwapChainManager>(ctx);
-        m_command_buffer_manager = std::make_unique<CommandBufferManager>(
+        m_swap_chain_manager = std::make_unique<vulkan::SwapChainManager>(ctx);
+        m_command_buffer_manager = std::make_unique<vulkan::CommandBufferManager>(
             ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
 
         m_sampler = vulkan::Sampler(ctx);
@@ -164,7 +165,8 @@ class ShapeRendering : public Game {
     void render() override {
 
         auto command_buffer = m_command_buffer_manager->get_command_buffer();
-        RenderPass render_pass = m_swap_chain_manager->get_render_pass(command_buffer);
+        vulkan::RenderPass render_pass =
+            m_swap_chain_manager->get_render_pass(command_buffer);
         render_pass.begin();
 
         // START RENDERING GEOMETRIES
@@ -206,10 +208,11 @@ class ShapeRendering : public Game {
         rectangle_instance_buffer.transfer();
         hexagon_instance_buffer.transfer();
 
-        m_geometry_pipeline->render_circles(command_buffer);
-        m_geometry_pipeline->render_triangles(command_buffer);
-        m_geometry_pipeline->render_rectangles(command_buffer);
-        m_geometry_pipeline->render_hexagons(command_buffer);
+        auto camera_transform_matrix = camera::Camera2D::get_default_view_matrix();
+        m_geometry_pipeline->render_circles(command_buffer, camera_transform_matrix);
+        m_geometry_pipeline->render_triangles(command_buffer, camera_transform_matrix);
+        m_geometry_pipeline->render_rectangles(command_buffer, camera_transform_matrix);
+        m_geometry_pipeline->render_hexagons(command_buffer, camera_transform_matrix);
         // STOP RENDERING GEOMETRIES
 
         const auto text_box_1 =
