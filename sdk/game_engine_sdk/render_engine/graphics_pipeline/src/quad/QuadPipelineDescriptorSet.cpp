@@ -1,14 +1,13 @@
-#include "game_engine_sdk/render_engine/graphics_pipeline/quad/QuadPipelineDescriptorSet.h"
-#include "game_engine_sdk/render_engine/descriptors/SwapDescriptorSetBuilder.h"
+#include "graphics_pipeline/quad/QuadPipelineDescriptorSet.h"
+#include "graphics_pipeline/SwapDescriptorSetBuilder.h"
 
-using namespace graphics_pipeline;
-
-QuadPipelineDescriptorSet::QuadPipelineDescriptorSet(
+graphics_pipeline::quad::QuadPipelineDescriptorSet::QuadPipelineDescriptorSet(
     std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
     vulkan::DescriptorPool &descriptor_pool, QuadPipelineDescriptorSetOpts &&opts)
     : m_descriptor_set(build_descriptor_set(ctx, descriptor_pool, std::move(opts))) {}
 
-SwapDescriptorSet QuadPipelineDescriptorSet::build_descriptor_set(
+graphics_pipeline::SwapDescriptorSet
+graphics_pipeline::quad::QuadPipelineDescriptorSet::build_descriptor_set(
     std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
     vulkan::DescriptorPool &descriptor_pool, QuadPipelineDescriptorSetOpts &&opts) {
     auto builder = SwapDescriptorSetBuilder(opts.num_sets);
@@ -35,11 +34,16 @@ SwapDescriptorSet QuadPipelineDescriptorSet::build_descriptor_set(
     return builder.build(ctx, descriptor_pool);
 }
 
-vulkan::DescriptorSetLayout &QuadPipelineDescriptorSet::get_layout() {
+vulkan::DescriptorSetLayout &
+graphics_pipeline::quad::QuadPipelineDescriptorSet::get_layout() {
     return m_descriptor_set.get_layout();
 }
 
-SwapDescriptorSet *QuadPipelineDescriptorSet::handle() { return &m_descriptor_set; }
-vulkan::DescriptorSet QuadPipelineDescriptorSet::get_next() {
+graphics_pipeline::SwapDescriptorSet *
+graphics_pipeline::quad::QuadPipelineDescriptorSet::handle() {
+    return &m_descriptor_set;
+}
+
+vulkan::DescriptorSet graphics_pipeline::quad::QuadPipelineDescriptorSet::get_next() {
     return m_descriptor_set.get();
 }

@@ -700,8 +700,8 @@ unsigned int geometry_spv_len = 8276;
 
 } // namespace
 
-std::unique_ptr<ShaderResource> GeometryVertex::create_resource() {
-    return ShaderResourceBuilder()
+std::unique_ptr<graphics_pipeline::ShaderResource> GeometryVertex::create_resource() {
+    return graphics_pipeline::ShaderResourceBuilder()
         .name(std::move(resource_name))
         .length(geometry_spv_len)
         .bytes(&geometry_spv[0])

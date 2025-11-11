@@ -1,7 +1,7 @@
 #pragma once
 
 #include "game_engine_sdk/render_engine/graphics_pipeline/GraphicsPipeline.h"
-#include "game_engine_sdk/render_engine/resources/shaders/ShaderResource.h"
+#include "graphics_pipeline/ShaderResource.h"
 #include "vulkan/DescriptorSetLayout.h"
 #include "vulkan/SwapChainManager.h"
 #include "vulkan/context/GraphicsContext.h"

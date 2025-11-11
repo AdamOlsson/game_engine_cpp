@@ -18,6 +18,7 @@ file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/public/*.h")
 add_library(${PROJECT_NAME} 
     STATIC
         ${SOURCES}
+        ${HEADERS}
 )
 add_library(render_engine::vulkan ALIAS ${PROJECT_NAME})
 
@@ -25,16 +26,18 @@ target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 
 target_include_directories(${PROJECT_NAME} 
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/public
-    PRIVATE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/public>
+        $<INSTALL_INTERFACE:include>
+    # PRIVAT
         ${VULKAN_SDK_PATH}/include
 )
 
 target_link_libraries(${PROJECT_NAME}
+    PUBLIC 
+        render_engine::window
+        glfw
     PRIVATE 
         sdk::logger
-        glfw
         ${VULKAN_LIBRARY}
-        render_engine::window
         render_engine::image
 )

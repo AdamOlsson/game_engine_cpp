@@ -1,11 +1,11 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/resources/Resource.h"
+#include "graphics_pipeline/Resource.h"
 #include <cstdint>
 #include <memory>
 #include <vector>
 
-class ImageResource : public Resource {
+class ImageResource : public graphics_pipeline::Resource {
 
   private:
     // All resources

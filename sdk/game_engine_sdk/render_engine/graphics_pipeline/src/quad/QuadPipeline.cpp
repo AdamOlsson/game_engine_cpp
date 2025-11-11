@@ -1,6 +1,16 @@
 #include "graphics_pipeline/quad/QuadPipeline.h"
-#include "game_engine_sdk/render_engine/resources/shaders/fragment/quad/quad.h"
-#include "game_engine_sdk/render_engine/resources/shaders/vertex/quad/quad.h"
+#include "shaders/quad_fragment_shader.h"
+#include "shaders/quad_vertex_shader.h"
+
+namespace {
+const std::vector<uint16_t> m_quad_indices = {0, 1, 2, 0, 2, 3};
+const std::vector<Vertex> m_quad_vertices = {
+    Vertex(-0.5f, -0.5f, 0.0f),
+    Vertex(-0.5f, 0.5f, 0.0f),
+    Vertex(0.5f, 0.5f, 0.0f),
+    Vertex(0.5f, -0.5f, 0.0f),
+};
+} // namespace
 
 graphics_pipeline::quad::QuadPipeline::QuadPipeline(
     std::shared_ptr<vulkan::context::GraphicsContext> ctx,
@@ -16,8 +26,8 @@ graphics_pipeline::quad::QuadPipeline::QuadPipeline(
       m_pipeline_layout(
           vulkan::PipelineLayout(ctx, descriptor_set_layout, push_constant_range)) {
 
-    auto quad_vert = QuadVertex::create_resource();
-    auto quad_frag = QuadFragment::create_resource();
+    auto quad_vert = QuadVertexShader::create_resource();
+    auto quad_frag = QuadFragmentShader::create_resource();
 
     m_pipeline = vulkan::Pipeline(
         ctx, m_pipeline_layout,

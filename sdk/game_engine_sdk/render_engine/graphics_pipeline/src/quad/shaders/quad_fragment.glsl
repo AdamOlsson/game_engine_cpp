@@ -10,7 +10,7 @@ layout(location = 2) in flat vec4 in_color;
 layout(location = 0) out vec4 out_color; 
 
 void main() {
-    if ( in_uv.x < 0.0 || in_uv.y < 0.0) {
+    if (in_uv.x < 0.0 || in_uv.y < 0.0) {
         out_color = in_color; 
         return;
     }

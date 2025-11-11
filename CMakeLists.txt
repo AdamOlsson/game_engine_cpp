@@ -76,13 +76,14 @@ target_link_libraries(${PROJECT_NAME}
         ${VULKAN_LIBRARY}
         glm
         glfw
+        sdk::logger
+        sdk::util
         render_engine::image
         render_engine::camera
         render_engine::tiling
         render_engine::window
         render_engine::vulkan
-        sdk::logger
-        sdk::util
+        render_engine::graphics_pipeline
 )
 
 set_target_properties(${PROJECT_NAME}

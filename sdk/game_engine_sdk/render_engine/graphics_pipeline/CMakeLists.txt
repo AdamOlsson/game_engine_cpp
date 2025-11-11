@@ -11,6 +11,17 @@ project(graphics_pipeline CXX)
 file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/public/*.h")
 
+# Compile shaders
+execute_process(
+    COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/src/quad/shaders/compile_shaders.py
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    RESULT_VARIABLE result
+)
+
+if(result)
+    message(FATAL_ERROR "Failed to compile shaders with error: ${result}")
+endif()
+
 add_library(${PROJECT_NAME} 
     STATIC
         ${SOURCES}
@@ -23,12 +34,14 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/public
     PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
 
 )
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE 
         sdk::logger
+        sdk::util
         glm::glm
-        ${VULKAN_LIBRARY}
+        render_engine::vulkan
 )

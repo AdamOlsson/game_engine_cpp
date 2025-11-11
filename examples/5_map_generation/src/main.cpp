@@ -4,8 +4,9 @@
 #include "game_engine_sdk/render_engine/ModelMatrix.h"
 #include "game_engine_sdk/render_engine/TilesetUVWT.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
-#include "game_engine_sdk/render_engine/graphics_pipeline/quad/QuadPipeline.h"
-#include "game_engine_sdk/render_engine/graphics_pipeline/quad/QuadPipelineSBO.h"
+#include "graphics_pipeline/quad/QuadPipeline.h"
+#include "graphics_pipeline/quad/QuadPipelineDescriptorSet.h"
+#include "graphics_pipeline/quad/QuadPipelineSBO.h"
 #include "tiles.h"
 #include "tiling/NoiseMap.h"
 #include "tiling/wang/WangTiles.h"
@@ -14,11 +15,7 @@
 #include <memory>
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
-// CONTINUE: Render Wang tiling
-// - Fix import path to prefix with "game_engine_sdk" for modules
-// - Make graphics_pipeline its own module (maybe with vulkan?)
-//      - Move Quadpipeline and SwapDescriptorSet to its own module and link with util
-//          module
+
 using namespace tiling;
 
 constexpr float CELL_SIZE = 24.0f;
@@ -36,10 +33,11 @@ class MapGeneration : public Game {
 
     vulkan::DescriptorPool m_descriptor_pool;
     std::unique_ptr<
-        vulkan::buffers::SwapStorageBuffer<graphics_pipeline::QuadPipelineSBO>>
+        vulkan::buffers::SwapStorageBuffer<graphics_pipeline::quad::QuadPipelineSBO>>
         m_quad_storage_buffer;
-    std::unique_ptr<graphics_pipeline::QuadPipelineDescriptorSet> m_quad_descriptor_set;
-    std::unique_ptr<graphics_pipeline::QuadPipeline> m_quad_pipeline;
+    std::unique_ptr<graphics_pipeline::quad::QuadPipelineDescriptorSet>
+        m_quad_descriptor_set;
+    std::unique_ptr<graphics_pipeline::quad::QuadPipeline> m_quad_pipeline;
     size_t m_num_instances;
 
     std::vector<graphics_pipeline::GeometryInstanceBufferObject> m_render_cells;
@@ -95,7 +93,7 @@ class MapGeneration : public Game {
         m_tileset_uvwt = TilesetUVWT(m_tileset, TileSize(24, 24));
 
         m_quad_storage_buffer = std::make_unique<
-            vulkan::buffers::SwapStorageBuffer<graphics_pipeline::QuadPipelineSBO>>(
+            vulkan::buffers::SwapStorageBuffer<graphics_pipeline::quad::QuadPipelineSBO>>(
             ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT,
             m_wang_tiles.width() * m_wang_tiles.height());
 
@@ -107,9 +105,9 @@ class MapGeneration : public Game {
                                             .num_combined_image_samplers = 1});
 
         m_quad_descriptor_set =
-            std::make_unique<graphics_pipeline::QuadPipelineDescriptorSet>(
+            std::make_unique<graphics_pipeline::quad::QuadPipelineDescriptorSet>(
                 ctx, m_descriptor_pool,
-                graphics_pipeline::QuadPipelineDescriptorSetOpts{
+                graphics_pipeline::quad::QuadPipelineDescriptorSetOpts{
                     .storage_buffer_refs = vulkan::DescriptorBufferInfo::from_vector(
                         m_quad_storage_buffer->get_buffer_references()),
                     .combined_image_sampler_infos = {
@@ -119,7 +117,7 @@ class MapGeneration : public Game {
             vulkan::PushConstantRange{.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
                                       .offset = 0,
                                       .size = camera::Camera2D::matrix_size()};
-        m_quad_pipeline = std::make_unique<graphics_pipeline::QuadPipeline>(
+        m_quad_pipeline = std::make_unique<graphics_pipeline::quad::QuadPipeline>(
             ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
             &quad_descriptor_set_layout, &quad_push_constant_range);
 
@@ -135,7 +133,7 @@ class MapGeneration : public Game {
                     ? m_tileset_uvwt.uvwt_for_tile_at(tileset_index->x, tileset_index->y)
                     : m_tileset_uvwt.uvwt_for_tile_at(0, 0);
 
-            m_quad_storage_buffer->write(graphics_pipeline::QuadPipelineSBO{
+            m_quad_storage_buffer->write(graphics_pipeline::quad::QuadPipelineSBO{
                 .model_matrix = ModelMatrix()
                                     .scale(glm::vec3(CELL_SIZE, CELL_SIZE, 1.0))
                                     .translate(x, y, 0),

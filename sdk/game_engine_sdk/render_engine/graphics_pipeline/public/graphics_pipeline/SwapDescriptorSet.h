@@ -5,6 +5,7 @@
 #include "vulkan/context/GraphicsContext.h"
 #include <cstddef>
 
+namespace graphics_pipeline {
 class SwapDescriptorSet {
     friend class SwapDescriptorSetBuilder;
 
@@ -33,3 +34,5 @@ class SwapDescriptorSet {
     vulkan::DescriptorSetLayout &get_layout() { return m_layout; }
     const vulkan::DescriptorSet get();
 };
+
+} // namespace graphics_pipeline

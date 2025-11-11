@@ -24,14 +24,6 @@ class QuadPipeline {
     vulkan::PipelineLayout m_pipeline_layout;
     vulkan::Pipeline m_pipeline;
 
-    static constexpr std::array<uint16_t, 6> m_quad_indices = {0, 1, 2, 0, 2, 3};
-    static constexpr const std::array<Vertex, 4> m_quad_vertices = {
-        Vertex(-0.5f, -0.5f, 0.0f),
-        Vertex(-0.5f, 0.5f, 0.0f),
-        Vertex(0.5f, 0.5f, 0.0f),
-        Vertex(0.5f, -0.5f, 0.0f),
-    };
-
   public:
     QuadPipeline(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
                  vulkan::CommandBufferManager *command_buffer_manager,

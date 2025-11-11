@@ -1,9 +1,11 @@
 #pragma once
 
-#include "game_engine_sdk/render_engine/resources/Resource.h"
+#include "Resource.h"
 #include <cstdint>
 #include <memory>
 #include <vector>
+
+namespace graphics_pipeline {
 
 class ShaderResource : public Resource {
   private:
@@ -16,9 +18,9 @@ class ShaderResource : public Resource {
     friend class ShaderResourceBuilder;
 
   public:
-    const uint8_t *bytes() const override;
-    const std::string &name() const override;
-    const unsigned int length() const override;
+    const uint8_t *bytes() const;
+    const std::string &name() const;
+    const unsigned int length() const;
 
     ShaderResource(ShaderResource &&other) noexcept = default;
     ShaderResource &operator=(ShaderResource &&other) noexcept = default;
@@ -62,3 +64,5 @@ class ShaderResourceBuilder {
             std::move(name_), length_, static_cast<uint8_t *>(bytes_)));
     }
 };
+
+} // namespace graphics_pipeline
