@@ -30,11 +30,12 @@ layout(push_constant) uniform CameraMatrix {
 layout(location = 0) in vec3 in_local_position; // -0.5 to 0.5
 
 layout(location = 0) out vec2 out_local_position; // -0.5 to 0.5
-layout(location = 1) out vec4 out_color;
-layout(location = 2) out int out_geometry_type;
-layout(location = 3) out float out_border_width_px;
-layout(location = 4) out float out_border_radius_px;
-layout(location = 5) out vec4 out_border_color;
+layout(location = 1) out vec2 out_geometry_dimensions;
+layout(location = 2) out vec4 out_color;
+layout(location = 3) out int out_geometry_type;
+layout(location = 4) out float out_border_width_px;
+layout(location = 5) out float out_border_radius_px;
+layout(location = 6) out vec4 out_border_color;
 
 void main() {
     GeometrySBO instance = storage_buffer.instances[gl_InstanceIndex];
@@ -46,9 +47,13 @@ void main() {
     // world space -> view space (using view matrix) then
     // view space -> clip space (using projection matrix)
     vec4 clip_space_position = pc_camera.view_projection * world_space_position;
+    
+    const float geometry_width_world = instance.model_matrix[0][0];
+    const float geometry_height_world = instance.model_matrix[1][1];
 
     gl_Position = clip_space_position;
     out_local_position = in_local_position.xy;
+    out_geometry_dimensions = vec2(geometry_width_world, geometry_height_world);
     out_color = instance.color;
     out_geometry_type = RECTANGLE;
     out_border_width_px = instance.border.width;

@@ -167,7 +167,6 @@ class MapGeneration : public Game {
 
                     break;
                 case window::MouseEvent::LEFT_BUTTON_DOWN:
-                    logger::debug("mouse last position: ", m_mouse_last_position);
                     break;
                 case window::MouseEvent::LEFT_BUTTON_UP:
                     break;

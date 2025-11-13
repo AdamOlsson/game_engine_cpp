@@ -4,17 +4,13 @@
 #include "game_engine_sdk/render_engine/ModelMatrix.h"
 #include "graphics_pipeline/geometry/GeometryPipeline.h"
 #include "graphics_pipeline/geometry/GeometryPipelineSBO.h"
+#include "logger/logger.h"
 #include "vulkan/DescriptorPool.h"
-/*#include "vulkan/buffers/GpuBuffer.h.h"*/
 #include "window/WindowConfig.h"
 #include <memory>
 
 // CONTINUE:
-// - Render the grid using new geometry shader
-//      - Get the rectangle dimension to the fragment shader (maybe through the model
-//      matrix)
-//      - fix such the hovering over a square highlights it
-// - Partial updates of the storage buffer
+// - Partial updates of the storage buffer for cursor hovering
 
 constexpr size_t TILE_SIZE = 24; // World space
 constexpr auto INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
@@ -52,7 +48,9 @@ class ExamplePathing : public Game {
         const float num_pixels_at_default_zoom = 200.0f;
         m_camera = camera::Camera2D(window_size.width, window_size.height,
                                     num_pixels_at_default_zoom);
-
+        m_camera.configure_max_zoom(5.0f);
+        m_camera.configure_min_zoom(0.2f);
+        m_camera.set_zoom(0.4f);
         register_mouse_event_handler(ctx.get());
 
         m_swap_chain_manager = std::make_unique<vulkan::SwapChainManager>(ctx);
@@ -89,19 +87,26 @@ class ExamplePathing : public Game {
             ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
             &descriptor_layout, &quad_push_constant_range);
 
-        for (auto i = 0; i < 2; i++) {
+        for (auto i = 0; i < num_tiles_width * num_tiles_height; i++) {
+            const int x = i % num_tiles_width;
+            const int y = i / num_tiles_height;
+
             m_tile_instances->push_back(graphics_pipeline::geometry::GeometryPipelineSBO{
                 .model_matrix =
-                    ModelMatrix().scale(TILE_SIZE, TILE_SIZE, 1.0f).translate(i, 0, 0),
+                    ModelMatrix().scale(TILE_SIZE, TILE_SIZE, 1.0f).translate(x, y, 0),
                 .border =
                     {
-                        .color = util::colors::RED,
-                        .width = 2,
+                        .color = util::colors::rgba(1.0f, 1.0f, 1.0f, 0.1f),
+                        .width = 1,
                     },
             });
             m_num_instances++;
         }
+
         m_tile_instances->transfer();
+
+        m_camera.set_position(camera::WorldPoint2D(num_tiles_width / 2.0f * TILE_SIZE,
+                                                   num_tiles_height / 2.0f * TILE_SIZE));
     }
 
     void register_mouse_event_handler(vulkan::context::GraphicsContext *ctx) {
@@ -127,7 +132,6 @@ class ExamplePathing : public Game {
 
                     break;
                 case window::MouseEvent::LEFT_BUTTON_DOWN:
-                    logger::debug("mouse last position: ", m_mouse_last_position);
                     break;
                 case window::MouseEvent::LEFT_BUTTON_UP:
                     break;
@@ -142,7 +146,9 @@ class ExamplePathing : public Game {
             m_swap_chain_manager->get_render_pass(command_buffer);
         render_pass.begin();
 
-        if (abs(m_mouse_last_position.x) < 24.0 && abs(m_mouse_last_position.y) < 24.0) {
+        const auto cursor_world_point = m_camera.viewport_to_world(m_mouse_last_position);
+        if (abs(cursor_world_point.x) < TILE_SIZE / 2.0f &&
+            abs(cursor_world_point.y) < TILE_SIZE / 2.0f) {
             auto &instance_buffer = m_tile_instances->get_buffer();
             instance_buffer[0].color = util::colors::BLUE;
             instance_buffer.transfer();
