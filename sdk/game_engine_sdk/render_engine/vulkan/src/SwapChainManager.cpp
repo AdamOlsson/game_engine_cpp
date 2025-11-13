@@ -15,7 +15,8 @@ vulkan::SwapChainManager::SwapChainManager(
       m_window_size_swap_buffer(
           vulkan::buffers::SwapUniformBuffer<window::WindowDimension<float>>(
               m_ctx, MAX_FRAMES_IN_FLIGHT, 1)) {
-    m_window_size_swap_buffer.write(m_ctx->window->dimensions<float>());
+    m_window_size_swap_buffer.push_back(m_ctx->window->dimensions<float>());
+    m_window_size_swap_buffer.transfer();
 }
 
 vulkan::SwapChainManager::~SwapChainManager() {}

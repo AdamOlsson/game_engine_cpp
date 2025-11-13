@@ -54,7 +54,8 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
 
     m_circle_vertices_ubo = vulkan::buffers::SwapUniformBuffer<VertexUBO>(
         m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1);
-    m_circle_vertices_ubo.write(Geometry::circle_vertices_ubo);
+    m_circle_vertices_ubo.push_back(Geometry::circle_vertices_ubo);
+    m_circle_vertices_ubo.transfer();
     m_circle_descriptor_set =
         SwapDescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
             .add_storage_buffer(0, vulkan::DescriptorBufferInfo::from_vector(
@@ -74,7 +75,8 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
 
     m_triangle_vertices_ubo = vulkan::buffers::SwapUniformBuffer<VertexUBO>(
         m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1);
-    m_triangle_vertices_ubo.write(Geometry::triangle_vertices_ubo);
+    m_triangle_vertices_ubo.push_back(Geometry::triangle_vertices_ubo);
+    m_triangle_vertices_ubo.transfer();
     m_triangle_descriptor_set =
         SwapDescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
             .add_storage_buffer(0,
@@ -94,7 +96,8 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
 
     m_rectangle_vertices_ubo = vulkan::buffers::SwapUniformBuffer<VertexUBO>(
         m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1);
-    m_rectangle_vertices_ubo.write(Geometry::rectangle_vertices_ubo);
+    m_rectangle_vertices_ubo.push_back(Geometry::rectangle_vertices_ubo);
+    m_rectangle_vertices_ubo.transfer();
     m_rectangle_descriptor_set =
         SwapDescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
             .add_storage_buffer(0,
@@ -114,7 +117,8 @@ graphics_pipeline::GeometryPipeline::GeometryPipeline(
 
     m_hexagon_vertices_ubo = vulkan::buffers::SwapUniformBuffer<VertexUBO>(
         m_ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1);
-    m_hexagon_vertices_ubo.write(Geometry::hexagon_vertices_ubo);
+    m_hexagon_vertices_ubo.push_back(Geometry::hexagon_vertices_ubo);
+    m_hexagon_vertices_ubo.transfer();
     m_hexagon_descriptor_set =
         SwapDescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
             .add_storage_buffer(0,

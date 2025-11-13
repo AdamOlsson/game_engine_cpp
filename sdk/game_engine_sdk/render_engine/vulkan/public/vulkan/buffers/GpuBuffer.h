@@ -112,12 +112,14 @@ template <Printable T, GpuBufferType BufferType> class GpuBuffer {
     size_t size() const { return m_size; }
     size_t num_elements() const { return m_staging_buffer.size(); }
     void clear() { m_staging_buffer.clear(); }
+
     void transfer() { memcpy(m_buffer_mapped, m_staging_buffer.data(), m_size); }
 
     void push_back(T &t) {
         check_buffer_size();
         return m_staging_buffer.push_back(t);
     }
+
     void push_back(const T &t) {
         check_buffer_size();
         return m_staging_buffer.push_back(t);
@@ -240,23 +242,26 @@ template <typename T, GpuBufferType BufferType> class SwapGpuBuffer {
 
     void rotate() { m_idx = ++m_idx % m_buffers.size(); }
 
-    void write(T &val) {
+    void push_back(T &val) {
         for (auto &buf : m_buffers) {
             buf.push_back(val);
-            buf.transfer();
         }
     }
 
-    void write(T &&val) {
+    void push_back(T &&val) {
         for (auto &buf : m_buffers) {
             buf.push_back(val);
-            buf.transfer();
         }
     }
 
-    void write(const T &val) {
+    void push_back(const T &val) {
         for (auto &buf : m_buffers) {
             buf.push_back(val);
+        }
+    }
+
+    void transfer() {
+        for (auto &buf : m_buffers) {
             buf.transfer();
         }
     }

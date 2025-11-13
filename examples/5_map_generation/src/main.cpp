@@ -133,7 +133,7 @@ class MapGeneration : public Game {
                     ? m_tileset_uvwt.uvwt_for_tile_at(tileset_index->x, tileset_index->y)
                     : m_tileset_uvwt.uvwt_for_tile_at(0, 0);
 
-            m_quad_storage_buffer->write(graphics_pipeline::quad::QuadPipelineSBO{
+            m_quad_storage_buffer->push_back(graphics_pipeline::quad::QuadPipelineSBO{
                 .model_matrix = ModelMatrix()
                                     .scale(glm::vec3(CELL_SIZE, CELL_SIZE, 1.0))
                                     .translate(x, y, 0),
@@ -141,6 +141,7 @@ class MapGeneration : public Game {
             });
             m_num_instances++;
         }
+        m_quad_storage_buffer->transfer();
     }
 
     void register_mouse_event_handler(vulkan::context::GraphicsContext *ctx) {
@@ -193,7 +194,7 @@ class MapGeneration : public Game {
 int main() {
 
     GameEngineConfig config{
-        .window_config = window::WindowConfig{.dims = window::WindowDimension(960, 960),
+        .window_config = window::WindowConfig{.dims = window::WindowDimension(1080, 960),
                                               .title = "5_map_generation"},
     };
 

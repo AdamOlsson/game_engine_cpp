@@ -11,9 +11,18 @@ project(graphics_pipeline CXX)
 file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/public/*.h")
 
+foreach(source_file ${SOURCES})
+    message(STATUS "Found source file: ${source_file}")
+endforeach()
+
 # Compile shaders
 execute_process(
     COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/src/quad/shaders/compile_shaders.py
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    RESULT_VARIABLE result
+)
+execute_process(
+    COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/src/geometry/shaders/compile_shaders.py
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     RESULT_VARIABLE result
 )
