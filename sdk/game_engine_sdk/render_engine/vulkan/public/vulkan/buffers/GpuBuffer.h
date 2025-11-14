@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.h"
+#include "logger/io.h"
 #include "vulkan/context/GraphicsContext.h"
 #include "vulkan/traits.h"
 #include "vulkan/vulkan_core.h"
@@ -28,18 +29,13 @@ template <Printable T, GpuBufferType BufferType> class GpuBuffer {
     std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
 
     std::vector<T> m_staging_buffer;
+    std::vector<size_t> m_delta_ids;
     size_t m_capacity;
 
     VkDeviceSize m_size; // number of bytes
     VkBuffer m_buffer;
     VkDeviceMemory m_buffer_memory;
     void *m_buffer_mapped;
-
-    void check_buffer_size() {
-        if (m_staging_buffer.size() > m_capacity) {
-            logger::warning("Exceeding the GPU buffers size!");
-        }
-    }
 
   public:
     GpuBuffer() = default;
@@ -61,6 +57,7 @@ template <Printable T, GpuBufferType BufferType> class GpuBuffer {
         }
 
         m_staging_buffer.reserve(capacity);
+        m_delta_ids.reserve(capacity);
 
         vkMapMemory(m_ctx->logical_device, m_buffer_memory, 0, m_size, 0,
                     &m_buffer_mapped);
@@ -111,31 +108,69 @@ template <Printable T, GpuBufferType BufferType> class GpuBuffer {
     }
     size_t size() const { return m_size; }
     size_t num_elements() const { return m_staging_buffer.size(); }
-    void clear() { m_staging_buffer.clear(); }
 
-    void transfer() { memcpy(m_buffer_mapped, m_staging_buffer.data(), m_size); }
+    void clear() {
+        // Note: Not sure how this would work with partial updates. Right now, if you
+        // clear the staging buffer you need to call transfer() to sync tracking
+        // of changes to the staging buffer.
+        m_staging_buffer.clear();
+    }
+
+    void transfer() {
+        memcpy(m_buffer_mapped, m_staging_buffer.data(), m_size);
+        m_delta_ids.clear();
+    }
+
+    void transfer_delta() {
+        T *device_buffer = static_cast<T *>(m_buffer_mapped);
+        for (auto id : m_delta_ids) {
+            device_buffer[id] = m_staging_buffer[id];
+        }
+        m_delta_ids.clear();
+    }
 
     void push_back(T &t) {
-        check_buffer_size();
+        DEBUG_ASSERT(m_staging_buffer.size() < m_capacity,
+                     "Exceeding the GPU buffers size!");
+        m_delta_ids.push_back(m_staging_buffer.size() + 1);
         return m_staging_buffer.push_back(t);
     }
 
     void push_back(const T &t) {
-        check_buffer_size();
+        DEBUG_ASSERT(m_staging_buffer.size() < m_capacity,
+                     "Exceeding the GPU buffers size!");
+        m_delta_ids.push_back(m_staging_buffer.size() + 1);
         return m_staging_buffer.push_back(t);
     }
 
     decltype(auto) push_back(T &&t) {
-        check_buffer_size();
+        DEBUG_ASSERT(m_staging_buffer.size() < m_capacity,
+                     "Exceeding the GPU buffers size!");
+        m_delta_ids.push_back(m_staging_buffer.size() + 1);
         return m_staging_buffer.push_back(std::forward<T>(t));
     }
 
     template <typename... Args> decltype(auto) emplace_back(Args &&...args) {
-        check_buffer_size();
+        DEBUG_ASSERT(m_staging_buffer.size() < m_capacity,
+                     "Exceeding the GPU buffers size!");
+        m_delta_ids.push_back(m_staging_buffer.size() + 1);
         return m_staging_buffer.emplace_back(std::forward<Args>(args)...);
     }
 
-    T &operator[](size_t index) { return m_staging_buffer[index]; }
+    T &operator[](size_t index) {
+        // Note: Its not necesarrily true that if a user indexes into the staging buffer,
+        // that they will update it. However, there is no other way of tracking if they do
+        // so we have to be defencive and asssume that changes are made. The type of
+        // indexing I refer to is:
+        //
+        // auto& buffer_memeber = gpu_buffer[index];
+        //
+        // In the const case, its not possible to update the reference so no need assume
+        // changes.
+        m_delta_ids.push_back(index);
+        return m_staging_buffer[index];
+    }
+
     const T &operator[](size_t index) const { return m_staging_buffer[index]; }
 
     VkDescriptorSetLayoutBinding

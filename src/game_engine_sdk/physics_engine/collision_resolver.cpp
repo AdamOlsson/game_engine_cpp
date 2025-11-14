@@ -1,7 +1,7 @@
 #include "game_engine_sdk/physics_engine/collision_resolver.h"
 #include "game_engine_sdk/equations/equations.h"
 #include "game_engine_sdk/physics_engine/RigidBody.h"
-#include "util/io.h"
+#include "logger/io.h"
 #include <optional>
 
 inline float calculate_impulse_magnitude(const glm::vec3 &collision_normal,

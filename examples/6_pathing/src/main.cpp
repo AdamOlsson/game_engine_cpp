@@ -4,13 +4,13 @@
 #include "game_engine_sdk/render_engine/ModelMatrix.h"
 #include "graphics_pipeline/geometry/GeometryPipeline.h"
 #include "graphics_pipeline/geometry/GeometryPipelineSBO.h"
-#include "logger/logger.h"
 #include "vulkan/DescriptorPool.h"
 #include "window/WindowConfig.h"
 #include <memory>
 
 // CONTINUE:
-// - Partial updates of the storage buffer for cursor hovering
+// - Implement pathing
+// - Remove old geometry pipeline
 
 constexpr size_t TILE_SIZE = 24; // World space
 constexpr auto INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
@@ -35,8 +35,15 @@ class ExamplePathing : public Game {
         m_descriptor_set;
     std::unique_ptr<graphics_pipeline::geometry::GeometryPipeline> m_pipeline;
 
+    size_t m_swap_index;
+    size_t m_num_tiles_width;
+    size_t m_num_tiles_height;
+    std::array<size_t, 2> m_last_tile_index;
+
   public:
-    ExamplePathing() {}
+    ExamplePathing()
+        : m_swap_index(0), m_last_tile_index({0, 0}),
+          m_mouse_last_position(window::ViewportPoint(-10000, -1000)) {}
 
     ~ExamplePathing() {};
 
@@ -64,11 +71,11 @@ class ExamplePathing : public Game {
 
         const auto window_dims = ctx->window->dimensions<size_t>();
         // multiply by 2 is simply to cover the entire screen and more
-        auto num_tiles_width = (window_dims.width / TILE_SIZE) * 2;
-        auto num_tiles_height = (window_dims.width / TILE_SIZE) * 2;
+        m_num_tiles_width = (window_dims.width / TILE_SIZE) * 2;
+        m_num_tiles_height = (window_dims.width / TILE_SIZE) * 2;
         m_tile_instances = std::make_unique<vulkan::buffers::SwapStorageBuffer<
             graphics_pipeline::geometry::GeometryPipelineSBO>>(
-            ctx, 2, num_tiles_width * num_tiles_height);
+            ctx, 2, m_num_tiles_width * m_num_tiles_height);
 
         m_descriptor_set =
             std::make_unique<graphics_pipeline::geometry::GeometryPipelineDescriptorSet>(
@@ -87,9 +94,9 @@ class ExamplePathing : public Game {
             ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
             &descriptor_layout, &quad_push_constant_range);
 
-        for (auto i = 0; i < num_tiles_width * num_tiles_height; i++) {
-            const int x = i % num_tiles_width;
-            const int y = i / num_tiles_height;
+        for (auto i = 0; i < m_num_tiles_width * m_num_tiles_height; i++) {
+            const int x = i % m_num_tiles_width;
+            const int y = i / m_num_tiles_height;
 
             m_tile_instances->push_back(graphics_pipeline::geometry::GeometryPipelineSBO{
                 .model_matrix =
@@ -105,8 +112,8 @@ class ExamplePathing : public Game {
 
         m_tile_instances->transfer();
 
-        m_camera.set_position(camera::WorldPoint2D(num_tiles_width / 2.0f * TILE_SIZE,
-                                                   num_tiles_height / 2.0f * TILE_SIZE));
+        m_camera.set_position(camera::WorldPoint2D(
+            m_num_tiles_width / 2.0f * TILE_SIZE, m_num_tiles_height / 2.0f * TILE_SIZE));
     }
 
     void register_mouse_event_handler(vulkan::context::GraphicsContext *ctx) {
@@ -146,16 +153,25 @@ class ExamplePathing : public Game {
             m_swap_chain_manager->get_render_pass(command_buffer);
         render_pass.begin();
 
+        // Reset highlight from previous frame
+        auto &instance_buffer = m_tile_instances->get_buffer();
+        instance_buffer[m_last_tile_index[m_swap_index]].color =
+            util::colors::TRANSPARENT;
+        instance_buffer.transfer();
+
         const auto cursor_world_point = m_camera.viewport_to_world(m_mouse_last_position);
-        if (abs(cursor_world_point.x) < TILE_SIZE / 2.0f &&
-            abs(cursor_world_point.y) < TILE_SIZE / 2.0f) {
+        // Offset by half a tile because tile center is middle of tile, not bottom right
+        const auto tile_x = (cursor_world_point.x / TILE_SIZE) + 0.5;
+        const auto tile_y = (cursor_world_point.y / TILE_SIZE) + 0.5;
+        const auto tile_index =
+            static_cast<size_t>(tile_y) * m_num_tiles_width + static_cast<size_t>(tile_x);
+
+        if (0 <= tile_index && tile_index < m_num_tiles_width * m_num_tiles_height) {
             auto &instance_buffer = m_tile_instances->get_buffer();
-            instance_buffer[0].color = util::colors::BLUE;
-            instance_buffer.transfer();
+            instance_buffer[tile_index].color = util::colors::BLUE;
+            instance_buffer.transfer_delta();
+            m_last_tile_index[m_swap_index] = tile_index;
         } else {
-            auto &instance_buffer = m_tile_instances->get_buffer();
-            instance_buffer[0].color = util::colors::TRANSPARENT;
-            instance_buffer.transfer();
         }
 
         auto descriptor = m_descriptor_set.get();
@@ -166,6 +182,7 @@ class ExamplePathing : public Game {
 
         m_tile_instances->rotate();
         m_descriptor_set->rotate();
+        m_swap_index = ++m_swap_index % 2;
     }
 };
 
