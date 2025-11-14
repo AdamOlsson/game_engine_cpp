@@ -187,6 +187,8 @@ class MapGeneration : public Game {
                                 m_num_instances);
 
         render_pass.end_submit_present();
+        m_quad_descriptor_set->rotate();
+        m_quad_storage_buffer->rotate();
     }
 };
 
