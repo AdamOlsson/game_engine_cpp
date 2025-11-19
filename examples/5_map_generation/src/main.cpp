@@ -9,6 +9,7 @@
 #include "graphics_pipeline/quad/QuadPipelineSBO.h"
 #include "tiles.h"
 #include "tiling/NoiseMap.h"
+#include "tiling/TileGrid.h"
 #include "tiling/wang/WangTiles.h"
 #include "vulkan/vulkan_core.h"
 #include "window/WindowConfig.h"
@@ -49,8 +50,6 @@ class MapGeneration : public Game {
     window::ViewportPoint m_mouse_last_position = window::ViewportPoint();
     camera::Camera2D m_camera;
 
-    wang::WangTiles<CellType> m_wang_tiles;
-
   public:
     MapGeneration() {}
 
@@ -64,16 +63,27 @@ class MapGeneration : public Game {
         auto noise_map =
             tiling::NoiseMap::unique_from_filepath(ASSET_FILE("noise_map.jpeg"));
 
-        auto rule = [](float value) -> CellType {
+        auto grid_assign_rule = [](float value) -> tiling::Tile<CellType> {
             if (value > 0.5) {
-                return CellType::Wall;
+                return tiling::Tile{
+                    .type = CellType::Wall,
+                    .weight = 9999.0f,
+                };
             } else {
-                return CellType::Grass;
+                return tiling::Tile{
+                    .type = CellType::Grass,
+                    .weight = 1.0f,
+                };
             }
         };
 
-        m_wang_tiles = wang::WangTiles<CellType>(*noise_map, std::move(rule),
-                                                 std::move(tileset_constraints));
+        auto grid = tiling::TileGrid<CellType>(noise_map->width, noise_map->height);
+
+        for (auto i = 0; i < noise_map->width * noise_map->height; i++) {
+            grid[i] = grid_assign_rule(noise_map->noise[i]);
+        }
+        /*grid.assign_tile_types(*noise_map, std::move(grid_assign_rule));*/
+        tiling::wang::assign_tile_sprites(grid, tileset_constraints);
 
         auto window_size = ctx->window->get_framebuffer_size<float>();
         const float num_pixels_at_default_zoom = 200.0f;
@@ -94,8 +104,7 @@ class MapGeneration : public Game {
 
         m_quad_storage_buffer = std::make_unique<
             vulkan::buffers::SwapStorageBuffer<graphics_pipeline::quad::QuadPipelineSBO>>(
-            ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT,
-            m_wang_tiles.width() * m_wang_tiles.height());
+            ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, grid.width() * grid.height());
 
         m_descriptor_pool = vulkan::DescriptorPool(
             ctx, vulkan::DescriptorPoolOpts{.max_num_descriptor_sets =
@@ -121,12 +130,12 @@ class MapGeneration : public Game {
             ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
             &quad_descriptor_set_layout, &quad_push_constant_range);
 
-        const auto num_tiles = m_wang_tiles.width() * m_wang_tiles.height();
+        const auto num_tiles = grid.width() * grid.height();
         m_num_instances = 0;
         for (auto i = 0; i < num_tiles; i++) {
-            const int x = i % m_wang_tiles.width();
-            const int y = i / m_wang_tiles.width();
-            const auto tileset_index = m_wang_tiles.lookup_tile(x, y);
+            const int x = i % grid.width();
+            const int y = i / grid.width();
+            const auto tileset_index = grid.get_cell(x, y).sprite_index;
 
             const glm::vec4 uvwt =
                 tileset_index.has_value()

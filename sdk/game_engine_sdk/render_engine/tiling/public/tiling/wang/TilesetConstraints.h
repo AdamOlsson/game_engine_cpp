@@ -1,14 +1,14 @@
 #pragma once
 
 #include "logger/logger.h"
+#include "tiling/TilesetIndex.h"
 #include "tiling/traits.h"
-#include "tiling/wang/TilesetIndex.h"
 #include <iostream>
 #include <optional>
 
 namespace tiling::wang {
 
-template <WangEnumUint8 T> struct TilesetTile {
+template <EnumUint8 T> struct TilesetTile {
     T type;
     struct TilesetTileConstraints {
         std::vector<T> north;
@@ -18,7 +18,7 @@ template <WangEnumUint8 T> struct TilesetTile {
     } constraints;
 };
 
-template <WangEnumUint8 T> struct TilesetKey {
+template <EnumUint8 T> struct TilesetKey {
     T type;
     T north;
     T east;
@@ -37,7 +37,7 @@ template <WangEnumUint8 T> struct TilesetKey {
 };
 
 // Hasing function that supports 32-bit systems
-template <WangEnumUint8 T> struct TilesetKeyHash {
+template <EnumUint8 T> struct TilesetKeyHash {
     std::size_t operator()(const TilesetKey<T> &key) const {
         std::size_t h = 0;
         h ^= std::hash<std::underlying_type_t<T>>{}(
@@ -59,7 +59,7 @@ template <WangEnumUint8 T> struct TilesetKeyHash {
     }
 };
 
-template <WangEnumUint8 T> class TilesetConstraints {
+template <EnumUint8 T> class TilesetConstraints {
   private:
     size_t m_count;
     std::unordered_map<TilesetKey<T>, TilesetIndex, TilesetKeyHash<T>> m_constraints;

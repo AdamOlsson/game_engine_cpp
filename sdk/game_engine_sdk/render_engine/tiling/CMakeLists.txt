@@ -10,14 +10,20 @@ message(STATUS "    Build tests: ${GAME_ENGINE_SDK_BUILD_TEST}")
 
 project(tiling CXX)
 
-add_library(${PROJECT_NAME} INTERFACE)
+file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/public/*.h")
+
+add_library(${PROJECT_NAME} 
+    STATIC
+        ${SOURCES}
+)
 add_library(render_engine::tiling ALIAS ${PROJECT_NAME})
 
-target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 
 target_include_directories(${PROJECT_NAME} 
-    INTERFACE
-    ${CMAKE_CURRENT_SOURCE_DIR}/public
+    PUBLIC 
+        ${CMAKE_CURRENT_SOURCE_DIR}/public
 )
 
 target_link_libraries(${PROJECT_NAME}

@@ -1,6 +1,5 @@
 #pragma once
 #include "image/Image.h"
-#include "logger/logger.h"
 #include <vector>
 
 namespace tiling {
@@ -31,10 +30,6 @@ class NoiseMap {
             reinterpret_cast<uint8_t *>(bytes.data()), bytes.size());
         const auto image_dims = image_data.dimensions;
 
-        /*logger::debug("sizeof(unsigned char): ", sizeof(unsigned char));*/
-        /*logger::debug("sizeof(uint8_t): ", sizeof(uint8_t));*/
-        /*logger::debug("Image Dimensions: ", image_dims);*/
-
         if (image_dims.channels != 1) {
             throw std::runtime_error(
                 std::format("Expected only 1 channel in the image but found {}",
@@ -48,7 +43,6 @@ class NoiseMap {
         noise.reserve(noise_map_size);
         for (auto i = 0; i < noise_map_size; i++) {
             noise.push_back(static_cast<float>(image_data.pixels[i]) / 255.0f);
-            /*logger::debug(std::format("{}: {}", i, noise.back()));*/
         }
 
         return std::make_unique<NoiseMap>(std::move(noise), image_dims.width,

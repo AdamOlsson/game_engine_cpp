@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-namespace tiling::wang {
+namespace tiling {
 struct TilesetIndex {
     unsigned int x;
     unsigned int y;
@@ -24,4 +24,4 @@ struct TilesetIndex {
     }
 };
 
-} // namespace tiling::wang
+} // namespace tiling
