@@ -1,8 +1,9 @@
 #pragma once
 
+#include "tiling/traits.h"
 #include <cstddef>
+#include <iostream>
 #include <vector>
-
 namespace tiling {
 
 template <typename T> class Grid {
@@ -16,6 +17,16 @@ template <typename T> class Grid {
     Grid(const size_t width, const size_t height)
         : m_grid_width(width), m_grid_height(height) {
         m_cells.resize(m_grid_width * m_grid_height);
+    }
+
+    Grid(const std::vector<std::vector<T>> &grid)
+        : m_grid_width(grid.size() > 0 ? grid[0].size() : 0), m_grid_height(grid.size()) {
+        m_cells.reserve(m_grid_width * m_grid_height);
+        for (auto r : grid) {
+            for (auto c : r) {
+                m_cells.push_back(c);
+            }
+        }
     }
 
     T &get_cell(const size_t x, const size_t y) { return m_cells[y * m_grid_width + x]; }

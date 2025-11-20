@@ -9,10 +9,11 @@
 #include <memory>
 
 // CONTINUE:
+// - Implement pathing
+//      - Make use of the search path in example 6
 // - Think about the API for assigning TilesetIndex from WangTiles...
 //      - Do I want to go hardcore and split the render data from logic data? Specifically
 //          storing the TilesetIndex on the Tile
-// - Implement pathing
 // - Remove old geometry pipeline
 
 constexpr size_t TILE_SIZE = 24; // World space

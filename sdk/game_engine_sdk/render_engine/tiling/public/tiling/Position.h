@@ -2,6 +2,8 @@
 
 #include <cstddef>
 #include <functional>
+#include <sstream>
+
 namespace tiling {
 class Position {
   public:
@@ -10,12 +12,22 @@ class Position {
     constexpr Position() = default;
     constexpr Position(int x, int y) : x(x), y(y) {};
 
-    Position operator+(const Position &other) const;
-    bool operator==(const Position &other) const;
-    bool operator<(const Position &other) const;
-
     float manhattan_distance(const Position &other) const;
     float euclidian_distance(const Position &other) const;
+
+    Position operator+(const Position &other) const;
+    bool operator==(const Position &other) const;
+
+    bool operator<(const Position &other) const;
+    friend std::ostream &operator<<(std::ostream &os, const Position &obj) {
+        return os << obj.to_string();
+    }
+
+    std::string to_string() const {
+        std::ostringstream oss;
+        oss << "Position(" << x << ", " << y << ")";
+        return oss.str();
+    }
 };
 
 struct PositionHash {
