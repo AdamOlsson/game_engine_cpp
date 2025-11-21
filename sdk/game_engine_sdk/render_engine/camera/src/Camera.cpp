@@ -153,6 +153,6 @@ glm::mat4 camera::Camera2D::get_view_projection_matrix() {
     return m_projection_matrix * m_view_matrix;
 }
 
-glm::vec2 camera::Camera2D::get_position() { return m_position; }
+camera::WorldPoint2D camera::Camera2D::get_position() { return m_position; }
 float camera::Camera2D::get_rotation() { return m_rotation; }
 float camera::Camera2D::get_zoom() { return m_zoom; }

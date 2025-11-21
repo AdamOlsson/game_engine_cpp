@@ -1,19 +1,19 @@
 #pragma once
 
-#include "tiling/traits.h"
 #include <cstddef>
-#include <iostream>
 #include <vector>
 namespace tiling {
 
 template <typename T> class Grid {
   private:
-    const size_t m_grid_width;
-    const size_t m_grid_height;
+    size_t m_grid_width;
+    size_t m_grid_height;
 
     std::vector<T> m_cells;
 
   public:
+    Grid() = default;
+
     Grid(const size_t width, const size_t height)
         : m_grid_width(width), m_grid_height(height) {
         m_cells.resize(m_grid_width * m_grid_height);
@@ -58,6 +58,11 @@ template <typename T> class Grid {
     auto end() const { return m_cells.end(); }
     auto cbegin() const { return m_cells.cbegin(); }
     auto cend() const { return m_cells.cend(); }
+
+    Grid(Grid &&other) noexcept = default;
+    Grid &operator=(Grid &&other) noexcept = default;
+    Grid(const Grid &other) = default;
+    Grid &operator=(const Grid &other) = default;
 };
 
 } // namespace tiling

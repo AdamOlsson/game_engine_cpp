@@ -4,21 +4,38 @@
 #include "game_engine_sdk/render_engine/ModelMatrix.h"
 #include "graphics_pipeline/geometry/GeometryPipeline.h"
 #include "graphics_pipeline/geometry/GeometryPipelineSBO.h"
+#include "tiling/Position.h"
+#include "tiling/TileGrid.h"
+#include "tiling/search/AStar.h"
 #include "vulkan/DescriptorPool.h"
 #include "window/WindowConfig.h"
 #include <memory>
 
 // CONTINUE:
 // - Implement pathing
-//      - Make use of the search path in example 6
+//      - Add walls
+//      - Handle diagonal walls
+//      - Give user ability to choose from a set of heuristic functions
 // - Think about the API for assigning TilesetIndex from WangTiles...
 //      - Do I want to go hardcore and split the render data from logic data? Specifically
 //          storing the TilesetIndex on the Tile
 // - Remove old geometry pipeline
 
+enum State {
+    Start,
+    Search,
+    ShowSearch,
+};
+
+enum class CellType : uint8_t {};
+
 constexpr size_t TILE_SIZE = 24; // World space
 constexpr auto INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
 constexpr auto ZOOM_SCALE_FACTOR = 0.1f;
+
+struct FrameState {
+    std::vector<size_t> modified_instances;
+};
 
 class ExamplePathing : public Game {
   private:
@@ -42,16 +59,39 @@ class ExamplePathing : public Game {
     size_t m_swap_index;
     size_t m_num_tiles_width;
     size_t m_num_tiles_height;
-    std::array<size_t, 2> m_last_tile_index;
+
+    std::array<FrameState, 2> m_frame_states;
+
+    State m_state;
+    camera::WorldPoint2D m_start;
+    camera::WorldPoint2D m_end;
+    std::vector<tiling::Position> m_path;
+
+    tiling::TileGrid<CellType> m_grid;
 
   public:
     ExamplePathing()
-        : m_swap_index(0), m_last_tile_index({0, 0}),
-          m_mouse_last_position(window::ViewportPoint(-10000, -1000)) {}
+        : m_swap_index(0), m_mouse_last_position(window::ViewportPoint(-10000, -1000)),
+          m_grid(tiling::TileGrid<CellType>(0, 0)) {}
 
     ~ExamplePathing() {};
 
-    void update(float dt) override {};
+    void update(float dt) override {
+        if (m_state == State::Search) {
+            const auto start_tile_x = (m_start.x / TILE_SIZE) + 0.5f;
+            const auto start_tile_y = (m_start.y / TILE_SIZE) + 0.5f;
+            const tiling::Position start_tile =
+                tiling::Position(start_tile_x, start_tile_y);
+
+            const auto end_tile_x = (m_end.x / TILE_SIZE) + 0.5f;
+            const auto end_tile_y = (m_end.y / TILE_SIZE) + 0.5f;
+            const tiling::Position end_tile = tiling::Position(end_tile_x, end_tile_y);
+
+            /*logger::debug("Starting search from ", start_tile, " to ", end_tile);*/
+            m_path = tiling::search::AStar::search(m_grid, start_tile, end_tile);
+            m_state = State::ShowSearch;
+        }
+    };
 
     void setup(std::shared_ptr<vulkan::context::GraphicsContext> &ctx) override {
 
@@ -116,8 +156,10 @@ class ExamplePathing : public Game {
 
         m_tile_instances->transfer();
 
+        m_grid = tiling::TileGrid<CellType>(m_num_tiles_width, m_num_tiles_height);
         m_camera.set_position(camera::WorldPoint2D(
             m_num_tiles_width / 2.0f * TILE_SIZE, m_num_tiles_height / 2.0f * TILE_SIZE));
+        m_start = m_camera.get_position();
     }
 
     void register_mouse_event_handler(vulkan::context::GraphicsContext *ctx) {
@@ -140,11 +182,18 @@ class ExamplePathing : public Game {
                     break;
                 case window::MouseEvent::SCROLL:
                     m_camera.set_relative_zoom(point.y * ZOOM_SCALE_FACTOR);
-
                     break;
                 case window::MouseEvent::LEFT_BUTTON_DOWN:
                     break;
                 case window::MouseEvent::LEFT_BUTTON_UP:
+                    if (m_state == State::Start) {
+                        m_end = m_camera.viewport_to_world(point);
+                        m_state = State::Search;
+                    } else if (m_state == ShowSearch) {
+                        m_start = m_end;
+                        m_path.clear();
+                        m_state = State::Start;
+                    }
                     break;
                 }
             });
@@ -159,25 +208,71 @@ class ExamplePathing : public Game {
 
         // Reset highlight from previous frame
         auto &instance_buffer = m_tile_instances->get_buffer();
-        instance_buffer[m_last_tile_index[m_swap_index]].color =
-            util::colors::TRANSPARENT;
-        instance_buffer.transfer();
-
-        const auto cursor_world_point = m_camera.viewport_to_world(m_mouse_last_position);
-        // Offset by half a tile because tile center is middle of tile, not bottom right
-        const auto tile_x = (cursor_world_point.x / TILE_SIZE) + 0.5;
-        const auto tile_y = (cursor_world_point.y / TILE_SIZE) + 0.5;
-        const auto tile_index =
-            static_cast<size_t>(tile_y) * m_num_tiles_width + static_cast<size_t>(tile_x);
-
-        if (0 <= tile_index && tile_index < m_num_tiles_width * m_num_tiles_height) {
-            auto &instance_buffer = m_tile_instances->get_buffer();
-            instance_buffer[tile_index].color = util::colors::BLUE;
-            instance_buffer.transfer_delta();
-            m_last_tile_index[m_swap_index] = tile_index;
-        } else {
+        const auto modified_instances = m_frame_states[m_swap_index].modified_instances;
+        for (const auto &idx : modified_instances) {
+            instance_buffer[idx].color = util::colors::TRANSPARENT;
         }
 
+        m_frame_states[m_swap_index].modified_instances.clear();
+
+        const auto cursor_world_point = m_camera.viewport_to_world(m_mouse_last_position);
+        // Render tile highlight under cursor
+        // Offset by half a tile because tile center is middle of tile, not bottom right
+        const auto cursor_tile_x = (cursor_world_point.x / TILE_SIZE) + 0.5f;
+        const auto cursor_tile_y = (cursor_world_point.y / TILE_SIZE) + 0.5f;
+        const auto cursor_tile_index =
+            static_cast<size_t>(cursor_tile_y) * m_num_tiles_width +
+            static_cast<size_t>(cursor_tile_x);
+        if (0 <= cursor_tile_index &&
+            cursor_tile_index < m_num_tiles_width * m_num_tiles_height) {
+            auto &instance_buffer = m_tile_instances->get_buffer();
+            instance_buffer[cursor_tile_index].color =
+                util::colors::rgba(1.0f, 1.0f, 1.0f, 0.2f);
+            m_frame_states[m_swap_index].modified_instances.push_back(cursor_tile_index);
+        }
+
+        // Render path
+        for (const auto &pos : m_path) {
+            const auto tile_index = pos.y * m_num_tiles_width + pos.x;
+            if (0 <= tile_index && tile_index < m_num_tiles_width * m_num_tiles_height) {
+                auto &instance_buffer = m_tile_instances->get_buffer();
+                instance_buffer[tile_index].color =
+                    util::colors::rgba(0.0f, 1.0f, 0.0f, 0.4f);
+                m_frame_states[m_swap_index].modified_instances.push_back(tile_index);
+            }
+        }
+
+        // Render start tile
+        const auto start_tile_x = (m_start.x / TILE_SIZE) + 0.5f;
+        const auto start_tile_y = (m_start.y / TILE_SIZE) + 0.5f;
+        const auto start_tile_index =
+            static_cast<size_t>(start_tile_y) * m_num_tiles_width +
+            static_cast<size_t>(start_tile_x);
+        if (0 <= start_tile_index &&
+            start_tile_index < m_num_tiles_width * m_num_tiles_height) {
+            auto &instance_buffer = m_tile_instances->get_buffer();
+            instance_buffer[start_tile_index].color =
+                util::colors::rgba(0.0f, 0.0f, 1.0f, 0.4f);
+            m_frame_states[m_swap_index].modified_instances.push_back(start_tile_index);
+        }
+
+        // Render stop tile
+        if (m_state == State::ShowSearch) {
+            const auto end_tile_x = (m_end.x / TILE_SIZE) + 0.5f;
+            const auto end_tile_y = (m_end.y / TILE_SIZE) + 0.5f;
+            const auto end_tile_index =
+                static_cast<size_t>(end_tile_y) * m_num_tiles_width +
+                static_cast<size_t>(end_tile_x);
+            if (0 <= end_tile_index &&
+                end_tile_index < m_num_tiles_width * m_num_tiles_height) {
+                auto &instance_buffer = m_tile_instances->get_buffer();
+                instance_buffer[end_tile_index].color =
+                    util::colors::rgba(1.0f, 0.0f, 0.0f, 0.4f);
+                m_frame_states[m_swap_index].modified_instances.push_back(end_tile_index);
+            }
+        }
+
+        instance_buffer.transfer_delta();
         auto descriptor = m_descriptor_set.get();
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
         m_pipeline->render(command_buffer, descriptor, &push_constant, m_num_instances);

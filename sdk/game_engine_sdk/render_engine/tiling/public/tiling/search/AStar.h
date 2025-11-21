@@ -37,7 +37,7 @@ class AStar {
 
         while (node.parent != start) {
             reverse_path.push(node.parent);
-            logger::debug("Adding: ", reverse_path.top());
+            /*logger::debug("Adding: ", reverse_path.top());*/
             node = cell_details.at(node.parent);
         }
         reverse_path.push(start);
