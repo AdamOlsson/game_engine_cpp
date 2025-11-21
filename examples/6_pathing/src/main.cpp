@@ -15,7 +15,6 @@
 // - Implement pathing
 //      - Add walls
 //      - Handle diagonal walls
-//      - Give user ability to choose from a set of heuristic functions
 // - Think about the API for assigning TilesetIndex from WangTiles...
 //      - Do I want to go hardcore and split the render data from logic data? Specifically
 //          storing the TilesetIndex on the Tile
