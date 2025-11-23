@@ -76,12 +76,9 @@ class MapGeneration : public Game {
         };
 
         auto grid = tiling::TileGrid<CellType>(noise_map->width, noise_map->height);
-
         for (auto i = 0; i < noise_map->width * noise_map->height; i++) {
             grid[i] = grid_assign_rule(noise_map->noise[i]);
         }
-        /*grid.assign_tile_types(*noise_map, std::move(grid_assign_rule));*/
-        tiling::wang::assign_tile_sprites(grid, tileset_constraints);
 
         auto window_size = ctx->window->get_framebuffer_size<float>();
         const float num_pixels_at_default_zoom = 200.0f;
@@ -133,7 +130,9 @@ class MapGeneration : public Game {
         for (auto i = 0; i < num_tiles; i++) {
             const int x = i % grid.width();
             const int y = i / grid.width();
-            const auto tileset_index = grid.get_cell(x, y).sprite_index;
+
+            const auto tileset_index =
+                tiling::wang::lookup_tile_sprite(grid, tileset_constraints, x, y);
 
             const glm::vec4 uvwt =
                 tileset_index.has_value()

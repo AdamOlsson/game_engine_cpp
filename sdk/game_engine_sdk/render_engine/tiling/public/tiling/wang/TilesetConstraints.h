@@ -105,11 +105,11 @@ template <EnumUint8 T> class TilesetConstraints {
 
     std::optional<TilesetIndex> lookup_constraint(const T type, const T north,
                                                   const T east, const T south,
-                                                  const T west) {
+                                                  const T west) const {
         return lookup_constraint(TilesetKey<T>(type, north, east, south, west));
     }
 
-    std::optional<TilesetIndex> lookup_constraint(const TilesetKey<T> &constraint) {
+    std::optional<TilesetIndex> lookup_constraint(const TilesetKey<T> &constraint) const {
         auto it = m_constraints.find(constraint);
         if (it != m_constraints.end()) {
             return it->second;

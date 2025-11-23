@@ -14,9 +14,6 @@
 // CONTINUE:
 // - Implement pathing
 //      - Add walls
-// - Think about the API for assigning TilesetIndex from WangTiles...
-//      - Do I want to go hardcore and split the render data from logic data? Specifically
-//          storing the TilesetIndex on the Tile
 
 enum State {
     Start,

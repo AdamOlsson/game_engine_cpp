@@ -5,6 +5,7 @@
 
 /// @namespace tiling
 /// Contains tile-based data structure utilities.
+namespace tiling {
 
 /// @class Grid
 /// @brief A 2D grid container that stores elements in row-major order.
@@ -14,8 +15,6 @@
 /// accessed via 2D coordinates (x, y) or linear indices.
 ///
 /// @tparam T The type of elements stored in the grid.
-
-namespace tiling {
 template <typename T> class Grid {
   private:
     size_t m_grid_width;    ///< The number of columns in the grid.

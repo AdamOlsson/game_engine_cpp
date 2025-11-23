@@ -63,13 +63,12 @@ TEST(WangTilesetConstraintTest, Test_BasicTileSetup) {
     for (auto i = 0; i < noise_map.width * noise_map.height; i++) {
         grid[i] = rule(noise_map.noise[i]);
     }
-    tiling::wang::assign_tile_sprites(grid, constraints);
 
-    auto tileset_index = grid.get_cell(1, 1).sprite_index;
+    auto tileset_index = tiling::wang::lookup_tile_sprite(grid, constraints, 1, 1);
     EXPECT_TRUE(tileset_index.has_value());
     ASSERT_EQ(tiling::TilesetIndex(0, 0), tileset_index.value());
 
-    tileset_index = grid.get_cell(2, 1).sprite_index;
+    tileset_index = tiling::wang::lookup_tile_sprite(grid, constraints, 2, 1);
     EXPECT_TRUE(tileset_index.has_value());
     ASSERT_EQ(tiling::TilesetIndex(0, 0), tileset_index.value());
 
@@ -77,6 +76,6 @@ TEST(WangTilesetConstraintTest, Test_BasicTileSetup) {
     // constraint towards the edge of the map. Either I would need to have a
     // this "None" to a wildcard match or even easier, the outer most tiles
     // always have no texture.
-    tileset_index = grid.get_cell(0, 0).sprite_index;
+    tileset_index = tiling::wang::lookup_tile_sprite(grid, constraints, 0, 0);
     EXPECT_FALSE(tileset_index.has_value());
 }
