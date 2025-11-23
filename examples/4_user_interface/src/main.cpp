@@ -1,9 +1,8 @@
 #include "camera/Camera.h"
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
-#include "game_engine_sdk/render_engine/PerformanceWindow.h"
+/*#include "game_engine_sdk/render_engine/PerformanceWindow.h"*/
 #include "game_engine_sdk/render_engine/fonts/Font.h"
-#include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "game_engine_sdk/render_engine/resources/ResourceManager.h"
 #include "game_engine_sdk/render_engine/ui/Button.h"
 #include "game_engine_sdk/render_engine/ui/ElementProperties.h"
@@ -35,12 +34,8 @@ void on_leave_callback(ui::Button &self) {
 class UserInterfaceExample : public Game {
   private:
     ui::UI m_ui;
-    std::unique_ptr<vulkan::SwapChainManager> m_swap_chain_manager;
-    std::unique_ptr<vulkan::CommandBufferManager> m_command_buffer_manager;
 
     vulkan::Sampler m_sampler;
-    std::unique_ptr<graphics_pipeline::GeometryPipeline> m_geometry_pipeline;
-    std::unique_ptr<graphics_pipeline::TextPipeline> m_text_pipeline;
 
     const std::string VERSION_ID = "VERSION";
     const std::string NUMBER_ID = "NUMBER";
@@ -236,91 +231,9 @@ class UserInterfaceExample : public Game {
 
     void update(float dt) override {};
 
-    void render() override {
+    void render() override {};
 
-        if (m_in_settings) {
-            m_ui.get_text_box(INCREMENT_ID).text = std::to_string(m_increment);
-        } else {
-            m_ui.get_text_box(INCREMENT_ID).text = "";
-        }
-
-        auto command_buffer = m_command_buffer_manager->get_command_buffer();
-        vulkan::RenderPass render_pass =
-            m_swap_chain_manager->get_render_pass(command_buffer);
-
-        render_pass.begin();
-
-        m_ui.get_text_box(NUMBER_ID).text = std::to_string(m_number);
-        auto ui_state = m_ui.get_state();
-
-        auto &rectangle_instance_buffer =
-            m_geometry_pipeline->get_rectangle_instance_buffer();
-        auto &character_instance_buffer = m_text_pipeline->get_character_buffer();
-        auto &text_segment_buffer = m_text_pipeline->get_text_segment_buffer();
-
-        rectangle_instance_buffer.clear();
-        character_instance_buffer.clear();
-        text_segment_buffer.clear();
-
-        for (const auto button : ui_state.buttons) {
-            float rotation = 0.0;
-            rectangle_instance_buffer.push_back(
-                graphics_pipeline::GeometryInstanceBufferObject{
-                    .center = button->properties.container.center,
-                    .dimension = button->properties.container.dimension,
-                    .rotation = 0.0f,
-                    .color = button->properties.container.background_color,
-                    .uvwt = glm::vec4(-1.0f),
-                    .border = {
-                        .color = button->properties.container.border.color,
-                        .thickness = button->properties.container.border.thickness,
-                        .radius = button->properties.container.border.radius,
-                    }});
-
-            m_text_pipeline->text_kerning(button->text, button->properties);
-        }
-
-        for (const auto text_box : ui_state.text_boxes) {
-            m_text_pipeline->text_kerning(text_box->text, text_box->properties);
-        }
-
-        PerformanceWindow::get_instance().render(m_geometry_pipeline.get(),
-                                                 m_text_pipeline.get(), command_buffer);
-
-        rectangle_instance_buffer.transfer();
-        character_instance_buffer.transfer();
-        text_segment_buffer.transfer();
-
-        auto camera_transform_matrix = camera::Camera2D::get_default_view_matrix();
-        m_geometry_pipeline->render_rectangles(command_buffer, camera_transform_matrix);
-        m_text_pipeline->render_text(command_buffer);
-
-        render_pass.end_submit_present();
-    };
-
-    void setup(std::shared_ptr<vulkan::context::GraphicsContext> &ctx) override {
-        register_all_fonts();
-        register_all_images();
-        register_all_shaders();
-        m_swap_chain_manager = std::make_unique<vulkan::SwapChainManager>(ctx);
-        m_command_buffer_manager = std::make_unique<vulkan::CommandBufferManager>(
-            ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
-
-        m_sampler = vulkan::Sampler(ctx);
-        m_geometry_pipeline = std::make_unique<graphics_pipeline::GeometryPipeline>(
-            ctx, m_command_buffer_manager.get(), *m_swap_chain_manager,
-            graphics_pipeline::GeometryPipelineOptions{});
-
-        auto font = std::make_unique<Font>(ctx, m_command_buffer_manager.get(),
-                                           "DefaultFont", &m_sampler);
-        m_text_pipeline = std::make_unique<graphics_pipeline::TextPipeline>(
-            ctx, m_command_buffer_manager.get(), *m_swap_chain_manager, std::move(font));
-
-        ctx->window->register_mouse_event_callback(
-            [this](window::MouseEvent e, window::ViewportPoint &p) {
-                this->m_ui.update_state_from_mouse_event(e, p);
-            });
-    }
+    void setup(std::shared_ptr<vulkan::context::GraphicsContext> &ctx) override {}
 };
 
 int main() {
@@ -330,9 +243,6 @@ int main() {
                                               .title = "4_user_interface"}};
 
     auto game = std::make_unique<UserInterfaceExample>();
-    auto game_engine = std::make_unique<GameEngine>(std::move(game), config);
-
-    game_engine->run();
 
     return 0;
 }

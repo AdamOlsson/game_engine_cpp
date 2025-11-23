@@ -3,7 +3,6 @@
 #include "game_engine_sdk/GameEngine.h"
 #include "game_engine_sdk/render_engine/ModelMatrix.h"
 #include "game_engine_sdk/render_engine/TilesetUVWT.h"
-#include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "graphics_pipeline/quad/QuadPipeline.h"
 #include "graphics_pipeline/quad/QuadPipelineDescriptorSet.h"
 #include "graphics_pipeline/quad/QuadPipelineSBO.h"
@@ -24,6 +23,7 @@ constexpr float ZOOM_SCALE_FACTOR = 0.1f;
 constexpr glm::vec2 INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
 constexpr glm::vec2 INVERT_X_AXIS = glm::vec2(-1.0f, 1.0f);
 constexpr glm::vec2 INVERT_Y_AXIS = glm::vec2(1.0f, -1.0f);
+constexpr size_t MAX_FRAMES_IN_FLIGHT = 2;
 
 class MapGeneration : public Game {
   private:
@@ -40,8 +40,6 @@ class MapGeneration : public Game {
         m_quad_descriptor_set;
     std::unique_ptr<graphics_pipeline::quad::QuadPipeline> m_quad_pipeline;
     size_t m_num_instances;
-
-    std::vector<graphics_pipeline::GeometryInstanceBufferObject> m_render_cells;
 
     Texture m_tileset;
     TilesetUVWT m_tileset_uvwt;
@@ -93,8 +91,8 @@ class MapGeneration : public Game {
         register_mouse_event_handler(ctx.get());
 
         m_swap_chain_manager = std::make_unique<vulkan::SwapChainManager>(ctx);
-        m_command_buffer_manager = std::make_unique<vulkan::CommandBufferManager>(
-            ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
+        m_command_buffer_manager =
+            std::make_unique<vulkan::CommandBufferManager>(ctx, MAX_FRAMES_IN_FLIGHT);
 
         m_sampler = vulkan::Sampler(ctx, vulkan::Filter::NEAREST,
                                     vulkan::SamplerAddressMode::CLAMP_TO_BORDER);
@@ -104,14 +102,14 @@ class MapGeneration : public Game {
 
         m_quad_storage_buffer = std::make_unique<
             vulkan::buffers::SwapStorageBuffer<graphics_pipeline::quad::QuadPipelineSBO>>(
-            ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, grid.width() * grid.height());
+            ctx, MAX_FRAMES_IN_FLIGHT, grid.width() * grid.height());
 
         m_descriptor_pool = vulkan::DescriptorPool(
-            ctx, vulkan::DescriptorPoolOpts{.max_num_descriptor_sets =
-                                                graphics_pipeline::MAX_FRAMES_IN_FLIGHT,
-                                            .num_storage_buffers = 1,
-                                            .num_uniform_buffers = 0,
-                                            .num_combined_image_samplers = 1});
+            ctx,
+            vulkan::DescriptorPoolOpts{.max_num_descriptor_sets = MAX_FRAMES_IN_FLIGHT,
+                                       .num_storage_buffers = 1,
+                                       .num_uniform_buffers = 0,
+                                       .num_combined_image_samplers = 1});
 
         m_quad_descriptor_set =
             std::make_unique<graphics_pipeline::quad::QuadPipelineDescriptorSet>(

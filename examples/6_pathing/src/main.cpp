@@ -14,11 +14,9 @@
 // CONTINUE:
 // - Implement pathing
 //      - Add walls
-//      - Handle diagonal walls
 // - Think about the API for assigning TilesetIndex from WangTiles...
 //      - Do I want to go hardcore and split the render data from logic data? Specifically
 //          storing the TilesetIndex on the Tile
-// - Remove old geometry pipeline
 
 enum State {
     Start,
