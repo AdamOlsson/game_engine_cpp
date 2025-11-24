@@ -9,8 +9,15 @@ graphics_pipeline::SwapDescriptorSet::SwapDescriptorSet(
     : m_ctx(ctx), m_capacity(descriptor_sets.size()), m_next(0),
       m_layout(std::move(layout)), m_descriptor_sets(std::move(descriptor_sets)) {}
 
-const vulkan::DescriptorSet graphics_pipeline::SwapDescriptorSet::get() {
+const vulkan::DescriptorSet graphics_pipeline::SwapDescriptorSet::get_next() {
     auto &desc = m_descriptor_sets[m_next];
     m_next = ++m_next % m_capacity;
     return desc;
 }
+
+const vulkan::DescriptorSet graphics_pipeline::SwapDescriptorSet::get_current() {
+    auto &desc = m_descriptor_sets[m_next];
+    return desc;
+}
+
+void graphics_pipeline::SwapDescriptorSet::rotate() { m_next = ++m_next % m_capacity; }

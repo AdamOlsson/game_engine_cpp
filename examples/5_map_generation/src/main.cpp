@@ -3,12 +3,12 @@
 #include "game_engine_sdk/GameEngine.h"
 #include "game_engine_sdk/render_engine/ModelMatrix.h"
 #include "game_engine_sdk/render_engine/TilesetUVWT.h"
-#include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "graphics_pipeline/quad/QuadPipeline.h"
 #include "graphics_pipeline/quad/QuadPipelineDescriptorSet.h"
 #include "graphics_pipeline/quad/QuadPipelineSBO.h"
 #include "tiles.h"
 #include "tiling/NoiseMap.h"
+#include "tiling/TileGrid.h"
 #include "tiling/wang/WangTiles.h"
 #include "vulkan/vulkan_core.h"
 #include "window/WindowConfig.h"
@@ -23,6 +23,7 @@ constexpr float ZOOM_SCALE_FACTOR = 0.1f;
 constexpr glm::vec2 INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
 constexpr glm::vec2 INVERT_X_AXIS = glm::vec2(-1.0f, 1.0f);
 constexpr glm::vec2 INVERT_Y_AXIS = glm::vec2(1.0f, -1.0f);
+constexpr size_t MAX_FRAMES_IN_FLIGHT = 2;
 
 class MapGeneration : public Game {
   private:
@@ -40,16 +41,12 @@ class MapGeneration : public Game {
     std::unique_ptr<graphics_pipeline::quad::QuadPipeline> m_quad_pipeline;
     size_t m_num_instances;
 
-    std::vector<graphics_pipeline::GeometryInstanceBufferObject> m_render_cells;
-
     Texture m_tileset;
     TilesetUVWT m_tileset_uvwt;
 
     bool m_is_right_mouse_pressed = false;
     window::ViewportPoint m_mouse_last_position = window::ViewportPoint();
     camera::Camera2D m_camera;
-
-    wang::WangTiles<CellType> m_wang_tiles;
 
   public:
     MapGeneration() {}
@@ -64,16 +61,24 @@ class MapGeneration : public Game {
         auto noise_map =
             tiling::NoiseMap::unique_from_filepath(ASSET_FILE("noise_map.jpeg"));
 
-        auto rule = [](float value) -> CellType {
+        auto grid_assign_rule = [](float value) -> tiling::Tile<CellType> {
             if (value > 0.5) {
-                return CellType::Wall;
+                return tiling::Tile{
+                    .type = CellType::Wall,
+                    .weight = 9999.0f,
+                };
             } else {
-                return CellType::Grass;
+                return tiling::Tile{
+                    .type = CellType::Grass,
+                    .weight = 1.0f,
+                };
             }
         };
 
-        m_wang_tiles = wang::WangTiles<CellType>(*noise_map, std::move(rule),
-                                                 std::move(tileset_constraints));
+        auto grid = tiling::TileGrid<CellType>(noise_map->width, noise_map->height);
+        for (auto i = 0; i < noise_map->width * noise_map->height; i++) {
+            grid[i] = grid_assign_rule(noise_map->noise[i]);
+        }
 
         auto window_size = ctx->window->get_framebuffer_size<float>();
         const float num_pixels_at_default_zoom = 200.0f;
@@ -83,8 +88,8 @@ class MapGeneration : public Game {
         register_mouse_event_handler(ctx.get());
 
         m_swap_chain_manager = std::make_unique<vulkan::SwapChainManager>(ctx);
-        m_command_buffer_manager = std::make_unique<vulkan::CommandBufferManager>(
-            ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT);
+        m_command_buffer_manager =
+            std::make_unique<vulkan::CommandBufferManager>(ctx, MAX_FRAMES_IN_FLIGHT);
 
         m_sampler = vulkan::Sampler(ctx, vulkan::Filter::NEAREST,
                                     vulkan::SamplerAddressMode::CLAMP_TO_BORDER);
@@ -94,15 +99,14 @@ class MapGeneration : public Game {
 
         m_quad_storage_buffer = std::make_unique<
             vulkan::buffers::SwapStorageBuffer<graphics_pipeline::quad::QuadPipelineSBO>>(
-            ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT,
-            m_wang_tiles.width() * m_wang_tiles.height());
+            ctx, MAX_FRAMES_IN_FLIGHT, grid.width() * grid.height());
 
         m_descriptor_pool = vulkan::DescriptorPool(
-            ctx, vulkan::DescriptorPoolOpts{.max_num_descriptor_sets =
-                                                graphics_pipeline::MAX_FRAMES_IN_FLIGHT,
-                                            .num_storage_buffers = 1,
-                                            .num_uniform_buffers = 0,
-                                            .num_combined_image_samplers = 1});
+            ctx,
+            vulkan::DescriptorPoolOpts{.max_num_descriptor_sets = MAX_FRAMES_IN_FLIGHT,
+                                       .num_storage_buffers = 1,
+                                       .num_uniform_buffers = 0,
+                                       .num_combined_image_samplers = 1});
 
         m_quad_descriptor_set =
             std::make_unique<graphics_pipeline::quad::QuadPipelineDescriptorSet>(
@@ -121,19 +125,21 @@ class MapGeneration : public Game {
             ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
             &quad_descriptor_set_layout, &quad_push_constant_range);
 
-        const auto num_tiles = m_wang_tiles.width() * m_wang_tiles.height();
+        const auto num_tiles = grid.width() * grid.height();
         m_num_instances = 0;
         for (auto i = 0; i < num_tiles; i++) {
-            const int x = i % m_wang_tiles.width();
-            const int y = i / m_wang_tiles.width();
-            const auto tileset_index = m_wang_tiles.lookup_tile(x, y);
+            const int x = i % grid.width();
+            const int y = i / grid.width();
+
+            const auto tileset_index =
+                tiling::wang::lookup_tile_sprite(grid, tileset_constraints, x, y);
 
             const glm::vec4 uvwt =
                 tileset_index.has_value()
                     ? m_tileset_uvwt.uvwt_for_tile_at(tileset_index->x, tileset_index->y)
                     : m_tileset_uvwt.uvwt_for_tile_at(0, 0);
 
-            m_quad_storage_buffer->write(graphics_pipeline::quad::QuadPipelineSBO{
+            m_quad_storage_buffer->push_back(graphics_pipeline::quad::QuadPipelineSBO{
                 .model_matrix = ModelMatrix()
                                     .scale(glm::vec3(CELL_SIZE, CELL_SIZE, 1.0))
                                     .translate(x, y, 0),
@@ -141,6 +147,7 @@ class MapGeneration : public Game {
             });
             m_num_instances++;
         }
+        m_quad_storage_buffer->transfer();
     }
 
     void register_mouse_event_handler(vulkan::context::GraphicsContext *ctx) {
@@ -166,7 +173,6 @@ class MapGeneration : public Game {
 
                     break;
                 case window::MouseEvent::LEFT_BUTTON_DOWN:
-                    logger::debug("mouse last position: ", m_mouse_last_position);
                     break;
                 case window::MouseEvent::LEFT_BUTTON_UP:
                     break;
@@ -187,13 +193,15 @@ class MapGeneration : public Game {
                                 m_num_instances);
 
         render_pass.end_submit_present();
+        m_quad_descriptor_set->rotate();
+        m_quad_storage_buffer->rotate();
     }
 };
 
 int main() {
 
     GameEngineConfig config{
-        .window_config = window::WindowConfig{.dims = window::WindowDimension(960, 960),
+        .window_config = window::WindowConfig{.dims = window::WindowDimension(1080, 960),
                                               .title = "5_map_generation"},
     };
 

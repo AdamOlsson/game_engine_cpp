@@ -1,111 +1,86 @@
 #pragma once
 
-#include "tiling/NoiseMap.h"
+#include "tiling/TileGrid.h"
 #include "tiling/traits.h"
 #include "tiling/wang/TilesetConstraints.h"
-#include <iostream>
-#include <vector>
 
+/// @namespace tiling::wang
+/// Contains Wang tile constraints and lookup functionality for procedural tile-based
+/// generation.
 namespace tiling::wang {
 
-template <WangEnumUint8 T> class WangTiles {
-  private:
-    unsigned int m_grid_width;
-    unsigned int m_grid_height;
-    std::vector<T> m_tiles;
+/// @brief Looks up the appropriate sprite index for a tile based on Wang tile
+/// constraints.
+///
+/// This function implements Wang tile constraint matching by examining the tile types of
+/// neighboring cells and finding a compatible sprite from the tileset that satisfies all
+/// edge constraints. Wang tiles are a procedural texture technique where tile
+/// compatibility is determined by matching edge colors or types between adjacent tiles.
+///
+/// @tparam TileType An unsigned 8-bit enumeration type representing different tile
+/// categories.
+///
+/// @param grid Reference to the tile grid to query for neighboring tile information.
+/// @param constraints Reference to the constraint lookup table that stores valid tile
+///                    combinations based on neighbor tile types.
+/// @param x The column coordinate of the tile to look up.
+/// @param y The row coordinate of the tile to look up.
+///
+/// @return An optional containing the sprite index if a valid sprite matching all
+/// constraints
+///         is found, or an empty optional if no compatible sprite exists.
+///
+/// @details
+/// The function operates as follows:
+/// 1. Retrieves the type of the current tile at (x, y).
+/// 2. Queries the four neighboring cells (left, top, right, bottom) for their tile types.
+/// 3. Treats out-of-bounds neighbors as having type 0xFF (a "None" constraint).
+/// 4. Passes the current tile type and all four neighbor constraints to the lookup table
+///    to find a sprite that satisfies all adjacency requirements.
+///
+/// @note **Known Issue**: Tiles at the edges of the map have a "None" constraint (0xFF)
+///       towards the map boundary. This can cause mismatches if the constraint system
+///       doesn't account for boundary tiles. Potential solutions include:
+///       - Treating "None" as a wildcard that matches any neighbor type
+///       - Restricting outer-most tiles to have no texture (treated specially)
+///       - Defining explicit boundary tile types
+///
+/// @see TilesetConstraints for constraint lookup implementation
+/// @see TileGrid for tile storage and access
+template <EnumUint8 TileType>
+std::optional<TilesetIndex>
+lookup_tile_sprite(TileGrid<TileType> &grid,
+                   const TilesetConstraints<TileType> &constraints, const int x,
+                   const int y) {
 
-    TilesetConstraints<T> m_constraints;
+    const TileType current_type = grid.get_cell(x, y).type;
 
-    std::vector<std::optional<TilesetIndex>> m_tile_sprites;
-
-    std::vector<T> assign_tile_types(const tiling::NoiseMap &noise_map,
-                                     std::function<T(float)> tile_assign_rule) {
-        std::vector<T> cell_types;
-        cell_types.reserve(noise_map.size());
-        for (auto c : noise_map.noise) {
-            cell_types.push_back(tile_assign_rule(c));
-        }
-        return cell_types;
+    // For each cell, find the constraints based on bordering cells
+    TileType left_constraint = static_cast<TileType>(0xFF);
+    if (x - 1 >= 0) {
+        left_constraint = grid.get_cell(x - 1, y).type;
     }
 
-    std::vector<std::optional<TilesetIndex>>
-    assign_tile_sprites(std::vector<T> &cell_types) {
-        std::vector<std::optional<TilesetIndex>> cell_sprites;
-        cell_sprites.reserve(m_grid_width * m_grid_height);
-        for (auto i = 0; i < cell_types.size(); i++) {
-            const int x = i % m_grid_width;
-            const int y = i / m_grid_width;
-
-            const int left = x - 1;
-            const int right = x + 1;
-            const int top = i - m_grid_width;
-            const int bottom = i + m_grid_width;
-
-            const T current_type = cell_types[i];
-
-            // For each cell, find the constraints based on bordering cells
-            T left_constraint = static_cast<T>(0xFF);
-            if (left >= 0) {
-                left_constraint = cell_types[i - 1];
-            }
-
-            T top_constraint = static_cast<T>(0xFF);
-            if (top >= 0) {
-                top_constraint = cell_types[top];
-            }
-
-            T right_constraint = static_cast<T>(0xFF);
-            if (right < m_grid_width) {
-                right_constraint = cell_types[i + 1];
-            }
-
-            T bottom_constraint = static_cast<T>(0xFF);
-            if (bottom < m_grid_width * m_grid_height) {
-                bottom_constraint = cell_types[bottom];
-            }
-
-            // TODO: A problem is that the outer most tiles will always have a "None"
-            // constraint towards the edge of the map. Either I would need to have a
-            // this "None" to a wildcard match or even easier, the outer most tiles
-            // always have no texture.
-            auto tileset_index = m_constraints.lookup_constraint(
-                current_type, top_constraint, right_constraint, bottom_constraint,
-                left_constraint);
-            if (tileset_index) {
-                cell_sprites.push_back(tileset_index.value());
-            } else {
-                cell_sprites.push_back(std::nullopt);
-            }
-        }
-        return cell_sprites;
+    TileType top_constraint = static_cast<TileType>(0xFF);
+    if (y - 1 >= 0) {
+        top_constraint = grid.get_cell(x, y - 1).type;
     }
 
-  public:
-    WangTiles() = default;
-    ~WangTiles() = default;
-    WangTiles(const tiling::NoiseMap &noise_map, std::function<T(float)> tile_assign_rule,
-              TilesetConstraints<T> &&constraints)
-        : m_grid_width(noise_map.width), m_grid_height(noise_map.height),
-          m_constraints(std::move(constraints)) {
-        m_tiles = assign_tile_types(std::move(noise_map), std::move(tile_assign_rule));
-        m_tile_sprites = assign_tile_sprites(m_tiles);
+    TileType right_constraint = static_cast<TileType>(0xFF);
+    if (x + 1 < grid.width()) {
+        right_constraint = grid.get_cell(x + 1, y).type;
     }
 
-    unsigned int width() { return m_grid_width; }
-    unsigned int height() { return m_grid_height; }
-
-    void print_cell_type() {
-        for (auto i = 0; i < m_tiles.size(); i++) {
-            std::cout << m_tiles[i] << " ";
-            if ((i + 1) % m_grid_width == 0) {
-                std::cout << std::endl;
-            }
-        }
-        std::cout << std::endl;
+    TileType bottom_constraint = static_cast<TileType>(0xFF);
+    if (y + 1 < grid.width() * grid.height()) {
+        bottom_constraint = grid.get_cell(x, y + 1).type;
     }
 
-    std::optional<TilesetIndex> lookup_tile(const unsigned int x, const unsigned int y) {
-        return m_tile_sprites[y * m_grid_width + x];
-    }
-};
+    // TODO: A problem is that the outer most tiles will always have a
+    // "None" constraint towards the edge of the map. Either I would need to
+    // have a this "None" to a wildcard match or even easier, the outer most
+    // tiles always have no texture.
+    return constraints.lookup_constraint(current_type, top_constraint, right_constraint,
+                                         bottom_constraint, left_constraint);
+}
 } // namespace tiling::wang

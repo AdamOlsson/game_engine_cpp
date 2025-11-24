@@ -32,7 +32,9 @@ class SwapDescriptorSet {
     ~SwapDescriptorSet() = default;
 
     vulkan::DescriptorSetLayout &get_layout() { return m_layout; }
-    const vulkan::DescriptorSet get();
+    const vulkan::DescriptorSet get_next();
+    const vulkan::DescriptorSet get_current();
+    void rotate();
 };
 
 } // namespace graphics_pipeline

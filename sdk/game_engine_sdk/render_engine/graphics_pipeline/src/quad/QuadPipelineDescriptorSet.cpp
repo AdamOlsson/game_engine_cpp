@@ -45,5 +45,13 @@ graphics_pipeline::quad::QuadPipelineDescriptorSet::handle() {
 }
 
 vulkan::DescriptorSet graphics_pipeline::quad::QuadPipelineDescriptorSet::get_next() {
-    return m_descriptor_set.get();
+    return m_descriptor_set.get_next();
+}
+
+vulkan::DescriptorSet graphics_pipeline::quad::QuadPipelineDescriptorSet::get_current() {
+    return m_descriptor_set.get_current();
+}
+
+void graphics_pipeline::quad::QuadPipelineDescriptorSet::rotate() {
+    m_descriptor_set.rotate();
 }

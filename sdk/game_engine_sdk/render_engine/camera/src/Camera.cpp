@@ -19,8 +19,9 @@
 #endif
 
 camera::Camera2D::Camera2D()
-    : m_position(glm::vec2(0.0f)), m_rotation(0.0f), m_zoom(1.0f), m_viewport_width(1.0f),
-      m_viewport_height(1.0f), m_view_matrix(glm::mat4(1.0f)), m_base_orho_height(2.0f),
+    : m_position(glm::vec2(0.0f)), m_rotation(0.0f), m_zoom(1.0f), m_max_zoom(10.0f),
+      m_min_zoom(0.1f), m_viewport_width(1.0f), m_viewport_height(1.0f),
+      m_view_matrix(glm::mat4(1.0f)), m_base_orho_height(2.0f),
       m_projection_matrix(glm::mat4(1.0f)) {
     update_view_matrix();
     update_projection_matrix();
@@ -28,13 +29,16 @@ camera::Camera2D::Camera2D()
 
 camera::Camera2D::Camera2D(const float viewport_width, const float viewport_height,
                            const float base_ortho_height)
-    : m_position(glm::vec2(0.0f)), m_rotation(0.0f), m_zoom(1.0f),
-      m_viewport_width(viewport_width), m_viewport_height(viewport_height),
-      m_base_orho_height(base_ortho_height) {
+    : m_position(glm::vec2(0.0f)), m_rotation(0.0f), m_zoom(1.0f), m_max_zoom(10.0f),
+      m_min_zoom(0.1f), m_viewport_width(viewport_width),
+      m_viewport_height(viewport_height), m_base_orho_height(base_ortho_height) {
     update_view_matrix();
     update_projection_matrix();
 }
 
+void camera::Camera2D::set_position(const float x, const float y) {
+    m_position = glm::vec2(x, y);
+}
 void camera::Camera2D::set_position(const WorldPoint2D &new_pos) { m_position = new_pos; }
 void camera::Camera2D::set_position(WorldPoint2D &&new_pos) {
     m_position = std::move(new_pos);
@@ -52,12 +56,15 @@ void camera::Camera2D::set_rotation(const float new_rot) { m_rotation = new_rot;
 void camera::Camera2D::set_relative_rotation(const float delta) { m_rotation += delta; }
 
 void camera::Camera2D::set_zoom(const float new_zoom) {
-    m_zoom = glm::clamp(new_zoom, 0.1f, 10.0f);
+    m_zoom = glm::clamp(new_zoom, m_min_zoom, m_max_zoom);
 }
 
 void camera::Camera2D::set_relative_zoom(const float delta) {
-    m_zoom = glm::clamp(m_zoom + delta, 0.1f, 10.0f);
+    m_zoom = glm::clamp(m_zoom + delta, m_min_zoom, m_max_zoom);
 }
+
+void camera::Camera2D::configure_max_zoom(const float max) { m_max_zoom = max; }
+void camera::Camera2D::configure_min_zoom(const float min) { m_min_zoom = min; }
 
 void camera::Camera2D::update_view_matrix() {
 
@@ -118,12 +125,19 @@ camera::Camera2D::viewport_delta_to_world(const ViewportPoint &viewport_delta) c
 
 camera::WorldPoint2D
 camera::Camera2D::viewport_to_world(const ViewportPoint &viewport_pos) const {
-    const auto view_space = glm::vec2(viewport_pos.x / (m_viewport_width / 2.0f),
-                                      viewport_pos.y / (m_viewport_height / 2.0f));
-    const auto world_space = glm::inverse(m_projection_matrix * m_view_matrix) *
-                             glm::vec4(view_space, 0.0f, 1.0f);
+    float aspect = m_viewport_width / m_viewport_height;
+    float ortho_height = m_base_orho_height / m_zoom;
+    float ortho_width = ortho_height * aspect;
 
-    return glm::vec2(world_space.x, world_space.y);
+    float world_per_pixel_x = ortho_width / m_viewport_width;
+    float world_per_pixel_y = ortho_height / m_viewport_height;
+
+    glm::vec2 world_offset =
+        glm::vec2(viewport_pos.x * world_per_pixel_x, viewport_pos.y * world_per_pixel_y);
+
+    glm::vec2 world_pos = m_position + world_offset;
+
+    return world_pos;
 }
 
 glm::mat4 camera::Camera2D::get_projection_matrix() {
@@ -139,6 +153,6 @@ glm::mat4 camera::Camera2D::get_view_projection_matrix() {
     return m_projection_matrix * m_view_matrix;
 }
 
-glm::vec2 camera::Camera2D::get_position() { return m_position; }
+camera::WorldPoint2D camera::Camera2D::get_position() { return m_position; }
 float camera::Camera2D::get_rotation() { return m_rotation; }
 float camera::Camera2D::get_zoom() { return m_zoom; }

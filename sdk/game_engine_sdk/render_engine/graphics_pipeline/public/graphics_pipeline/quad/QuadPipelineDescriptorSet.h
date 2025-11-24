@@ -30,6 +30,8 @@ class QuadPipelineDescriptorSet {
     vulkan::DescriptorSetLayout &get_layout();
     SwapDescriptorSet *handle();
     vulkan::DescriptorSet get_next();
+    vulkan::DescriptorSet get_current();
+    void rotate();
 };
 
 } // namespace graphics_pipeline::quad

@@ -44,7 +44,7 @@ class QuadPipeline {
         }
 
         if (descriptor_set) {
-            const vulkan::DescriptorSet set = descriptor_set->get_next();
+            const vulkan::DescriptorSet set = descriptor_set->get_current();
             vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                                     m_pipeline_layout, 0, 1, &set, 0, nullptr);
         }

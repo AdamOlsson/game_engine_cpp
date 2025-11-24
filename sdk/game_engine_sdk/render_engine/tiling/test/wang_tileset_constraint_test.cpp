@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
+#include "tiling/TilesetIndex.h"
 #include "tiling/wang/TilesetConstraints.h"
-#include "tiling/wang/TilesetIndex.h"
 
 enum class CellType : uint8_t {
     None,
@@ -26,7 +26,7 @@ inline std::ostream &operator<<(std::ostream &os, CellType type) {
 TEST(WangTilesetConstraintTest, Test_AddSingleConstraint) {
     auto constraints = tiling::wang::TilesetConstraints<CellType>();
     constraints.add_constraint(
-        tiling::wang::TilesetIndex(0, 0),
+        tiling::TilesetIndex(0, 0),
         tiling::wang::TilesetTile<CellType>{.type = CellType::Wall,
                                             .constraints = {
                                                 .north = {CellType::Wall},
@@ -37,13 +37,13 @@ TEST(WangTilesetConstraintTest, Test_AddSingleConstraint) {
     auto tileset_index = constraints.lookup_constraint(
         CellType::Wall, CellType::Wall, CellType::Wall, CellType::Wall, CellType::Wall);
     EXPECT_TRUE(tileset_index.has_value());
-    ASSERT_EQ(tiling::wang::TilesetIndex(0, 0), tileset_index.value());
+    ASSERT_EQ(tiling::TilesetIndex(0, 0), tileset_index.value());
 }
 
 TEST(WangTilesetConstraintTest, Test_AllPermutationsGenerated) {
     {
         auto constraints = tiling::wang::TilesetConstraints<CellType>();
-        constraints.add_constraint(tiling::wang::TilesetIndex(0, 0),
+        constraints.add_constraint(tiling::TilesetIndex(0, 0),
                                    tiling::wang::TilesetTile<CellType>{
                                        .type = CellType::Wall,
                                        .constraints = {
@@ -59,18 +59,18 @@ TEST(WangTilesetConstraintTest, Test_AllPermutationsGenerated) {
             constraints.lookup_constraint(CellType::Wall, CellType::Wall, CellType::Wall,
                                           CellType::Wall, CellType::Wall);
         EXPECT_TRUE(tileset_index_1.has_value());
-        ASSERT_EQ(tiling::wang::TilesetIndex(0, 0), tileset_index_1.value());
+        ASSERT_EQ(tiling::TilesetIndex(0, 0), tileset_index_1.value());
 
         auto tileset_index_2 =
             constraints.lookup_constraint(CellType::Wall, CellType::Grass, CellType::Wall,
                                           CellType::Wall, CellType::Wall);
         EXPECT_TRUE(tileset_index_2.has_value());
-        ASSERT_EQ(tiling::wang::TilesetIndex(0, 0), tileset_index_2.value());
+        ASSERT_EQ(tiling::TilesetIndex(0, 0), tileset_index_2.value());
     }
 
     {
         auto constraints = tiling::wang::TilesetConstraints<CellType>();
-        constraints.add_constraint(tiling::wang::TilesetIndex(0, 0),
+        constraints.add_constraint(tiling::TilesetIndex(0, 0),
                                    tiling::wang::TilesetTile<CellType>{
                                        .type = CellType::Wall,
                                        .constraints = {
@@ -86,18 +86,18 @@ TEST(WangTilesetConstraintTest, Test_AllPermutationsGenerated) {
             constraints.lookup_constraint(CellType::Wall, CellType::Wall, CellType::Wall,
                                           CellType::Wall, CellType::Wall);
         EXPECT_TRUE(tileset_index_1.has_value());
-        ASSERT_EQ(tiling::wang::TilesetIndex(0, 0), tileset_index_1.value());
+        ASSERT_EQ(tiling::TilesetIndex(0, 0), tileset_index_1.value());
 
         auto tileset_index_2 =
             constraints.lookup_constraint(CellType::Wall, CellType::Wall, CellType::Grass,
                                           CellType::Wall, CellType::Wall);
         EXPECT_TRUE(tileset_index_2.has_value());
-        ASSERT_EQ(tiling::wang::TilesetIndex(0, 0), tileset_index_2.value());
+        ASSERT_EQ(tiling::TilesetIndex(0, 0), tileset_index_2.value());
     }
 
     {
         auto constraints = tiling::wang::TilesetConstraints<CellType>();
-        constraints.add_constraint(tiling::wang::TilesetIndex(0, 0),
+        constraints.add_constraint(tiling::TilesetIndex(0, 0),
                                    tiling::wang::TilesetTile<CellType>{
                                        .type = CellType::Wall,
                                        .constraints = {
@@ -113,18 +113,18 @@ TEST(WangTilesetConstraintTest, Test_AllPermutationsGenerated) {
             constraints.lookup_constraint(CellType::Wall, CellType::Wall, CellType::Wall,
                                           CellType::Wall, CellType::Wall);
         EXPECT_TRUE(tileset_index_1.has_value());
-        ASSERT_EQ(tiling::wang::TilesetIndex(0, 0), tileset_index_1.value());
+        ASSERT_EQ(tiling::TilesetIndex(0, 0), tileset_index_1.value());
 
         auto tileset_index_2 =
             constraints.lookup_constraint(CellType::Wall, CellType::Wall, CellType::Wall,
                                           CellType::Grass, CellType::Wall);
         EXPECT_TRUE(tileset_index_2.has_value());
-        ASSERT_EQ(tiling::wang::TilesetIndex(0, 0), tileset_index_2.value());
+        ASSERT_EQ(tiling::TilesetIndex(0, 0), tileset_index_2.value());
     }
 
     {
         auto constraints = tiling::wang::TilesetConstraints<CellType>();
-        constraints.add_constraint(tiling::wang::TilesetIndex(0, 0),
+        constraints.add_constraint(tiling::TilesetIndex(0, 0),
                                    tiling::wang::TilesetTile<CellType>{
                                        .type = CellType::Wall,
                                        .constraints = {
@@ -140,13 +140,13 @@ TEST(WangTilesetConstraintTest, Test_AllPermutationsGenerated) {
             constraints.lookup_constraint(CellType::Wall, CellType::Wall, CellType::Wall,
                                           CellType::Wall, CellType::Wall);
         EXPECT_TRUE(tileset_index_1.has_value());
-        ASSERT_EQ(tiling::wang::TilesetIndex(0, 0), tileset_index_1.value());
+        ASSERT_EQ(tiling::TilesetIndex(0, 0), tileset_index_1.value());
 
         auto tileset_index_2 =
             constraints.lookup_constraint(CellType::Wall, CellType::Wall, CellType::Wall,
                                           CellType::Wall, CellType::Grass);
         EXPECT_TRUE(tileset_index_2.has_value());
-        ASSERT_EQ(tiling::wang::TilesetIndex(0, 0), tileset_index_2.value());
+        ASSERT_EQ(tiling::TilesetIndex(0, 0), tileset_index_2.value());
     }
 }
 
@@ -164,8 +164,7 @@ TEST(WangTilesetConstraintTest,
                 .west = {CellType::Wall},
             },
     };
-    constraints.add_constraint(tiling::wang::TilesetIndex(0, 0),
-                               std::move(wall_constraint));
+    constraints.add_constraint(tiling::TilesetIndex(0, 0), std::move(wall_constraint));
 
     auto grass_constraint = tiling::wang::TilesetTile<CellType>{
         .type = CellType::Grass,
@@ -177,16 +176,15 @@ TEST(WangTilesetConstraintTest,
                 .west = {CellType::Wall},
             },
     };
-    constraints.add_constraint(tiling::wang::TilesetIndex(1, 1),
-                               std::move(grass_constraint));
+    constraints.add_constraint(tiling::TilesetIndex(1, 1), std::move(grass_constraint));
 
     auto tileset_index_wall = constraints.lookup_constraint(
         CellType::Wall, CellType::Wall, CellType::Wall, CellType::Wall, CellType::Wall);
     EXPECT_TRUE(tileset_index_wall.has_value());
-    ASSERT_EQ(tiling::wang::TilesetIndex(0, 0), tileset_index_wall.value());
+    ASSERT_EQ(tiling::TilesetIndex(0, 0), tileset_index_wall.value());
 
     auto tileset_index_grass = constraints.lookup_constraint(
         CellType::Grass, CellType::Wall, CellType::Wall, CellType::Wall, CellType::Wall);
     EXPECT_TRUE(tileset_index_grass.has_value());
-    ASSERT_EQ(tiling::wang::TilesetIndex(1, 1), tileset_index_grass.value());
+    ASSERT_EQ(tiling::TilesetIndex(1, 1), tileset_index_grass.value());
 }

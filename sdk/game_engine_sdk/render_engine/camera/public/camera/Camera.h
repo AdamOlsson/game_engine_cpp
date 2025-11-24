@@ -12,6 +12,9 @@ class Camera2D {
     float m_rotation;
     float m_zoom;
 
+    float m_max_zoom;
+    float m_min_zoom;
+
     float m_viewport_width;
     float m_viewport_height;
     float m_base_orho_height;
@@ -28,6 +31,7 @@ class Camera2D {
              const float base_ortho_height);
     ~Camera2D() = default;
 
+    void set_position(const float x, const float y);
     void set_position(const WorldPoint2D &new_pos);
     void set_position(WorldPoint2D &&new_pos);
 
@@ -39,6 +43,9 @@ class Camera2D {
 
     void set_zoom(const float new_zoom);
     void set_relative_zoom(const float delta);
+
+    void configure_max_zoom(const float max);
+    void configure_min_zoom(const float min);
 
     glm::mat4 get_view_matrix();
     glm::mat4 get_projection_matrix();

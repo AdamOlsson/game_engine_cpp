@@ -48,32 +48,34 @@ TEST(WangTilesetConstraintTest, Test_BasicTileSetup) {
             .south = {CellType::Grass, CellType::Grass},
             .west = {CellType::Grass, CellType::Wall},
         }};
-    constraints.add_constraint(tiling::wang::TilesetIndex(0, 0),
-                               std::move(wall_constraints));
+    constraints.add_constraint(tiling::TilesetIndex(0, 0), std::move(wall_constraints));
 
-    auto rule = [](float value) -> CellType {
+    auto rule = [](float value) -> tiling::Tile<CellType> {
         if (value > 0.5) {
-            return CellType::Wall;
+            return tiling::Tile{.type = CellType::Wall};
         } else {
-            return CellType::Grass;
+            return tiling::Tile{.type = CellType::Grass};
         }
     };
 
-    auto wang =
-        tiling::wang::WangTiles<CellType>(noise_map, rule, std::move(constraints));
+    auto grid = tiling::TileGrid<CellType>(noise_map.width, noise_map.height);
 
-    auto tileset_index = wang.lookup_tile(1, 1);
-    EXPECT_TRUE(tileset_index.has_value());
-    ASSERT_EQ(tiling::wang::TilesetIndex(0, 0), tileset_index.value());
+    for (auto i = 0; i < noise_map.width * noise_map.height; i++) {
+        grid[i] = rule(noise_map.noise[i]);
+    }
 
-    tileset_index = wang.lookup_tile(2, 1);
+    auto tileset_index = tiling::wang::lookup_tile_sprite(grid, constraints, 1, 1);
     EXPECT_TRUE(tileset_index.has_value());
-    ASSERT_EQ(tiling::wang::TilesetIndex(0, 0), tileset_index.value());
+    ASSERT_EQ(tiling::TilesetIndex(0, 0), tileset_index.value());
+
+    tileset_index = tiling::wang::lookup_tile_sprite(grid, constraints, 2, 1);
+    EXPECT_TRUE(tileset_index.has_value());
+    ASSERT_EQ(tiling::TilesetIndex(0, 0), tileset_index.value());
 
     // TODO: A problem is that the outer most tiles will always have a "None"
     // constraint towards the edge of the map. Either I would need to have a
     // this "None" to a wildcard match or even easier, the outer most tiles
     // always have no texture.
-    tileset_index = wang.lookup_tile(0, 0);
+    tileset_index = tiling::wang::lookup_tile_sprite(grid, constraints, 0, 0);
     EXPECT_FALSE(tileset_index.has_value());
 }

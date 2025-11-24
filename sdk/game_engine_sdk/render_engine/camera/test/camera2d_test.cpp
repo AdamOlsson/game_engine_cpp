@@ -1,5 +1,5 @@
 #include "camera/Camera.h"
-#include "util/io.h"
+#include "logger/io.h"
 #include <gtest/gtest.h>
 
 TEST(Camera2DTest, Test_SetRelativeCameraZoomOffOrigo) {

@@ -1,13 +1,16 @@
 #include "game_engine_sdk/render_engine/graphics_pipeline/TextPipeline.h"
 #include "game_engine_sdk/render_engine/Geometry.h"
 #include "game_engine_sdk/render_engine/descriptors/SwapDescriptorSetBuilder.h"
-#include "game_engine_sdk/render_engine/graphics_pipeline/GeometryPipeline.h"
 #include "game_engine_sdk/render_engine/graphics_pipeline/GraphicsPipelineBuilder.h"
 #include "game_engine_sdk/render_engine/resources/ResourceManager.h"
 #include "game_engine_sdk/render_engine/resources/shaders/fragment/text/text.h"
 #include "game_engine_sdk/render_engine/resources/shaders/vertex/text/text.h"
 #include "vulkan/DescriptorPool.h"
 #include <cstring>
+
+namespace {
+constexpr size_t MAX_FRAMES_IN_FLIGHT = 2;
+}
 
 graphics_pipeline::TextPipeline::TextPipeline(
     std::shared_ptr<vulkan::context::GraphicsContext> ctx,
@@ -16,9 +19,9 @@ graphics_pipeline::TextPipeline::TextPipeline(
     : m_ctx(ctx), m_font(std::move(font)),
       m_character_buffers(
           vulkan::buffers::SwapStorageBuffer<CharacterInstanceBufferObject>(
-              ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 1024)),
+              ctx, MAX_FRAMES_IN_FLIGHT, 1024)),
       m_text_segment_buffers(vulkan::buffers::SwapStorageBuffer<TextSegmentBufferObject>(
-          ctx, graphics_pipeline::MAX_FRAMES_IN_FLIGHT, 16)),
+          ctx, MAX_FRAMES_IN_FLIGHT, 16)),
       m_vertex_buffer(vulkan::buffers::VertexBuffer(ctx, Geometry::quad_vertices,
                                                     command_buffer_manager)),
       m_index_buffer(vulkan::buffers::IndexBuffer(ctx, Geometry::quad_indices,
@@ -31,7 +34,7 @@ graphics_pipeline::TextPipeline::TextPipeline(
         vulkan::DescriptorImageInfo(m_font->font_atlas.view(), m_font->sampler)};
 
     m_descriptor_set =
-        SwapDescriptorSetBuilder(graphics_pipeline::MAX_FRAMES_IN_FLIGHT)
+        SwapDescriptorSetBuilder(MAX_FRAMES_IN_FLIGHT)
             .add_storage_buffer(0, vulkan::DescriptorBufferInfo::from_vector(
                                        m_character_buffers.get_buffer_references()))
             .add_uniform_buffer(1,
