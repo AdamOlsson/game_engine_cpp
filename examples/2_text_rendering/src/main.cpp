@@ -83,8 +83,12 @@ struct SFntHeader {
 SFntHeader read_sfnt_header(std::ifstream &stream) {
     uint32_t tag = read_uint32(stream);
 
-    if (tag != OTTO && tag != TTF) {
-        throw std::runtime_error("OpenType Collection files not supported.");
+    if (tag == TTCF) {
+        throw std::runtime_error("OpenType Collection files are not supported.");
+    }
+
+    if (tag == TTF) {
+        throw std::runtime_error("OpenType outline types are not supported.");
     }
 
     auto header = SFntHeader{
@@ -112,7 +116,10 @@ SFntHeader read_sfnt_header(std::ifstream &stream) {
 }
 
 int main() {
-    auto otf_filestream = open_filestream(ASSET_FILE("ftystrategycidencv.otf"));
+    /*auto otf_filestream = open_filestream(ASSET_FILE("ftystrategycidencv.otf"));*/
+    /*auto otf_filestream = open_filestream(ASSET_FILE("dustismo-roman-italic.ttf"));*/
+    auto otf_filestream =
+        open_filestream(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
 
     const auto sfnt_header = read_sfnt_header(otf_filestream);
     std::cout << sfnt_header << std::endl;

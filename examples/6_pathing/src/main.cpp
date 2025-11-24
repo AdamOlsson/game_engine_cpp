@@ -11,11 +11,7 @@
 #include "window/WindowConfig.h"
 #include <memory>
 
-// CONTINUE:
-// - Implement pathing
-//      - Add walls
-
-enum State {
+enum SearchState {
     Start,
     Search,
     ShowSearch,
@@ -26,6 +22,7 @@ enum class CellType : uint8_t {};
 constexpr size_t TILE_SIZE = 24; // World space
 constexpr auto INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
 constexpr auto ZOOM_SCALE_FACTOR = 0.1f;
+constexpr auto WALL_WEIGHT = 100000.0f;
 
 struct FrameState {
     std::vector<size_t> modified_instances;
@@ -39,6 +36,8 @@ class ExamplePathing : public Game {
     vulkan::DescriptorPool m_descriptor_pool;
 
     bool m_is_right_mouse_pressed = false;
+    bool m_is_left_mouse_pressed = false;
+    bool m_is_left_shift_pressed = false;
     window::ViewportPoint m_mouse_last_position = window::ViewportPoint();
     camera::Camera2D m_camera;
 
@@ -56,10 +55,11 @@ class ExamplePathing : public Game {
 
     std::array<FrameState, 2> m_frame_states;
 
-    State m_state;
+    SearchState m_state;
     camera::WorldPoint2D m_start;
     camera::WorldPoint2D m_end;
     std::vector<tiling::Position> m_path;
+    std::set<tiling::Position> m_walls;
 
     tiling::TileGrid<CellType> m_grid;
 
@@ -71,7 +71,7 @@ class ExamplePathing : public Game {
     ~ExamplePathing() {};
 
     void update(float dt) override {
-        if (m_state == State::Search) {
+        if (m_state == SearchState::Search) {
             const auto start_tile_x = (m_start.x / TILE_SIZE) + 0.5f;
             const auto start_tile_y = (m_start.y / TILE_SIZE) + 0.5f;
             const tiling::Position start_tile =
@@ -81,9 +81,17 @@ class ExamplePathing : public Game {
             const auto end_tile_y = (m_end.y / TILE_SIZE) + 0.5f;
             const tiling::Position end_tile = tiling::Position(end_tile_x, end_tile_y);
 
+            for (const auto &wall : m_walls) {
+                if (wall == start_tile || wall == end_tile) {
+                    continue;
+                }
+                auto &cell = m_grid.get_cell(wall.x, wall.y);
+                cell.weight = WALL_WEIGHT;
+            }
+
             /*logger::debug("Starting search from ", start_tile, " to ", end_tile);*/
             m_path = tiling::search::AStar::search(m_grid, start_tile, end_tile);
-            m_state = State::ShowSearch;
+            m_state = SearchState::ShowSearch;
         }
     };
 
@@ -97,6 +105,7 @@ class ExamplePathing : public Game {
         m_camera.configure_min_zoom(0.2f);
         m_camera.set_zoom(0.4f);
         register_mouse_event_handler(ctx.get());
+        register_keyboard_event_handler(ctx.get());
 
         m_swap_chain_manager = std::make_unique<vulkan::SwapChainManager>(ctx);
         m_command_buffer_manager = std::make_unique<vulkan::CommandBufferManager>(ctx, 2);
@@ -167,7 +176,13 @@ class ExamplePathing : public Game {
                     m_is_right_mouse_pressed = false;
                     break;
                 case window::MouseEvent::CURSOR_MOVED:
-                    if (m_is_right_mouse_pressed) {
+                    if (m_is_left_shift_pressed && m_is_left_mouse_pressed) {
+                        // Recaalculate the cursor position to a tile
+                        const auto world_point = m_camera.viewport_to_world(point);
+                        const auto tile_x = (world_point.x / TILE_SIZE) + 0.5f;
+                        const auto tile_y = (world_point.y / TILE_SIZE) + 0.5f;
+                        m_walls.insert(tiling::Position(tile_x, tile_y));
+                    } else if (!m_is_left_shift_pressed && m_is_right_mouse_pressed) {
                         auto world_delta = m_camera.viewport_delta_to_world(
                             point - m_mouse_last_position);
                         m_camera.set_relative_position(world_delta * INVERT_AXISES);
@@ -178,16 +193,37 @@ class ExamplePathing : public Game {
                     m_camera.set_relative_zoom(point.y * ZOOM_SCALE_FACTOR);
                     break;
                 case window::MouseEvent::LEFT_BUTTON_DOWN:
+                    m_is_left_mouse_pressed = true;
                     break;
-                case window::MouseEvent::LEFT_BUTTON_UP:
-                    if (m_state == State::Start) {
+                case window::MouseEvent::LEFT_BUTTON_UP: {
+
+                    if (m_is_left_shift_pressed) {
+                        break;
+                    }
+
+                    if (m_state == SearchState::Start) {
                         m_end = m_camera.viewport_to_world(point);
-                        m_state = State::Search;
+                        m_state = SearchState::Search;
                     } else if (m_state == ShowSearch) {
                         m_start = m_end;
                         m_path.clear();
-                        m_state = State::Start;
+                        m_state = SearchState::Start;
                     }
+                    m_is_left_mouse_pressed = false;
+                    break;
+                }
+                }
+            });
+    }
+
+    void register_keyboard_event_handler(vulkan::context::GraphicsContext *ctx) {
+        ctx->window->register_keyboard_event_callback(
+            [this](window::KeyEvent &key, window::KeyState &state) {
+                switch (key) {
+                case window::KeyEvent::LEFT_SHIFT:
+                    m_is_left_shift_pressed = state == window::KeyState::DOWN;
+                    break;
+                default:
                     break;
                 }
             });
@@ -209,20 +245,13 @@ class ExamplePathing : public Game {
 
         m_frame_states[m_swap_index].modified_instances.clear();
 
-        const auto cursor_world_point = m_camera.viewport_to_world(m_mouse_last_position);
-        // Render tile highlight under cursor
-        // Offset by half a tile because tile center is middle of tile, not bottom right
-        const auto cursor_tile_x = (cursor_world_point.x / TILE_SIZE) + 0.5f;
-        const auto cursor_tile_y = (cursor_world_point.y / TILE_SIZE) + 0.5f;
-        const auto cursor_tile_index =
-            static_cast<size_t>(cursor_tile_y) * m_num_tiles_width +
-            static_cast<size_t>(cursor_tile_x);
-        if (0 <= cursor_tile_index &&
-            cursor_tile_index < m_num_tiles_width * m_num_tiles_height) {
-            auto &instance_buffer = m_tile_instances->get_buffer();
-            instance_buffer[cursor_tile_index].color =
-                util::colors::rgba(1.0f, 1.0f, 1.0f, 0.2f);
-            m_frame_states[m_swap_index].modified_instances.push_back(cursor_tile_index);
+        // Render walls
+        for (const auto &wall : m_walls) {
+            const auto wall_tile_index = static_cast<size_t>(wall.y) * m_num_tiles_width +
+                                         static_cast<size_t>(wall.x);
+            instance_buffer[wall_tile_index].color =
+                util::colors::rgba(0.8f, 0.8f, 0.8f, 1.0f);
+            m_frame_states[m_swap_index].modified_instances.push_back(wall_tile_index);
         }
 
         // Render path
@@ -251,7 +280,7 @@ class ExamplePathing : public Game {
         }
 
         // Render stop tile
-        if (m_state == State::ShowSearch) {
+        if (m_state == SearchState::ShowSearch) {
             const auto end_tile_x = (m_end.x / TILE_SIZE) + 0.5f;
             const auto end_tile_y = (m_end.y / TILE_SIZE) + 0.5f;
             const auto end_tile_index =
@@ -264,6 +293,26 @@ class ExamplePathing : public Game {
                     util::colors::rgba(1.0f, 0.0f, 0.0f, 0.4f);
                 m_frame_states[m_swap_index].modified_instances.push_back(end_tile_index);
             }
+        }
+
+        const auto cursor_world_point = m_camera.viewport_to_world(m_mouse_last_position);
+        // Render tile highlight under cursor
+        // Offset by half a tile because tile center is middle of tile, not bottom right
+        const auto cursor_tile_x = (cursor_world_point.x / TILE_SIZE) + 0.5f;
+        const auto cursor_tile_y = (cursor_world_point.y / TILE_SIZE) + 0.5f;
+        const auto cursor_tile_index =
+            static_cast<size_t>(cursor_tile_y) * m_num_tiles_width +
+            static_cast<size_t>(cursor_tile_x);
+        if (0 <= cursor_tile_index &&
+            cursor_tile_index < m_num_tiles_width * m_num_tiles_height) {
+            auto &instance_buffer = m_tile_instances->get_buffer();
+            auto &current_color = instance_buffer[cursor_tile_index].color;
+            if (current_color == util::colors::TRANSPARENT) {
+                current_color = util::colors::rgba(0.2f, 0.2f, 0.2f, 1.0f);
+            } else {
+                current_color.a = 0.2f;
+            }
+            m_frame_states[m_swap_index].modified_instances.push_back(cursor_tile_index);
         }
 
         instance_buffer.transfer_delta();
@@ -280,6 +329,18 @@ class ExamplePathing : public Game {
 };
 
 int main() {
+
+    std::cout << "\n";
+    std::cout << "╔════════════════════════════════════════════════════════════╗\n";
+    std::cout << "║                        🎯 CONTROLS                         ║\n";
+    std::cout << "╚════════════════════════════════════════════════════════════╝\n";
+    std::cout << "\n";
+    std::cout << "  ① Left Click once to search from blue to clicked tile\n";
+    std::cout << "\n";
+    std::cout << "  ② Left Click again to remove\n";
+    std::cout << "\n";
+    std::cout << "  ③ Hold left Shift and click & drag to create obstacles over tiles\n";
+    std::cout << "\n";
 
     GameEngineConfig config{
         .window_config = window::WindowConfig{.dims = window::WindowDimension(1920, 960),
