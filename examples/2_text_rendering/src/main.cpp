@@ -31,26 +31,27 @@ int main() {
         }
 
         otf_filestream.seekg(t.offset);
-
-        std::cout << " # " << t.table_tag << std::endl;
+        std::cout << "Seeking to " << t.offset << " (0x" << std::hex << t.offset << ")"
+                  << std::endl;
+        /*std::cout << " # " << t.table_tag << std::endl;*/
 
         if (t.table_tag == "head") {
             // TODO: Calculate checksum of TableRecord
             const auto font_table_head =
                 FontTableHead::read_font_table_head(otf_filestream);
-            std::cout << " - " << font_table_head << std::endl;
+            /*std::cout << " - " << font_table_head << std::endl;*/
 
         } else if (t.table_tag == "hhea") {
             const auto font_table_hhea =
                 FontTableHhea::read_font_table_hhea(otf_filestream);
-            std::cout << " - " << font_table_hhea << std::endl;
+            /*std::cout << " - " << font_table_hhea << std::endl;*/
 
         } else if (t.table_tag == "cmap") {
             const auto font_table_cmap =
                 cmap::FontTableCmap::read_font_table_cmap(otf_filestream);
-            std::cout << " - " << font_table_cmap << std::endl;
+            /*std::cout << " - " << font_table_cmap << std::endl;*/
             for (const auto &record : *font_table_cmap.encoding_records) {
-                std::cout << " -- " << record << std::endl;
+                /*std::cout << " -- " << record << std::endl;*/
             }
 
         } else if (t.table_tag ==

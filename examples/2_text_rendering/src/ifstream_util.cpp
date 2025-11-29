@@ -57,3 +57,10 @@ std::vector<char> read_n_bytes(std::ifstream &stream, const size_t n) {
     stream.read(buffer.data(), n);
     return buffer;
 }
+
+std::unique_ptr<std::vector<uint8_t>> read_n_bytes_unique(std::ifstream &stream,
+                                                          const size_t n) {
+    auto buffer = std::make_unique<std::vector<uint8_t>>(n);
+    stream.read(reinterpret_cast<char *>(buffer->data()), n);
+    return buffer;
+}
