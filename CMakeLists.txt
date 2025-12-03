@@ -45,6 +45,7 @@ if(GAME_ENGINE_SDK_BUILD_TEST)
 endif()
 
 set(GAME_ENGINE_SDK_BUILD_RENDER_ENGINE ON CACHE BOOL "" FORCE)
+set(RENDER_ENGINE_BUILD_FONT ON CACHE BOOL "" FORCE)
 set(RENDER_ENGINE_BUILD_IMAGE ON CACHE BOOL "" FORCE)
 set(RENDER_ENGINE_BUILD_CAMERA ON CACHE BOOL "" FORCE)
 set(RENDER_ENGINE_BUILD_TILING ON CACHE BOOL "" FORCE)
@@ -78,6 +79,7 @@ target_link_libraries(${PROJECT_NAME}
         glfw
         sdk::logger
         sdk::util
+        render_engine::font
         render_engine::image
         render_engine::camera
         render_engine::tiling

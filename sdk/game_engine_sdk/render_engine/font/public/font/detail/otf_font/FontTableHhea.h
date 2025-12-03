@@ -1,13 +1,13 @@
 #pragma once
 
-#include "ifstream_util.h"
+#include "font/detail/ifstream_util.h"
 #include <cstdint>
 #include <fstream>
 #include <sstream>
 
 // Documentation
 // https://learn.microsoft.com/en-us/typography/opentype/spec/hhea
-
+namespace font::detail::otf_font {
 struct FontTableHhea {
     uint16_t major_version = 0;
     uint16_t minor_version = 0;
@@ -80,3 +80,4 @@ struct FontTableHhea {
         return os << obj.to_string();
     }
 };
+} // namespace font::detail::otf_font

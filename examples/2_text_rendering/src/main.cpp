@@ -1,10 +1,9 @@
-
-#include "FontTableCFF.h"
-#include "FontTableCmap.h"
-#include "FontTableHead.h"
-#include "FontTableHhea.h"
-#include "SfntHeader.h"
-#include "ifstream_util.h"
+#include "font/detail/ifstream_util.h"
+#include "font/detail/otf_font/FontTableCmap.h"
+#include "font/detail/otf_font/FontTableHead.h"
+#include "font/detail/otf_font/FontTableHhea.h"
+#include "font/detail/otf_font/SfntHeader.h"
+#include "font/detail/otf_font/cff/FontTableCFF.h"
 
 #include <iostream>
 
@@ -16,10 +15,11 @@
 int main() {
     /*auto otf_filestream = open_filestream(ASSET_FILE("ftystrategycidencv.otf"));*/
     /*auto otf_filestream = open_filestream(ASSET_FILE("dustismo-roman-italic.ttf"));*/
-    auto otf_filestream =
-        open_filestream(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
+    auto otf_filestream = font::detail::open_filestream(
+        ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
 
-    const auto sfnt_header = SFntHeader::read_sfnt_header(otf_filestream);
+    const auto sfnt_header =
+        font::detail::otf_font::SFntHeader::read_sfnt_header(otf_filestream);
     std::cout << sfnt_header << std::endl;
 
     std::cout << "Found tables:" << std::endl;
@@ -38,17 +38,20 @@ int main() {
         if (t.table_tag == "head") {
             // TODO: Calculate checksum of TableRecord
             const auto font_table_head =
-                FontTableHead::read_font_table_head(otf_filestream);
+                font::detail::otf_font::FontTableHead::read_font_table_head(
+                    otf_filestream);
             /*std::cout << " - " << font_table_head << std::endl;*/
 
         } else if (t.table_tag == "hhea") {
             const auto font_table_hhea =
-                FontTableHhea::read_font_table_hhea(otf_filestream);
+                font::detail::otf_font::FontTableHhea::read_font_table_hhea(
+                    otf_filestream);
             /*std::cout << " - " << font_table_hhea << std::endl;*/
 
         } else if (t.table_tag == "cmap") {
             const auto font_table_cmap =
-                cmap::FontTableCmap::read_font_table_cmap(otf_filestream);
+                font::detail::otf_font::cmap::FontTableCmap::read_font_table_cmap(
+                    otf_filestream);
             /*std::cout << " - " << font_table_cmap << std::endl;*/
             for (const auto &record : *font_table_cmap.encoding_records) {
                 /*std::cout << " -- " << record << std::endl;*/
@@ -57,8 +60,9 @@ int main() {
         } else if (t.table_tag ==
                    "CFF ") { // Note the whitespace at the end of the string
             const auto font_table_cff =
-                cff::FontTableCFF::read_font_table_cff(otf_filestream);
-            std::cout << " - " << font_table_cff << std::endl;
+                font::detail::otf_font::cff::FontTableCFF::read_font_table_cff(
+                    otf_filestream);
+            /*std::cout << " - " << font_table_cff << std::endl;*/
         }
     }
 

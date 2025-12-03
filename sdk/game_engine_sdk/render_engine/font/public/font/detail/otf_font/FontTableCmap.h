@@ -1,10 +1,10 @@
 #pragma once
 
-#include "ifstream_util.h"
+#include "font/detail/ifstream_util.h"
 #include <cstdint>
 #include <sstream>
 
-namespace cmap {
+namespace font::detail::otf_font::cmap {
 struct FontTableEncodingRecord {
     uint16_t platform_id = 0;
     uint16_t encoding_id = 0;
@@ -76,4 +76,4 @@ struct FontTableCmap {
 
 struct Subtable {};
 
-} // namespace cmap
+} // namespace font::detail::otf_font::cmap

@@ -1,10 +1,11 @@
 #pragma once
 
-#include "ifstream_util.h"
+#include "font/detail/ifstream_util.h"
 #include <cstdint>
 #include <fstream>
 #include <sstream>
 
+namespace font::detail::otf_font {
 struct FontTableHead {
     uint16_t major_version = 0;
     uint16_t minor_version = 0;
@@ -78,3 +79,4 @@ struct FontTableHead {
         return os << obj.to_string();
     }
 };
+} // namespace font::detail::otf_font

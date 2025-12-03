@@ -2,7 +2,7 @@
 
 #include <array>
 #include <string>
-
+namespace font::detail::otf_font::cff {
 constexpr int N_STD_STRING = 391;
 constexpr std::array<std::string, N_STD_STRING> CFF_STANDARD_STRINGS = {{
     ".notdef",
@@ -397,3 +397,4 @@ constexpr std::array<std::string, N_STD_STRING> CFF_STANDARD_STRINGS = {{
     "Roman",
     "Semibold",
 }};
+} // namespace font::detail::otf_font::cff

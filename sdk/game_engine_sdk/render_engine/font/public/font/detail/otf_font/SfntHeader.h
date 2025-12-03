@@ -1,12 +1,13 @@
 #pragma once
 
-#include "ifstream_util.h"
+#include "font/detail/ifstream_util.h"
 #include "logger/io.h"
 #include <cstdint>
 #include <iostream>
 #include <sstream>
 #include <string>
 
+namespace font::detail::otf_font {
 constexpr uint32_t TTCF = 0x74746366;
 constexpr uint32_t OTTO = 0x4F54544F;
 constexpr uint32_t TTF = 0x00010000;
@@ -117,3 +118,4 @@ struct SFntHeader {
         return header;
     }
 };
+} // namespace font::detail::otf_font

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <fstream>
 #include <iostream>
+namespace font::detail {
 std::ifstream open_filestream(const std::string &filename);
 
 uint32_t read_uint32(std::ifstream &stream);
@@ -27,3 +28,5 @@ template <typename It> void print_iter(It begin, It end) {
         std::cout << *it;
     }
 }
+
+}; // namespace font::detail
