@@ -59,6 +59,7 @@ graphics_pipeline::GraphicsPipeline graphics_pipeline::GraphicsPipelineBuilder::
     vulkan::PipelineLayout layout = vulkan::PipelineLayout(
         ctx, m_descriptor_set_layout, std::move(push_constant_ranges));
     vulkan::Pipeline pipeline =
-        vulkan::Pipeline(ctx, layout, vertex_shader, fragment_shader, swap_chain_manager);
+        vulkan::Pipeline(ctx, layout, vertex_shader, fragment_shader, swap_chain_manager,
+                         vulkan::PipelineOpts{});
     return GraphicsPipeline(std::move(layout), std::move(pipeline));
 }

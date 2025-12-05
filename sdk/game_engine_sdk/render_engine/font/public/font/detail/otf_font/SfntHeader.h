@@ -1,7 +1,7 @@
 #pragma once
 
 #include "font/detail/ifstream_util.h"
-#include "logger/io.h"
+#include "util/assert.h"
 #include <cstdint>
 #include <iostream>
 #include <sstream>

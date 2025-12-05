@@ -8,8 +8,7 @@ vulkan::buffers::VertexBuffer::VertexBuffer() {}
 vulkan::buffers::VertexBuffer::VertexBuffer(
     std::shared_ptr<vulkan::context::GraphicsContext> ctx,
     const std::vector<Vertex> &vertices, CommandBufferManager *command_buffer_manager)
-    : m_ctx(ctx), size(sizeof(Vertex) * vertices.size()),
-      num_vertices(num_vertices = size / sizeof(Vertex)) {
+    : m_ctx(ctx), size(sizeof(Vertex) * vertices.size()), num_vertices(vertices.size()) {
 
     auto [graphics_queue, _] = m_ctx->get_device_queues();
 

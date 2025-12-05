@@ -25,6 +25,10 @@ class ModelMatrix {
     ModelMatrix &scale(const float x, const float y, const float z);
     ModelMatrix &scale(const glm::vec3 &vec);
     ModelMatrix &scale(const glm::vec3 &&vec);
+    template <StaticCastableToFloat T> ModelMatrix &scale(const T value) {
+        m_matrix = glm::scale(m_matrix, glm::vec3(static_cast<float>(value)));
+        return *this;
+    }
 
     ModelMatrix &rotate(const float angle, const glm::vec3 &axis);
 

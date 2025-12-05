@@ -6,10 +6,12 @@ vulkan::Pipeline::Pipeline(std::shared_ptr<vulkan::context::GraphicsContext> ctx
                            PipelineLayout &layout,
                            const ShaderModule &vertex_shader_module,
                            const ShaderModule &fragment_shader_module,
-                           SwapChainManager &swap_chain_manager)
+                           SwapChainManager &swap_chain_manager,
+                           const PipelineOpts &&opts)
     : m_ctx(ctx),
       m_pipeline(create_graphics_pipeline(&layout, vertex_shader_module,
-                                          fragment_shader_module, swap_chain_manager)) {}
+                                          fragment_shader_module, swap_chain_manager,
+                                          std::move(opts))) {}
 
 vulkan::Pipeline::~Pipeline() {
     if (m_pipeline == VK_NULL_HANDLE) {
@@ -39,16 +41,8 @@ vulkan::Pipeline &vulkan::Pipeline::operator=(Pipeline &&other) noexcept {
 
 VkPipeline vulkan::Pipeline::create_graphics_pipeline(
     PipelineLayout *layout, const ShaderModule &vertex_shader_module,
-    const ShaderModule &fragment_shader_module, SwapChainManager &swap_chain_manager) {
-    // Note from tutorial:
-    // There is one more (optional) member, pSpecializationInfo, which we won't
-    // be using here, but is worth discussing. It allows you to specify values
-    // for shader constants. You can use a single shader module where its
-    // behavior can be configured at pipeline creation by specifying different
-    // values for the constants used in it. This is more efficient than
-    // configuring the shader using variables at render time, because the
-    // compiler can do optimizations like eliminating if statements that depend
-    // on these values
+    const ShaderModule &fragment_shader_module, SwapChainManager &swap_chain_manager,
+    const PipelineOpts &&opts) {
 
     VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -77,7 +71,7 @@ VkPipeline vulkan::Pipeline::create_graphics_pipeline(
 
     VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    inputAssembly.topology = opts.assembler.topology;
     inputAssembly.primitiveRestartEnable = VK_FALSE;
 
     VkViewport viewport{};
@@ -109,7 +103,7 @@ VkPipeline vulkan::Pipeline::create_graphics_pipeline(
     rasterizer.depthClampEnable = VK_FALSE;
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
     // Using any mode other than fill requires enabling a GPU feature.
-    rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+    rasterizer.polygonMode = opts.rasterizer.polygon_mode;
     rasterizer.lineWidth = 1.0f;
     rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
     rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;

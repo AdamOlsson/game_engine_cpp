@@ -9,6 +9,7 @@
 namespace font::detail::otf_font::cff {
 
 struct Glyph {
+    std::string name;
     std::vector<std::pair<int, int>> points;
 };
 
@@ -66,11 +67,13 @@ struct Type2Charstring {
         /*}*/
         /*std::cout << "\n";*/
 
-        auto glyph = decode_glyph(encoded_glyph_seq);
-        return {glyph};
+        auto points = decode_glyph(encoded_glyph_seq);
+
+        return {Glyph{.name = std::move(glyph_name), .points = std::move(points)}};
     }
 
-    static Glyph decode_glyph(const std::span<uint8_t> &encoded_glyph_seq) {
+    static std::vector<std::pair<int, int>>
+    decode_glyph(const std::span<uint8_t> &encoded_glyph_seq) {
 
         std::vector<std::stack<int>> value_stacks;
         std::vector<int> operators;
@@ -83,7 +86,7 @@ struct Type2Charstring {
             operators.push_back(operator_);
         }
 
-        auto glyph = Glyph{};
+        std::vector<std::pair<int, int>> points;
         int x = 0;
         int y = 0;
         const auto num_operators = operators.size();
@@ -91,6 +94,7 @@ struct Type2Charstring {
             const int oper = operators[i];
             auto &values = value_stacks[i];
             switch (oper) {
+                // TODO: What do HSteam hint mean?
             case Type2HintOperators::HStem: {
                 const auto num_pairs = (values.size() - 2) / 2;
                 std::vector<std::pair<int, int>> dys{};
@@ -123,7 +127,7 @@ struct Type2Charstring {
                 values.pop();
                 x += dx1;
                 y += dy1;
-                glyph.points.emplace_back(x, y);
+                points.emplace_back(x, y);
                 std::cout << std::format("{} {} rmoveto", dx1, dy1) << std::endl;
                 break;
             }
@@ -154,7 +158,7 @@ struct Type2Charstring {
                     ds.emplace_back(dxa, dya);
                     x += dxa;
                     y += dya;
-                    glyph.points.emplace_back(x, y);
+                    points.emplace_back(x, y);
                 }
                 // This is all for print
                 std::string str;
@@ -192,8 +196,8 @@ struct Type2Charstring {
                          "Error: glyph sequence still has an unprocessed value");
         });
 
-        glyph.points.shrink_to_fit();
-        return glyph;
+        points.shrink_to_fit();
+        return points;
     }
 
     template <std::input_iterator Iter>

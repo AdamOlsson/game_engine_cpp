@@ -1,6 +1,6 @@
 #pragma once
 
-#include "logger/io.h"
+#include "util/assert.h"
 #include <cstdint>
 namespace font::detail::otf_font::cff {
 struct CFFDict {

@@ -5,7 +5,7 @@
 #include "CFFStandardStrings.h"
 #include "Type2Charstring.h"
 #include "font/detail/ifstream_util.h"
-#include "logger/io.h"
+#include "util/assert.h"
 #include <cstdint>
 #include <fstream>
 #include <iostream>
@@ -53,7 +53,6 @@ struct FontTableCFF {
         OffSize off_size = 0;
     } header;
 
-    /*CFFIndex name; // TODO: This should only be a string*/
     std::string name;
 
     struct Top {
@@ -117,6 +116,13 @@ struct FontTableCFF {
             read_charsets_data(stream, charstrings_index.count, string_index);
 
         cff.glyphs = Type2Charstring::parse(charstrings_index, charset);
+
+        auto g = cff.glyphs[0];
+        std::cout << std::format("Glyph '{}': ", g.name);
+        for (auto i : cff.glyphs[0].points) {
+            std::cout << std::format("({},{}) ", i.first, i.second);
+        }
+        std::cout << std::endl;
 
         return cff;
     }

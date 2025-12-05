@@ -21,8 +21,15 @@ execute_process(
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     RESULT_VARIABLE result
 )
+
 execute_process(
     COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/src/geometry/shaders/compile_shaders.py
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    RESULT_VARIABLE result
+)
+
+execute_process(
+    COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/src/text/shaders/compile_shaders.py
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     RESULT_VARIABLE result
 )
@@ -53,4 +60,5 @@ target_link_libraries(${PROJECT_NAME}
         sdk::util
         glm::glm
         render_engine::vulkan
+        render_engine::font
 )

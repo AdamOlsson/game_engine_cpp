@@ -1,6 +1,7 @@
 #include "game_engine_sdk/render_engine/ModelMatrix.h"
 
-ModelMatrix::ModelMatrix() : m_matrix(glm::mat4(1.0f)) {}
+ModelMatrix::ModelMatrix()
+    : m_matrix(glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f))) {}
 
 ModelMatrix::ModelMatrix(const glm::mat4 &mat) : m_matrix(mat) {}
 

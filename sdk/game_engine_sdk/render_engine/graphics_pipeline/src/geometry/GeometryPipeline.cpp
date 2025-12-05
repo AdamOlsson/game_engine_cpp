@@ -32,5 +32,6 @@ graphics_pipeline::geometry::GeometryPipeline::GeometryPipeline(
 
     m_pipeline = vulkan::Pipeline(
         ctx, m_pipeline_layout, vulkan::ShaderModule(ctx, vert->bytes(), vert->length()),
-        vulkan::ShaderModule(ctx, frag->bytes(), frag->length()), *swap_chain_manager);
+        vulkan::ShaderModule(ctx, frag->bytes(), frag->length()), *swap_chain_manager,
+        vulkan::PipelineOpts{});
 }
