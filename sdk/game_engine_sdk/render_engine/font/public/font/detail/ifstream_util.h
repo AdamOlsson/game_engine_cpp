@@ -23,6 +23,9 @@ std::vector<char> read_n_bytes(std::ifstream &stream, const size_t n);
 std::unique_ptr<std::vector<uint8_t>> read_n_bytes_unique(std::ifstream &stream,
                                                           const size_t n);
 
+std::vector<uint16_t> read_n_uint16(std::ifstream &stream, const size_t n);
+std::vector<int16_t> read_n_int16(std::ifstream &stream, const size_t n);
+
 template <typename It> void print_iter(It begin, It end) {
     for (It it = begin; it != end; ++it) {
         std::cout << *it;

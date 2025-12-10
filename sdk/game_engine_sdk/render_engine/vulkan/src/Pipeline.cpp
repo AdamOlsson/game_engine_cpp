@@ -86,8 +86,7 @@ VkPipeline vulkan::Pipeline::create_graphics_pipeline(
     scissor.offset = {0, 0};
     scissor.extent = swap_chain_manager.m_swap_chain.m_extent;
 
-    std::vector<VkDynamicState> dynamicStates = {VK_DYNAMIC_STATE_VIEWPORT,
-                                                 VK_DYNAMIC_STATE_SCISSOR};
+    std::vector<VkDynamicState> dynamicStates = opts.dynamic_states.states;
     VkPipelineDynamicStateCreateInfo dynamicState{};
     dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());

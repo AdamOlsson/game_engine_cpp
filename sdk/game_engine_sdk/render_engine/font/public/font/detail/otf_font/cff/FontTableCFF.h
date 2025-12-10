@@ -79,7 +79,7 @@ struct FontTableCFF {
 
     static FontTableCFF read_font_table_cff(std::ifstream &stream) {
         const auto start_cff_data = stream.tellg();
-        std::cout << "Start CFF data: 0x" << start_cff_data << std::endl;
+        /*std::cout << "Start CFF data: 0x" << start_cff_data << std::endl;*/
         auto cff = FontTableCFF{
             .header =
                 {
@@ -117,12 +117,12 @@ struct FontTableCFF {
 
         cff.glyphs = Type2Charstring::parse(charstrings_index, charset);
 
-        auto g = cff.glyphs[0];
-        std::cout << std::format("Glyph '{}': ", g.name);
-        for (auto i : cff.glyphs[0].points) {
-            std::cout << std::format("({},{}) ", i.first, i.second);
-        }
-        std::cout << std::endl;
+        /*auto g = cff.glyphs[0];*/
+        /*std::cout << std::format("Glyph '{}': ", g.name);*/
+        /*for (auto i : cff.glyphs[0].points) {*/
+        /*    std::cout << std::format("({},{}) ", i.first, i.second);*/
+        /*}*/
+        /*std::cout << std::endl;*/
 
         return cff;
     }

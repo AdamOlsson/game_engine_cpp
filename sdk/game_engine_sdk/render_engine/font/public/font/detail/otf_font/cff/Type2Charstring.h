@@ -53,20 +53,24 @@ struct Type2Charstring {
     static std::vector<Glyph> parse(const CFFIndex &charstring_index,
                                     const std::vector<std::string> &charset) {
 
-        const auto num_glyphs = charstring_index.count;
-        auto char_z = 58;
+        /*const auto num_glyphs = charstring_index.count;*/
         /*for (auto i = 0; i < num_glyphs; i++) {*/
-        /*for (auto i = 0; i < 59; i++) {*/
-        auto i = char_z;
-        const auto glyph_name = charset[i];
-        const auto encoded_glyph_seq = charstring_index[i];
-
-        /*std::cout << glyph_name << ": ";*/
-        /*for (auto i : encoded_glyph_seq) {*/
-        /*    std::cout << std::dec << static_cast<int>(i) << " ";*/
+        /*    const auto glyph_name = charset[i];*/
+        /*    const auto encoded_glyph_seq = charstring_index[i];*/
+        /*    std::cout << std::format("{}. {}: ", i, glyph_name);*/
+        /*    for (int c : encoded_glyph_seq) {*/
+        /*        std::cout << c << " ";*/
+        /*    }*/
+        /*    std::cout << std::endl;*/
         /*}*/
-        /*std::cout << "\n";*/
 
+        /*auto i = 59; // Z*/
+        /*auto i = 42; // I*/
+        /*auto i = 44; // L*/
+        /*auto i = 76; // l*/
+        auto i = 77;
+        const auto glyph_name = charset[i - 1];
+        const auto encoded_glyph_seq = charstring_index[i];
         auto points = decode_glyph(encoded_glyph_seq);
 
         return {Glyph{.name = std::move(glyph_name), .points = std::move(points)}};
@@ -94,7 +98,6 @@ struct Type2Charstring {
             const int oper = operators[i];
             auto &values = value_stacks[i];
             switch (oper) {
-                // TODO: What do HSteam hint mean?
             case Type2HintOperators::HStem: {
                 const auto num_pairs = (values.size() - 2) / 2;
                 std::vector<std::pair<int, int>> dys{};
@@ -117,6 +120,31 @@ struct Type2Charstring {
                     str += std::format("{{{} {}}},", dys[i].first, dys[i].second);
                 }
                 std::cout << std::format("{} {} {{{}}} hstem", y, dy, str) << std::endl;
+                break;
+            }
+
+            case Type2HintOperators::VStem: {
+                const auto num_pairs = (values.size() - 2) / 2;
+                std::vector<std::pair<int, int>> dxs{};
+                dxs.reserve(num_pairs);
+                for (auto i = 0; i < num_pairs; i++) {
+                    const int dxb = values.top();
+                    values.pop();
+                    const int dxa = values.top();
+                    values.pop();
+                    dxs.emplace_back(dxa, dxb);
+                }
+                const int dx = values.top();
+                values.pop();
+                const int x = values.top();
+                values.pop();
+
+                // This is all for print
+                std::string str;
+                for (size_t i = 0; i < dxs.size(); ++i) {
+                    str += std::format("{{{} {}}},", dxs[i].first, dxs[i].second);
+                }
+                std::cout << std::format("{} {} {{{}}} vstem", x, dx, str) << std::endl;
                 break;
             }
 
@@ -148,18 +176,24 @@ struct Type2Charstring {
 
             case Type2PathConstructOperators::RLineTo: {
                 const auto num_pairs = values.size() / 2;
+                // x1 y1 x2 y2 x3 y3
                 std::vector<std::pair<int, int>> ds{};
                 ds.reserve(num_pairs);
+
                 for (auto i = 0; i < num_pairs; i++) {
                     const int dya = values.top();
                     values.pop();
                     const int dxa = values.top();
                     values.pop();
                     ds.emplace_back(dxa, dya);
-                    x += dxa;
-                    y += dya;
+                }
+
+                for (int i = ds.size() - 1; i >= 0; i--) {
+                    x += ds[i].first;
+                    y += ds[i].second;
                     points.emplace_back(x, y);
                 }
+
                 // This is all for print
                 std::string str;
                 for (size_t i = 0; i < ds.size(); ++i) {
@@ -192,8 +226,10 @@ struct Type2Charstring {
         DEBUG_ASSERT(value_stacks[0].size() == 0,
                      "Error: glyph sequence still has an unprocessed width value");
         DEBUG_CODE(for (auto i = 1; i < value_stacks.size(); i++) {
-            DEBUG_ASSERT(value_stacks[i].size() == 0,
-                         "Error: glyph sequence still has an unprocessed value");
+            DEBUG_ASSERT(
+                value_stacks[i].size() == 0,
+                std::format("Error: glyph sequence {} still has an unprocessed value",
+                            i));
         });
 
         points.shrink_to_fit();

@@ -64,3 +64,21 @@ font::detail::read_n_bytes_unique(std::ifstream &stream, const size_t n) {
     stream.read(reinterpret_cast<char *>(buffer->data()), n);
     return buffer;
 }
+
+std::vector<uint16_t> font::detail::read_n_uint16(std::ifstream &stream, const size_t n) {
+    std::vector<uint16_t> buffer;
+    buffer.reserve(n);
+    for (auto i = 0; i < n; i++) {
+        buffer.push_back(read_uint16(stream));
+    }
+    return buffer;
+}
+
+std::vector<int16_t> font::detail::read_n_int16(std::ifstream &stream, const size_t n) {
+    std::vector<int16_t> buffer;
+    buffer.reserve(n);
+    for (auto i = 0; i < n; i++) {
+        buffer.push_back(read_int16(stream));
+    }
+    return buffer;
+}

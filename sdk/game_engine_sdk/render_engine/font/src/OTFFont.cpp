@@ -31,7 +31,7 @@ font::OTFFont::OTFFont(const std::string &filepath) {
             m_font_table_head =
                 font::detail::otf_font::FontTableHead::read_font_table_head(
                     otf_filestream);
-            /*std::cout << " - " << font_table_head << std::endl;*/
+            /*std::cout << " - " << m_font_table_head << std::endl;*/
 
         } else if (t.table_tag == "hhea") {
             m_font_table_hhea =
@@ -43,10 +43,15 @@ font::OTFFont::OTFFont(const std::string &filepath) {
             const auto font_table_cmap =
                 font::detail::otf_font::cmap::FontTableCmap::read_font_table_cmap(
                     otf_filestream);
+
+            const auto char_I = 73;
+            const auto glyph_id = font_table_cmap.get_glyph_id(char_I);
+            std::cout << "Glyph ID: " << glyph_id << std::endl;
+
             /*std::cout << " - " << font_table_cmap << std::endl;*/
-            for (const auto &record : *font_table_cmap.encoding_records) {
-                /*std::cout << " -- " << record << std::endl;*/
-            }
+            /*for (const auto &record : *font_table_cmap.encoding_records) {*/
+            /*    std::cout << " -- " << record << std::endl;*/
+            /*}*/
 
         } else if (t.table_tag ==
                    "CFF ") { // Note the whitespace at the end of the string

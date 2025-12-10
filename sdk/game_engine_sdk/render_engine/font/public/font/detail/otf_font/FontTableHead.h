@@ -55,7 +55,7 @@ struct FontTableHead {
             << "\tmajor_version: " << major_version << "\n"
             << "\tminor_version: " << minor_version << "\n"
             << "\tfont_revision: 0x" << std::hex << font_revision << std::dec << "\n"
-            << "\tchecksum_adjustment: 0x" << std::hex << checksum_adjustment << std::dec
+            << "\tchecksum_adjustment: " << std::dec << checksum_adjustment << std::dec
             << "\n"
             << "\tmagic_number: 0x" << std::hex << magic_number << std::dec << "\n"
             << "\tflags: 0x" << std::hex << flags << std::dec << "\n"

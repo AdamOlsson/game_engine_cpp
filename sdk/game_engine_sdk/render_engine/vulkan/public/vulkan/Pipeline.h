@@ -16,6 +16,10 @@ struct PipelineOpts {
     struct {
         VkPolygonMode polygon_mode = VK_POLYGON_MODE_FILL;
     } rasterizer;
+    struct {
+        std::vector<VkDynamicState> states{VK_DYNAMIC_STATE_VIEWPORT,
+                                           VK_DYNAMIC_STATE_SCISSOR};
+    } dynamic_states;
 };
 
 class Pipeline {
