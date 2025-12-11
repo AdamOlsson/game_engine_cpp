@@ -16,12 +16,9 @@ constexpr auto ZOOM_SCALE_FACTOR = 0.1f;
 
 // TODO:
 // TextPipeline:
-// - Parse the cmap table in the otf file and use this table when indexing into
-//      Type2Charstring data. Keep in mind (1) to look for the encoding type in the cmap
-//      header and only support unicode, and (2) charstring index is offset by one for its
-//      corresponding value in charstring data.
-// - Validate the parsed points with the online tool. The character "I" does not seem to
+// - Validate the parsed points with the online tool. The character "l" does not seem to
 //      get the same values, maybe that is because of the hstem operator?
+// - Implement all other Type2Charstring operatorrs
 // - Move ModelMatrix class to sdk
 
 class ExampleTextRendering : public Game {

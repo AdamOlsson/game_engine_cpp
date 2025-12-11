@@ -45,7 +45,9 @@ font::OTFFont::OTFFont(const std::string &filepath) {
                     otf_filestream);
 
             const auto char_I = 73;
-            const auto glyph_id = font_table_cmap.get_glyph_id(char_I);
+            const auto char_l = 0x006C;
+            const auto c = char_l;
+            const auto glyph_id = font_table_cmap.get_glyph_id(c);
             std::cout << "Glyph ID: " << glyph_id << std::endl;
 
             /*std::cout << " - " << font_table_cmap << std::endl;*/

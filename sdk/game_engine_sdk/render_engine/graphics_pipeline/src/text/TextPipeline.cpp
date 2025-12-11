@@ -3,16 +3,6 @@
 #include "shaders/text_vertex_shader.h"
 #include "vulkan/vulkan_core.h"
 
-namespace {
-/*const std::vector<uint16_t> m_quad_indices = {0, 1, 2, 0, 2, 3};*/
-/*const std::vector<Vertex> m_quad_vertices = {*/
-/*    Vertex(-0.5f, -0.5f, 0.0f),*/
-/*    Vertex(-0.5f, 0.5f, 0.0f),*/
-/*    Vertex(0.5f, 0.5f, 0.0f),*/
-/*    Vertex(0.5f, -0.5f, 0.0f),*/
-/*};*/
-} // namespace
-
 graphics_pipeline::text::TextPipeline::TextPipeline(
     std::shared_ptr<vulkan::context::GraphicsContext> ctx,
     vulkan::CommandBufferManager *command_buffer_manager,
@@ -44,7 +34,7 @@ void graphics_pipeline::text::TextPipeline::load_font(
     for (const auto &glyph : font.m_font_table_cff.glyphs) {
         for (const auto &point : glyph.points) {
             vertices.emplace_back(static_cast<float>(point.first),
-                                  static_cast<float>(point.second), 0.0f);
+                                  -1.0f * static_cast<float>(point.second), 0.0f);
         }
     }
 

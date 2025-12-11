@@ -117,12 +117,12 @@ struct FontTableCFF {
 
         cff.glyphs = Type2Charstring::parse(charstrings_index, charset);
 
-        /*auto g = cff.glyphs[0];*/
-        /*std::cout << std::format("Glyph '{}': ", g.name);*/
-        /*for (auto i : cff.glyphs[0].points) {*/
-        /*    std::cout << std::format("({},{}) ", i.first, i.second);*/
-        /*}*/
-        /*std::cout << std::endl;*/
+        auto g = cff.glyphs[0];
+        std::cout << std::format("Glyph '{}': ", g.name);
+        for (auto i : cff.glyphs[0].points) {
+            std::cout << std::format("({},{}) ", i.first, i.second);
+        }
+        std::cout << std::endl;
 
         return cff;
     }

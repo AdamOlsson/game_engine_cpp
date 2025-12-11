@@ -20,14 +20,17 @@ enum Type2Operators {
     CallGSubr = 29,
 };
 
-enum Type2PathConstructOperators {
+enum Type2MoveToOperators {
     VMoveTo = 4,
+    RMoveTo = 21,
+    HMoveTo = 22,
+};
+
+enum Type2PathConstructOperators {
     RLineTo = 5,
     HLineTo = 6,
     VLineTo = 7,
     RRCurveTo = 8,
-    RMoveTo = 21,
-    HMoveTo = 22,
     RCurveLine = 25,
     VVCurveTo = 26,
     HHCurveTo = 27,
@@ -53,21 +56,6 @@ struct Type2Charstring {
     static std::vector<Glyph> parse(const CFFIndex &charstring_index,
                                     const std::vector<std::string> &charset) {
 
-        /*const auto num_glyphs = charstring_index.count;*/
-        /*for (auto i = 0; i < num_glyphs; i++) {*/
-        /*    const auto glyph_name = charset[i];*/
-        /*    const auto encoded_glyph_seq = charstring_index[i];*/
-        /*    std::cout << std::format("{}. {}: ", i, glyph_name);*/
-        /*    for (int c : encoded_glyph_seq) {*/
-        /*        std::cout << c << " ";*/
-        /*    }*/
-        /*    std::cout << std::endl;*/
-        /*}*/
-
-        /*auto i = 59; // Z*/
-        /*auto i = 42; // I*/
-        /*auto i = 44; // L*/
-        /*auto i = 76; // l*/
         auto i = 77;
         const auto glyph_name = charset[i - 1];
         const auto encoded_glyph_seq = charstring_index[i];
@@ -83,6 +71,14 @@ struct Type2Charstring {
         std::vector<int> operators;
         for (auto iter = encoded_glyph_seq.begin(); iter != encoded_glyph_seq.end();
              iter++) {
+
+            auto iter_copy = iter;
+            std::cout << "Encoded sequence: ";
+            while (iter_copy != encoded_glyph_seq.end()) {
+                std::cout << static_cast<int>(*iter_copy) << " ";
+                iter_copy++;
+            }
+            std::cout << std::endl;
             std::stack<int> decoded_values;
             decode_until_next_operator(iter, encoded_glyph_seq.end(), decoded_values);
             const int operator_ = *iter;
@@ -90,11 +86,11 @@ struct Type2Charstring {
             operators.push_back(operator_);
         }
 
-        std::vector<std::pair<int, int>> points;
-        int x = 0;
-        int y = 0;
-        const auto num_operators = operators.size();
-        for (auto i = 0; i < num_operators; i++) {
+        // The following is the order of the operators:
+        // w? {hs* vs* cm* hm* mt subpath}? {mt subpath}* endchar
+
+        // Handle hint operators (hs, vs, cm, hm)
+        for (auto i = 0; i < operators.size(); i++) {
             const int oper = operators[i];
             auto &values = value_stacks[i];
             switch (oper) {
@@ -119,7 +115,7 @@ struct Type2Charstring {
                 for (size_t i = 0; i < dys.size(); ++i) {
                     str += std::format("{{{} {}}},", dys[i].first, dys[i].second);
                 }
-                std::cout << std::format("{} {} {{{}}} hstem", y, dy, str) << std::endl;
+                std::cout << std::format("hstem {} {} {{{}}}", y, dy, str) << std::endl;
                 break;
             }
 
@@ -144,11 +140,30 @@ struct Type2Charstring {
                 for (size_t i = 0; i < dxs.size(); ++i) {
                     str += std::format("{{{} {}}},", dxs[i].first, dxs[i].second);
                 }
-                std::cout << std::format("{} {} {{{}}} vstem", x, dx, str) << std::endl;
+                std::cout << std::format("vstem {} {} {{{}}} ", x, dx, str) << std::endl;
                 break;
             }
 
-            case Type2PathConstructOperators::RMoveTo: {
+            case Type2HintOperators::HStemHM:
+            case Type2HintOperators::HintMask:
+            case Type2HintOperators::CntrMask:
+            case Type2HintOperators::VStemHM:
+                DEBUG_ASSERT(
+                    false,
+                    std::format("Error: Hint operator {} not yet implemented", oper));
+            }
+        }
+
+        std::vector<std::pair<int, int>> points;
+        int x = 0;
+        int y = 0;
+        std::pair<int, int> contour_start;
+        for (auto i = 0; i < operators.size(); i++) {
+            const int oper = operators[i];
+            auto &values = value_stacks[i];
+            switch (oper) {
+
+            case Type2MoveToOperators::RMoveTo: {
                 const int dy1 = values.top();
                 values.pop();
                 const int dx1 = values.top();
@@ -156,27 +171,31 @@ struct Type2Charstring {
                 x += dx1;
                 y += dy1;
                 points.emplace_back(x, y);
-                std::cout << std::format("{} {} rmoveto", dx1, dy1) << std::endl;
+                contour_start = std::make_pair(x, y);
+                std::cout << std::format("rmoveto {} {} ", dx1, dy1) << std::endl;
                 break;
             }
 
-            case Type2PathConstructOperators::HMoveTo: {
+            case Type2MoveToOperators::HMoveTo: {
                 const int dx1 = values.top();
                 values.pop();
-                std::cout << std::format("{} hmoveto", dx1) << std::endl;
+                x += dx1;
+                contour_start = std::make_pair(x, y);
+                std::cout << std::format("hmoveto {}", dx1) << std::endl;
                 break;
             }
 
-            case Type2PathConstructOperators::VMoveTo: {
+            case Type2MoveToOperators::VMoveTo: {
                 const int dy1 = values.top();
                 values.pop();
-                std::cout << std::format("{} vmoveto", dy1) << std::endl;
+                y += dy1;
+                contour_start = std::make_pair(x, y);
+                std::cout << std::format("vmoveto {}", dy1) << std::endl;
                 break;
             }
 
             case Type2PathConstructOperators::RLineTo: {
                 const auto num_pairs = values.size() / 2;
-                // x1 y1 x2 y2 x3 y3
                 std::vector<std::pair<int, int>> ds{};
                 ds.reserve(num_pairs);
 
@@ -199,11 +218,18 @@ struct Type2Charstring {
                 for (size_t i = 0; i < ds.size(); ++i) {
                     str += std::format("{{{} {}}},", ds[i].first, ds[i].second);
                 }
-                std::cout << std::format("{{{}}} rlineto", str) << std::endl;
+                std::cout << std::format("rlineto {{{}}} ", str) << std::endl;
                 break;
             }
 
+            // Hintmasks operators are allowed in the subpath
+            case Type2HintOperators::HintMask:
+                DEBUG_ASSERT(
+                    false, "Error: HintMask operators in subpath is not yet implemented");
+                break;
+
             case Type2Operators::EndChar: {
+                points.push_back(std::move(contour_start));
                 std::cout << "endchar" << std::endl;
                 break;
             }
