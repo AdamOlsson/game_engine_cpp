@@ -44,11 +44,11 @@ font::OTFFont::OTFFont(const std::string &filepath) {
                 font::detail::otf_font::cmap::FontTableCmap::read_font_table_cmap(
                     otf_filestream);
 
-            const auto char_I = 73;
-            const auto char_l = 0x006C;
-            const auto c = char_l;
-            const auto glyph_id = font_table_cmap.get_glyph_id(c);
-            std::cout << "Glyph ID: " << glyph_id << std::endl;
+            /*const auto char_I = 73;*/
+            /*const auto char_l = 0x006C;*/
+            /*const auto c = char_l;*/
+            /*const auto glyph_id = font_table_cmap.get_glyph_id(c);*/
+            /*std::cout << "Glyph ID: " << glyph_id << std::endl;*/
 
             /*std::cout << " - " << font_table_cmap << std::endl;*/
             /*for (const auto &record : *font_table_cmap.encoding_records) {*/
@@ -60,7 +60,7 @@ font::OTFFont::OTFFont(const std::string &filepath) {
             m_font_table_cff =
                 font::detail::otf_font::cff::FontTableCFF::read_font_table_cff(
                     otf_filestream);
-            /*std::cout << " - " << font_table_cff << std::endl;*/
+            /*std::cout << " - " << m_font_table_cff << std::endl;*/
         }
     }
 }

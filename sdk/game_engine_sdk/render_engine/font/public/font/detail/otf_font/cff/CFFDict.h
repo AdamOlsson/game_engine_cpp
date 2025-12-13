@@ -4,13 +4,13 @@
 #include <cstdint>
 namespace font::detail::otf_font::cff {
 struct CFFDict {
-    static uint8_t decode1(const uint8_t b0) {
+    static int8_t decode1(const uint8_t b0) {
         const auto value = b0 - 139;
         DEBUG_ASSERT(-107 <= value && value <= 107, "Incorrect encoding");
         return value;
     }
 
-    static uint16_t decode2(const uint8_t b0, const uint8_t b1) {
+    static int16_t decode2(const uint8_t b0, const uint8_t b1) {
         const auto value = (b0 - 247) * 256 + b1 + 108;
         DEBUG_ASSERT(108 <= value && value <= 1131, "Incorrect encoding");
         return value;
@@ -22,7 +22,7 @@ struct CFFDict {
         return value;
     }
 
-    static uint16_t decode4(const uint8_t b1, const uint8_t b2) {
+    static int16_t decode4(const uint8_t b1, const uint8_t b2) {
         const auto value = b1 << 8 | b2;
         DEBUG_ASSERT(-32786 <= value && value <= 32767, "Incorrect encoding");
         return value;
