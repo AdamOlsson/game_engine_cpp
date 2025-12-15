@@ -37,7 +37,7 @@ struct CFFIndex {
             } else if (off_size == 4) {
                 offsets->push_back(read_uint32(stream));
             } else {
-                std::runtime_error("Unkown offset size value");
+                std::runtime_error("Unkown offset size value.");
             }
         }
 

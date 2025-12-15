@@ -3,6 +3,7 @@
 #include "CFFDict.h"
 #include "CFFIndex.h"
 #include "CFFStandardStrings.h"
+#include "PrivateData.h"
 #include "Type2Charstring.h"
 #include "font/detail/ifstream_util.h"
 #include "util/assert.h"
@@ -45,6 +46,11 @@ enum EncodingID {
     Expert = 1,
 };
 
+struct Glyph {
+    std::string name;
+    std::vector<std::pair<int, int>> points;
+};
+
 struct FontTableCFF {
     struct Header {
         Card8 major_version = 0;
@@ -73,7 +79,7 @@ struct FontTableCFF {
         int32_t private_offset = 0;
     } top;
 
-    CFFIndex global_subroutines;
+    PrivateData private_data;
 
     std::vector<Glyph> glyphs;
 
@@ -95,13 +101,25 @@ struct FontTableCFF {
 
         const auto top_index = CFFIndex::read_index(stream);
         const auto string_index = CFFIndex::read_index(stream);
-        cff.global_subroutines = CFFIndex::read_index(stream);
+        const auto global_subroutines = CFFIndex::read_index(stream);
 
         cff.top = parse_top_data(top_index, string_index);
 
         if (cff.top.encoding != EncodingID::Standard) {
-            throw std::runtime_error("Error: Only standard encoding implemented");
+            throw std::runtime_error("Error: Only standard encoding implemented.");
         }
+
+        stream.seekg(start_cff_data + std::streamoff(cff.top.private_offset));
+        DEBUG_ASSERT(stream.good(),
+                     "Error: Filestream not okay after seeking to private data.");
+        const auto private_bytes = read_n_bytes(stream, cff.top.private_size);
+        cff.private_data = PrivateData::parse(private_bytes);
+
+        stream.seekg(start_cff_data +
+                     std::streamoff(cff.top.private_offset + cff.private_data.subrs));
+        DEBUG_ASSERT(stream.good(),
+                     "Error: Filestream not okay after seeking to local subroutines.");
+        const auto local_subroutines = CFFIndex::read_index(stream);
 
         stream.seekg(start_cff_data + std::streamoff(cff.top.charstrings));
         DEBUG_ASSERT(stream.good(),
@@ -115,14 +133,21 @@ struct FontTableCFF {
         const auto charset =
             read_charsets_data(stream, charstrings_index.count, string_index);
 
-        cff.glyphs = Type2Charstring::parse(charstrings_index, charset);
+        const auto glyph_outlines = Type2Charstring::parse(
+            charstrings_index, global_subroutines, local_subroutines);
 
-        auto g = cff.glyphs[0];
-        std::cout << std::format("Glyph '{}': ", g.name);
-        for (auto i : cff.glyphs[0].points) {
-            std::cout << std::format("({},{}) ", i.first, i.second);
-        }
-        std::cout << std::endl;
+        auto i = 54; // 54 = U
+        const auto glyph_name = charset[i - 1];
+        cff.glyphs = {
+            Glyph{.name = "", .points = glyph_outlines[0]},
+        };
+
+        /*auto g = cff.glyphs[0];*/
+        /*std::cout << std::format("Glyph '{}': ", g.name);*/
+        /*for (auto i : cff.glyphs[0].points) {*/
+        /*    std::cout << std::format("({},{}) ", i.first, i.second);*/
+        /*}*/
+        /*std::cout << std::endl;*/
 
         return cff;
     }
@@ -131,6 +156,7 @@ struct FontTableCFF {
         auto top = Top{};
         const auto data = top_index[0];
 
+        // TODO: Make use of CFFDict::parse()
         std::stack<int> values;
         for (auto data_iter = data.begin(); data_iter != data.end(); data_iter++) {
             DEBUG_ASSERT(values.size() == 0, "Error: Expected stack to be empty.");

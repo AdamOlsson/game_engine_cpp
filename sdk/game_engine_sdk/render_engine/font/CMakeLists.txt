@@ -3,9 +3,10 @@ cmake_minimum_required(VERSION 3.28)
 
 option(CMAKE_LOG_LEVEL_DEBUG "Configure using debug log level" OFF)
 
-message(STATUS "Building image module with the following options:")
+message(STATUS "Building font module with the following options:")
 message(STATUS "    Log level: ${CMAKE_LOG_LEVEL_DEBUG}")
 message(STATUS "    Build type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "    Build tests: ${GAME_ENGINE_SDK_BUILD_TEST}")
 
 project(font CXX)
 
@@ -30,3 +31,7 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE 
         sdk::util
 )
+
+if(GAME_ENGINE_SDK_BUILD_TEST)
+    add_subdirectory(test)
+endif()

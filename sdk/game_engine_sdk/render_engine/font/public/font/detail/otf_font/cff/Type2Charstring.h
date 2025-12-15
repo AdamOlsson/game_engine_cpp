@@ -39,10 +39,8 @@ struct OnCurvePoint {
     }
 };
 
-struct Glyph {
-    std::string name;
-    std::vector<std::pair<int, int>> points;
-};
+using Outline = std::vector<std::pair<int, int>>;
+using OutlineControlPoints = std::vector<std::variant<OffCurvePoint, OnCurvePoint>>;
 
 enum Type2Operators {
     CallSubr = 10,
@@ -84,17 +82,19 @@ enum Type2HintOperators {
 };
 
 struct Type2Charstring {
-    static std::vector<Glyph> parse(const CFFIndex &charstring_index,
-                                    const std::vector<std::string> &charset) {
+    static std::vector<Outline> parse(const CFFIndex &charstring_index,
+                                      const CFFIndex &global_subrs,
+                                      const CFFIndex &local_subrs) {
 
-        auto i = 54; // 54 = U
+        /*auto i = 48; // 48 = O*/
+        /*auto i = 54; // 54 = U*/
+        auto i = 74; // 74 = i
         /*auto i = 77; // 77 = l*/
-        const auto glyph_name = charset[i - 1];
         const auto encoded_glyph_seq = charstring_index[i];
-        auto control_points = decode_glyph(encoded_glyph_seq);
+        auto control_points = decode_glyph(encoded_glyph_seq, global_subrs, local_subrs);
 
         // TODO: Based on the bezier curves calculate vertices. Might not do here...
-        std::vector<std::pair<int, int>> points;
+        Outline points;
         for (const auto &control_point : control_points) {
             points.emplace_back(std::visit(
                 [](const auto &p) -> std::pair<int, int> {
@@ -109,11 +109,12 @@ struct Type2Charstring {
                 control_point));
         }
 
-        return {Glyph{.name = std::move(glyph_name), .points = std::move(points)}};
+        return {points};
     }
 
-    static std::vector<std::variant<OffCurvePoint, OnCurvePoint>>
-    decode_glyph(const std::span<uint8_t> &encoded_glyph_seq) {
+    static OutlineControlPoints decode_glyph(const std::span<uint8_t> &encoded_glyph_seq,
+                                             const CFFIndex &global_subrs,
+                                             const CFFIndex &local_subrs) {
 
         std::vector<std::stack<int>> value_stacks;
         std::vector<int> operators;
@@ -190,7 +191,7 @@ struct Type2Charstring {
                 for (size_t i = 0; i < dxs.size(); ++i) {
                     str += std::format("{{{} {}}},", dxs[i].first, dxs[i].second);
                 }
-                std::cout << std::format("vstem {} {} {{{}}} ", x, dx, str) << std::endl;
+                std::cout << std::format("vstem {} {} [{}] ", x, dx, str) << std::endl;
                 break;
             }
 
@@ -204,7 +205,7 @@ struct Type2Charstring {
             }
         }
 
-        std::vector<std::variant<OffCurvePoint, OnCurvePoint>> points;
+        OutlineControlPoints points;
         int x = 0;
         int y = 0;
         std::pair<int, int> contour_start(0, 0);
@@ -467,7 +468,29 @@ struct Type2Charstring {
             }
 
             case Type2Operators::CallSubr: {
-                DEBUG_ASSERT(false, "Error: CallSubr operator not yet implemented");
+                const auto num_operands = values.size();
+                std::vector<int> operands;
+                operands.resize(num_operands);
+                for (int i = operands.size() - 1; i >= 0; i--) {
+                    operands[i] = values.top();
+                    values.pop();
+                }
+
+                std::vector<OutlineControlPoints> outlines;
+                outlines.reserve(num_operands);
+                for (int c : operands) {
+                    const size_t subr_index =
+                        subroutine_index_correction(c, local_subrs.count);
+                    std::cout << std::format("callsubr: {}", subr_index) << std::endl;
+                    const auto subroutine = local_subrs[subr_index];
+                    outlines.push_back(
+                        decode_glyph(subroutine, global_subrs, local_subrs));
+                }
+
+                // TODO: If the current path is open when a moveto operator is
+                // encountered, the path should be closed before performing the moveto
+                // TODO: Return multiple outlines
+                /*DEBUG_ASSERT(false, "Error: CallSubr operator not yet implemented");*/
                 break;
             }
 
@@ -476,9 +499,24 @@ struct Type2Charstring {
                 break;
             }
 
+            case Type2Operators::Return: {
+                DEBUG_ASSERT(
+                    i == operators.size() - 1,
+                    "Error: return operator found when there are operators following.");
+                break;
+            }
+
+            // These operators are handles above
+            case Type2HintOperators::HStem:
+            case Type2HintOperators::VStem:
+            case Type2HintOperators::HStemHM:
+            case Type2HintOperators::VStemHM:
+            case Type2HintOperators::CntrMask:
+                break;
+
             default: {
-                /*std::cout << std::format("Next operator: {}", static_cast<int>(oper))*/
-                /*          << std::endl;*/
+                DEBUG_ASSERT(false,
+                             std::format("Error: operator {} not yet implemented", oper));
                 break;
             }
             }
@@ -548,60 +586,16 @@ struct Type2Charstring {
             break;
         }
     }
+
+    static size_t subroutine_index_correction(const int index,
+                                              const int num_subroutines) {
+        if (num_subroutines < 1240) {
+            return index + 107;
+        } else if (num_subroutines < 33900) {
+            return index + 1131;
+        }
+        return index + 32768;
+    }
 };
 
-/*inline std::string to_string(Type2Operators op) {*/
-/*    switch (op) {*/
-/*    case HStem:*/
-/*        return "HStem";*/
-/*    case VStem:*/
-/*        return "VStem";*/
-/*    case VMoveTo:*/
-/*        return "VMoveTo";*/
-/*    case RLineTo:*/
-/*        return "RLineTo";*/
-/*    case HLineTo:*/
-/*        return "HLineTo";*/
-/*    case VLineTo:*/
-/*        return "VLineTo";*/
-/*    case RRCurveTo:*/
-/*        return "RRCurveTo";*/
-/*    case CallSubr:*/
-/*        return "CallSubr";*/
-/*    case Return:*/
-/*        return "Return";*/
-/*    case EndChar:*/
-/*        return "EndChar";*/
-/*    case HStemHM:*/
-/*        return "HStemHM";*/
-/*    case HintMask:*/
-/*        return "HintMask";*/
-/*    case CntrMask:*/
-/*        return "CntrMask";*/
-/*    case RMoveTo:*/
-/*        return "RMoveTo";*/
-/*    case HMoveTo:*/
-/*        return "HMoveTo";*/
-/*    case VStemHM:*/
-/*        return "VStemHM";*/
-/*    case RCurveLine:*/
-/*        return "RCurveLine";*/
-/*    case VVCurveTo:*/
-/*        return "VVCurveTo";*/
-/*    case HHCurveTo:*/
-/*        return "HHCurveTo";*/
-/*    case CallGSubr:*/
-/*        return "CallGSubr";*/
-/*    case VHCurveTo:*/
-/*        return "VHCurveTo";*/
-/*    case HVCurveTo:*/
-/*        return "HVCurveTo";*/
-/*    default:*/
-/*        return "Unknown(" + std::to_string(static_cast<int>(op)) + ")";*/
-/*    }*/
-/*}*/
-/**/
-/*std::ostream &operator<<(std::ostream &os, Type2Operators op) {*/
-/*    return os << to_string(op);*/
-/*}*/
 }; // namespace font::detail::otf_font::cff

@@ -52,9 +52,9 @@ uint16_t font::detail::read_uint16(std::ifstream &stream) {
 
 uint8_t font::detail::read_uint8(std::ifstream &stream) { return stream.get(); }
 
-std::vector<char> font::detail::read_n_bytes(std::ifstream &stream, const size_t n) {
-    std::vector<char> buffer(n);
-    stream.read(buffer.data(), n);
+std::vector<uint8_t> font::detail::read_n_bytes(std::ifstream &stream, const size_t n) {
+    std::vector<uint8_t> buffer(n);
+    stream.read(reinterpret_cast<char *>(buffer.data()), n);
     return buffer;
 }
 
