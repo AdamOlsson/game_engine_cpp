@@ -48,7 +48,7 @@ enum EncodingID {
 
 struct Glyph {
     std::string name;
-    std::vector<std::pair<int, int>> points;
+    std::vector<std::pair<int, int>> outlines;
 };
 
 struct FontTableCFF {
@@ -139,7 +139,7 @@ struct FontTableCFF {
         auto i = 54; // 54 = U
         const auto glyph_name = charset[i - 1];
         cff.glyphs = {
-            Glyph{.name = "", .points = glyph_outlines[0]},
+            Glyph{.name = "", .outlines = glyph_outlines[0]},
         };
 
         /*auto g = cff.glyphs[0];*/

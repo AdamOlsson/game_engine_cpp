@@ -32,7 +32,7 @@ void graphics_pipeline::text::TextPipeline::load_font(
 
     std::vector<Vertex> vertices;
     for (const auto &glyph : font.m_font_table_cff.glyphs) {
-        for (const auto &point : glyph.points) {
+        for (const auto &point : glyph.outlines) {
             vertices.emplace_back(static_cast<float>(point.first),
                                   -1.0f * static_cast<float>(point.second), 0.0f);
         }

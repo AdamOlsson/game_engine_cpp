@@ -78,7 +78,7 @@ class ExampleTextRendering : public Game {
         auto glyph = otf_font.m_font_table_cff.glyphs[0];
         m_glyph_positions = std::make_unique<
             vulkan::buffers::SwapStorageBuffer<graphics_pipeline::text::TextPipelineSBO>>(
-            ctx, 2, glyph.points.size());
+            ctx, 2, glyph.outlines.size());
 
         m_descriptor_set =
             std::make_unique<graphics_pipeline::text::TextPipelineDescriptorSet>(
@@ -98,12 +98,15 @@ class ExampleTextRendering : public Game {
             &descriptor_layout, &push_constant_range);
         m_pipeline->load_font(m_command_buffer_manager.get(), otf_font);
 
+        auto glyph_id = otf_font.glyph_index(font::Unicode("U"));
+        std::cout << "Glyph ID: " << glyph_id << std::endl;
+
         float sum_x = 0;
         float sum_y = 0;
         int count = 0;
         const auto scale = 0.1f;
-        m_num_instances = glyph.points.size();
-        for (const auto &pos : glyph.points) {
+        m_num_instances = glyph.outlines.size();
+        for (const auto &pos : glyph.outlines) {
 
             m_glyph_positions->push_back(graphics_pipeline::text::TextPipelineSBO{
                 .model_matrix = ModelMatrix().scale(scale)});

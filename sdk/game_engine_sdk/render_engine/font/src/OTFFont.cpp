@@ -40,15 +40,9 @@ font::OTFFont::OTFFont(const std::string &filepath) {
             /*std::cout << " - " << font_table_hhea << std::endl;*/
 
         } else if (t.table_tag == "cmap") {
-            const auto font_table_cmap =
+            m_font_table_cmap =
                 font::detail::otf_font::cmap::FontTableCmap::read_font_table_cmap(
                     otf_filestream);
-
-            /*const auto char_I = 73;*/
-            /*const auto char_l = 0x006C;*/
-            /*const auto c = char_l;*/
-            /*const auto glyph_id = font_table_cmap.get_glyph_id(c);*/
-            /*std::cout << "Glyph ID: " << glyph_id << std::endl;*/
 
             /*std::cout << " - " << font_table_cmap << std::endl;*/
             /*for (const auto &record : *font_table_cmap.encoding_records) {*/
@@ -63,4 +57,8 @@ font::OTFFont::OTFFont(const std::string &filepath) {
             /*std::cout << " - " << m_font_table_cff << std::endl;*/
         }
     }
+}
+
+size_t font::OTFFont::glyph_index(const Unicode &unicode) {
+    return m_font_table_cmap.get_glyph_id(unicode[0]);
 }
