@@ -199,13 +199,13 @@ struct Type2Charstring {
                     // be treated as vstem
                     handle_vstem(state, operands);
                 }
-                const size_t num_hint_bytes = (state.hint_count + 7) / 8;
 
+                const size_t num_hint_bytes = (state.hint_count + 7) / 8;
                 std::cout << "hintmask: 0x";
-                std::vector<uint8_t> mask_bytes;
+                std::vector<uint8_t> hint_mask_bytes;
                 for (size_t i = 0; i < num_hint_bytes; i++) {
-                    mask_bytes.push_back(*(++iter));
-                    std::cout << std::hex << static_cast<int>(mask_bytes.back())
+                    hint_mask_bytes.push_back(*(++iter));
+                    std::cout << std::hex << static_cast<int>(hint_mask_bytes.back())
                               << std::dec;
                 }
                 std::cout << std::endl;
@@ -213,363 +213,76 @@ struct Type2Charstring {
             }
 
             case Type2HintOperators::CntrMask: {
-                DEBUG_ASSERT(
-                    false,
-                    std::format("Error: Hint operator {} not yet implemented", oper));
-            }
-
-            case Type2MoveToOperators::RMoveTo: {
-                const int dy1 = operands.top();
-                operands.pop();
-                const int dx1 = operands.top();
-                operands.pop();
-                state.x += dx1;
-                state.y += dy1;
-                if (state.path_open) {
-                    state.path_open = false;
-                    state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
-                                                       state.contour_start.first,
-                                                       state.contour_start.second);
-                    state.outlines.push_back(std::move(state.current_outline));
-                    state.current_outline = {};
-                    std::cout << std::format("rmoveto (closed path): ({},{})", state.x,
-                                             state.y)
-                              << std::endl;
-                } else {
-                    state.path_open = true;
-
-                    std::cout << std::format("rmoveto (opened path): ({},{})", state.x,
-                                             state.y)
-                              << std::endl;
+                const size_t num_hint_bytes = (state.hint_count + 7) / 8;
+                std::cout << "cntrmask: 0x";
+                std::vector<uint8_t> cntr_mask_bytes;
+                for (size_t i = 0; i < num_hint_bytes; i++) {
+                    cntr_mask_bytes.push_back(*(++iter));
+                    std::cout << std::hex << static_cast<int>(cntr_mask_bytes.back())
+                              << std::dec;
                 }
-                state.contour_start = std::make_pair(state.x, state.y);
+                std::cout << std::endl;
                 break;
             }
 
-            case Type2MoveToOperators::HMoveTo: {
-                const int dx1 = operands.top();
-                operands.pop();
-                state.x += dx1;
-                if (state.path_open) {
-                    state.path_open = false;
-                    state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
-                                                       state.contour_start.first,
-                                                       state.contour_start.second);
-                    state.outlines.push_back(std::move(state.current_outline));
-                    state.current_outline = {};
-                    std::cout << std::format("hmoveto (closed path): ({},{})", state.x,
-                                             state.y)
-                              << std::endl;
-                } else {
-                    state.path_open = true;
-
-                    std::cout << std::format("hmoveto (opened path): ({},{})", state.x,
-                                             state.y)
-                              << std::endl;
-                }
-                state.contour_start = std::make_pair(state.x, state.y);
+            case Type2MoveToOperators::RMoveTo:
+                handle_rmoveto(state, operands);
                 break;
-            }
 
-            case Type2MoveToOperators::VMoveTo: {
-                const int dy1 = operands.top();
-                operands.pop();
-                state.y += dy1;
-                if (state.path_open) {
-                    state.path_open = false;
-                    state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
-                                                       state.contour_start.first,
-                                                       state.contour_start.second);
-                    state.outlines.push_back(std::move(state.current_outline));
-                    state.current_outline = {};
-                    std::cout << std::format("vmoveto (closed path): ({},{})", state.x,
-                                             state.y)
-                              << std::endl;
-
-                    state.contour_start = std::make_pair(state.x, state.y);
-                } else {
-                    state.contour_start = std::make_pair(state.x, state.y);
-                    state.path_open = true;
-
-                    std::cout << std::format("vmoveto (opened path): ({},{})", state.x,
-                                             state.y)
-                              << std::endl;
-                }
-                state.contour_start = std::make_pair(state.x, state.y);
+            case Type2MoveToOperators::HMoveTo:
+                handle_hmoveto(state, operands);
                 break;
-            }
 
-            case Type2PathConstructOperators::RLineTo: {
-                const auto num_pairs = operands.size() / 2;
-                std::vector<std::pair<int, int>> ds{};
-                ds.reserve(num_pairs);
-
-                for (auto i = 0; i < num_pairs; i++) {
-                    const int dya = operands.top();
-                    operands.pop();
-                    const int dxa = operands.top();
-                    operands.pop();
-                    ds.emplace_back(dxa, dya);
-                }
-
-                for (int i = ds.size() - 1; i >= 0; i--) {
-                    state.x += ds[i].first;
-                    state.y += ds[i].second;
-                    state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
-                                                       state.x, state.y);
-                    std::cout << std::format("rlineto: ({},{}) ", state.x, state.y)
-                              << std::endl;
-                }
-
-                /*DEBUG_ASSERT(state.path_open,*/
-                /*             "Error: expected path to be open before path operator");*/
+            case Type2MoveToOperators::VMoveTo:
+                handle_vmoveto(state, operands);
                 break;
-            }
 
-            case Type2PathConstructOperators::HLineTo: {
-                const auto num_operands = operands.size();
-                std::vector<int> operands_vec;
-                operands_vec.resize(num_operands);
-                for (int i = operands.size() - 1; i >= 0; i--) {
-                    operands_vec[i] = operands.top();
-                    operands.pop();
-                }
-
-                for (auto i = 0; i < operands_vec.size(); i++) {
-                    if (i % 2 == 0) {
-                        state.x += operands_vec[i];
-                    } else {
-                        state.y += operands_vec[i];
-                    }
-                    state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
-                                                       state.x, state.y);
-                    std::cout << std::format("hlineto ({},{})", state.x, state.y)
-                              << std::endl;
-                }
+            case Type2PathConstructOperators::RLineTo:
+                handle_rlineto(state, operands);
                 break;
-            }
 
-            case Type2PathConstructOperators::VLineTo: {
-                const auto num_operands = operands.size();
-                std::vector<int> operands_vec;
-                operands_vec.resize(num_operands);
-                for (int i = operands_vec.size() - 1; i >= 0; i--) {
-                    operands_vec[i] = operands.top();
-                    operands.pop();
-                }
-
-                for (auto i = 0; i < operands_vec.size(); i++) {
-                    if (i % 2 == 0) {
-                        state.y += operands_vec[i];
-                    } else {
-                        state.x += operands_vec[i];
-                    }
-                    state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
-                                                       state.x, state.y);
-                    std::cout << std::format("vlineto ({},{})", state.x, state.y)
-                              << std::endl;
-                }
+            case Type2PathConstructOperators::HLineTo:
+                handle_hlineto(state, operands);
                 break;
-            }
 
-            case Type2PathConstructOperators::RRCurveTo: {
-                const auto num_operands = operands.size();
-                std::vector<int> operands_vec;
-                operands_vec.resize(num_operands);
-                for (int i = operands.size() - 1; i >= 0; i--) {
-                    operands_vec[i] = operands.top();
-                    operands.pop();
-                }
-
-                for (auto i = 0; i < num_operands / 6; i++) {
-                    const int dxa = operands_vec[i * 6 + 0];
-                    const int dya = operands_vec[i * 6 + 1];
-                    const int dxb = operands_vec[i * 6 + 2];
-                    const int dyb = operands_vec[i * 6 + 3];
-                    const int dxc = operands_vec[i * 6 + 4];
-                    const int dyc = operands_vec[i * 6 + 5];
-
-                    //  Control point A is the last value of the points vector
-                    //  Control point B
-                    state.x += dxa;
-                    state.y += dya;
-                    std::cout << std::format("rrcurveto: ({},{}) ", state.x, state.y);
-                    state.current_outline.emplace_back(std::in_place_type<OffCurvePoint>,
-                                                       state.x, state.y);
-
-                    // Control point C
-                    state.x += dxb;
-                    state.y += dyb;
-                    std::cout << std::format("({},{}) ", state.x, state.y);
-                    state.current_outline.emplace_back(std::in_place_type<OffCurvePoint>,
-                                                       state.x, state.y);
-
-                    // Control point D
-                    state.x += dxc;
-                    state.y += dyc;
-                    std::cout << std::format("({},{})", state.x, state.y) << std::endl;
-                    state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
-                                                       state.x, state.y);
-                }
-
-                /*DEBUG_ASSERT(state.path_open,*/
-                /*             "Error: expected path to be open before path operator");*/
+            case Type2PathConstructOperators::VLineTo:
+                handle_vlineto(state, operands);
                 break;
-            }
 
-            case Type2PathConstructOperators::RCurveLine: {
-                DEBUG_ASSERT(false, "Error: RCurveLine operator is not yet implemented");
+            case Type2PathConstructOperators::RCurveLine:
+                handle_rcurveline(state, operands);
                 break;
-            }
 
-            case Type2PathConstructOperators::VVCurveTo: {
-                // |- dx1? {dya dxb dyb dyc}+ vvcurveto (26) |-
-                // We do some odd things with multiples of 4 to only read exactly what we
-                // expect. The assert at the end of this function will catch any errors.
-                const size_t num_operations = operands.size() / 4;
-                std::vector<int> operands_vec;
-                operands_vec.resize(num_operations * 4);
-                auto count = operands.size() - 1;
-                while (operands.size() >= 4) {
-                    operands_vec[count--] = operands.top();
-                    operands.pop();
-                    operands_vec[count--] = operands.top();
-                    operands.pop();
-                    operands_vec[count--] = operands.top();
-                    operands.pop();
-                    operands_vec[count--] = operands.top();
-                    operands.pop();
-                }
-                if (operands.size() > 0) {
-                    const int dx1 = operands.top();
-                    state.x += dx1;
-                    operands.pop();
-                }
-                for (auto i = 0; i < num_operations; i++) {
-                    const int dya = operands_vec[i * 4 + 0];
-                    const int dxb = operands_vec[i * 4 + 1];
-                    const int dyb = operands_vec[i * 4 + 2];
-                    const int dyc = operands_vec[i * 4 + 3];
-
-                    state.y += dya;
-                    std::cout << std::format("vvcurveto: ({},{}) ", state.x, state.y);
-                    state.current_outline.emplace_back(std::in_place_type<OffCurvePoint>,
-                                                       state.x, state.y);
-
-                    // Second control point
-                    state.x += dxb;
-                    state.y += dyb;
-                    std::cout << std::format("({},{}) ", state.x, state.y);
-                    state.current_outline.emplace_back(std::in_place_type<OffCurvePoint>,
-                                                       state.x, state.y);
-
-                    state.y += dyc;
-                    std::cout << std::format("({},{})", state.x, state.y) << std::endl;
-                    state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
-                                                       state.x, state.y);
-                }
-
-                /*DEBUG_ASSERT(state.path_open,*/
-                /*             "Error: expected path to be open before path operator");*/
+            case Type2PathConstructOperators::VHCurveTo:
+                handle_vhcurveline(state, operands);
                 break;
-            }
 
-            case Type2PathConstructOperators::HHCurveTo: {
-                // |- dy1? {dxa dxb dyb dxc}+ hhcurveto (27) |-
-                // We do some odd things with multiples of 4 to only read exactly what we
-                // expect. The assert at the end of this function will catch any errors.
-                const size_t num_operations = operands.size() / 4;
-                std::vector<int> operands_vec;
-                operands_vec.resize(num_operations * 4);
-                auto count = operands.size() - 1;
-                while (operands.size() >= 4) {
-                    operands_vec[count--] = operands.top();
-                    operands.pop();
-
-                    operands_vec[count--] = operands.top();
-                    operands.pop();
-
-                    operands_vec[count--] = operands.top();
-                    operands.pop();
-
-                    operands_vec[count--] = operands.top();
-                    operands.pop();
-                }
-
-                if (operands.size() > 0) {
-                    const int dy1 = operands.top();
-                    state.y += dy1;
-                    operands.pop();
-                }
-
-                for (auto i = 0; i < num_operations; i++) {
-                    const int dxa = operands_vec[i * 4 + 0];
-                    const int dxb = operands_vec[i * 4 + 1];
-                    const int dyb = operands_vec[i * 4 + 2];
-                    const int dxc = operands_vec[i * 4 + 3];
-
-                    state.x += dxa;
-                    std::cout << std::format("hhcurveto: ({},{}) ", state.x, state.y);
-                    state.current_outline.emplace_back(std::in_place_type<OffCurvePoint>,
-                                                       state.x, state.y);
-
-                    state.x += dxb;
-                    state.y += dyb;
-                    std::cout << std::format("({},{}) ", state.x, state.y);
-                    state.current_outline.emplace_back(std::in_place_type<OffCurvePoint>,
-                                                       state.x, state.y);
-
-                    state.x += dxc;
-                    std::cout << std::format("({},{})", state.x, state.y) << std::endl;
-                    state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
-                                                       state.x, state.y);
-                }
-
+            case Type2PathConstructOperators::HVCurveTo:
+                handle_hvcurveline(state, operands);
                 break;
-            }
 
-            case Type2Operators::EndChar: {
-                std::cout << "endchar: "
-                          << std::format("({},{})", state.contour_start.first,
-                                         state.contour_start.second)
-                          << std::endl;
-
-                state.path_open = false;
-                state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
-                                                   state.contour_start.first,
-                                                   state.contour_start.second);
-
-                state.outlines.push_back(std::move(state.current_outline));
-                state.current_outline = {};
+            case Type2PathConstructOperators::RRCurveTo:
+                handle_rrcurveto(state, operands);
                 break;
-            }
 
-            case Type2Operators::CallSubr: {
-                const auto num_operands = operands.size();
-                std::vector<int> operands_vec;
-                operands_vec.resize(num_operands);
-                for (int i = operands.size() - 1; i >= 0; i--) {
-                    operands_vec[i] = operands.top();
-                    operands.pop();
-                }
-
-                for (int c : operands_vec) {
-                    const size_t subr_index =
-                        subroutine_index_correction(c, local_subrs.count);
-                    std::cout << std::format("callsubr: {}", subr_index) << std::endl;
-                    const auto subroutine = local_subrs[subr_index];
-                    decode_glyph(subroutine, global_subrs, local_subrs, state);
-                }
-
-                // TODO: If the current path is open when a moveto operator is
-                // encountered, the path should be closed before performing the moveto
-                // TODO: Return multiple outlines
-                /*DEBUG_ASSERT(false, "Error: CallSubr operator not yet implemented");*/
+            case Type2PathConstructOperators::VVCurveTo:
+                handle_vvcurveto(state, operands);
                 break;
-            }
+
+            case Type2PathConstructOperators::HHCurveTo:
+                handle_hhcurveto(state, operands);
+                break;
+
+            case Type2Operators::EndChar:
+                handle_endchar(state, operands);
+                break;
+
+            case Type2Operators::CallSubr:
+                handle_callsubr(state, operands, global_subrs, local_subrs);
+                break;
 
             case Type2Operators::CallGSubr: {
-                DEBUG_ASSERT(false, "Error: CallGSubr operator not yet implemented");
+                handle_callgsubr(state, operands, global_subrs, local_subrs);
                 break;
             }
 
@@ -582,11 +295,9 @@ struct Type2Charstring {
                 break;
             }
 
-                // These operators are handles above
-
             default: {
-                DEBUG_ASSERT(false,
-                             std::format("Error: operator {} not yet implemented", oper));
+                DEBUG_ASSERT(
+                    false, std::format("Error: operator {} not yet implemented.", oper));
                 break;
             }
             }
@@ -599,11 +310,11 @@ struct Type2Charstring {
         }
 
         DEBUG_ASSERT(operand_stacks[0].size() == 0,
-                     "Error: glyph sequence still has an unprocessed width value");
+                     "Error: glyph sequence still has an unprocessed width value.");
         DEBUG_CODE(for (auto i = 1; i < operand_stacks.size(); i++) {
             DEBUG_ASSERT(operand_stacks[i].size() == 0,
                          std::format("Error: glyph sequence {} (operand {}) still has an "
-                                     "unprocessed operand",
+                                     "unprocessed operand.",
                                      i, operators[i]));
         });
 
@@ -666,17 +377,37 @@ struct Type2Charstring {
     }
 
   private:
-    static void handle_hstem(font::detail::otf_font::cff::DecodeState &state,
-                             std::stack<int> &operands);
+    // clang-format off
+    static void handle_hstem(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
+    static void handle_hstemhm(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
+    static void handle_vstem(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
+    static void handle_vstemhm(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
 
-    static void handle_hstemhm(font::detail::otf_font::cff::DecodeState &state,
-                               std::stack<int> &operands);
+    static void handle_hmoveto(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
+    static void handle_rmoveto(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
+    static void handle_vmoveto(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
 
-    static void handle_vstem(font::detail::otf_font::cff::DecodeState &state,
-                             std::stack<int> &operands);
+    static void handle_rlineto(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
+    static void handle_vlineto(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
+    static void handle_hlineto(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
 
-    static void handle_vstemhm(font::detail::otf_font::cff::DecodeState &state,
-                               std::stack<int> &operands);
+    static void handle_rcurveline(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
+    static void handle_vhcurveline(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
+    static void handle_hvcurveline(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
+    
+    static void handle_rrcurveto(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
+    static void handle_vvcurveto(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
+    static void handle_hhcurveto(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
+
+    static void handle_endchar(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
+    // clang-format on
+
+    static void handle_callsubr(font::detail::otf_font::cff::DecodeState &state,
+                                std::stack<int> &operands, const CFFIndex &global_subrs,
+                                const CFFIndex &local_subrs);
+    static void handle_callgsubr(font::detail::otf_font::cff::DecodeState &state,
+                                 std::stack<int> &operands, const CFFIndex &global_subrs,
+                                 const CFFIndex &local_subrs);
 };
 
 }; // namespace font::detail::otf_font::cff
