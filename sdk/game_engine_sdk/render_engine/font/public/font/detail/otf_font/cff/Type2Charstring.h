@@ -48,6 +48,8 @@ struct DecodeState {
     int x = 0;
     int y = 0;
     int width = 0;
+    size_t hint_count = 0;
+    std::pair<int, int> contour_start = {0, 0};
     OutlineControlPoints current_outline;
     std::vector<OutlineControlPoints> outlines;
 };
@@ -99,7 +101,7 @@ struct Type2Charstring {
         std::vector<GlyphOutlines> font_outlines;
         font_outlines.reserve(charstring_index.count);
         for (auto i = 0; i < charstring_index.count; i++) {
-            std::cout << "Decoding glyph ID: " << i << std::endl;
+            std::cout << std::endl << "Decoding glyph ID: " << i << std::endl;
             const auto encoded_glyph_seq = charstring_index[i];
             // TODO: What to do with width?
             DecodeState state{};
@@ -144,17 +146,17 @@ struct Type2Charstring {
                              const CFFIndex &global_subrs, const CFFIndex &local_subrs,
                              DecodeState &state) {
 
-        std::vector<std::stack<int>> value_stacks;
+        std::vector<std::stack<int>> operand_stacks;
         std::vector<int> operators;
         for (auto iter = encoded_glyph_seq.begin(); iter != encoded_glyph_seq.end();
              iter++) {
 
             auto iter_copy = iter;
 
-            std::stack<int> decoded_values;
-            decode_until_next_operator(iter, encoded_glyph_seq.end(), decoded_values);
+            std::stack<int> decoded_operands;
+            decode_until_next_operator(iter, encoded_glyph_seq.end(), decoded_operands);
             const int operator_ = *iter;
-            value_stacks.push_back(std::move(decoded_values));
+            operand_stacks.push_back(std::move(decoded_operands));
             operators.push_back(operator_);
 
             std::cout << "Encoded sequence: ";
@@ -163,147 +165,71 @@ struct Type2Charstring {
                 iter_copy++;
             }
             std::cout << operator_ << std::endl;
-        }
 
-        // The following is the order of the operators:
-        // w? {hs* vs* cm* hm* mt subpath}? {mt subpath}* endchar
+            // The following is the order of the operators:
+            // w? {hs* vs* cm* hm* mt subpath}? {mt subpath}* endchar
 
-        // Handle hint operators (hs, vs, cm, hm)
-        for (auto i = 0; i < operators.size(); i++) {
-            const int oper = operators[i];
-            auto &values = value_stacks[i];
+            // Handle hint operators (hs, vs, cm, hm)
+            const int &oper = operators.back();
+            auto &operands = operand_stacks.back();
             switch (oper) {
 
-            case Type2HintOperators::HStem: {
-                const auto num_pairs = (values.size() - 2) / 2;
-                std::vector<std::pair<int, int>> dys{};
-                dys.reserve(num_pairs);
-                for (auto i = 0; i < num_pairs; i++) {
-                    const int dyb = values.top();
-                    values.pop();
-                    const int dya = values.top();
-                    values.pop();
-                    dys.emplace_back(dya, dyb);
-                }
-                const int dy = values.top();
-                values.pop();
-                const int y = values.top();
-                values.pop();
+            // Hints: zero or more of each of the following hint
+            // operators, in exactly the following order: hstem, hstemhm,
+            //  vstem, vstemhm, cntrmask, hintmask.
+            case Type2HintOperators::HStem:
+                handle_hstem(state, operands);
+                break;
 
-                // This is all for print
-                std::string str;
-                for (size_t i = 0; i < dys.size(); ++i) {
-                    str += std::format("({},{}) ", dys[i].first, dys[i].second);
+            case Type2HintOperators::HStemHM:
+                handle_hstemhm(state, operands);
+                break;
+
+            case Type2HintOperators::VStem:
+                handle_vstem(state, operands);
+                break;
+
+            case Type2HintOperators::VStemHM:
+                handle_vstemhm(state, operands);
+                break;
+
+            case Type2HintOperators::HintMask: {
+                if (operands.size() > 0) {
+                    // This case is an optimization in OTF files and these values are to
+                    // be treated as vstem
+                    handle_vstem(state, operands);
                 }
-                std::cout << std::format("hstem: {} {} [{}]", y, dy, str) << std::endl;
+                const size_t num_hint_bytes = (state.hint_count + 7) / 8;
+
+                std::cout << "hintmask: 0x";
+                std::vector<uint8_t> mask_bytes;
+                for (size_t i = 0; i < num_hint_bytes; i++) {
+                    mask_bytes.push_back(*(++iter));
+                    std::cout << std::hex << static_cast<int>(mask_bytes.back())
+                              << std::dec;
+                }
+                std::cout << std::endl;
                 break;
             }
 
-            case Type2HintOperators::HStemHM: {
-                const auto num_pairs = (values.size() - 2) / 2;
-                std::vector<std::pair<int, int>> dys{};
-                dys.reserve(num_pairs);
-                for (auto i = 0; i < num_pairs; i++) {
-                    const int dyb = values.top();
-                    values.pop();
-                    const int dya = values.top();
-                    values.pop();
-                    dys.emplace_back(dya, dyb);
-                }
-                const int dy = values.top();
-                values.pop();
-                const int y = values.top();
-                values.pop();
-
-                // This is all for print
-                std::string str;
-                for (size_t i = 0; i < dys.size(); ++i) {
-                    str += std::format("({},{}) ", dys[i].first, dys[i].second);
-                }
-                std::cout << std::format("hstemhm: {} {} [{}]", y, dy, str) << std::endl;
-                break;
-            }
-
-            case Type2HintOperators::VStem: {
-                const auto num_pairs = (values.size() - 2) / 2;
-                std::vector<std::pair<int, int>> dxs{};
-                dxs.reserve(num_pairs);
-                for (auto i = 0; i < num_pairs; i++) {
-                    const int dxb = values.top();
-                    values.pop();
-                    const int dxa = values.top();
-                    values.pop();
-                    dxs.emplace_back(dxa, dxb);
-                }
-                const int dx = values.top();
-                values.pop();
-                const int x = values.top();
-                values.pop();
-
-                // This is all for print
-                std::string str;
-                for (size_t i = 0; i < dxs.size(); ++i) {
-                    str += std::format("{{{} {}}},", dxs[i].first, dxs[i].second);
-                }
-                std::cout << std::format("vstem {} {} [{}] ", x, dx, str) << std::endl;
-                break;
-            }
-
-            case Type2HintOperators::VStemHM: {
-                const auto num_pairs = (values.size() - 2) / 2;
-                std::vector<std::pair<int, int>> dxs{};
-                dxs.reserve(num_pairs);
-                for (auto i = 0; i < num_pairs; i++) {
-                    const int dxb = values.top();
-                    values.pop();
-                    const int dxa = values.top();
-                    values.pop();
-                    dxs.emplace_back(dxa, dxb);
-                }
-                const int dx = values.top();
-                values.pop();
-                const int x = values.top();
-                values.pop();
-
-                // This is all for print
-                std::string str;
-                for (size_t i = 0; i < dxs.size(); ++i) {
-                    str += std::format("{{{} {}}},", dxs[i].first, dxs[i].second);
-                }
-                std::cout << std::format("vstemhm {} {} [{}] ", x, dx, str) << std::endl;
-                break;
-            }
-
-            case Type2HintOperators::HintMask:
-            case Type2HintOperators::CntrMask:
+            case Type2HintOperators::CntrMask: {
                 DEBUG_ASSERT(
                     false,
                     std::format("Error: Hint operator {} not yet implemented", oper));
             }
-        }
-
-        /*bool state.path_open = false;*/
-        /*OutlineControlPoints points;*/
-        /*int x = 0;*/
-        /*int y = 0;*/
-        std::pair<int, int> contour_start(0, 0);
-        for (auto i = 0; i < operators.size(); i++) {
-            const int oper = operators[i];
-            auto &values = value_stacks[i];
-            switch (oper) {
 
             case Type2MoveToOperators::RMoveTo: {
-                const int dy1 = values.top();
-                values.pop();
-                const int dx1 = values.top();
-                values.pop();
+                const int dy1 = operands.top();
+                operands.pop();
+                const int dx1 = operands.top();
+                operands.pop();
                 state.x += dx1;
                 state.y += dy1;
                 if (state.path_open) {
                     state.path_open = false;
                     state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
-                                                       contour_start.first,
-                                                       contour_start.second);
+                                                       state.contour_start.first,
+                                                       state.contour_start.second);
                     state.outlines.push_back(std::move(state.current_outline));
                     state.current_outline = {};
                     std::cout << std::format("rmoveto (closed path): ({},{})", state.x,
@@ -316,19 +242,19 @@ struct Type2Charstring {
                                              state.y)
                               << std::endl;
                 }
-                contour_start = std::make_pair(state.x, state.y);
+                state.contour_start = std::make_pair(state.x, state.y);
                 break;
             }
 
             case Type2MoveToOperators::HMoveTo: {
-                const int dx1 = values.top();
-                values.pop();
+                const int dx1 = operands.top();
+                operands.pop();
                 state.x += dx1;
                 if (state.path_open) {
                     state.path_open = false;
                     state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
-                                                       contour_start.first,
-                                                       contour_start.second);
+                                                       state.contour_start.first,
+                                                       state.contour_start.second);
                     state.outlines.push_back(std::move(state.current_outline));
                     state.current_outline = {};
                     std::cout << std::format("hmoveto (closed path): ({},{})", state.x,
@@ -341,48 +267,48 @@ struct Type2Charstring {
                                              state.y)
                               << std::endl;
                 }
-                contour_start = std::make_pair(state.x, state.y);
+                state.contour_start = std::make_pair(state.x, state.y);
                 break;
             }
 
             case Type2MoveToOperators::VMoveTo: {
-                const int dy1 = values.top();
-                values.pop();
+                const int dy1 = operands.top();
+                operands.pop();
                 state.y += dy1;
                 if (state.path_open) {
                     state.path_open = false;
                     state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
-                                                       contour_start.first,
-                                                       contour_start.second);
+                                                       state.contour_start.first,
+                                                       state.contour_start.second);
                     state.outlines.push_back(std::move(state.current_outline));
                     state.current_outline = {};
                     std::cout << std::format("vmoveto (closed path): ({},{})", state.x,
                                              state.y)
                               << std::endl;
 
-                    contour_start = std::make_pair(state.x, state.y);
+                    state.contour_start = std::make_pair(state.x, state.y);
                 } else {
-                    contour_start = std::make_pair(state.x, state.y);
+                    state.contour_start = std::make_pair(state.x, state.y);
                     state.path_open = true;
 
                     std::cout << std::format("vmoveto (opened path): ({},{})", state.x,
                                              state.y)
                               << std::endl;
                 }
-                contour_start = std::make_pair(state.x, state.y);
+                state.contour_start = std::make_pair(state.x, state.y);
                 break;
             }
 
             case Type2PathConstructOperators::RLineTo: {
-                const auto num_pairs = values.size() / 2;
+                const auto num_pairs = operands.size() / 2;
                 std::vector<std::pair<int, int>> ds{};
                 ds.reserve(num_pairs);
 
                 for (auto i = 0; i < num_pairs; i++) {
-                    const int dya = values.top();
-                    values.pop();
-                    const int dxa = values.top();
-                    values.pop();
+                    const int dya = operands.top();
+                    operands.pop();
+                    const int dxa = operands.top();
+                    operands.pop();
                     ds.emplace_back(dxa, dya);
                 }
 
@@ -401,19 +327,19 @@ struct Type2Charstring {
             }
 
             case Type2PathConstructOperators::HLineTo: {
-                const auto num_operands = values.size();
-                std::vector<int> operands;
-                operands.resize(num_operands);
+                const auto num_operands = operands.size();
+                std::vector<int> operands_vec;
+                operands_vec.resize(num_operands);
                 for (int i = operands.size() - 1; i >= 0; i--) {
-                    operands[i] = values.top();
-                    values.pop();
+                    operands_vec[i] = operands.top();
+                    operands.pop();
                 }
 
-                for (auto i = 0; i < operands.size(); i++) {
+                for (auto i = 0; i < operands_vec.size(); i++) {
                     if (i % 2 == 0) {
-                        state.x += operands[i];
+                        state.x += operands_vec[i];
                     } else {
-                        state.y += operands[i];
+                        state.y += operands_vec[i];
                     }
                     state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
                                                        state.x, state.y);
@@ -424,19 +350,19 @@ struct Type2Charstring {
             }
 
             case Type2PathConstructOperators::VLineTo: {
-                const auto num_operands = values.size();
-                std::vector<int> operands;
-                operands.resize(num_operands);
-                for (int i = operands.size() - 1; i >= 0; i--) {
-                    operands[i] = values.top();
-                    values.pop();
+                const auto num_operands = operands.size();
+                std::vector<int> operands_vec;
+                operands_vec.resize(num_operands);
+                for (int i = operands_vec.size() - 1; i >= 0; i--) {
+                    operands_vec[i] = operands.top();
+                    operands.pop();
                 }
 
-                for (auto i = 0; i < operands.size(); i++) {
+                for (auto i = 0; i < operands_vec.size(); i++) {
                     if (i % 2 == 0) {
-                        state.y += operands[i];
+                        state.y += operands_vec[i];
                     } else {
-                        state.x += operands[i];
+                        state.x += operands_vec[i];
                     }
                     state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
                                                        state.x, state.y);
@@ -447,21 +373,21 @@ struct Type2Charstring {
             }
 
             case Type2PathConstructOperators::RRCurveTo: {
-                const auto num_operands = values.size();
-                std::vector<int> operands;
-                operands.resize(num_operands);
+                const auto num_operands = operands.size();
+                std::vector<int> operands_vec;
+                operands_vec.resize(num_operands);
                 for (int i = operands.size() - 1; i >= 0; i--) {
-                    operands[i] = values.top();
-                    values.pop();
+                    operands_vec[i] = operands.top();
+                    operands.pop();
                 }
 
                 for (auto i = 0; i < num_operands / 6; i++) {
-                    const int dxa = operands[i * 6 + 0];
-                    const int dya = operands[i * 6 + 1];
-                    const int dxb = operands[i * 6 + 2];
-                    const int dyb = operands[i * 6 + 3];
-                    const int dxc = operands[i * 6 + 4];
-                    const int dyc = operands[i * 6 + 5];
+                    const int dxa = operands_vec[i * 6 + 0];
+                    const int dya = operands_vec[i * 6 + 1];
+                    const int dxb = operands_vec[i * 6 + 2];
+                    const int dyb = operands_vec[i * 6 + 3];
+                    const int dxc = operands_vec[i * 6 + 4];
+                    const int dyc = operands_vec[i * 6 + 5];
 
                     //  Control point A is the last value of the points vector
                     //  Control point B
@@ -500,30 +426,30 @@ struct Type2Charstring {
                 // |- dx1? {dya dxb dyb dyc}+ vvcurveto (26) |-
                 // We do some odd things with multiples of 4 to only read exactly what we
                 // expect. The assert at the end of this function will catch any errors.
-                const size_t num_operations = values.size() / 4;
-                std::vector<int> operands;
-                operands.resize(num_operations * 4);
+                const size_t num_operations = operands.size() / 4;
+                std::vector<int> operands_vec;
+                operands_vec.resize(num_operations * 4);
                 auto count = operands.size() - 1;
-                while (values.size() >= 4) {
-                    operands[count--] = values.top();
-                    values.pop();
-                    operands[count--] = values.top();
-                    values.pop();
-                    operands[count--] = values.top();
-                    values.pop();
-                    operands[count--] = values.top();
-                    values.pop();
+                while (operands.size() >= 4) {
+                    operands_vec[count--] = operands.top();
+                    operands.pop();
+                    operands_vec[count--] = operands.top();
+                    operands.pop();
+                    operands_vec[count--] = operands.top();
+                    operands.pop();
+                    operands_vec[count--] = operands.top();
+                    operands.pop();
                 }
-                if (values.size() > 0) {
-                    const int dx1 = values.top();
+                if (operands.size() > 0) {
+                    const int dx1 = operands.top();
                     state.x += dx1;
-                    values.pop();
+                    operands.pop();
                 }
                 for (auto i = 0; i < num_operations; i++) {
-                    const int dya = operands[i * 4 + 0];
-                    const int dxb = operands[i * 4 + 1];
-                    const int dyb = operands[i * 4 + 2];
-                    const int dyc = operands[i * 4 + 3];
+                    const int dya = operands_vec[i * 4 + 0];
+                    const int dxb = operands_vec[i * 4 + 1];
+                    const int dyb = operands_vec[i * 4 + 2];
+                    const int dyc = operands_vec[i * 4 + 3];
 
                     state.y += dya;
                     std::cout << std::format("vvcurveto: ({},{}) ", state.x, state.y);
@@ -552,35 +478,35 @@ struct Type2Charstring {
                 // |- dy1? {dxa dxb dyb dxc}+ hhcurveto (27) |-
                 // We do some odd things with multiples of 4 to only read exactly what we
                 // expect. The assert at the end of this function will catch any errors.
-                const size_t num_operations = values.size() / 4;
-                std::vector<int> operands;
-                operands.resize(num_operations * 4);
+                const size_t num_operations = operands.size() / 4;
+                std::vector<int> operands_vec;
+                operands_vec.resize(num_operations * 4);
                 auto count = operands.size() - 1;
-                while (values.size() >= 4) {
-                    operands[count--] = values.top();
-                    values.pop();
+                while (operands.size() >= 4) {
+                    operands_vec[count--] = operands.top();
+                    operands.pop();
 
-                    operands[count--] = values.top();
-                    values.pop();
+                    operands_vec[count--] = operands.top();
+                    operands.pop();
 
-                    operands[count--] = values.top();
-                    values.pop();
+                    operands_vec[count--] = operands.top();
+                    operands.pop();
 
-                    operands[count--] = values.top();
-                    values.pop();
+                    operands_vec[count--] = operands.top();
+                    operands.pop();
                 }
 
-                if (values.size() > 0) {
-                    const int dy1 = values.top();
+                if (operands.size() > 0) {
+                    const int dy1 = operands.top();
                     state.y += dy1;
-                    values.pop();
+                    operands.pop();
                 }
 
                 for (auto i = 0; i < num_operations; i++) {
-                    const int dxa = operands[i * 4 + 0];
-                    const int dxb = operands[i * 4 + 1];
-                    const int dyb = operands[i * 4 + 2];
-                    const int dxc = operands[i * 4 + 3];
+                    const int dxa = operands_vec[i * 4 + 0];
+                    const int dxb = operands_vec[i * 4 + 1];
+                    const int dyb = operands_vec[i * 4 + 2];
+                    const int dxc = operands_vec[i * 4 + 3];
 
                     state.x += dxa;
                     std::cout << std::format("hhcurveto: ({},{}) ", state.x, state.y);
@@ -602,22 +528,16 @@ struct Type2Charstring {
                 break;
             }
 
-            // Hintmasks operators are allowed in the subpath
-            case Type2HintOperators::HintMask:
-                DEBUG_ASSERT(
-                    false, "Error: HintMask operators in subpath is not yet implemented");
-                break;
-
             case Type2Operators::EndChar: {
                 std::cout << "endchar: "
-                          << std::format("({},{})", contour_start.first,
-                                         contour_start.second)
+                          << std::format("({},{})", state.contour_start.first,
+                                         state.contour_start.second)
                           << std::endl;
 
                 state.path_open = false;
                 state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
-                                                   contour_start.first,
-                                                   contour_start.second);
+                                                   state.contour_start.first,
+                                                   state.contour_start.second);
 
                 state.outlines.push_back(std::move(state.current_outline));
                 state.current_outline = {};
@@ -625,15 +545,15 @@ struct Type2Charstring {
             }
 
             case Type2Operators::CallSubr: {
-                const auto num_operands = values.size();
-                std::vector<int> operands;
-                operands.resize(num_operands);
+                const auto num_operands = operands.size();
+                std::vector<int> operands_vec;
+                operands_vec.resize(num_operands);
                 for (int i = operands.size() - 1; i >= 0; i--) {
-                    operands[i] = values.top();
-                    values.pop();
+                    operands_vec[i] = operands.top();
+                    operands.pop();
                 }
 
-                for (int c : operands) {
+                for (int c : operands_vec) {
                     const size_t subr_index =
                         subroutine_index_correction(c, local_subrs.count);
                     std::cout << std::format("callsubr: {}", subr_index) << std::endl;
@@ -641,7 +561,6 @@ struct Type2Charstring {
                     decode_glyph(subroutine, global_subrs, local_subrs, state);
                 }
 
-                // TODO: I expect the lower part of the "i" to be visible. WHy is it not?
                 // TODO: If the current path is open when a moveto operator is
                 // encountered, the path should be closed before performing the moveto
                 // TODO: Return multiple outlines
@@ -657,19 +576,13 @@ struct Type2Charstring {
             case Type2Operators::Return: {
                 std::cout << "return" << std::endl;
                 DEBUG_ASSERT(
-                    i == operators.size() - 1,
+                    iter + 1 == encoded_glyph_seq.end(),
                     "Error: return operator found when there are operators following.");
 
                 break;
             }
 
-            // These operators are handles above
-            case Type2HintOperators::HStem:
-            case Type2HintOperators::VStem:
-            case Type2HintOperators::HStemHM:
-            case Type2HintOperators::VStemHM:
-            case Type2HintOperators::CntrMask:
-                break;
+                // These operators are handles above
 
             default: {
                 DEBUG_ASSERT(false,
@@ -680,17 +593,17 @@ struct Type2Charstring {
         }
 
         // Check if the sequence started with a width
-        if (value_stacks[0].size() > 0) {
-            state.width = value_stacks[0].top();
-            value_stacks[0].pop();
+        if (operand_stacks[0].size() > 0) {
+            state.width = operand_stacks[0].top();
+            operand_stacks[0].pop();
         }
 
-        DEBUG_ASSERT(value_stacks[0].size() == 0,
+        DEBUG_ASSERT(operand_stacks[0].size() == 0,
                      "Error: glyph sequence still has an unprocessed width value");
-        DEBUG_CODE(for (auto i = 1; i < value_stacks.size(); i++) {
-            DEBUG_ASSERT(value_stacks[i].size() == 0,
+        DEBUG_CODE(for (auto i = 1; i < operand_stacks.size(); i++) {
+            DEBUG_ASSERT(operand_stacks[i].size() == 0,
                          std::format("Error: glyph sequence {} (operand {}) still has an "
-                                     "unprocessed value",
+                                     "unprocessed operand",
                                      i, operators[i]));
         });
 
@@ -751,6 +664,19 @@ struct Type2Charstring {
         }
         return index + 32768;
     }
+
+  private:
+    static void handle_hstem(font::detail::otf_font::cff::DecodeState &state,
+                             std::stack<int> &operands);
+
+    static void handle_hstemhm(font::detail::otf_font::cff::DecodeState &state,
+                               std::stack<int> &operands);
+
+    static void handle_vstem(font::detail::otf_font::cff::DecodeState &state,
+                             std::stack<int> &operands);
+
+    static void handle_vstemhm(font::detail::otf_font::cff::DecodeState &state,
+                               std::stack<int> &operands);
 };
 
 }; // namespace font::detail::otf_font::cff
