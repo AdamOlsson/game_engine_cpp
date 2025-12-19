@@ -21,11 +21,11 @@ void font::detail::otf_font::cff::Type2Charstring::handle_hstem(
     state.hint_count++;
 
     // This is all for print
-    std::string str;
-    for (size_t i = 0; i < dys.size(); ++i) {
-        str += std::format("({},{}) ", dys[i].first, dys[i].second);
-    }
-    std::cout << std::format("hstem: {} {} [{}]", y, dy, str) << std::endl;
+    /*std::string str;*/
+    /*for (size_t i = 0; i < dys.size(); ++i) {*/
+    /*    str += std::format("({},{}) ", dys[i].first, dys[i].second);*/
+    /*}*/
+    /*std::cout << std::format("hstem: {} {} [{}]", y, dy, str) << std::endl;*/
 }
 
 void font::detail::otf_font::cff::Type2Charstring::handle_hstemhm(
@@ -49,11 +49,11 @@ void font::detail::otf_font::cff::Type2Charstring::handle_hstemhm(
     state.hint_count++;
 
     // This is all for print
-    std::string str;
-    for (size_t i = 0; i < dys.size(); ++i) {
-        str += std::format("({},{}) ", dys[i].first, dys[i].second);
-    }
-    std::cout << std::format("hstemhm: {} {} [{}]", y, dy, str) << std::endl;
+    /*std::string str;*/
+    /*for (size_t i = 0; i < dys.size(); ++i) {*/
+    /*    str += std::format("({},{}) ", dys[i].first, dys[i].second);*/
+    /*}*/
+    /*std::cout << std::format("hstemhm: {} {} [{}]", y, dy, str) << std::endl;*/
 }
 
 void font::detail::otf_font::cff::Type2Charstring::handle_vstem(
@@ -76,11 +76,11 @@ void font::detail::otf_font::cff::Type2Charstring::handle_vstem(
     state.hint_count++;
 
     // This is all for print
-    std::string str;
-    for (size_t i = 0; i < dxs.size(); ++i) {
-        str += std::format("{{{} {}}},", dxs[i].first, dxs[i].second);
-    }
-    std::cout << std::format("vstem {} {} [{}] ", x, dx, str) << std::endl;
+    /*std::string str;*/
+    /*for (size_t i = 0; i < dxs.size(); ++i) {*/
+    /*    str += std::format("{{{} {}}},", dxs[i].first, dxs[i].second);*/
+    /*}*/
+    /*std::cout << std::format("vstem {} {} [{}] ", x, dx, str) << std::endl;*/
 }
 
 void font::detail::otf_font::cff::Type2Charstring::handle_vstemhm(
@@ -103,11 +103,11 @@ void font::detail::otf_font::cff::Type2Charstring::handle_vstemhm(
     state.hint_count++;
 
     // This is all for print
-    std::string str;
-    for (size_t i = 0; i < dxs.size(); ++i) {
-        str += std::format("{{{} {}}},", dxs[i].first, dxs[i].second);
-    }
-    std::cout << std::format("vstemhm {} {} [{}] ", x, dx, str) << std::endl;
+    /*std::string str;*/
+    /*for (size_t i = 0; i < dxs.size(); ++i) {*/
+    /*    str += std::format("{{{} {}}},", dxs[i].first, dxs[i].second);*/
+    /*}*/
+    /*std::cout << std::format("vstemhm {} {} [{}] ", x, dx, str) << std::endl;*/
 }
 
 void font::detail::otf_font::cff::Type2Charstring::handle_rmoveto(
@@ -125,13 +125,13 @@ void font::detail::otf_font::cff::Type2Charstring::handle_rmoveto(
                                            state.contour_start.second);
         state.outlines.push_back(std::move(state.current_outline));
         state.current_outline = {};
-        std::cout << std::format("rmoveto (closed path): ({},{})", state.x, state.y)
-                  << std::endl;
+        /*std::cout << std::format("rmoveto (closed path): ({},{})", state.x, state.y)*/
+        /*          << std::endl;*/
     } else {
         state.path_open = true;
 
-        std::cout << std::format("rmoveto (opened path): ({},{})", state.x, state.y)
-                  << std::endl;
+        /*std::cout << std::format("rmoveto (opened path): ({},{})", state.x, state.y)*/
+        /*          << std::endl;*/
     }
     state.contour_start = std::make_pair(state.x, state.y);
 }
@@ -148,13 +148,13 @@ void font::detail::otf_font::cff::Type2Charstring::handle_hmoveto(
                                            state.contour_start.second);
         state.outlines.push_back(std::move(state.current_outline));
         state.current_outline = {};
-        std::cout << std::format("hmoveto (closed path): ({},{})", state.x, state.y)
-                  << std::endl;
+        /*std::cout << std::format("hmoveto (closed path): ({},{})", state.x, state.y)*/
+        /*          << std::endl;*/
     } else {
         state.path_open = true;
 
-        std::cout << std::format("hmoveto (opened path): ({},{})", state.x, state.y)
-                  << std::endl;
+        /*std::cout << std::format("hmoveto (opened path): ({},{})", state.x, state.y)*/
+        /*          << std::endl;*/
     }
     state.contour_start = std::make_pair(state.x, state.y);
 }
@@ -171,16 +171,16 @@ void font::detail::otf_font::cff::Type2Charstring::handle_vmoveto(
                                            state.contour_start.second);
         state.outlines.push_back(std::move(state.current_outline));
         state.current_outline = {};
-        std::cout << std::format("vmoveto (closed path): ({},{})", state.x, state.y)
-                  << std::endl;
+        /*std::cout << std::format("vmoveto (closed path): ({},{})", state.x, state.y)*/
+        /*          << std::endl;*/
 
         state.contour_start = std::make_pair(state.x, state.y);
     } else {
         state.contour_start = std::make_pair(state.x, state.y);
         state.path_open = true;
 
-        std::cout << std::format("vmoveto (opened path): ({},{})", state.x, state.y)
-                  << std::endl;
+        /*std::cout << std::format("vmoveto (opened path): ({},{})", state.x, state.y)*/
+        /*          << std::endl;*/
     }
     state.contour_start = std::make_pair(state.x, state.y);
 }
@@ -204,7 +204,7 @@ void font::detail::otf_font::cff::Type2Charstring::handle_rlineto(
         state.y += ds[i].second;
         state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>, state.x,
                                            state.y);
-        std::cout << std::format("rlineto: ({},{}) ", state.x, state.y) << std::endl;
+        /*std::cout << std::format("rlineto: ({},{}) ", state.x, state.y) << std::endl;*/
     }
 }
 
@@ -226,7 +226,7 @@ void font::detail::otf_font::cff::Type2Charstring::handle_vlineto(
         }
         state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>, state.x,
                                            state.y);
-        std::cout << std::format("vlineto ({},{})", state.x, state.y) << std::endl;
+        /*std::cout << std::format("vlineto ({},{})", state.x, state.y) << std::endl;*/
     }
 }
 
@@ -248,7 +248,7 @@ void font::detail::otf_font::cff::Type2Charstring::handle_hlineto(
         }
         state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>, state.x,
                                            state.y);
-        std::cout << std::format("hlineto ({},{})", state.x, state.y) << std::endl;
+        /*std::cout << std::format("hlineto ({},{})", state.x, state.y) << std::endl;*/
     }
 }
 
@@ -264,7 +264,7 @@ void font::detail::otf_font::cff::Type2Charstring::handle_rcurveline(
     rlineto_stack.push(dxd);
     rlineto_stack.push(dyd);
 
-    std::cout << std::format("rcurveline: ") << std::endl;
+    /*std::cout << std::format("rcurveline: ") << std::endl;*/
     handle_rrcurveto(state, operands);
     handle_rlineto(state, rlineto_stack);
 
@@ -304,21 +304,21 @@ void font::detail::otf_font::cff::Type2Charstring::handle_rrcurveto(
         //  Control point B
         state.x += dxa;
         state.y += dya;
-        std::cout << std::format("rrcurveto: ({},{}) ", state.x, state.y);
+        /*std::cout << std::format("rrcurveto: ({},{}) ", state.x, state.y);*/
         state.current_outline.emplace_back(std::in_place_type<OffCurvePoint>, state.x,
                                            state.y);
 
         // Control point C
         state.x += dxb;
         state.y += dyb;
-        std::cout << std::format("({},{}) ", state.x, state.y);
+        /*std::cout << std::format("({},{}) ", state.x, state.y);*/
         state.current_outline.emplace_back(std::in_place_type<OffCurvePoint>, state.x,
                                            state.y);
 
         // Control point D
         state.x += dxc;
         state.y += dyc;
-        std::cout << std::format("({},{})", state.x, state.y) << std::endl;
+        /*std::cout << std::format("({},{})", state.x, state.y) << std::endl;*/
         state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>, state.x,
                                            state.y);
     }
@@ -355,19 +355,19 @@ void font::detail::otf_font::cff::Type2Charstring::handle_vvcurveto(
         const int dyc = operands_vec[i * 4 + 3];
 
         state.y += dya;
-        std::cout << std::format("vvcurveto: ({},{}) ", state.x, state.y);
+        /*std::cout << std::format("vvcurveto: ({},{}) ", state.x, state.y);*/
         state.current_outline.emplace_back(std::in_place_type<OffCurvePoint>, state.x,
                                            state.y);
 
         // Second control point
         state.x += dxb;
         state.y += dyb;
-        std::cout << std::format("({},{}) ", state.x, state.y);
+        /*std::cout << std::format("({},{}) ", state.x, state.y);*/
         state.current_outline.emplace_back(std::in_place_type<OffCurvePoint>, state.x,
                                            state.y);
 
         state.y += dyc;
-        std::cout << std::format("({},{})", state.x, state.y) << std::endl;
+        /*std::cout << std::format("({},{})", state.x, state.y) << std::endl;*/
         state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>, state.x,
                                            state.y);
     }
@@ -409,18 +409,18 @@ void font::detail::otf_font::cff::Type2Charstring::handle_hhcurveto(
         const int dxc = operands_vec[i * 4 + 3];
 
         state.x += dxa;
-        std::cout << std::format("hhcurveto: ({},{}) ", state.x, state.y);
+        /*std::cout << std::format("hhcurveto: ({},{}) ", state.x, state.y);*/
         state.current_outline.emplace_back(std::in_place_type<OffCurvePoint>, state.x,
                                            state.y);
 
         state.x += dxb;
         state.y += dyb;
-        std::cout << std::format("({},{}) ", state.x, state.y);
+        /*std::cout << std::format("({},{}) ", state.x, state.y);*/
         state.current_outline.emplace_back(std::in_place_type<OffCurvePoint>, state.x,
                                            state.y);
 
         state.x += dxc;
-        std::cout << std::format("({},{})", state.x, state.y) << std::endl;
+        /*std::cout << std::format("({},{})", state.x, state.y) << std::endl;*/
         state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>, state.x,
                                            state.y);
     }
@@ -428,10 +428,10 @@ void font::detail::otf_font::cff::Type2Charstring::handle_hhcurveto(
 
 void font::detail::otf_font::cff::Type2Charstring::handle_endchar(
     font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands) {
-    std::cout << "endchar: "
-              << std::format("({},{})", state.contour_start.first,
-                             state.contour_start.second)
-              << std::endl;
+    /*std::cout << "endchar: "*/
+    /*<< std::format("({},{})", state.contour_start.first,*/
+    /*               state.contour_start.second)*/
+    /*<< std::endl;*/
 
     state.path_open = false;
     state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
@@ -456,7 +456,7 @@ void font::detail::otf_font::cff::Type2Charstring::handle_callsubr(
 
     for (int c : operands_vec) {
         const size_t subr_index = subroutine_index_correction(c, local_subrs.count);
-        std::cout << std::format("callsubr: {}", subr_index) << std::endl;
+        /*std::cout << std::format("callsubr: {}", subr_index) << std::endl;*/
         const auto subroutine = local_subrs[subr_index];
         decode_glyph(subroutine, global_subrs, local_subrs, state);
     }
@@ -476,7 +476,7 @@ void font::detail::otf_font::cff::Type2Charstring::handle_callgsubr(
 
     for (int c : operands_vec) {
         const size_t subr_index = subroutine_index_correction(c, global_subrs.count);
-        std::cout << std::format("callgsubr: {}", subr_index) << std::endl;
+        /*std::cout << std::format("callgsubr: {}", subr_index) << std::endl;*/
         const auto subroutine = global_subrs[subr_index];
         decode_glyph(subroutine, global_subrs, local_subrs, state);
     }

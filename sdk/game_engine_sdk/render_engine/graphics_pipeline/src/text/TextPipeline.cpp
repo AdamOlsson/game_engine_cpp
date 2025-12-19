@@ -30,14 +30,60 @@ graphics_pipeline::text::TextPipeline::TextPipeline(
 void graphics_pipeline::text::TextPipeline::load_font(
     vulkan::CommandBufferManager *command_buffer_manager, const font::OTFFont &font) {
 
+    std::vector<vulkan::DrawIndirectCommand> draw_commands;
+    size_t instance_offset_count = 0;
+    size_t offset_count = 0;
     std::vector<Vertex> vertices;
-    for (const auto &glyph : font.m_font_table_cff.glyphs) {
-        for (const auto &point : glyph.outlines) {
+    /*size_t count = 0;*/
+    for (const auto &glyph : font.glyphs) {
+
+        /*if (count != 54 && count != 55) {*/
+        /*    count++;*/
+        /*    continue;*/
+        /*}*/
+        /*count++;*/
+
+        // Note: When I allow of composite glyphs, the cmap will not longer be valid
+        // as each additional outline of one glyph offsets all following vertices one
+        // index
+        const auto &outline = glyph.outlines[0];
+
+        draw_commands.push_back(vulkan::DrawIndirectCommand{
+            .vertexCount = static_cast<uint32_t>(outline.size()),
+            .instanceCount = 1,
+            .firstVertex = static_cast<uint32_t>(offset_count),
+            .firstInstance = static_cast<uint32_t>(instance_offset_count),
+        });
+
+        /*std::cout << "vertexCount: " << draw_commands.back().vertexCount << std::endl;*/
+        /*std::cout << "instanceCount: " << draw_commands.back().instanceCount <<
+         * std::endl;*/
+        /*std::cout << "firstVertex: " << draw_commands.back().firstVertex << std::endl;*/
+        /*std::cout << "firstInstance: " << draw_commands.back().firstInstance <<
+         * std::endl;*/
+        /*std::cout << std::endl;*/
+
+        // TODO: Handle multiple instances of a glyph
+        instance_offset_count++;
+
+        for (const auto &point : outline) {
             vertices.emplace_back(static_cast<float>(point.first),
                                   -1.0f * static_cast<float>(point.second), 0.0f);
+            offset_count++;
         }
     }
 
     m_glyph_vertex_buffer =
         vulkan::buffers::VertexBuffer(m_ctx, vertices, command_buffer_manager);
+
+    m_draw_command_buffer = vulkan::buffers::StorageBuffer<vulkan::DrawIndirectCommand>(
+        m_ctx, draw_commands.size(), VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT);
+
+    /*std::cout << "Size of draw commands: " << draw_commands.size() << std::endl;*/
+    for (auto &command : draw_commands) {
+        m_draw_command_buffer->push_back(std::move(command));
+    }
+
+    m_draw_command_buffer->transfer();
+    m_font = font;
 }

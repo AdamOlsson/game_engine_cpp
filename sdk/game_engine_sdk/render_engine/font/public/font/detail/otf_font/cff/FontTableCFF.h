@@ -5,6 +5,7 @@
 #include "CFFStandardStrings.h"
 #include "PrivateData.h"
 #include "Type2Charstring.h"
+
 #include "font/detail/ifstream_util.h"
 #include "util/assert.h"
 #include <cstdint>
@@ -46,11 +47,6 @@ enum EncodingID {
     Expert = 1,
 };
 
-struct Glyph {
-    std::string name;
-    std::vector<std::pair<int, int>> outlines;
-};
-
 struct FontTableCFF {
     struct Header {
         Card8 major_version = 0;
@@ -81,7 +77,7 @@ struct FontTableCFF {
 
     PrivateData private_data;
 
-    std::vector<Glyph> glyphs;
+    std::vector<font::Glyph> glyphs;
 
     static FontTableCFF read_font_table_cff(std::ifstream &stream) {
         const auto start_cff_data = stream.tellg();
@@ -124,30 +120,23 @@ struct FontTableCFF {
         stream.seekg(start_cff_data + std::streamoff(cff.top.charstrings));
         DEBUG_ASSERT(stream.good(),
                      "Error: Filestream not okay after seeking to charstring data.");
-        const auto charstrings_index = CFFIndex::read_index(stream);
-        /*std::cout << "Charstrings Index: " << charstrings_index << std::endl;*/
+        const auto charstring_index = CFFIndex::read_index(stream);
+        /*std::cout << "Charstring Index: " << charstring_index << std::endl;*/
 
         stream.seekg(start_cff_data + std::streamoff(cff.top.charset));
         DEBUG_ASSERT(stream.good(),
                      "Error: Filestream not okay after seeking to charset data.");
         const auto charset =
-            read_charsets_data(stream, charstrings_index.count, string_index);
+            read_charsets_data(stream, charstring_index.count, string_index);
 
         const auto glyph_outlines = Type2Charstring::parse(
-            charstrings_index, global_subroutines, local_subroutines);
+            charstring_index, global_subroutines, local_subroutines);
 
-        auto i = 54; // 54 = U
-        const auto glyph_name = charset[i - 1];
-        cff.glyphs = {
-            Glyph{.name = "", .outlines = glyph_outlines[0]},
-        };
-
-        /*auto g = cff.glyphs[0];*/
-        /*std::cout << std::format("Glyph '{}': ", g.name);*/
-        /*for (auto i : cff.glyphs[0].points) {*/
-        /*    std::cout << std::format("({},{}) ", i.first, i.second);*/
-        /*}*/
-        /*std::cout << std::endl;*/
+        cff.glyphs.reserve(charstring_index.count);
+        for (auto i = 0; i < charstring_index.count; i++) {
+            cff.glyphs.push_back(font::Glyph{.name = std::move(charset[i - 1]),
+                                             .outlines = std::move(glyph_outlines[i])});
+        }
 
         return cff;
     }

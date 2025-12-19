@@ -2,6 +2,7 @@
 
 #include "CFFDict.h"
 #include "CFFIndex.h"
+#include "font/Glyph.h"
 
 #include <ostream>
 #include <stdexcept>
@@ -39,8 +40,6 @@ struct OnCurvePoint {
     }
 };
 
-using Outline = std::vector<std::pair<int, int>>;
-using GlyphOutlines = std::vector<Outline>;
 using OutlineControlPoints = std::vector<std::variant<OffCurvePoint, OnCurvePoint>>;
 
 struct DecodeState {
@@ -94,14 +93,14 @@ enum Type2HintOperators {
 };
 
 struct Type2Charstring {
-    static std::vector<Outline> parse(const CFFIndex &charstring_index,
-                                      const CFFIndex &global_subrs,
-                                      const CFFIndex &local_subrs) {
+    static std::vector<GlyphOutlines> parse(const CFFIndex &charstring_index,
+                                            const CFFIndex &global_subrs,
+                                            const CFFIndex &local_subrs) {
 
         std::vector<GlyphOutlines> font_outlines;
         font_outlines.reserve(charstring_index.count);
         for (auto i = 0; i < charstring_index.count; i++) {
-            std::cout << std::endl << "Decoding glyph ID: " << i << std::endl;
+            /*std::cout << std::endl << "Decoding glyph ID: " << i << std::endl;*/
             const auto encoded_glyph_seq = charstring_index[i];
             // TODO: What to do with width?
             DecodeState state{};
@@ -115,11 +114,7 @@ struct Type2Charstring {
             font_outlines.push_back(std::move(glyph_outlines));
         }
 
-        // 48 = O
-        // 54 = U
-        // 74 = i
-        // 77 = l
-        return font_outlines[54];
+        return font_outlines;
     }
 
     static Outline parse_bezier_curves(const OutlineControlPoints bezier_curve) {
@@ -151,7 +146,7 @@ struct Type2Charstring {
         for (auto iter = encoded_glyph_seq.begin(); iter != encoded_glyph_seq.end();
              iter++) {
 
-            auto iter_copy = iter;
+            /*auto iter_copy = iter;*/
 
             std::stack<int> decoded_operands;
             decode_until_next_operator(iter, encoded_glyph_seq.end(), decoded_operands);
@@ -159,13 +154,13 @@ struct Type2Charstring {
             operand_stacks.push_back(std::move(decoded_operands));
             operators.push_back(operator_);
 
-            std::cout << "Encoded sequence: ";
-            while (iter_copy != iter) {
-                std::cout << static_cast<int>(*iter_copy) << " ";
-                iter_copy++;
-            }
-            std::cout << operator_ << std::endl;
-
+            /*std::cout << "Encoded sequence: ";*/
+            /*while (iter_copy != iter) {*/
+            /*    std::cout << static_cast<int>(*iter_copy) << " ";*/
+            /*    iter_copy++;*/
+            /*}*/
+            /*std::cout << operator_ << std::endl;*/
+            /**/
             // The following is the order of the operators:
             // w? {hs* vs* cm* hm* mt subpath}? {mt subpath}* endchar
 
@@ -201,27 +196,27 @@ struct Type2Charstring {
                 }
 
                 const size_t num_hint_bytes = (state.hint_count + 7) / 8;
-                std::cout << "hintmask: 0x";
+                /*std::cout << "hintmask: 0x";*/
                 std::vector<uint8_t> hint_mask_bytes;
                 for (size_t i = 0; i < num_hint_bytes; i++) {
                     hint_mask_bytes.push_back(*(++iter));
-                    std::cout << std::hex << static_cast<int>(hint_mask_bytes.back())
-                              << std::dec;
+                    /*std::cout << std::hex << static_cast<int>(hint_mask_bytes.back())*/
+                    /*          << std::dec;*/
                 }
-                std::cout << std::endl;
+                /*std::cout << std::endl;*/
                 break;
             }
 
             case Type2HintOperators::CntrMask: {
                 const size_t num_hint_bytes = (state.hint_count + 7) / 8;
-                std::cout << "cntrmask: 0x";
+                /*std::cout << "cntrmask: 0x";*/
                 std::vector<uint8_t> cntr_mask_bytes;
                 for (size_t i = 0; i < num_hint_bytes; i++) {
                     cntr_mask_bytes.push_back(*(++iter));
-                    std::cout << std::hex << static_cast<int>(cntr_mask_bytes.back())
-                              << std::dec;
+                    /*std::cout << std::hex << static_cast<int>(cntr_mask_bytes.back())*/
+                    /*          << std::dec;*/
                 }
-                std::cout << std::endl;
+                /*std::cout << std::endl;*/
                 break;
             }
 
@@ -287,7 +282,7 @@ struct Type2Charstring {
             }
 
             case Type2Operators::Return: {
-                std::cout << "return" << std::endl;
+                /*std::cout << "return" << std::endl;*/
                 DEBUG_ASSERT(
                     iter + 1 == encoded_glyph_seq.end(),
                     "Error: return operator found when there are operators following.");

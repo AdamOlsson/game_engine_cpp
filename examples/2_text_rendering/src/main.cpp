@@ -16,9 +16,12 @@ constexpr auto ZOOM_SCALE_FACTOR = 0.1f;
 
 // TODO:
 // TextPipeline:
-// - Validate the parsed points with the online tool. The character "l" does not seem to
-//      get the same values, maybe that is because of the hstem operator?
-// - Implement all other Type2Charstring operatorrs
+// - Handle compound glyphs, note that adding more outlines will offset all
+//         following glyph ids which I do not want. I want the cmap to correspond to the
+//         indices. Also keep in mind how we are going to render the glyphs properly.
+//
+// - Implement all other Type2Charstring operators
+// - Refactor the usage and internals of OTFFont to be nice
 // - Move ModelMatrix class to sdk
 
 class ExampleTextRendering : public Game {
@@ -55,6 +58,19 @@ class ExampleTextRendering : public Game {
         auto otf_font =
             font::OTFFont(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
 
+        m_glyph_positions = std::make_unique<
+            vulkan::buffers::SwapStorageBuffer<graphics_pipeline::text::TextPipelineSBO>>(
+            ctx, 2, otf_font.glyphs.size());
+
+        const auto scale = 0.1f;
+        for (auto i = 0; i < otf_font.glyphs.size(); i++) {
+            // TODO: Each instance should represent one text (not only one glyph)
+            m_glyph_positions->push_back(graphics_pipeline::text::TextPipelineSBO{
+                .model_matrix = ModelMatrix().scale(scale)});
+            /*std::cout << otf_font.glyphs[i].name << " " << std::endl;*/
+        }
+        m_glyph_positions->transfer();
+
         auto window_size = ctx->window->get_framebuffer_size<float>();
         const float num_pixels_at_default_zoom = 200.0f;
         m_camera = camera::Camera2D(window_size.width, window_size.height,
@@ -75,11 +91,6 @@ class ExampleTextRendering : public Game {
 
         const auto window_dims = ctx->window->dimensions<size_t>();
 
-        auto glyph = otf_font.m_font_table_cff.glyphs[0];
-        m_glyph_positions = std::make_unique<
-            vulkan::buffers::SwapStorageBuffer<graphics_pipeline::text::TextPipelineSBO>>(
-            ctx, 2, glyph.outlines.size());
-
         m_descriptor_set =
             std::make_unique<graphics_pipeline::text::TextPipelineDescriptorSet>(
                 ctx, m_descriptor_pool,
@@ -97,29 +108,6 @@ class ExampleTextRendering : public Game {
             ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
             &descriptor_layout, &push_constant_range);
         m_pipeline->load_font(m_command_buffer_manager.get(), otf_font);
-
-        auto glyph_id = otf_font.glyph_index(font::Unicode("U"));
-        std::cout << "Glyph ID: " << glyph_id << std::endl;
-
-        float sum_x = 0;
-        float sum_y = 0;
-        int count = 0;
-        const auto scale = 0.1f;
-        m_num_instances = glyph.outlines.size();
-        for (const auto &pos : glyph.outlines) {
-
-            m_glyph_positions->push_back(graphics_pipeline::text::TextPipelineSBO{
-                .model_matrix = ModelMatrix().scale(scale)});
-            sum_x += pos.first * scale;
-            sum_y += pos.second * scale;
-
-            count++;
-            break;
-        }
-        // Set camera in the middle of all points
-        m_camera.set_position(
-            camera::WorldPoint2D(sum_x / fmax(count, 1), sum_y / fmax(count, 1)));
-        m_glyph_positions->transfer();
     }
 
     void register_mouse_event_handler(vulkan::context::GraphicsContext *ctx) {
@@ -161,7 +149,8 @@ class ExampleTextRendering : public Game {
 
         auto descriptor = m_descriptor_set.get();
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
-        m_pipeline->render(command_buffer, descriptor, &push_constant, m_num_instances);
+        m_pipeline->render(command_buffer, descriptor, &push_constant,
+                           font::Unicode("A"));
 
         render_pass.end_submit_present();
 

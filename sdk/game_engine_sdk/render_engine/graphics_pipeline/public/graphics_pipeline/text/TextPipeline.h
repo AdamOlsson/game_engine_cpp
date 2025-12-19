@@ -2,6 +2,7 @@
 #include "TextPipelineDescriptorSet.h"
 #include "font/OTFFont.h"
 #include "vulkan/CommandBuffer.h"
+#include "vulkan/DrawIndirectCommand.h"
 #include "vulkan/Pipeline.h"
 #include "vulkan/PipelineLayout.h"
 #include "vulkan/PushConstantRange.h"
@@ -19,6 +20,11 @@ class TextPipeline {
 
     std::optional<vulkan::buffers::VertexBuffer> m_glyph_vertex_buffer;
     std::optional<vulkan::buffers::IndexBuffer> m_glyph_index_buffer;
+
+    std::optional<vulkan::buffers::StorageBuffer<vulkan::DrawIndirectCommand>>
+        m_draw_command_buffer;
+
+    std::optional<font::OTFFont> m_font;
 
     vulkan::ShaderStageFlags m_push_constant_stage;
 
@@ -38,7 +44,7 @@ class TextPipeline {
     template <typename PushConstantType>
     void render(const vulkan::CommandBuffer &command_buffer,
                 TextPipelineDescriptorSet *descriptor_set,
-                PushConstantType *push_constant, const int num_instances) {
+                PushConstantType *push_constant, const font::Unicode &unicode) {
 
         DEBUG_ASSERT(m_glyph_vertex_buffer.has_value(),
                      "Error: can't render text because a font is not loaded");
@@ -59,7 +65,15 @@ class TextPipeline {
         const VkDeviceSize vertex_buffers_offset = 0;
         vkCmdBindVertexBuffers(command_buffer, 0, 1, &m_glyph_vertex_buffer->buffer,
                                &vertex_buffers_offset);
-        vkCmdDraw(command_buffer, m_glyph_vertex_buffer->num_vertices, 1, 0, 0);
+
+        const int num_draw_calls = 1;
+        const int stride = sizeof(vulkan::DrawIndirectCommand);
+        const auto glyph_id = m_font->glyph_index(unicode);
+
+        auto draw_command_buffer_ref = m_draw_command_buffer->get_reference();
+        const int offset = glyph_id * stride;
+        vkCmdDrawIndirect(command_buffer, draw_command_buffer_ref.buffer, offset,
+                          num_draw_calls, stride);
     }
 };
 

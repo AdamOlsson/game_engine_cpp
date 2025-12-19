@@ -3,7 +3,6 @@
 #include "common.h"
 #include "logger/io.h"
 #include "vulkan/context/GraphicsContext.h"
-#include "vulkan/traits.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
 #include <iostream>
@@ -24,7 +23,7 @@ struct GpuBufferRef {
 };
 template <GpuBufferType BufferType> class BufferDescriptor;
 
-template <Printable T, GpuBufferType BufferType> class GpuBuffer {
+template <typename T, GpuBufferType BufferType> class GpuBuffer {
   private:
     std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
 
@@ -40,21 +39,25 @@ template <Printable T, GpuBufferType BufferType> class GpuBuffer {
   public:
     GpuBuffer() = default;
 
-    GpuBuffer(std::shared_ptr<vulkan::context::GraphicsContext> ctx, size_t capacity)
+    GpuBuffer(std::shared_ptr<vulkan::context::GraphicsContext> ctx, size_t capacity,
+              const std::optional<VkBufferUsageFlagBits> usage = std::nullopt)
         : m_ctx(ctx), m_capacity(capacity), m_size(capacity * sizeof(T)) {
 
+        VkBufferUsageFlagBits usage_;
         if constexpr (BufferType == GpuBufferType::Storage) {
-            create_buffer(m_ctx.get(), m_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                              VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                          m_buffer, m_buffer_memory);
-
+            usage_ = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
         } else if constexpr (BufferType == GpuBufferType::Uniform) {
-            create_buffer(m_ctx.get(), m_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                              VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                          m_buffer, m_buffer_memory);
+            usage_ = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
         }
+
+        if (usage.has_value()) {
+            usage_ = static_cast<VkBufferUsageFlagBits>(usage_ | usage.value());
+        }
+
+        create_buffer(m_ctx.get(), m_size, usage_,
+                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                          VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                      m_buffer, m_buffer_memory);
 
         m_staging_buffer.reserve(capacity);
         m_delta_ids.reserve(capacity);
@@ -81,10 +84,12 @@ template <Printable T, GpuBufferType BufferType> class GpuBuffer {
           m_staging_buffer(std::move(other.m_staging_buffer)),
           m_buffer(std::move(other.m_buffer)),
           m_buffer_memory(std::move(other.m_buffer_memory)),
-          m_buffer_mapped(std::move(other.m_buffer_mapped)) {
+          m_buffer_mapped(std::move(other.m_buffer_mapped)),
+          m_capacity(other.m_capacity) {
         other.m_buffer = VK_NULL_HANDLE;
         other.m_buffer_memory = VK_NULL_HANDLE;
         other.m_buffer_mapped = VK_NULL_HANDLE;
+        other.m_capacity = 0;
     }
 
     GpuBuffer &operator=(GpuBuffer &&other) noexcept {
@@ -95,10 +100,12 @@ template <Printable T, GpuBufferType BufferType> class GpuBuffer {
             m_buffer = std::move(other.m_buffer);
             m_buffer_memory = std::move(other.m_buffer_memory);
             m_buffer_mapped = std::move(other.m_buffer_mapped);
+            m_capacity = other.m_capacity;
 
             other.m_buffer = VK_NULL_HANDLE;
             other.m_buffer_memory = VK_NULL_HANDLE;
             other.m_buffer_mapped = VK_NULL_HANDLE;
+            other.m_capacity = 0;
         }
         return *this;
     }
@@ -160,7 +167,7 @@ template <Printable T, GpuBufferType BufferType> class GpuBuffer {
     T &operator[](size_t index) {
         // Note: Its not necesarrily true that if a user indexes into the staging buffer,
         // that they will update it. However, there is no other way of tracking if they do
-        // so we have to be defencive and asssume that changes are made. The type of
+        // so we have to be defensive and asssume that changes are made. The type of
         // indexing I refer to is:
         //
         // auto& buffer_memeber = gpu_buffer[index];

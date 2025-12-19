@@ -1,6 +1,6 @@
 #include "font/OTFFont.h"
+
 #include "font/detail/ifstream_util.h"
-#include "font/detail/otf_font/FontTableCmap.h"
 #include "font/detail/otf_font/FontTableHead.h"
 #include "font/detail/otf_font/FontTableHhea.h"
 #include "font/detail/otf_font/SfntHeader.h"
@@ -9,7 +9,8 @@
 font::OTFFont::OTFFont(const std::string &filepath) {
 
     auto otf_filestream = font::detail::open_filestream(filepath);
-    m_sfnt_header = font::detail::otf_font::SFntHeader::read_sfnt_header(otf_filestream);
+    auto m_sfnt_header =
+        font::detail::otf_font::SFntHeader::read_sfnt_header(otf_filestream);
     /*std::cout << m_sfnt_header << std::endl;*/
 
     /*std::cout << "Found tables:" << std::endl;*/
@@ -28,13 +29,13 @@ font::OTFFont::OTFFont(const std::string &filepath) {
 
         if (t.table_tag == "head") {
             // TODO: Calculate checksum of TableRecord
-            m_font_table_head =
+            auto m_font_table_head =
                 font::detail::otf_font::FontTableHead::read_font_table_head(
                     otf_filestream);
             /*std::cout << " - " << m_font_table_head << std::endl;*/
 
         } else if (t.table_tag == "hhea") {
-            m_font_table_hhea =
+            auto m_font_table_hhea =
                 font::detail::otf_font::FontTableHhea::read_font_table_hhea(
                     otf_filestream);
             /*std::cout << " - " << font_table_hhea << std::endl;*/
@@ -51,10 +52,10 @@ font::OTFFont::OTFFont(const std::string &filepath) {
 
         } else if (t.table_tag ==
                    "CFF ") { // Note the whitespace at the end of the string
-            m_font_table_cff =
+            auto m_font_table_cff =
                 font::detail::otf_font::cff::FontTableCFF::read_font_table_cff(
                     otf_filestream);
-            /*std::cout << " - " << m_font_table_cff << std::endl;*/
+            glyphs = std::move(m_font_table_cff.glyphs);
         }
     }
 }
