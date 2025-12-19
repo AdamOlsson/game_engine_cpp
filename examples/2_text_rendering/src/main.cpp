@@ -16,11 +16,15 @@ constexpr auto ZOOM_SCALE_FACTOR = 0.1f;
 
 // TODO:
 // TextPipeline:
-// - Handle compound glyphs, note that adding more outlines will offset all
-//         following glyph ids which I do not want. I want the cmap to correspond to the
-//         indices. Also keep in mind how we are going to render the glyphs properly.
-//
+// - Render the english alphabet for my font
+// - Use the bezier curves to create points on the outline of the glyph. Specifically, at
+//      t=0, t=0.5 and t=1.0
+// - Implement Loop-Blinn Algorithm for rendering of glyphs which requires me to
+//      also implement triangulation of the ou
+// - Handle compound glyphs and glyphs with "holes" like "A"
 // - Implement all other Type2Charstring operators
+// - Render the english alphabet for the two other fonts
+// - Render sentences
 // - Refactor the usage and internals of OTFFont to be nice
 // - Move ModelMatrix class to sdk
 
