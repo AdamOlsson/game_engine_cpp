@@ -14,15 +14,17 @@
 constexpr auto INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
 constexpr auto ZOOM_SCALE_FACTOR = 0.1f;
 
+// https://developer.nvidia.com/gpugems/gpugems3/part-iv-image-effects/chapter-25-rendering-vector-art-gpu
 // TODO:
 // TextPipeline:
-// - Render the english alphabet for my font
-// - Use the bezier curves to create points on the outline of the glyph. Specifically, at
-//      t=0, t=0.5 and t=1.0
-// - Implement Loop-Blinn Algorithm for rendering of glyphs which requires me to
-//      also implement triangulation of the ou
+// - Implement triangulation on on-curve points to get the interior of the glyph. Then
+//   render these triangles. I would go with Ear Clipping triangulation for now as it is
+//   the simplest.
+// - Implement Loop-Blinn Algorithm with the off-point curves to render smooth glyphs
+//
 // - Handle compound glyphs and glyphs with "holes" like "A"
 // - Implement all other Type2Charstring operators
+// - Render the english alphabet for my font
 // - Render the english alphabet for the two other fonts
 // - Render sentences
 // - Refactor the usage and internals of OTFFont to be nice
