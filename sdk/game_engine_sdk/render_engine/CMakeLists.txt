@@ -70,3 +70,6 @@ else()
     message(STATUS " Skipping graphics_pipeline module")
 endif()
 
+if(GAME_ENGINE_SDK_BUILD_TEST)
+    add_subdirectory(test)
+endif()

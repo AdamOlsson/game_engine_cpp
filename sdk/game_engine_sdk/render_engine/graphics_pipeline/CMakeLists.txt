@@ -61,4 +61,5 @@ target_link_libraries(${PROJECT_NAME}
         glm::glm
         render_engine::vulkan
         render_engine::font
+        render_engine::triangulation
 )

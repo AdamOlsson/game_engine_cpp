@@ -26,6 +26,10 @@ std::pair<int, int> make_vector(const std::pair<int, int> &from,
 
 std::vector<std::array<size_t, 3>>
 triangulation::earclip(const std::vector<std::pair<int, int>> &vertices) {
+    if (vertices.size() < 3) {
+        return {};
+    }
+
     std::vector<bool> is_reflex_vertex;
     is_reflex_vertex.resize(vertices.size());
 

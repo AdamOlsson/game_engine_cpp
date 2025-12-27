@@ -300,7 +300,7 @@ void font::detail::otf_font::cff::Type2Charstring::handle_rrcurveto(
         const int dxc = operands_vec[i * 6 + 4];
         const int dyc = operands_vec[i * 6 + 5];
 
-        //  Control point A is the last value of the points vector
+        //  Control point A is the previous value of the points vector
         //  Control point B
         state.x += dxa;
         state.y += dya;

@@ -18,7 +18,7 @@ constexpr auto ZOOM_SCALE_FACTOR = 0.1f;
 // TODO:
 // TextPipeline:
 // - Implement triangulation on on-curve points to get the interior of the glyph.
-// - Render the triangulated glyphs
+// - Render the glyphs using the indices returned from the triangulation
 // - Implement Loop-Blinn Algorithm with the off-point curves to render smooth glyphs
 // - Handle compound glyphs and glyphs with "holes" like "A"
 // - Implement all other Type2Charstring operators
@@ -154,7 +154,7 @@ class ExampleTextRendering : public Game {
         auto descriptor = m_descriptor_set.get();
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
         m_pipeline->render(command_buffer, descriptor, &push_constant,
-                           font::Unicode("A"));
+                           font::Unicode("C"));
 
         render_pass.end_submit_present();
 

@@ -22,5 +22,5 @@ void main() {
     TextSBO instance = storage_buffer.instances[gl_InstanceIndex];
 
     gl_Position = pc_camera.view_projection * instance.model_matrix * vec4(in_world_position, 1.0);
-    gl_PointSize = 4.0;
+    gl_PointSize = 8.0;
 }

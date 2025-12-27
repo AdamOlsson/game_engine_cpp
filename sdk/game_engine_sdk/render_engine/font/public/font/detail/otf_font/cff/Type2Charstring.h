@@ -121,18 +121,22 @@ struct Type2Charstring {
         Outline outline;
         outline.reserve(bezier_curve.size());
         for (const auto &control_point : bezier_curve) {
-            outline.emplace_back(std::visit(
+            const auto p = std::visit(
                 // TODO: Handle bezier curves
-                [](const auto &p) -> std::pair<int, int> {
+                [](const auto &p) -> std::optional<std::pair<int, int>> {
                     using T = std::decay_t<decltype(p)>;
                     if constexpr (std::is_same_v<T, OnCurvePoint>) {
                         return std::make_pair(p.x, p.y);
                     } else if constexpr (std::is_same_v<T, OffCurvePoint>) {
-                        return std::make_pair(p.x, p.y);
+                        return std::nullopt;
                     }
                     throw std::runtime_error("Error: Unkown curve point type");
                 },
-                control_point));
+                control_point);
+
+            if (p.has_value()) {
+                outline.emplace_back(std::move(p.value()));
+            }
         }
         return outline;
     }

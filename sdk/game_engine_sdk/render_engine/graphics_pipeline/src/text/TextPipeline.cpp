@@ -1,6 +1,7 @@
 #include "graphics_pipeline/text/TextPipeline.h"
 #include "shaders/text_fragment_shader.h"
 #include "shaders/text_vertex_shader.h"
+#include "triangulation/earcut.h"
 #include "vulkan/vulkan_core.h"
 
 graphics_pipeline::text::TextPipeline::TextPipeline(
@@ -34,6 +35,7 @@ void graphics_pipeline::text::TextPipeline::load_font(
     size_t instance_offset_count = 0;
     size_t offset_count = 0;
     std::vector<Vertex> vertices;
+    std::vector<uint16_t> indices;
     for (const auto &glyph : font.glyphs) {
 
         // Note: When I allow of composite glyphs, the cmap will not longer be valid
@@ -51,10 +53,6 @@ void graphics_pipeline::text::TextPipeline::load_font(
         // TODO: Handle multiple instances of a glyph
         instance_offset_count++;
 
-        // TODO: I suspect that I need to change front face of the triangles as the x,y
-        // coordinates in the OTF data are in counter clockwise order with positive y-axis
-        // up. When we flip the y-axis for the gpu, the x,y coordinates will be in
-        // clockwise order
         std::cout << glyph.name << ": ";
         for (const auto &point : outline) {
             std::cout << std::format("({},{}) ", point.first, point.second);
@@ -63,6 +61,13 @@ void graphics_pipeline::text::TextPipeline::load_font(
             offset_count++;
         }
         std::cout << std::endl;
+
+        // TODO: I suspect that I need to change front face of the triangles as the x,y
+        // coordinates in the OTF data are in counter clockwise order with positive y-axis
+        // up. When we flip the y-axis for the gpu, the x,y coordinates will be in
+        // clockwise order
+        /*const std::vector<std::array<size_t, 3>> triangles =*/
+        /*    triangulation::earclip(outline);*/
     }
 
     m_glyph_vertex_buffer =
