@@ -34,14 +34,7 @@ void graphics_pipeline::text::TextPipeline::load_font(
     size_t instance_offset_count = 0;
     size_t offset_count = 0;
     std::vector<Vertex> vertices;
-    /*size_t count = 0;*/
     for (const auto &glyph : font.glyphs) {
-
-        /*if (count != 54 && count != 55) {*/
-        /*    count++;*/
-        /*    continue;*/
-        /*}*/
-        /*count++;*/
 
         // Note: When I allow of composite glyphs, the cmap will not longer be valid
         // as each additional outline of one glyph offsets all following vertices one
@@ -55,22 +48,21 @@ void graphics_pipeline::text::TextPipeline::load_font(
             .firstInstance = static_cast<uint32_t>(instance_offset_count),
         });
 
-        /*std::cout << "vertexCount: " << draw_commands.back().vertexCount << std::endl;*/
-        /*std::cout << "instanceCount: " << draw_commands.back().instanceCount <<
-         * std::endl;*/
-        /*std::cout << "firstVertex: " << draw_commands.back().firstVertex << std::endl;*/
-        /*std::cout << "firstInstance: " << draw_commands.back().firstInstance <<
-         * std::endl;*/
-        /*std::cout << std::endl;*/
-
         // TODO: Handle multiple instances of a glyph
         instance_offset_count++;
 
+        // TODO: I suspect that I need to change front face of the triangles as the x,y
+        // coordinates in the OTF data are in counter clockwise order with positive y-axis
+        // up. When we flip the y-axis for the gpu, the x,y coordinates will be in
+        // clockwise order
+        std::cout << glyph.name << ": ";
         for (const auto &point : outline) {
+            std::cout << std::format("({},{}) ", point.first, point.second);
             vertices.emplace_back(static_cast<float>(point.first),
                                   -1.0f * static_cast<float>(point.second), 0.0f);
             offset_count++;
         }
+        std::cout << std::endl;
     }
 
     m_glyph_vertex_buffer =

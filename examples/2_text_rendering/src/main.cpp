@@ -17,11 +17,9 @@ constexpr auto ZOOM_SCALE_FACTOR = 0.1f;
 // https://developer.nvidia.com/gpugems/gpugems3/part-iv-image-effects/chapter-25-rendering-vector-art-gpu
 // TODO:
 // TextPipeline:
-// - Implement triangulation on on-curve points to get the interior of the glyph. Then
-//   render these triangles. I would go with Ear Clipping triangulation for now as it is
-//   the simplest.
+// - Implement triangulation on on-curve points to get the interior of the glyph.
+// - Render the triangulated glyphs
 // - Implement Loop-Blinn Algorithm with the off-point curves to render smooth glyphs
-//
 // - Handle compound glyphs and glyphs with "holes" like "A"
 // - Implement all other Type2Charstring operators
 // - Render the english alphabet for my font

@@ -24,7 +24,7 @@ int cross_prod(const std::pair<int, int> &va, const std::pair<int, int> &vb);
 std::pair<int, int> make_vector(const std::pair<int, int> &from,
                                 const std::pair<int, int> &to);
 
-std::vector<std::array<std::pair<int, int>, 3>>
+std::vector<std::array<size_t, 3>>
 triangulation::earclip(const std::vector<std::pair<int, int>> &vertices) {
     std::vector<bool> is_reflex_vertex;
     is_reflex_vertex.resize(vertices.size());
@@ -77,17 +77,18 @@ triangulation::earclip(const std::vector<std::pair<int, int>> &vertices) {
 
     DEBUG_ASSERT(is_ear_vertex.size() > 0, "Error: Found no ears in the polygon.");
 
-    std::vector<std::array<std::pair<int, int>, 3>> triangles;
+    std::vector<std::array<size_t, 3>> triangles;
     triangles.reserve(vertices.size() - 2);
     size_t i = 0;
+    // IMPROVEMENT: Use doubly linked list for ears and pop from front when removing
+    // indices. This would save some iterations where i is not an ear.
     while (triangles.size() < vertices.size() - 2) {
         if (!is_ear_vertex[i] || is_removed[i]) {
             i = (i + 1) % vertices.size();
             continue;
         }
 
-        triangles.emplace_back(
-            std::array{vertices[prev_id[i]], vertices[i], vertices[next_id[i]]});
+        triangles.emplace_back(std::array{prev_id[i], i, next_id[i]});
 
         if (triangles.size() >= vertices.size() - 2) {
             break;
