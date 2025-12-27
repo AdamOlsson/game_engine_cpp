@@ -1,4 +1,3 @@
-
 message(STATUS "Building tests for ${PROJECT_NAME}...")
 
 if(NOT GTest_FOUND)
@@ -14,7 +13,7 @@ if(CMAKE_LOG_LEVEL_DEBUG)
     endforeach()
 endif()
 
-set(TEST_EXEC_NAME "font_tests")
+set(TEST_EXEC_NAME "triangulation_tests")
 
 add_executable(${TEST_EXEC_NAME}
     ${TEST_SOURCES}
@@ -29,7 +28,7 @@ target_include_directories(${TEST_EXEC_NAME}
 
 target_link_libraries(${TEST_EXEC_NAME}
     PRIVATE
-        render_engine::font
+        render_engine::triangulation
         GTest::gtest_main
 )
 

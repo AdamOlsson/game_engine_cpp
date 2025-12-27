@@ -4,6 +4,7 @@ message(STATUS "Configuring render_engine modules")
 
 project(render_engine)
 
+option(RENDER_ENGINE_BUILD_TRIANGULATION "Build the triangulation module" ON)
 option(RENDER_ENGINE_BUILD_FONT "Build the font module" ON)
 option(RENDER_ENGINE_BUILD_IMAGE "Build the image module" ON)
 option(RENDER_ENGINE_BUILD_CAMERA "Build the camera module" ON)
@@ -11,6 +12,14 @@ option(RENDER_ENGINE_BUILD_TILING "Build the tiling module" ON)
 option(RENDER_ENGINE_BUILD_WINDOW "Build the window module" ON)
 option(RENDER_ENGINE_BUILD_VULKAN "Build the vulkan module" ON)
 option(RENDER_ENGINE_BUILD_GRAPHICS_PIPELINE "Build the graphics_pipeline module" ON)
+
+
+if(RENDER_ENGINE_BUILD_TRIANGULATION)
+    message(STATUS "Adding triangulation module")
+    add_subdirectory(triangulation)
+else()
+    message(STATUS "Skipping triangulation module")
+endif()
 
 if(RENDER_ENGINE_BUILD_FONT)
     message(STATUS "Adding font module")
