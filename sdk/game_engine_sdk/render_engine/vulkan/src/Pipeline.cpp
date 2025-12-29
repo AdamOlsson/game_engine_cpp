@@ -105,7 +105,7 @@ VkPipeline vulkan::Pipeline::create_graphics_pipeline(
     rasterizer.polygonMode = opts.rasterizer.polygon_mode;
     rasterizer.lineWidth = 1.0f;
     rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-    rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    rasterizer.frontFace = opts.rasterizer.front_face;
     rasterizer.depthBiasEnable = VK_FALSE;
     rasterizer.depthBiasConstantFactor = 0.0f; // Optional
     rasterizer.depthBiasClamp = 0.0f;          // Optional

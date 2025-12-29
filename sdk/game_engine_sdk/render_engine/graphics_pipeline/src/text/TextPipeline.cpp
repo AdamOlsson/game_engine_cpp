@@ -22,20 +22,16 @@ graphics_pipeline::text::TextPipeline::TextPipeline(
         ctx, m_pipeline_layout,
         vulkan::ShaderModule(ctx, quad_vert->bytes(), quad_vert->length()),
         vulkan::ShaderModule(ctx, quad_frag->bytes(), quad_frag->length()),
-        *swap_chain_manager,
-        vulkan::PipelineOpts{
-            .assembler = {.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST},
-        });
+        *swap_chain_manager, vulkan::PipelineOpts{});
 }
 
 void graphics_pipeline::text::TextPipeline::load_font(
     vulkan::CommandBufferManager *command_buffer_manager, const font::OTFFont &font) {
 
-    std::vector<vulkan::DrawIndirectCommand> draw_commands;
+    std::vector<vulkan::DrawIndexedIndirectCommand> index_draw_commands;
     size_t instance_offset_count = 0;
-    size_t offset_count = 0;
     std::vector<Vertex> vertices;
-    /*std::vector<uint16_t> indices;*/
+    std::vector<uint16_t> indices;
     for (const auto &glyph : font.glyphs) {
 
         // Note: When I allow of composite glyphs, the cmap will not longer be valid
@@ -43,41 +39,43 @@ void graphics_pipeline::text::TextPipeline::load_font(
         // index
         const auto &outline = glyph.outlines[0];
 
-        draw_commands.push_back(vulkan::DrawIndirectCommand{
-            .vertexCount = static_cast<uint32_t>(outline.size()),
+        const size_t first_vertex_idx = vertices.size();
+        for (const auto &point : outline) {
+            vertices.emplace_back(static_cast<float>(point.first),
+                                  -1.0f * static_cast<float>(point.second), 0.0f);
+        }
+
+        const std::vector<std::array<size_t, 3>> triangles =
+            triangulation::earclip(outline);
+
+        const size_t first_index_idx = indices.size();
+        for (const auto &triangle : triangles) {
+            indices.push_back(triangle[0] + first_vertex_idx);
+            indices.push_back(triangle[1] + first_vertex_idx);
+            indices.push_back(triangle[2] + first_vertex_idx);
+        }
+
+        index_draw_commands.push_back(vulkan::DrawIndexedIndirectCommand{
+            .indexCount = static_cast<uint32_t>(indices.size() - first_index_idx),
             .instanceCount = 1,
-            .firstVertex = static_cast<uint32_t>(offset_count),
+            .firstIndex = static_cast<uint32_t>(first_index_idx),
             .firstInstance = static_cast<uint32_t>(instance_offset_count),
         });
 
         // TODO: Handle multiple instances of a glyph
         instance_offset_count++;
-
-        std::cout << glyph.name << ": ";
-        for (const auto &point : outline) {
-            std::cout << std::format("({},{}) ", point.first, point.second);
-            vertices.emplace_back(static_cast<float>(point.first),
-                                  -1.0f * static_cast<float>(point.second), 0.0f);
-            offset_count++;
-        }
-        std::cout << std::endl;
-
-        // TODO: I suspect that I need to change front face of the triangles as the x,y
-        // coordinates in the OTF data are in counter clockwise order with positive y-axis
-        // up. When we flip the y-axis for the gpu, the x,y coordinates will be in
-        // clockwise order
-        /*const std::vector<std::array<size_t, 3>> triangles =*/
-        /*    triangulation::earclip(outline);*/
     }
 
     m_glyph_vertex_buffer =
         vulkan::buffers::VertexBuffer(m_ctx, vertices, command_buffer_manager);
+    m_glyph_index_buffer =
+        vulkan::buffers::IndexBuffer(m_ctx, indices, command_buffer_manager);
 
-    m_draw_command_buffer = vulkan::buffers::StorageBuffer<vulkan::DrawIndirectCommand>(
-        m_ctx, draw_commands.size(), VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT);
+    m_draw_command_buffer =
+        vulkan::buffers::StorageBuffer<vulkan::DrawIndexedIndirectCommand>(
+            m_ctx, index_draw_commands.size(), VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT);
 
-    /*std::cout << "Size of draw commands: " << draw_commands.size() << std::endl;*/
-    for (auto &command : draw_commands) {
+    for (auto &command : index_draw_commands) {
         m_draw_command_buffer->push_back(std::move(command));
     }
 

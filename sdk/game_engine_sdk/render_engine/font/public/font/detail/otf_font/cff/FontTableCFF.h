@@ -133,8 +133,8 @@ struct FontTableCFF {
             charstring_index, global_subroutines, local_subroutines);
 
         cff.glyphs.reserve(charstring_index.count);
-        for (auto i = 0; i < charstring_index.count; i++) {
-            cff.glyphs.push_back(font::Glyph{.name = std::move(charset[i - 1]),
+        for (size_t i = 0; i < charstring_index.count; i++) {
+            cff.glyphs.push_back(font::Glyph{.name = std::move(charset[i]),
                                              .outlines = std::move(glyph_outlines[i])});
         }
 

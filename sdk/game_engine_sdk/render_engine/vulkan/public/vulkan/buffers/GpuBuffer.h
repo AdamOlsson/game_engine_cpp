@@ -116,6 +116,8 @@ template <typename T, GpuBufferType BufferType> class GpuBuffer {
     size_t size() const { return m_size; }
     size_t num_elements() const { return m_staging_buffer.size(); }
 
+    size_t size_of_T() { return sizeof(T); }
+
     void clear() {
         // Note: Not sure how this would work with partial updates. Right now, if you
         // clear the staging buffer you need to call transfer() to sync tracking
@@ -281,6 +283,8 @@ template <typename T, GpuBufferType BufferType> class SwapGpuBuffer {
     }
 
     GpuBuffer<T, BufferType> &get_buffer() { return m_buffers[m_idx]; }
+
+    size_t size_of_T() { return sizeof(T); }
 
     void rotate() { m_idx = ++m_idx % m_buffers.size(); }
 

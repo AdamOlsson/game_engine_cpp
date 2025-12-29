@@ -15,6 +15,7 @@ struct PipelineOpts {
     } assembler;
     struct {
         VkPolygonMode polygon_mode = VK_POLYGON_MODE_FILL;
+        VkFrontFace front_face = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     } rasterizer;
     struct {
         std::vector<VkDynamicState> states{VK_DYNAMIC_STATE_VIEWPORT,

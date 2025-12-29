@@ -2,6 +2,7 @@
 #include "TextPipelineDescriptorSet.h"
 #include "font/OTFFont.h"
 #include "vulkan/CommandBuffer.h"
+#include "vulkan/DrawIndexedIndirectCommand.h"
 #include "vulkan/DrawIndirectCommand.h"
 #include "vulkan/Pipeline.h"
 #include "vulkan/PipelineLayout.h"
@@ -21,7 +22,7 @@ class TextPipeline {
     std::optional<vulkan::buffers::VertexBuffer> m_glyph_vertex_buffer;
     std::optional<vulkan::buffers::IndexBuffer> m_glyph_index_buffer;
 
-    std::optional<vulkan::buffers::StorageBuffer<vulkan::DrawIndirectCommand>>
+    std::optional<vulkan::buffers::StorageBuffer<vulkan::DrawIndexedIndirectCommand>>
         m_draw_command_buffer;
 
     std::optional<font::OTFFont> m_font;
@@ -65,15 +66,18 @@ class TextPipeline {
         const VkDeviceSize vertex_buffers_offset = 0;
         vkCmdBindVertexBuffers(command_buffer, 0, 1, &m_glyph_vertex_buffer->buffer,
                                &vertex_buffers_offset);
+        vkCmdBindIndexBuffer(command_buffer, m_glyph_index_buffer->buffer, 0,
+                             VK_INDEX_TYPE_UINT16);
 
         const int num_draw_calls = 1;
-        const int stride = sizeof(vulkan::DrawIndirectCommand);
+        const int stride = m_draw_command_buffer->size_of_T();
         const auto glyph_id = m_font->glyph_index(unicode);
 
         auto draw_command_buffer_ref = m_draw_command_buffer->get_reference();
         const int offset = glyph_id * stride;
-        vkCmdDrawIndirect(command_buffer, draw_command_buffer_ref.buffer, offset,
-                          num_draw_calls, stride);
+
+        vkCmdDrawIndexedIndirect(command_buffer, draw_command_buffer_ref.buffer, offset,
+                                 num_draw_calls, stride);
     }
 };
 
