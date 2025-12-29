@@ -20,6 +20,9 @@ add_executable(${TEST_EXEC_NAME}
     ${TEST_SOURCES}
 )
 
+target_compile_definitions(${TEST_EXEC_NAME} PRIVATE 
+    ASSET_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets")
+
 target_include_directories(${TEST_EXEC_NAME}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/tests
