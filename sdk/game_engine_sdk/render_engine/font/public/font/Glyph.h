@@ -2,12 +2,19 @@
 #include <vector>
 namespace font {
 
-using Outline = std::vector<std::pair<int, int>>;
-using GlyphOutlines = std::vector<Outline>;
+template <typename T> using Vertex = std::pair<T, T>;
+template <typename T> using Triangle = std::array<Vertex<T>, 3>;
+
+struct GlyphVertices {
+    std::vector<font::Vertex<float>> interior;
+    std::vector<font::Triangle<float>> exterior;
+};
+
+using GlyphVertexCollection = std::vector<GlyphVertices>;
 
 struct Glyph {
     std::string name;
-    GlyphOutlines outlines;
+    GlyphVertexCollection vertices;
 };
 
 } // namespace font

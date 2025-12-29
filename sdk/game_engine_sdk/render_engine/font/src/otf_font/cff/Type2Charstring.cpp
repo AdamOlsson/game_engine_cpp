@@ -1,6 +1,7 @@
 #include "font/detail/otf_font/cff/Type2Charstring.h"
+#include "math/interpolate.h"
 
-bool font::detail::otf_font::cff::Type2Charstring::is_off_curve_point(
+constexpr bool font::detail::otf_font::cff::Type2Charstring::is_off_curve_point(
     const std::variant<OffCurvePoint, OnCurvePoint> &p) {
     return std::visit(
         [](const auto &p) -> bool {
@@ -10,39 +11,62 @@ bool font::detail::otf_font::cff::Type2Charstring::is_off_curve_point(
         p);
 }
 
-font::Outline font::detail::otf_font::cff::Type2Charstring::parse_bezier_curves(
+constexpr std::pair<int, int>
+font::detail::otf_font::cff::Type2Charstring::decay_to_point(
+    const std::variant<OffCurvePoint, OnCurvePoint> &p) {
+    return std::visit(
+        [](const auto &p) -> std::pair<int, int> {
+            using T = std::decay_t<decltype(p)>;
+            if constexpr (std::is_same_v<T, OnCurvePoint>) {
+                return std::make_pair(p.x, p.y);
+            } else if constexpr (std::is_same_v<T, OffCurvePoint>) {
+                return std::make_pair(p.x, p.y);
+            }
+            throw std::runtime_error("Error: Unkown curve point type");
+        },
+        p);
+}
+
+font::GlyphVertices font::detail::otf_font::cff::Type2Charstring::parse_outline(
     const OutlineControlPoints &control_points) {
-    Outline outline;
-    outline.reserve(control_points.size());
+    GlyphVertices vertices;
+    vertices.interior.reserve(control_points.size());
+
+    /*Outline outline;*/
+    /*outline.reserve(control_points.size());*/
     for (size_t i = 0; i < control_points.size(); i++) {
         const auto &control_point = control_points[i];
 
-        // If the following control point is an off-curve points, the current point
-        // is the first control point of a cubic bezier curve
+        // If the following control point is an off-curve point, the current point
+        // is the first off-curve control point of a cubic bezier curve
         if (is_off_curve_point(control_point)) {
+            const std::pair<int, int> p0 = decay_to_point(
+                control_points[(i + control_points.size() - 1) % control_points.size()]);
+            const std::pair<int, int> p1 = decay_to_point(control_point);
+            const std::pair<int, int> p2 = decay_to_point(control_points[i + 1]);
+            const std::pair<int, int> p3 = decay_to_point(control_points[i + 2]);
+
+            const std::pair<math::CubicBezier, math::CubicBezier> split =
+                math::de_casteljaus(math::CubicBezier{p0, p1, p2, p3});
+
+            const math::QuadraticBezer quad_bezier1 =
+                math::approximate_quadratic_bezier(split.first);
+            const math::QuadraticBezer quad_bezier2 =
+                math::approximate_quadratic_bezier(split.second);
+
+            // TODO: How do I make a triangle from the quadratic bezier?
+            // I simply use p0, p1 and p2 as vertices
+
+            // TODO: Add the exterior triangles to an exterior vector
 
             i++; // Increment past the second off-curve control point
             continue;
         }
 
-        const auto p = std::visit(
-            // TODO: Handle bezier curves
-            [](const auto &p) -> std::optional<std::pair<int, int>> {
-                using T = std::decay_t<decltype(p)>;
-                if constexpr (std::is_same_v<T, OnCurvePoint>) {
-                    return std::make_pair(p.x, p.y);
-                } else if constexpr (std::is_same_v<T, OffCurvePoint>) {
-                    return std::nullopt;
-                }
-                throw std::runtime_error("Error: Unkown curve point type");
-            },
-            control_point);
-
-        if (p.has_value()) {
-            outline.emplace_back(std::move(p.value()));
-        }
+        const auto p = decay_to_point(control_point);
+        vertices.interior.emplace_back(std::move(p));
     }
-    return outline;
+    return vertices;
 }
 
 void font::detail::otf_font::cff::Type2Charstring::handle_hstem(

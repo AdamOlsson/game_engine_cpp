@@ -10,7 +10,7 @@ TEST(TriangulateGlyphsTest, Test_TriangulateAllGlyphs) {
 
     size_t count = 0;
     for (const auto &glyph : otf_font.glyphs) {
-        const auto &outline = glyph.outlines[0];
+        const auto &outline = glyph.vertices[0].interior;
 
         if (outline.size() < 3) {
             continue;
@@ -22,7 +22,7 @@ TEST(TriangulateGlyphsTest, Test_TriangulateAllGlyphs) {
         }
 
         const std::vector<std::array<size_t, 3>> triangles =
-            triangulation::earcut<triangulation::Index>(outline);
+            triangulation::earcut(outline);
         std::cout << std::endl;
 
         ASSERT_EQ(triangles.size(), outline.size() - 2);

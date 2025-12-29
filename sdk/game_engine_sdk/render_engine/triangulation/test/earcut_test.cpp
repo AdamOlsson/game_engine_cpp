@@ -5,7 +5,7 @@ TEST(TriangulationEarClipTests, Test_EarClipTriangle) {
     // Note the counter clockwise ordering, positive y up
     const std::vector<std::pair<int, int>> polygon = {{0, 0}, {10, 0}, {5, 5}};
 
-    const auto triangles = triangulation::earcut<triangulation::Index>(polygon);
+    const auto triangles = triangulation::earcut(polygon);
 
     EXPECT_EQ(1, triangles.size());
 
@@ -18,7 +18,7 @@ TEST(TriangulationEarClipTests, Test_EarClipQuad) {
     // Note the counter clockwise ordering, positive y up
     const std::vector<std::pair<int, int>> polygon = {{-5, -5}, {5, -5}, {5, 5}, {-5, 5}};
 
-    const auto triangles = triangulation::earcut<triangulation::Index>(polygon);
+    const auto triangles = triangulation::earcut(polygon);
 
     EXPECT_EQ(2, triangles.size());
 
@@ -37,7 +37,7 @@ TEST(TriangulationEarClipTests, Test_EarClipSimplePolygon) {
         {3, 48},   {52, 8},    {99, 50}, {138, 25}, {175, 77},
         {131, 72}, {111, 113}, {72, 43}, {26, 55},  {29, 100}};
 
-    const auto triangles = triangulation::earcut<triangulation::Index>(polygon);
+    const auto triangles = triangulation::earcut(polygon);
 
     EXPECT_EQ(8, triangles.size());
 

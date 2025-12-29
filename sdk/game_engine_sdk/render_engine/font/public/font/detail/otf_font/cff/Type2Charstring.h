@@ -93,28 +93,28 @@ enum Type2HintOperators {
 };
 
 struct Type2Charstring {
-    static std::vector<GlyphOutlines> parse(const CFFIndex &charstring_index,
-                                            const CFFIndex &global_subrs,
-                                            const CFFIndex &local_subrs) {
+    static std::vector<GlyphVertexCollection> parse(const CFFIndex &charstring_index,
+                                                    const CFFIndex &global_subrs,
+                                                    const CFFIndex &local_subrs) {
 
-        std::vector<GlyphOutlines> font_outlines;
-        font_outlines.reserve(charstring_index.count);
+        std::vector<std::vector<font::GlyphVertices>> font_vertices;
+        font_vertices.reserve(charstring_index.count);
         for (auto i = 0; i < charstring_index.count; i++) {
-            /*std::cout << std::endl << "Decoding glyph ID: " << i << std::endl;*/
             const auto encoded_glyph_seq = charstring_index[i];
             // TODO: What to do with width?
             DecodeState state{};
             decode_glyph(encoded_glyph_seq, global_subrs, local_subrs, state);
 
-            GlyphOutlines glyph_outlines;
-            glyph_outlines.reserve(state.outlines.size());
-            for (auto &bezier_curve : state.outlines) {
-                glyph_outlines.push_back(parse_bezier_curves(std::move(bezier_curve)));
+            GlyphVertexCollection glyph_vertices;
+            glyph_vertices.reserve(state.outlines.size());
+            for (auto &outline : state.outlines) {
+                glyph_vertices.push_back(parse_outline(std::move(outline)));
             }
-            font_outlines.push_back(std::move(glyph_outlines));
+
+            font_vertices.push_back(std::move(glyph_vertices));
         }
 
-        return font_outlines;
+        return font_vertices;
     }
 
     static void decode_glyph(const std::span<uint8_t> &encoded_glyph_seq,
@@ -384,8 +384,11 @@ struct Type2Charstring {
                                  std::stack<int> &operands, const CFFIndex &global_subrs,
                                  const CFFIndex &local_subrs);
 
-    static bool is_off_curve_point(const std::variant<OffCurvePoint, OnCurvePoint> &p);
-    static Outline parse_bezier_curves(const OutlineControlPoints &control_points);
+    static constexpr bool
+    is_off_curve_point(const std::variant<OffCurvePoint, OnCurvePoint> &p);
+    static font::GlyphVertices parse_outline(const OutlineControlPoints &control_points);
+    static constexpr std::pair<int, int>
+    decay_to_point(const std::variant<OffCurvePoint, OnCurvePoint> &p);
 };
 
 }; // namespace font::detail::otf_font::cff

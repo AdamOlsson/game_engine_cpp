@@ -37,7 +37,7 @@ void graphics_pipeline::text::TextPipeline::load_font(
         // Note: When I allow of composite glyphs, the cmap will not longer be valid
         // as each additional outline of one glyph offsets all following vertices one
         // index
-        const auto &outline = glyph.outlines[0];
+        const auto &outline = glyph.vertices[0].interior;
 
         const size_t first_vertex_idx = vertices.size();
         for (const auto &point : outline) {
@@ -45,8 +45,9 @@ void graphics_pipeline::text::TextPipeline::load_font(
                                   -1.0f * static_cast<float>(point.second), 0.0f);
         }
 
+        // TODO: Triangulate the interior glyph vectices
         const std::vector<std::array<size_t, 3>> triangles =
-            triangulation::earcut<triangulation::Index>(outline);
+            triangulation::earcut(outline);
 
         const size_t first_index_idx = indices.size();
         for (const auto &triangle : triangles) {

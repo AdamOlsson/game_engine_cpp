@@ -15,5 +15,5 @@ TEST(LerpTests, Test_LERPWithIntegers) {
     const std::pair<int, int> g = {2, 2};
     const std::pair<int, int> h = {10, 10};
     const std::pair<int, int> i = math::lerp(g, h, 0.5f);
-    EXPECT_EQ(i, std::pair(4, 4));
+    EXPECT_EQ(i, std::pair(6, 6));
 }
