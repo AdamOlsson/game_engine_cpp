@@ -1,4 +1,5 @@
 #include "font/OTFFont.h"
+#include "triangulation/earcut.h"
 #include <gtest/gtest.h>
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
@@ -7,16 +8,24 @@ TEST(TriangulateGlyphsTest, Test_TriangulateAllGlyphs) {
     const font::OTFFont otf_font =
         font::OTFFont(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
 
-    // TODO: Figure out why the character C is not decoded properly
+    size_t count = 0;
     for (const auto &glyph : otf_font.glyphs) {
         const auto &outline = glyph.outlines[0];
+
+        if (outline.size() < 3) {
+            continue;
+        }
 
         std::cout << glyph.name << ": ";
         for (const auto &point : outline) {
             std::cout << std::format("({},{}) ", point.first, point.second);
         }
-        std::cout << std::endl;
-    }
 
-    EXPECT_TRUE(false);
+        const auto triangles = triangulation::earclip(outline);
+        std::cout << std::endl;
+
+        ASSERT_EQ(triangles.size(), outline.size() - 2);
+        count++;
+    }
+    ASSERT_TRUE(count > 0);
 }

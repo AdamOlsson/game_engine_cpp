@@ -35,7 +35,7 @@ void graphics_pipeline::text::TextPipeline::load_font(
     size_t instance_offset_count = 0;
     size_t offset_count = 0;
     std::vector<Vertex> vertices;
-    std::vector<uint16_t> indices;
+    /*std::vector<uint16_t> indices;*/
     for (const auto &glyph : font.glyphs) {
 
         // Note: When I allow of composite glyphs, the cmap will not longer be valid

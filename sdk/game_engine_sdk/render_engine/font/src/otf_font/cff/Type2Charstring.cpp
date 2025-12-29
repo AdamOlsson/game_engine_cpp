@@ -434,9 +434,14 @@ void font::detail::otf_font::cff::Type2Charstring::handle_endchar(
     /*<< std::endl;*/
 
     state.path_open = false;
-    state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
-                                       state.contour_start.first,
-                                       state.contour_start.second);
+
+    // Most fonts contain atleast one "empty" glyph. If we encounter an empty glyph, do
+    // not create an outline
+    if (state.current_outline.size() != 0) {
+        state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
+                                           state.contour_start.first,
+                                           state.contour_start.second);
+    }
 
     state.outlines.push_back(std::move(state.current_outline));
     state.current_outline = {};

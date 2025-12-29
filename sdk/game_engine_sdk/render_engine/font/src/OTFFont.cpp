@@ -60,6 +60,6 @@ font::OTFFont::OTFFont(const std::string &filepath) {
     }
 }
 
-size_t font::OTFFont::glyph_index(const Unicode &unicode) {
+size_t font::OTFFont::glyph_index(const Unicode &unicode) const {
     return m_font_table_cmap.get_glyph_id(unicode[0]);
 }

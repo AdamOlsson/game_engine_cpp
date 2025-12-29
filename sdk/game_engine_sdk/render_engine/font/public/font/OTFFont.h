@@ -16,7 +16,7 @@ class OTFFont {
 
     OTFFont(const std::string &filepath);
 
-    size_t glyph_index(const Unicode &unicode);
+    size_t glyph_index(const Unicode &unicode) const;
 };
 
 }; // namespace font
