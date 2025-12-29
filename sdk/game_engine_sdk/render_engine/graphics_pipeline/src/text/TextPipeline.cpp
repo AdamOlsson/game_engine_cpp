@@ -1,4 +1,5 @@
 #include "graphics_pipeline/text/TextPipeline.h"
+#include "graphics_pipeline/text/GlyphVertex.h"
 #include "shaders/text_fragment_shader.h"
 #include "shaders/text_vertex_shader.h"
 #include "triangulation/earcut.h"
@@ -18,11 +19,24 @@ graphics_pipeline::text::TextPipeline::TextPipeline(
     auto quad_vert = TextVertexShader::create_resource();
     auto quad_frag = TextFragmentShader::create_resource();
 
+    VkVertexInputBindingDescription binding_description =
+        GlyphVertex::get_binding_description();
+    std::array<VkVertexInputAttributeDescription, 2> attribute_descriptions =
+        GlyphVertex::get_attribute_descriptions();
+
     m_pipeline = vulkan::Pipeline(
         ctx, m_pipeline_layout,
         vulkan::ShaderModule(ctx, quad_vert->bytes(), quad_vert->length()),
         vulkan::ShaderModule(ctx, quad_frag->bytes(), quad_frag->length()),
-        *swap_chain_manager, vulkan::PipelineOpts{});
+        *swap_chain_manager,
+        vulkan::PipelineOpts{
+            .vertex_input_info =
+                {
+                    .binding_description = binding_description,
+                    .attribute_descriptions_count = attribute_descriptions.size(),
+                    .attribute_descriptions = attribute_descriptions.data(),
+                },
+        });
 }
 
 void graphics_pipeline::text::TextPipeline::load_font(
@@ -30,24 +44,24 @@ void graphics_pipeline::text::TextPipeline::load_font(
 
     std::vector<vulkan::DrawIndexedIndirectCommand> index_draw_commands;
     size_t instance_offset_count = 0;
-    std::vector<Vertex> vertices;
+    std::vector<GlyphVertex> vertices;
     std::vector<uint16_t> indices;
     for (const auto &glyph : font.glyphs) {
 
         // Note: When I allow of composite glyphs, the cmap will not longer be valid
-        // as each additional outline of one glyph offsets all following vertices one
-        // index
-        const auto &outline = glyph.vertices[0].interior;
+        // as each additional interior_vertices of one glyph offsets all following
+        // vertices one index
+        const auto &interior_vertices = glyph.vertices[0].interior;
 
         const size_t first_vertex_idx = vertices.size();
-        for (const auto &point : outline) {
+        for (const auto &point : interior_vertices) {
             vertices.emplace_back(static_cast<float>(point.first),
-                                  -1.0f * static_cast<float>(point.second), 0.0f);
+                                  -1.0f * static_cast<float>(point.second), 0.0f, 0.0f,
+                                  0.0f, 0.0f);
         }
 
-        // TODO: Triangulate the interior glyph vectices
         const std::vector<std::array<size_t, 3>> triangles =
-            triangulation::earcut(outline);
+            triangulation::earcut(interior_vertices);
 
         const size_t first_index_idx = indices.size();
         for (const auto &triangle : triangles) {
@@ -55,6 +69,8 @@ void graphics_pipeline::text::TextPipeline::load_font(
             indices.push_back(triangle[1] + first_vertex_idx);
             indices.push_back(triangle[2] + first_vertex_idx);
         }
+
+        // TODO: Add the external vertices to the vertex list
 
         index_draw_commands.push_back(vulkan::DrawIndexedIndirectCommand{
             .indexCount = static_cast<uint32_t>(indices.size() - first_index_idx),

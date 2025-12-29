@@ -31,9 +31,8 @@ font::GlyphVertices font::detail::otf_font::cff::Type2Charstring::parse_outline(
     const OutlineControlPoints &control_points) {
     GlyphVertices vertices;
     vertices.interior.reserve(control_points.size());
+    vertices.exterior.reserve(control_points.size());
 
-    /*Outline outline;*/
-    /*outline.reserve(control_points.size());*/
     for (size_t i = 0; i < control_points.size(); i++) {
         const auto &control_point = control_points[i];
 
@@ -54,10 +53,19 @@ font::GlyphVertices font::detail::otf_font::cff::Type2Charstring::parse_outline(
             const math::QuadraticBezer quad_bezier2 =
                 math::approximate_quadratic_bezier(split.second);
 
-            // TODO: How do I make a triangle from the quadratic bezier?
-            // I simply use p0, p1 and p2 as vertices
+            // TODO: How should we pass exetrior vertices and uvw to the fragment shader?
+            // Assume serpentine classification
+            const std::vector<std::array<float, 3>> uvw = {
+                {0.0f, 0.0f, 1.0f},
+                {0.5f, 0.0f, 1.0f},
+                {1.0f, 1.0f, 1.0f},
+            };
 
-            // TODO: Add the exterior triangles to an exterior vector
+            vertices.exterior.emplace_back(
+                std::array{quad_bezier1.p0, quad_bezier1.p1, quad_bezier1.p2});
+
+            vertices.exterior.emplace_back(
+                std::array{quad_bezier2.p0, quad_bezier2.p1, quad_bezier2.p2});
 
             i++; // Increment past the second off-curve control point
             continue;
@@ -66,6 +74,10 @@ font::GlyphVertices font::detail::otf_font::cff::Type2Charstring::parse_outline(
         const auto p = decay_to_point(control_point);
         vertices.interior.emplace_back(std::move(p));
     }
+
+    vertices.interior.shrink_to_fit();
+    vertices.exterior.shrink_to_fit();
+
     return vertices;
 }
 

@@ -16,7 +16,7 @@ class QuadPipeline {
   private:
     std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
 
-    vulkan::buffers::VertexBuffer m_quad_vertex_buffer;
+    vulkan::buffers::VertexBuffer<vulkan::Vertex> m_quad_vertex_buffer;
     vulkan::buffers::IndexBuffer m_quad_index_buffer;
 
     vulkan::ShaderStageFlags m_push_constant_stage;

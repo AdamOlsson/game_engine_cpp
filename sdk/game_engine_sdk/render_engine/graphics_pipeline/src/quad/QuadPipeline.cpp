@@ -4,11 +4,11 @@
 
 namespace {
 const std::vector<uint16_t> m_quad_indices = {0, 1, 2, 0, 2, 3};
-const std::vector<Vertex> m_quad_vertices = {
-    Vertex(-0.5f, -0.5f, 0.0f),
-    Vertex(-0.5f, 0.5f, 0.0f),
-    Vertex(0.5f, 0.5f, 0.0f),
-    Vertex(0.5f, -0.5f, 0.0f),
+const std::vector<vulkan::Vertex> m_quad_vertices = {
+    vulkan::Vertex(-0.5f, -0.5f, 0.0f),
+    vulkan::Vertex(-0.5f, 0.5f, 0.0f),
+    vulkan::Vertex(0.5f, 0.5f, 0.0f),
+    vulkan::Vertex(0.5f, -0.5f, 0.0f),
 };
 } // namespace
 

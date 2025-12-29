@@ -11,6 +11,11 @@ namespace vulkan {
 
 struct PipelineOpts {
     struct {
+        std::optional<VkVertexInputBindingDescription> binding_description = std::nullopt;
+        uint32_t attribute_descriptions_count = 0;
+        VkVertexInputAttributeDescription *attribute_descriptions = nullptr;
+    } vertex_input_info;
+    struct {
         VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     } assembler;
     struct {

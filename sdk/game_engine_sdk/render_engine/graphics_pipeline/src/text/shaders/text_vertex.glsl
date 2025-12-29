@@ -16,7 +16,7 @@ layout(push_constant) uniform CameraMatrix {
 } pc_camera;
 
 layout(location = 0) in vec3 in_world_position;
-
+layout(location = 1) in vec3 in_uvw;
 
 void main() {
     TextSBO instance = storage_buffer.instances[gl_InstanceIndex];

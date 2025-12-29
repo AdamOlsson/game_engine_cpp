@@ -1,6 +1,7 @@
 #pragma once
 #include "TextPipelineDescriptorSet.h"
 #include "font/OTFFont.h"
+#include "graphics_pipeline/text/GlyphVertex.h"
 #include "vulkan/CommandBuffer.h"
 #include "vulkan/DrawIndexedIndirectCommand.h"
 #include "vulkan/Pipeline.h"
@@ -18,7 +19,7 @@ class TextPipeline {
   private:
     std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
 
-    std::optional<vulkan::buffers::VertexBuffer> m_glyph_vertex_buffer;
+    std::optional<vulkan::buffers::VertexBuffer<GlyphVertex>> m_glyph_vertex_buffer;
     std::optional<vulkan::buffers::IndexBuffer> m_glyph_index_buffer;
 
     std::optional<vulkan::buffers::StorageBuffer<vulkan::DrawIndexedIndirectCommand>>

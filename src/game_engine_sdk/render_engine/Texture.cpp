@@ -1,6 +1,6 @@
 #include "game_engine_sdk/render_engine/Texture.h"
-#include "game_engine_sdk/render_engine/graphics_pipeline/GraphicsPipeline.h"
 #include "game_engine_sdk/render_engine/resources/ResourceManager.h"
+#include "util/file.h"
 #include "vulkan/buffers/StagingBuffer.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
@@ -30,7 +30,7 @@ Texture::Texture(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
 Texture Texture::from_filepath(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
                                vulkan::CommandBufferManager *command_buffer_manager,
                                const char *filepath) {
-    const auto bytes = graphics_pipeline::readFile(filepath);
+    const auto bytes = util::file::read_file(filepath);
     const auto image_data = image::Image::load_rgba_image(
         reinterpret_cast<const uint8_t *>(bytes.data()), bytes.size());
     return Texture(ctx, command_buffer_manager, image_data);
@@ -40,7 +40,7 @@ std::unique_ptr<Texture>
 Texture::unique_from_filepath(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
                               vulkan::CommandBufferManager *command_buffer_manager,
                               const char *filepath) {
-    const auto bytes = graphics_pipeline::readFile(filepath);
+    const auto bytes = util::file::read_file(filepath);
     const auto image_data = image::Image::load_rgba_image(
         reinterpret_cast<const uint8_t *>(bytes.data()), bytes.size());
     return std::move(std::make_unique<Texture>(ctx, command_buffer_manager, image_data));
