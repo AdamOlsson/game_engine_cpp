@@ -45,6 +45,7 @@ font::GlyphVertices font::detail::otf_font::cff::Type2Charstring::parse_outline(
             const std::pair<int, int> p2 = decay_to_point(control_points[i + 1]);
             const std::pair<int, int> p3 = decay_to_point(control_points[i + 2]);
 
+            // TODO: I believe there is a bug here somewhere
             const std::pair<math::CubicBezier, math::CubicBezier> split =
                 math::de_casteljaus(math::CubicBezier{p0, p1, p2, p3});
 
@@ -53,19 +54,27 @@ font::GlyphVertices font::detail::otf_font::cff::Type2Charstring::parse_outline(
             const math::QuadraticBezer quad_bezier2 =
                 math::approximate_quadratic_bezier(split.second);
 
-            // TODO: How should we pass exetrior vertices and uvw to the fragment shader?
-            // Assume serpentine classification
-            const std::vector<std::array<float, 3>> uvw = {
-                {0.0f, 0.0f, 1.0f},
-                {0.5f, 0.0f, 1.0f},
-                {1.0f, 1.0f, 1.0f},
+            ExteriorTriangle triangle1 = {
+                .vertices = std::array{quad_bezier1.p0, quad_bezier1.p1, quad_bezier1.p2},
+                .uvw =
+                    {
+                        UVW{0.0f, 0.0f, 1.0f},
+                        UVW{0.5f, 0.0f, 1.0f},
+                        UVW{1.0f, 1.0f, 1.0f},
+                    },
             };
+            vertices.exterior.emplace_back(std::move(triangle1));
 
-            vertices.exterior.emplace_back(
-                std::array{quad_bezier1.p0, quad_bezier1.p1, quad_bezier1.p2});
-
-            vertices.exterior.emplace_back(
-                std::array{quad_bezier2.p0, quad_bezier2.p1, quad_bezier2.p2});
+            ExteriorTriangle triangle2 = {
+                .vertices = std::array{quad_bezier2.p0, quad_bezier2.p1, quad_bezier2.p2},
+                .uvw =
+                    {
+                        UVW{0.0f, 0.0f, 1.0f},
+                        UVW{0.5f, 0.0f, 1.0f},
+                        UVW{1.0f, 1.0f, 1.0f},
+                    },
+            };
+            vertices.exterior.emplace_back(std::move(triangle2));
 
             i++; // Increment past the second off-curve control point
             continue;

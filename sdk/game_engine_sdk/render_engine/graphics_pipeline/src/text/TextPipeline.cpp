@@ -51,13 +51,15 @@ void graphics_pipeline::text::TextPipeline::load_font(
         // Note: When I allow of composite glyphs, the cmap will not longer be valid
         // as each additional interior_vertices of one glyph offsets all following
         // vertices one index
-        const auto &interior_vertices = glyph.vertices[0].interior;
+        const std::vector<font::Vertex<float>> &interior_vertices =
+            glyph.vertices[0].interior;
+        const std::vector<font::ExteriorTriangle> &exterior_triangles =
+            glyph.vertices[0].exterior;
 
         const size_t first_vertex_idx = vertices.size();
         for (const auto &point : interior_vertices) {
-            vertices.emplace_back(static_cast<float>(point.first),
-                                  -1.0f * static_cast<float>(point.second), 0.0f, 0.0f,
-                                  0.0f, 0.0f);
+            vertices.emplace_back(point.first, -1.0f * point.second, 0.0f, 0.0f, 0.0f,
+                                  0.0f);
         }
 
         const std::vector<std::array<size_t, 3>> triangles =
@@ -70,7 +72,22 @@ void graphics_pipeline::text::TextPipeline::load_font(
             indices.push_back(triangle[2] + first_vertex_idx);
         }
 
-        // TODO: Add the external vertices to the vertex list
+        for (const font::ExteriorTriangle &triangle : exterior_triangles) {
+            indices.push_back(vertices.size() + first_vertex_idx);
+            vertices.emplace_back(
+                triangle.vertices[0].first, -1.0f * triangle.vertices[0].second, 0.0f,
+                triangle.uvw[0][0], triangle.uvw[0][1], triangle.uvw[0][2]);
+
+            indices.push_back(vertices.size() + first_vertex_idx);
+            vertices.emplace_back(
+                triangle.vertices[1].first, -1.0f * triangle.vertices[1].second, 0.0f,
+                triangle.uvw[1][0], triangle.uvw[1][1], triangle.uvw[1][2]);
+
+            indices.push_back(vertices.size() + first_vertex_idx);
+            vertices.emplace_back(
+                triangle.vertices[2].first, -1.0f * triangle.vertices[2].second, 0.0f,
+                triangle.uvw[2][0], triangle.uvw[2][1], triangle.uvw[2][2]);
+        }
 
         index_draw_commands.push_back(vulkan::DrawIndexedIndirectCommand{
             .indexCount = static_cast<uint32_t>(indices.size() - first_index_idx),

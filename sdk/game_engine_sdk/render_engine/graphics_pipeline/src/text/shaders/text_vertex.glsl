@@ -18,9 +18,15 @@ layout(push_constant) uniform CameraMatrix {
 layout(location = 0) in vec3 in_world_position;
 layout(location = 1) in vec3 in_uvw;
 
+layout(location = 0) out int out_is_interior;
+
+int is_interior(vec3 uvw) {
+    return uvw.x == 0.0 && uvw.y == 0.0 && uvw.z == 0.0 ? 1 : 0;
+}
+
 void main() {
     TextSBO instance = storage_buffer.instances[gl_InstanceIndex];
 
     gl_Position = pc_camera.view_projection * instance.model_matrix * vec4(in_world_position, 1.0);
-    gl_PointSize = 8.0;
+    out_is_interior = is_interior(in_uvw);
 }
