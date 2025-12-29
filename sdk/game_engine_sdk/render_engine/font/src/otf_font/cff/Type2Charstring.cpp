@@ -1,5 +1,50 @@
 #include "font/detail/otf_font/cff/Type2Charstring.h"
 
+bool font::detail::otf_font::cff::Type2Charstring::is_off_curve_point(
+    const std::variant<OffCurvePoint, OnCurvePoint> &p) {
+    return std::visit(
+        [](const auto &p) -> bool {
+            using T = std::decay_t<decltype(p)>;
+            return std::is_same_v<T, OffCurvePoint>;
+        },
+        p);
+}
+
+font::Outline font::detail::otf_font::cff::Type2Charstring::parse_bezier_curves(
+    const OutlineControlPoints &control_points) {
+    Outline outline;
+    outline.reserve(control_points.size());
+    for (size_t i = 0; i < control_points.size(); i++) {
+        const auto &control_point = control_points[i];
+
+        // If the following control point is an off-curve points, the current point
+        // is the first control point of a cubic bezier curve
+        if (is_off_curve_point(control_point)) {
+
+            i++; // Increment past the second off-curve control point
+            continue;
+        }
+
+        const auto p = std::visit(
+            // TODO: Handle bezier curves
+            [](const auto &p) -> std::optional<std::pair<int, int>> {
+                using T = std::decay_t<decltype(p)>;
+                if constexpr (std::is_same_v<T, OnCurvePoint>) {
+                    return std::make_pair(p.x, p.y);
+                } else if constexpr (std::is_same_v<T, OffCurvePoint>) {
+                    return std::nullopt;
+                }
+                throw std::runtime_error("Error: Unkown curve point type");
+            },
+            control_point);
+
+        if (p.has_value()) {
+            outline.emplace_back(std::move(p.value()));
+        }
+    }
+    return outline;
+}
+
 void font::detail::otf_font::cff::Type2Charstring::handle_hstem(
     font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands) {
     state.hint_count++;

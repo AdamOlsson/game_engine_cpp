@@ -46,7 +46,7 @@ void graphics_pipeline::text::TextPipeline::load_font(
         }
 
         const std::vector<std::array<size_t, 3>> triangles =
-            triangulation::earclip(outline);
+            triangulation::earcut<triangulation::Index>(outline);
 
         const size_t first_index_idx = indices.size();
         for (const auto &triangle : triangles) {

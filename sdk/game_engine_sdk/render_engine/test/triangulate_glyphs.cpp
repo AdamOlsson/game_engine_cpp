@@ -21,7 +21,8 @@ TEST(TriangulateGlyphsTest, Test_TriangulateAllGlyphs) {
             std::cout << std::format("({},{}) ", point.first, point.second);
         }
 
-        const auto triangles = triangulation::earclip(outline);
+        const std::vector<std::array<size_t, 3>> triangles =
+            triangulation::earcut<triangulation::Index>(outline);
         std::cout << std::endl;
 
         ASSERT_EQ(triangles.size(), outline.size() - 2);
