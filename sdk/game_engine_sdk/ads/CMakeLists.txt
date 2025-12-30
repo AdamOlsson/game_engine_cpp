@@ -26,6 +26,11 @@ target_include_directories(${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/public
 )
 
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+        sdk::util
+)
+
 if(GAME_ENGINE_SDK_BUILD_TEST)
     add_subdirectory(test)
 endif()

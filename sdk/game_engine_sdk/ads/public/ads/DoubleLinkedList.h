@@ -1,4 +1,5 @@
 #pragma once
+#include "util/assert.h"
 #include <cstddef>
 #include <iterator>
 #include <memory>
@@ -188,30 +189,28 @@ template <typename T> class DoubleLinkedList {
             return false;
         }
 
-        // Check if it's the head
         if (m_head->value == v) {
             pop_front();
             return true;
         }
 
-        // Check if it's the tail
         if (m_tail->value == v) {
             pop_back();
             return true;
         }
 
-        // Search in the middle
         Node *current = m_head->next.get();
-        while (current != nullptr && current != m_tail) {
+        while (current && current != m_tail) {
             if (current->value == v) {
-                // Found the node to remove
-                // Save the next pointer before moving
-                Node *next_node = current->next.get();
 
-                // Reconnect the links
-                current->prev->next = std::move(current->next);
-                if (next_node) {
-                    next_node->prev = current->prev;
+                DEBUG_ASSERT(current->prev != nullptr, "");
+                DEBUG_ASSERT(current->next != nullptr, "");
+
+                std::unique_ptr<Node> removed = std::move(current->prev->next);
+                current->prev->next = std::move(removed->next);
+
+                if (current->prev->next) {
+                    current->prev->next->prev = current->prev;
                 }
                 m_size--;
                 return true;
@@ -221,6 +220,7 @@ template <typename T> class DoubleLinkedList {
 
         return false;
     }
+
     iterator begin() { return iterator(m_head.get()); }
     iterator end() { return iterator(nullptr); }
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ads/DoubleLinkedList.h"
 #include "util/assert.h"
 #include <vector>
 namespace triangulation {
@@ -15,9 +16,11 @@ template <typename T> class Earcut {
 
   private:
     std::vector<bool> m_is_reflex_vertex;
-    std::vector<bool> m_is_convex_vertex;
+    ads::DoubleLinkedList<size_t> m_reflex_vertices;
+
     std::vector<bool> m_is_removed;
     std::vector<bool> m_is_ear_vertex;
+
     std::vector<size_t> m_next_id;
     std::vector<size_t> m_prev_id;
 
@@ -31,7 +34,6 @@ template <typename T> class Earcut {
         }
 
         m_is_reflex_vertex.resize(exterior_vertices.size());
-        m_is_convex_vertex.resize(exterior_vertices.size());
         m_is_removed.resize(exterior_vertices.size());
         m_next_id.resize(exterior_vertices.size());
         m_prev_id.resize(exterior_vertices.size());
@@ -47,15 +49,19 @@ template <typename T> class Earcut {
                 is_convex(exterior_vertices[m_prev_id[i]], exterior_vertices[i],
                           exterior_vertices[m_next_id[i]]);
 
-            m_is_convex_vertex[i] = is_conv;
             m_is_reflex_vertex[i] = !is_conv;
+
+            if (!is_conv) {
+                m_reflex_vertices.push_back(i);
+            }
+
             m_is_removed[i] = false;
         }
 
         // Determine which exterior_vertices are m_is_ear_vertex
         m_is_ear_vertex.resize(exterior_vertices.size());
-        for (size_t i = 0; i < m_is_convex_vertex.size(); i++) {
-            if (!m_is_convex_vertex[i]) {
+        for (size_t i = 0; i < m_is_reflex_vertex.size(); i++) {
+            if (m_is_reflex_vertex[i]) {
                 continue;
             }
 
@@ -65,7 +71,7 @@ template <typename T> class Earcut {
 
             DEBUG_CODE({
                 if (m_is_ear_vertex[i]) {
-                    DEBUG_ASSERT(m_is_convex_vertex[i],
+                    DEBUG_ASSERT(!m_is_reflex_vertex[i],
                                  "Error: all ear vertices are ear vertices.");
                 }
             });
@@ -94,7 +100,6 @@ template <typename T> class Earcut {
             m_prev_id[m_next_id[i]] = m_prev_id[i];
             m_is_removed[i] = true;
             m_is_ear_vertex[i] = false;
-            m_is_convex_vertex[i] = false;
             m_is_reflex_vertex[i] = false;
 
             reclassify_vertex(m_prev_id[i], exterior_vertices);
@@ -113,20 +118,22 @@ template <typename T> class Earcut {
         const auto v_next = vertices[m_next_id[i]];
 
         if (m_is_reflex_vertex[i]) {
-            const bool is_conv = is_convex(v_prev, v_curr, v_next);
-            m_is_convex_vertex[i] = is_conv;
-            m_is_reflex_vertex[i] = !is_conv;
+            const bool now_conv = is_convex(v_prev, v_curr, v_next);
+            m_is_reflex_vertex[i] = !now_conv;
+            if (now_conv) {
+                m_reflex_vertices.remove(i);
+            }
         }
 
         // Wether the vertex became an ear or remain an ear after the adjacent vertex was
         // removed, if it is convex we need to check if it is an ear
-        if (m_is_convex_vertex[i]) {
+        if (!m_is_reflex_vertex[i]) {
             m_is_ear_vertex[i] = is_ear(v_prev, v_curr, v_next, vertices);
         }
 
         DEBUG_CODE({
             if (m_is_ear_vertex[i]) {
-                DEBUG_ASSERT(m_is_convex_vertex[i],
+                DEBUG_ASSERT(!m_is_reflex_vertex[i],
                              "Error: all ear vertices are ear vertices.");
             }
         });
@@ -141,8 +148,7 @@ template <typename T> class Earcut {
         const std::pair<T, T> vbc = make_vector(v_curr, v_next);
         const std::pair<T, T> vca = make_vector(v_next, v_prev);
 
-        for (size_t other_vertice = 0; other_vertice < m_is_reflex_vertex.size();
-             other_vertice++) {
+        for (const size_t &other_vertice : m_reflex_vertices) {
             const auto &p = vertices[other_vertice];
 
             if (!m_is_reflex_vertex[other_vertice] || p == v_prev || p == v_curr ||
