@@ -20,6 +20,7 @@ template <typename T> class DoubleLinkedList {
     class iterator {
       private:
         Node *m_node;
+        friend class DoubleLinkedList;
 
       public:
         using difference_type = std::ptrdiff_t;
@@ -170,6 +171,56 @@ template <typename T> class DoubleLinkedList {
 
     size_t size() const noexcept { return m_size; }
 
+    bool exists(const T &v) const {
+
+        Node *current = m_head.get();
+        while (current != nullptr) {
+            if (current->value == v) {
+                return true;
+            }
+            current = current->next.get();
+        }
+        return false;
+    }
+
+    bool remove(const T &v) {
+        if (m_size == 0) {
+            return false;
+        }
+
+        // Check if it's the head
+        if (m_head->value == v) {
+            pop_front();
+            return true;
+        }
+
+        // Check if it's the tail
+        if (m_tail->value == v) {
+            pop_back();
+            return true;
+        }
+
+        // Search in the middle
+        Node *current = m_head->next.get();
+        while (current != nullptr && current != m_tail) {
+            if (current->value == v) {
+                // Found the node to remove
+                // Save the next pointer before moving
+                Node *next_node = current->next.get();
+
+                // Reconnect the links
+                current->prev->next = std::move(current->next);
+                if (next_node) {
+                    next_node->prev = current->prev;
+                }
+                m_size--;
+                return true;
+            }
+            current = current->next.get();
+        }
+
+        return false;
+    }
     iterator begin() { return iterator(m_head.get()); }
     iterator end() { return iterator(nullptr); }
 

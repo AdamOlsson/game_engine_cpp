@@ -162,3 +162,34 @@ TEST(DoubleLinkedListTests, Test_Iterator) {
         count--;
     }
 }
+
+TEST(DoubleLinkedListTests, Test_ExistsAndRemove) {
+    ads::DoubleLinkedList<int> list;
+
+    EXPECT_FALSE(list.exists(0));
+    EXPECT_FALSE(list.remove(0));
+
+    list.push_back(0);
+    list.push_back(1);
+    list.push_back(2);
+
+    EXPECT_EQ(list.size(), 3);
+    EXPECT_TRUE(list.exists(0));
+    EXPECT_TRUE(list.exists(1));
+    EXPECT_TRUE(list.exists(2));
+    EXPECT_TRUE(list.remove(1));
+
+    EXPECT_EQ(list.size(), 2);
+    EXPECT_TRUE(list.exists(0));
+    EXPECT_TRUE(list.exists(2));
+    EXPECT_TRUE(list.remove(0));
+
+    EXPECT_EQ(list.size(), 1);
+    EXPECT_TRUE(list.exists(2));
+    EXPECT_TRUE(list.remove(2));
+
+    EXPECT_EQ(list.size(), 0);
+
+    EXPECT_FALSE(list.exists(0));
+    EXPECT_FALSE(list.remove(0));
+}
