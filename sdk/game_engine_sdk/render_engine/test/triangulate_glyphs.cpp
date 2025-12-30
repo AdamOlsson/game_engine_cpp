@@ -23,7 +23,7 @@ TEST(TriangulateGlyphsTest, Test_TriangulateAllGlyphs) {
         std::cout << std::endl;
 
         const std::vector<std::array<size_t, 3>> triangles =
-            triangulation::earcut(outline);
+            triangulation::Earcut<float>::run(outline, {});
 
         ASSERT_EQ(triangles.size(), outline.size() - 2);
         count++;
@@ -45,7 +45,8 @@ TEST(TriangulateGlyphsTest, DISABLED_Test_TriangulateGlyph) {
     }
     std::cout << std::endl;
 
-    const std::vector<std::array<size_t, 3>> triangles = triangulation::earcut(outline);
+    const std::vector<std::array<size_t, 3>> triangles =
+        triangulation::Earcut<float>::run(outline, {});
 
     ASSERT_EQ(triangles.size(), outline.size() - 2);
 }

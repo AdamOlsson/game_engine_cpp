@@ -53,6 +53,7 @@ void graphics_pipeline::text::TextPipeline::load_font(
         // Note: When I allow of composite glyphs, the cmap will not longer be valid
         // as each additional interior_vertices of one glyph offsets all following
         // vertices one index
+        // TODO: The outer and inner polygon must be of opposite winding order
         const std::vector<font::Vertex<float>> &interior_vertices =
             glyph.vertices[0].interior;
         const std::vector<font::ExteriorTriangle> &exterior_triangles =
@@ -65,7 +66,7 @@ void graphics_pipeline::text::TextPipeline::load_font(
         }
 
         const std::vector<std::array<size_t, 3>> triangles =
-            triangulation::earcut(interior_vertices);
+            triangulation::Earcut<float>::run(interior_vertices, {});
 
         const size_t first_index_idx = indices.size();
         for (const auto &triangle : triangles) {
