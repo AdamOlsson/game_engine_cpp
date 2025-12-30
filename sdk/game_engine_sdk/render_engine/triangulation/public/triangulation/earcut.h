@@ -20,6 +20,7 @@ template <typename T> class Earcut {
 
     std::vector<bool> m_is_removed;
     std::vector<bool> m_is_ear_vertex;
+    /*ads::DoubleLinkedList<size_t> m_ear_vertices;*/
 
     std::vector<size_t> m_next_id;
     std::vector<size_t> m_prev_id;
@@ -68,6 +69,7 @@ template <typename T> class Earcut {
             m_is_ear_vertex[i] =
                 is_ear(exterior_vertices[m_prev_id[i]], exterior_vertices[i],
                        exterior_vertices[m_next_id[i]], exterior_vertices);
+            /*m_ear_vertices.push_back(i);*/
 
             DEBUG_CODE({
                 if (m_is_ear_vertex[i]) {
@@ -89,6 +91,8 @@ template <typename T> class Earcut {
                 i = (i + 1) % exterior_vertices.size();
                 continue;
             }
+            /*const size_t i = m_ear_vertices.front();*/
+            /*m_ear_vertices.pop_front();*/
 
             triangles.emplace_back(std::array{m_prev_id[i], i, m_next_id[i]});
 
@@ -117,8 +121,8 @@ template <typename T> class Earcut {
         const auto v_curr = vertices[i];
         const auto v_next = vertices[m_next_id[i]];
 
+        const bool now_conv = is_convex(v_prev, v_curr, v_next);
         if (m_is_reflex_vertex[i]) {
-            const bool now_conv = is_convex(v_prev, v_curr, v_next);
             m_is_reflex_vertex[i] = !now_conv;
             if (now_conv) {
                 m_reflex_vertices.remove(i);
@@ -127,8 +131,16 @@ template <typename T> class Earcut {
 
         // Wether the vertex became an ear or remain an ear after the adjacent vertex was
         // removed, if it is convex we need to check if it is an ear
-        if (!m_is_reflex_vertex[i]) {
-            m_is_ear_vertex[i] = is_ear(v_prev, v_curr, v_next, vertices);
+        if (now_conv) {
+            /*const bool was_ear = m_is_ear_vertex[i];*/
+            const bool now_ear = is_ear(v_prev, v_curr, v_next, vertices);
+            m_is_ear_vertex[i] = now_ear;
+
+            /*if (!was_ear && now_ear) {*/
+            /*    m_ear_vertices.push_back(i);*/
+            /*} else if (was_ear && !now_ear) {*/
+            /*    m_ear_vertices.remove(i);*/
+            /*}*/
         }
 
         DEBUG_CODE({
