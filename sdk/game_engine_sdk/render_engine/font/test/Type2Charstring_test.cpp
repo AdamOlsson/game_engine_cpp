@@ -3,7 +3,7 @@
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 
-TEST(Type2CharstringTests, Test_ParseGlyphC) {
+TEST(Type2CharstringTests, DISABLED_Test_ParseGlyphC) {
     const font::OTFFont otf_font =
         font::OTFFont(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
 

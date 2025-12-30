@@ -254,7 +254,7 @@ struct FontTableCmap {
         DEBUG_ASSERT(preferred_table_idx.has_value(),
                      "Error: No preferred table index was found");
 
-        const auto &table = tables[preferred_table_idx.value()];
+        const Subtable &table = tables[preferred_table_idx.value()];
 
         return std::visit(
             [char_code](const auto &subtable) -> uint16_t {

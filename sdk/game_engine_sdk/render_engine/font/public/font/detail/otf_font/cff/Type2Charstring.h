@@ -389,6 +389,7 @@ struct Type2Charstring {
     static font::GlyphVertices parse_outline(const OutlineControlPoints &control_points);
     static constexpr std::pair<int, int>
     decay_to_point(const std::variant<OffCurvePoint, OnCurvePoint> &p);
+    static constexpr bool is_clockwise_winding(const font::Triangle<float> &triangle);
 };
 
 }; // namespace font::detail::otf_font::cff

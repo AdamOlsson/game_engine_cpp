@@ -134,7 +134,7 @@ struct FontTableCFF {
 
         cff.glyphs.reserve(charstring_index.count);
         for (size_t i = 0; i < charstring_index.count; i++) {
-            cff.glyphs.push_back(font::Glyph{.name = std::move(charset[i]),
+            cff.glyphs.push_back(font::Glyph{.name = std::move(charset[i - 1]),
                                              .vertices = std::move(glyph_outlines[i])});
         }
 

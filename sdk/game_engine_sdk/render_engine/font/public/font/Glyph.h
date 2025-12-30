@@ -7,6 +7,7 @@ template <typename T> using UVW = std::array<T, 3>;
 template <typename T> using Triangle = std::array<Vertex<T>, 3>;
 
 struct ExteriorTriangle {
+    bool clockwise_winding = false;
     std::array<Vertex<float>, 3> vertices;
     std::array<UVW<float>, 3> uvw;
 };

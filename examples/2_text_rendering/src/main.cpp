@@ -19,7 +19,7 @@ constexpr auto ZOOM_SCALE_FACTOR = 0.1f;
 // TextPipeline:
 // - DONE Implement triangulation on on-curve points to get the interior of the glyph.
 // - DONE Render the glyphs using the indices returned from the triangulation
-// - Implement Loop-Blinn Algorithm with the off-point curves to render smooth glyphs
+// - DONE Implement Loop-Blinn Algorithm with the off-point curves to render smooth glyphs
 // - Handle compound glyphs and glyphs with "holes" like "A"
 // - Implement all other Type2Charstring operators
 // - Render the english alphabet for my font
@@ -162,9 +162,6 @@ class ExampleTextRendering : public Game {
         /*m_descriptor_set->rotate();*/
     }
 };
-
-// OTF Data types:
-// https://learn.microsoft.com/en-us/typography/opentype/spec/otff#data-types
 
 int main() {
 

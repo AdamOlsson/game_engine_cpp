@@ -55,7 +55,7 @@ bool is_ear(const std::pair<T, T> &v_prev, const std::pair<T, T> &v_curr,
         const T cross_a = cross_prod(vab, vpa);
         const T cross_b = cross_prod(vbc, vpb);
         const T cross_c = cross_prod(vca, vpc);
-        if (cross_a <= 0 && cross_b <= 0 && cross_c <= 0) {
+        if (cross_a < 0 && cross_b < 0 && cross_c < 0) {
             // point p is inside the triangle
             return false;
         }

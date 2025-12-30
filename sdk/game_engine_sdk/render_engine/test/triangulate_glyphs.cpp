@@ -20,13 +20,32 @@ TEST(TriangulateGlyphsTest, Test_TriangulateAllGlyphs) {
         for (const auto &point : outline) {
             std::cout << std::format("({},{}) ", point.first, point.second);
         }
+        std::cout << std::endl;
 
         const std::vector<std::array<size_t, 3>> triangles =
             triangulation::earcut(outline);
-        std::cout << std::endl;
 
         ASSERT_EQ(triangles.size(), outline.size() - 2);
         count++;
     }
     ASSERT_TRUE(count > 0);
+}
+
+TEST(TriangulateGlyphsTest, DISABLED_Test_TriangulateGlyph) {
+    const font::OTFFont otf_font =
+        font::OTFFont(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
+
+    const uint16_t index = otf_font.glyph_index(font::Unicode("2"));
+    const font::Glyph glyph = otf_font.glyphs[index];
+    const auto &outline = glyph.vertices[0].interior;
+
+    std::cout << glyph.name << ": ";
+    for (const auto &point : outline) {
+        std::cout << std::format("({},{}) ", point.first, point.second);
+    }
+    std::cout << std::endl;
+
+    const std::vector<std::array<size_t, 3>> triangles = triangulation::earcut(outline);
+
+    ASSERT_EQ(triangles.size(), outline.size() - 2);
 }

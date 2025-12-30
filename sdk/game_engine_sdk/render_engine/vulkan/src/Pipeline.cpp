@@ -119,7 +119,7 @@ VkPipeline vulkan::Pipeline::create_graphics_pipeline(
     // Using any mode other than fill requires enabling a GPU feature.
     rasterizer.polygonMode = opts.rasterizer.polygon_mode;
     rasterizer.lineWidth = 1.0f;
-    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+    rasterizer.cullMode = opts.rasterizer.cull_mode;
     rasterizer.frontFace = opts.rasterizer.front_face;
     rasterizer.depthBiasEnable = VK_FALSE;
     rasterizer.depthBiasConstantFactor = 0.0f; // Optional

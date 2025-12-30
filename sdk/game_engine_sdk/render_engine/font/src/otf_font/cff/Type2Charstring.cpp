@@ -1,4 +1,5 @@
 #include "font/detail/otf_font/cff/Type2Charstring.h"
+#include "math/area.h"
 #include "math/interpolate.h"
 
 constexpr bool font::detail::otf_font::cff::Type2Charstring::is_off_curve_point(
@@ -27,6 +28,11 @@ font::detail::otf_font::cff::Type2Charstring::decay_to_point(
         p);
 }
 
+constexpr bool font::detail::otf_font::cff::Type2Charstring::is_clockwise_winding(
+    const font::Triangle<float> &triangle) {
+    return math::signed_area_triangle(triangle) > 0.0f;
+}
+
 font::GlyphVertices font::detail::otf_font::cff::Type2Charstring::parse_outline(
     const OutlineControlPoints &control_points) {
     GlyphVertices vertices;
@@ -45,17 +51,20 @@ font::GlyphVertices font::detail::otf_font::cff::Type2Charstring::parse_outline(
             const std::pair<int, int> p2 = decay_to_point(control_points[i + 1]);
             const std::pair<int, int> p3 = decay_to_point(control_points[i + 2]);
 
-            // TODO: I believe there is a bug here somewhere
+            const math::CubicBezier cubic_bezier = math::CubicBezier{p0, p1, p2, p3};
             const std::pair<math::CubicBezier, math::CubicBezier> split =
-                math::de_casteljaus(math::CubicBezier{p0, p1, p2, p3});
+                math::de_casteljaus(cubic_bezier);
 
             const math::QuadraticBezer quad_bezier1 =
                 math::approximate_quadratic_bezier(split.first);
             const math::QuadraticBezer quad_bezier2 =
                 math::approximate_quadratic_bezier(split.second);
 
+            font::Triangle<float> triangle1_vertices =
+                std::array{quad_bezier1.p0, quad_bezier1.p1, quad_bezier1.p2};
             ExteriorTriangle triangle1 = {
-                .vertices = std::array{quad_bezier1.p0, quad_bezier1.p1, quad_bezier1.p2},
+                .clockwise_winding = is_clockwise_winding(triangle1_vertices),
+                .vertices = std::move(triangle1_vertices),
                 .uvw =
                     {
                         UVW{0.0f, 0.0f, 1.0f},
@@ -65,8 +74,19 @@ font::GlyphVertices font::detail::otf_font::cff::Type2Charstring::parse_outline(
             };
             vertices.exterior.emplace_back(std::move(triangle1));
 
+            if (triangle1.clockwise_winding) {
+                vertices.interior.emplace_back(quad_bezier1.p1);
+            }
+
+            // When approximating the cubic bezier with 2 quadratic bezier we leave
+            // a second under the curve that always should be filled
+            vertices.interior.emplace_back(std::move(quad_bezier1.p2));
+
+            font::Triangle triangle2_vertices =
+                std::array{quad_bezier2.p0, quad_bezier2.p1, quad_bezier2.p2};
             ExteriorTriangle triangle2 = {
-                .vertices = std::array{quad_bezier2.p0, quad_bezier2.p1, quad_bezier2.p2},
+                .clockwise_winding = is_clockwise_winding(triangle2_vertices),
+                .vertices = std::move(triangle2_vertices),
                 .uvw =
                     {
                         UVW{0.0f, 0.0f, 1.0f},
@@ -76,12 +96,15 @@ font::GlyphVertices font::detail::otf_font::cff::Type2Charstring::parse_outline(
             };
             vertices.exterior.emplace_back(std::move(triangle2));
 
-            i++; // Increment past the second off-curve control point
-            continue;
-        }
+            if (triangle2.clockwise_winding) {
+                vertices.interior.emplace_back(quad_bezier2.p1);
+            }
 
-        const auto p = decay_to_point(control_point);
-        vertices.interior.emplace_back(std::move(p));
+            i++; // Increment past the second off-curve control point
+        } else {
+            const auto p = decay_to_point(control_point);
+            vertices.interior.emplace_back(std::move(p));
+        }
     }
 
     vertices.interior.shrink_to_fit();

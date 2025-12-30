@@ -36,7 +36,9 @@ graphics_pipeline::text::TextPipeline::TextPipeline(
                     .attribute_descriptions_count = attribute_descriptions.size(),
                     .attribute_descriptions = attribute_descriptions.data(),
                 },
-        });
+            .rasterizer = {
+                .cull_mode = VK_CULL_MODE_NONE,
+            }});
 }
 
 void graphics_pipeline::text::TextPipeline::load_font(
@@ -73,20 +75,24 @@ void graphics_pipeline::text::TextPipeline::load_font(
         }
 
         for (const font::ExteriorTriangle &triangle : exterior_triangles) {
-            indices.push_back(vertices.size() + first_vertex_idx);
-            vertices.emplace_back(
-                triangle.vertices[0].first, -1.0f * triangle.vertices[0].second, 0.0f,
-                triangle.uvw[0][0], triangle.uvw[0][1], triangle.uvw[0][2]);
+            const float clockwise_winding = triangle.clockwise_winding ? 1.0f : 0.0f;
+            indices.push_back(vertices.size());
+            vertices.emplace_back(triangle.vertices[0].first,
+                                  -1.0f * triangle.vertices[0].second, clockwise_winding,
+                                  triangle.uvw[0][0], triangle.uvw[0][1],
+                                  triangle.uvw[0][2]);
 
-            indices.push_back(vertices.size() + first_vertex_idx);
-            vertices.emplace_back(
-                triangle.vertices[1].first, -1.0f * triangle.vertices[1].second, 0.0f,
-                triangle.uvw[1][0], triangle.uvw[1][1], triangle.uvw[1][2]);
+            indices.push_back(vertices.size());
+            vertices.emplace_back(triangle.vertices[1].first,
+                                  -1.0f * triangle.vertices[1].second, clockwise_winding,
+                                  triangle.uvw[1][0], triangle.uvw[1][1],
+                                  triangle.uvw[1][2]);
 
-            indices.push_back(vertices.size() + first_vertex_idx);
-            vertices.emplace_back(
-                triangle.vertices[2].first, -1.0f * triangle.vertices[2].second, 0.0f,
-                triangle.uvw[2][0], triangle.uvw[2][1], triangle.uvw[2][2]);
+            indices.push_back(vertices.size());
+            vertices.emplace_back(triangle.vertices[2].first,
+                                  -1.0f * triangle.vertices[2].second, clockwise_winding,
+                                  triangle.uvw[2][0], triangle.uvw[2][1],
+                                  triangle.uvw[2][2]);
         }
 
         index_draw_commands.push_back(vulkan::DrawIndexedIndirectCommand{
