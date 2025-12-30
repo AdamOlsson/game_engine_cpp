@@ -8,7 +8,7 @@ message(STATUS "    Log level: ${CMAKE_LOG_LEVEL_DEBUG}")
 message(STATUS "    Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "    Build tests: ${GAME_ENGINE_SDK_BUILD_TEST}")
 
-project(math CXX)
+project(ads CXX)
 
 file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/public/*.h")
@@ -17,7 +17,7 @@ add_library(${PROJECT_NAME}
     STATIC
         ${SOURCES}
 )
-add_library(sdk::math ALIAS ${PROJECT_NAME})
+add_library(sdk::ads ALIAS ${PROJECT_NAME})
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 
