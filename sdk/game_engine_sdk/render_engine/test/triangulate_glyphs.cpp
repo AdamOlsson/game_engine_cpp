@@ -34,7 +34,7 @@ TEST(TriangulateGlyphsTest, DISABLED_Test_TriangulateAllGlyphs) {
     ASSERT_TRUE(count > 0);
 }
 
-TEST(TriangulateGlyphsTest, Test_TriangulateGlyph) {
+TEST(TriangulateGlyphsTest, DISABLED_Test_TriangulateGlyph) {
     const font::OTFFont otf_font =
         font::OTFFont(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
 

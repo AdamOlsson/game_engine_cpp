@@ -20,7 +20,10 @@ constexpr auto ZOOM_SCALE_FACTOR = 0.1f;
 // - DONE Implement triangulation on on-curve points to get the interior of the glyph.
 // - DONE Render the glyphs using the indices returned from the triangulation
 // - DONE Implement Loop-Blinn Algorithm with the off-point curves to render smooth glyphs
-// - Handle compound glyphs and glyphs with "holes" like "A"
+// - Handle glyphs with single holes such as A and D
+// - Handle glyphs with multiple holes such as B
+// - Handle compund glyphs with no holes such as i and !
+// - Handle compund glyphs with holes such as %
 // - Implement all other Type2Charstring operators
 // - Render the english alphabet for my font
 // - Render the english alphabet for the two other fonts
