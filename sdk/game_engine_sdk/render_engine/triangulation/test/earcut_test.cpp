@@ -14,6 +14,22 @@ TEST(TriangulationEarClipTests, Test_EarClipTriangle) {
     EXPECT_EQ(triangles[0][2], 1);
 }
 
+TEST(TriangulationEarClipTests, Test_EarClipTriangleWithHole) {
+    // Note the counter clockwise ordering, positive y up, holes clockwise ordering
+    const std::vector<std::pair<int, int>> polygon = {{0, 0}, {10, 0}, {5, 5}};
+    const std::vector<std::pair<int, int>> hole = {{2, 1}, {5, 4}, {8, 1}};
+
+    const auto triangles = triangulation::Earcut<int>::run(polygon, hole);
+
+    // Expected number of triangles is number of vertices - 2, the number of vertices
+    // is 3 for exterior and 3 for hole but the bridging adds 1 as well
+    EXPECT_EQ(6 - 2 + 1, triangles.size());
+
+    /*EXPECT_EQ(triangles[0][0], 2);*/
+    /*EXPECT_EQ(triangles[0][1], 0);*/
+    /*EXPECT_EQ(triangles[0][2], 1);*/
+}
+
 TEST(TriangulationEarClipTests, Test_EarClipQuad) {
     // Note the counter clockwise ordering, positive y up
     const std::vector<std::pair<int, int>> polygon = {{-5, -5}, {5, -5}, {5, 5}, {-5, 5}};
@@ -29,6 +45,26 @@ TEST(TriangulationEarClipTests, Test_EarClipQuad) {
     EXPECT_EQ(triangles[1][0], 3);
     EXPECT_EQ(triangles[1][1], 1);
     EXPECT_EQ(triangles[1][2], 2);
+}
+
+TEST(TriangulationEarClipTests, Test_EarClipQuadWithHole) {
+    // Note the counter clockwise ordering, positive y up, holes clockwise ordering
+    const std::vector<std::pair<int, int>> polygon = {{-5, -5}, {5, -5}, {5, 5}, {-5, 5}};
+    const std::vector<std::pair<int, int>> hole = {{4, -4}, {-4, -4}, {-4, 4}, {4, 4}};
+
+    const auto triangles = triangulation::Earcut<int>::run(polygon, hole);
+
+    // Expected number of triangles is number of vertices - 2, the number of vertices
+    // is 4 for exterior and 4 for hole but the bridging adds 1 as well
+    EXPECT_EQ(8 - 2 + 1, triangles.size());
+
+    /*EXPECT_EQ(triangles[0][0], 3);*/
+    /*EXPECT_EQ(triangles[0][1], 0);*/
+    /*EXPECT_EQ(triangles[0][2], 1);*/
+
+    /*EXPECT_EQ(triangles[1][0], 3);*/
+    /*EXPECT_EQ(triangles[1][1], 1);*/
+    /*EXPECT_EQ(triangles[1][2], 2);*/
 }
 
 TEST(TriangulationEarClipTests, Test_EarClipSimplePolygon) {
