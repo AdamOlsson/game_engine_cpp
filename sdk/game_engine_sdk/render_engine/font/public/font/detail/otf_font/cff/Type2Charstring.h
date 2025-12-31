@@ -93,28 +93,35 @@ enum Type2HintOperators {
 };
 
 struct Type2Charstring {
-    static std::vector<GlyphVertexCollection> parse(const CFFIndex &charstring_index,
-                                                    const CFFIndex &global_subrs,
-                                                    const CFFIndex &local_subrs) {
+    static std::vector<GlyphOutlineCollection> parse(const CFFIndex &charstring_index,
+                                                     const CFFIndex &global_subrs,
+                                                     const CFFIndex &local_subrs) {
 
-        std::vector<std::vector<font::GlyphVertices>> font_vertices;
-        font_vertices.reserve(charstring_index.count);
+        std::vector<GlyphVertexCollection> font_outlines;
+        font_outlines.reserve(charstring_index.count);
         for (auto i = 0; i < charstring_index.count; i++) {
             const auto encoded_glyph_seq = charstring_index[i];
             // TODO: What to do with width?
+
+            // CONTINUE: & (and probably all glyphs with more than 1 hole) are not decoded
+            // properly. More specifically, the decoding only handles 2 move to operations
+            // where glyphs with more than 1 whole have 3 or more. The problem is that
+            // when I encounter the second move to operator I never open the path again
+            // (by setting state.path_open = true) even if I find more path construct
+            // operators
             DecodeState state{};
             decode_glyph(encoded_glyph_seq, global_subrs, local_subrs, state);
 
-            GlyphVertexCollection glyph_vertices;
-            glyph_vertices.reserve(state.outlines.size());
+            GlyphOutlineCollection glyph_outlines;
+            glyph_outlines.reserve(state.outlines.size());
             for (auto &outline : state.outlines) {
-                glyph_vertices.push_back(parse_outline(std::move(outline)));
+                glyph_outlines.push_back(parse_outline(std::move(outline)));
             }
 
-            font_vertices.push_back(std::move(glyph_vertices));
+            font_outlines.push_back(std::move(glyph_outlines));
         }
 
-        return font_vertices;
+        return font_outlines;
     }
 
     static void decode_glyph(const std::span<uint8_t> &encoded_glyph_seq,
@@ -126,21 +133,12 @@ struct Type2Charstring {
         for (auto iter = encoded_glyph_seq.begin(); iter != encoded_glyph_seq.end();
              iter++) {
 
-            /*auto iter_copy = iter;*/
-
             std::stack<int> decoded_operands;
             decode_until_next_operator(iter, encoded_glyph_seq.end(), decoded_operands);
             const int operator_ = *iter;
             operand_stacks.push_back(std::move(decoded_operands));
             operators.push_back(operator_);
 
-            /*std::cout << "Encoded sequence: ";*/
-            /*while (iter_copy != iter) {*/
-            /*    std::cout << static_cast<int>(*iter_copy) << " ";*/
-            /*    iter_copy++;*/
-            /*}*/
-            /*std::cout << operator_ << std::endl;*/
-            /**/
             // The following is the order of the operators:
             // w? {hs* vs* cm* hm* mt subpath}? {mt subpath}* endchar
 
@@ -386,10 +384,9 @@ struct Type2Charstring {
 
     static constexpr bool
     is_off_curve_point(const std::variant<OffCurvePoint, OnCurvePoint> &p);
-    static font::GlyphVertices parse_outline(const OutlineControlPoints &control_points);
+    static font::GlyphOutline parse_outline(const OutlineControlPoints &control_points);
     static constexpr std::pair<int, int>
     decay_to_point(const std::variant<OffCurvePoint, OnCurvePoint> &p);
-    static constexpr bool is_clockwise_winding(const font::Triangle<float> &triangle);
 };
 
 }; // namespace font::detail::otf_font::cff

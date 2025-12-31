@@ -7,6 +7,7 @@
 #include "Type2Charstring.h"
 
 #include "font/detail/ifstream_util.h"
+#include "font/winding.h"
 #include "util/assert.h"
 #include <cstdint>
 #include <fstream>
@@ -129,13 +130,46 @@ struct FontTableCFF {
         const auto charset =
             read_charsets_data(stream, charstring_index.count, string_index);
 
-        const auto glyph_outlines = Type2Charstring::parse(
+        std::vector<GlyphOutlineCollection> font_outlines = Type2Charstring::parse(
             charstring_index, global_subroutines, local_subroutines);
 
         cff.glyphs.reserve(charstring_index.count);
         for (size_t i = 0; i < charstring_index.count; i++) {
-            cff.glyphs.push_back(font::Glyph{.name = std::move(charset[i - 1]),
-                                             .vertices = std::move(glyph_outlines[i])});
+            std::vector<GlyphOutline> &glyph_outlines = font_outlines[i];
+
+            if (glyph_outlines.size() == 0) {
+                continue;
+            }
+
+            // We assume that the first outline is always the outer outline of a glyph
+            const bool outer_winding_order_clockwise =
+                is_clockwise_winding(glyph_outlines[0].vertices);
+
+            Glyph glyph{};
+            glyph.name = std::move(charset[i - 1]);
+            for (GlyphOutline &outline : glyph_outlines) {
+                const bool clockwise_winding = is_clockwise_winding(outline.vertices);
+
+                // If the outline has the same winding order, it is a separate polygon
+                // such as the characters i, % or !. If the outline has the opposite
+                // winding order, it is a hole in the current polygon
+                if (outer_winding_order_clockwise == clockwise_winding) {
+                    // New polygon
+                    glyph.polygons.emplace_back();
+                    Polygon &poly = glyph.polygons.back();
+                    poly.exterior_outline = std::move(outline.vertices);
+                } else {
+                    // Hole in current polygon
+                    Polygon &poly = glyph.polygons.back();
+                    poly.interior_outlines.push_back(std::move(outline.vertices));
+                }
+
+                for (auto &curve : outline.curves) {
+                    glyph.curves.push_back(std::move(curve));
+                }
+            }
+
+            cff.glyphs.push_back(std::move(glyph));
         }
 
         return cff;

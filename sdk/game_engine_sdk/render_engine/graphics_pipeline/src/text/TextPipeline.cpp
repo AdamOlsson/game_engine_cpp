@@ -50,23 +50,32 @@ void graphics_pipeline::text::TextPipeline::load_font(
     std::vector<uint16_t> indices;
     for (const auto &glyph : font.glyphs) {
 
-        // Note: When I allow of composite glyphs, the cmap will not longer be valid
-        // as each additional interior_vertices of one glyph offsets all following
-        // vertices one index
-        // TODO: The outer and inner polygon must be of opposite winding order
-        const std::vector<font::Vertex<float>> &interior_vertices =
-            glyph.vertices[0].interior;
-        const std::vector<font::ExteriorTriangle> &exterior_triangles =
-            glyph.vertices[0].exterior;
+        if (glyph.polygons.size() == 0) {
+            index_draw_commands.push_back(vulkan::DrawIndexedIndirectCommand{
+                .indexCount = static_cast<uint32_t>(indices.size()),
+                .instanceCount = 1,
+                .firstIndex = static_cast<uint32_t>(indices.size()),
+                .firstInstance = static_cast<uint32_t>(instance_offset_count),
+            });
+
+            instance_offset_count++;
+            continue;
+        }
+
+        const font::Polygon &polygon = glyph.polygons[0];
+
+        const std::vector<font::Vertex<float>> &polygon_outline =
+            polygon.exterior_outline;
+        const std::vector<font::ExteriorTriangle> &polygon_curves = glyph.curves;
 
         const size_t first_vertex_idx = vertices.size();
-        for (const auto &point : interior_vertices) {
+        for (const auto &point : polygon_outline) {
             vertices.emplace_back(point.first, -1.0f * point.second, 0.0f, 0.0f, 0.0f,
                                   0.0f);
         }
 
         const std::vector<std::array<size_t, 3>> triangles =
-            triangulation::Earcut<float>::run(interior_vertices, {});
+            triangulation::Earcut<float>::run(polygon_outline, {});
 
         const size_t first_index_idx = indices.size();
         for (const auto &triangle : triangles) {
@@ -75,7 +84,7 @@ void graphics_pipeline::text::TextPipeline::load_font(
             indices.push_back(triangle[2] + first_vertex_idx);
         }
 
-        for (const font::ExteriorTriangle &triangle : exterior_triangles) {
+        for (const font::ExteriorTriangle &triangle : polygon_curves) {
             const float clockwise_winding = triangle.clockwise_winding ? 1.0f : 0.0f;
             indices.push_back(vertices.size());
             vertices.emplace_back(triangle.vertices[0].first,

@@ -12,16 +12,26 @@ struct ExteriorTriangle {
     std::array<UVW<float>, 3> uvw;
 };
 
-struct GlyphVertices {
-    std::vector<font::Vertex<float>> interior;
-    std::vector<font::ExteriorTriangle> exterior;
+struct GlyphOutline {
+    std::vector<font::Vertex<float>> vertices;
+    std::vector<font::ExteriorTriangle> curves;
 };
 
-using GlyphVertexCollection = std::vector<GlyphVertices>;
+using GlyphVertexCollection = std::vector<GlyphOutline>;
+using GlyphOutlineCollection = std::vector<GlyphOutline>;
+
+// A polygon can only have one exterior outline, but multiple interior
+// outlines (holes)
+template <typename T> using Outline = std::vector<T>;
+struct Polygon {
+    Outline<Vertex<float>> exterior_outline;
+    std::vector<Outline<Vertex<float>>> interior_outlines;
+};
 
 struct Glyph {
     std::string name;
-    GlyphVertexCollection vertices;
+    std::vector<Polygon> polygons;
+    std::vector<ExteriorTriangle> curves;
 };
 
 } // namespace font
