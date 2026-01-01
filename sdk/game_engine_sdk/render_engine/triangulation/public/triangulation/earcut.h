@@ -3,6 +3,7 @@
 #include "ads/DoubleLinkedList.h"
 #include "math/area.h"
 #include "util/assert.h"
+#include <cfloat>
 #include <vector>
 namespace triangulation {
 
@@ -231,7 +232,7 @@ template <typename T> class Earcut {
         }
         const std::pair<T, T> &M = interior[interior_bridge_vertex];
 
-        float min_x = 999.0f;
+        float min_x = FLT_MAX;
         size_t closest_edge_id = exterior.size();
         for (size_t i = 0; i < exterior.size(); i++) {
             const auto &start = exterior[i];
@@ -273,7 +274,7 @@ template <typename T> class Earcut {
         //  Select the vertex from the edge with the largest X
         const auto &start = exterior[closest_edge_id];
         const auto &end = exterior[(closest_edge_id + 1) % exterior.size()];
-        const size_t exterior_bridge_vertice =
+        const size_t exterior_bridge_vertex =
             start.first >= end.first ? closest_edge_id
                                      : (closest_edge_id + 1) % exterior.size();
 
@@ -294,7 +295,7 @@ template <typename T> class Earcut {
 
         for (size_t i = 0; i < exterior.size(); i++) {
             merged_vertices.push_back(exterior[i]);
-            if (i == exterior_bridge_vertice) {
+            if (i == exterior_bridge_vertex) {
                 for (size_t j = 0; j < interior.size(); j++) {
                     merged_vertices.push_back(
                         interior[(j + interior_bridge_vertex) % interior.size()]);

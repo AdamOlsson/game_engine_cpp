@@ -220,6 +220,20 @@ void font::detail::otf_font::cff::Type2Charstring::handle_vstemhm(
 
 void font::detail::otf_font::cff::Type2Charstring::handle_rmoveto(
     font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands) {
+
+    if (state.current_outline.size() != 0) {
+        if (state.x != state.contour_start.first &&
+            state.y != state.contour_start.second) {
+            state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
+                                               state.contour_start.first,
+                                               state.contour_start.second);
+        }
+        state.outlines.push_back(std::move(state.current_outline));
+        state.current_outline = {};
+        /*std::cout << std::format("rmoveto (closed path): ({},{})", state.x, state.y)*/
+        /*          << std::endl;*/
+    }
+
     const int dy1 = operands.top();
     operands.pop();
     const int dx1 = operands.top();
@@ -227,75 +241,52 @@ void font::detail::otf_font::cff::Type2Charstring::handle_rmoveto(
     state.x += dx1;
     state.y += dy1;
 
-    if (state.current_outline.size() != 0) {
-        /*if (state.path_open) {*/
-        /*state.path_open = false;*/
-        state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
-                                           state.contour_start.first,
-                                           state.contour_start.second);
-        state.outlines.push_back(std::move(state.current_outline));
-        state.current_outline = {};
-        /*std::cout << std::format("rmoveto (closed path): ({},{})", state.x, state.y)*/
-        /*          << std::endl;*/
-    } else {
-        /*state.path_open = true;*/
-
-        /*std::cout << std::format("rmoveto (opened path): ({},{})", state.x, state.y)*/
-        /*          << std::endl;*/
-    }
     state.contour_start = std::make_pair(state.x, state.y);
 }
 
 void font::detail::otf_font::cff::Type2Charstring::handle_hmoveto(
     font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands) {
-    const int dx1 = operands.top();
-    operands.pop();
-    state.x += dx1;
 
     if (state.current_outline.size() != 0) {
-        /*if (state.path_open) {*/
-        /*state.path_open = false;*/
-        state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
-                                           state.contour_start.first,
-                                           state.contour_start.second);
+        if (state.x != state.contour_start.first &&
+            state.y != state.contour_start.second) {
+            state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
+                                               state.contour_start.first,
+                                               state.contour_start.second);
+        }
         state.outlines.push_back(std::move(state.current_outline));
         state.current_outline = {};
         /*std::cout << std::format("hmoveto (closed path): ({},{})", state.x, state.y)*/
         /*          << std::endl;*/
-    } else {
-        /*state.path_open = true;*/
-
-        /*std::cout << std::format("hmoveto (opened path): ({},{})", state.x, state.y)*/
-        /*          << std::endl;*/
     }
+
+    const int dx1 = operands.top();
+    operands.pop();
+    state.x += dx1;
+
     state.contour_start = std::make_pair(state.x, state.y);
 }
 
 void font::detail::otf_font::cff::Type2Charstring::handle_vmoveto(
     font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands) {
+
+    if (state.current_outline.size() != 0) {
+        if (state.x != state.contour_start.first &&
+            state.y != state.contour_start.second) {
+            state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
+                                               state.contour_start.first,
+                                               state.contour_start.second);
+        }
+        state.outlines.push_back(std::move(state.current_outline));
+        state.current_outline = {};
+
+        state.contour_start = std::make_pair(state.x, state.y);
+    }
+
     const int dy1 = operands.top();
     operands.pop();
     state.y += dy1;
 
-    if (state.current_outline.size() != 0) {
-        /*if (state.path_open) {*/
-        /*state.path_open = false;*/
-        state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
-                                           state.contour_start.first,
-                                           state.contour_start.second);
-        state.outlines.push_back(std::move(state.current_outline));
-        state.current_outline = {};
-        /*std::cout << std::format("vmoveto (closed path): ({},{})", state.x, state.y)*/
-        /*          << std::endl;*/
-
-        state.contour_start = std::make_pair(state.x, state.y);
-    } else {
-        state.contour_start = std::make_pair(state.x, state.y);
-        /*state.path_open = true;*/
-
-        /*std::cout << std::format("vmoveto (opened path): ({},{})", state.x, state.y)*/
-        /*          << std::endl;*/
-    }
     state.contour_start = std::make_pair(state.x, state.y);
 }
 
@@ -552,9 +543,12 @@ void font::detail::otf_font::cff::Type2Charstring::handle_endchar(
     // Most fonts contain atleast one "empty" glyph. If we encounter an empty glyph, do
     // not create an outline
     if (state.current_outline.size() != 0) {
-        state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
-                                           state.contour_start.first,
-                                           state.contour_start.second);
+        if (state.x != state.contour_start.first &&
+            state.y != state.contour_start.second) {
+            state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
+                                               state.contour_start.first,
+                                               state.contour_start.second);
+        }
     }
 
     state.outlines.push_back(std::move(state.current_outline));

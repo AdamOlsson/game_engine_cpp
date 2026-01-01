@@ -66,6 +66,12 @@ void graphics_pipeline::text::TextPipeline::load_font(
 
         const std::vector<font::Vertex<float>> &polygon_outline =
             polygon.exterior_outline;
+
+        font::Outline<font::Vertex<float>> polygon_interior = {};
+        if (polygon.interior_outlines.size() > 0) {
+            polygon_interior = polygon.interior_outlines[0];
+        }
+
         const std::vector<font::ExteriorTriangle> &polygon_curves = glyph.curves;
 
         const size_t first_vertex_idx = vertices.size();
@@ -75,7 +81,7 @@ void graphics_pipeline::text::TextPipeline::load_font(
         }
 
         const std::vector<std::array<size_t, 3>> triangles =
-            triangulation::Earcut<float>::run(polygon_outline, {});
+            triangulation::Earcut<float>::run(polygon_outline, polygon_interior);
 
         const size_t first_index_idx = indices.size();
         for (const auto &triangle : triangles) {
