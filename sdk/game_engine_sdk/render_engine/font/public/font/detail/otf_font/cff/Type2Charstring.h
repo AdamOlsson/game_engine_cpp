@@ -43,7 +43,7 @@ struct OnCurvePoint {
 using OutlineControlPoints = std::vector<std::variant<OffCurvePoint, OnCurvePoint>>;
 
 struct DecodeState {
-    bool path_open = false;
+    /*bool path_open = false;*/
     int x = 0;
     int y = 0;
     int width = 0;
@@ -103,12 +103,6 @@ struct Type2Charstring {
             const auto encoded_glyph_seq = charstring_index[i];
             // TODO: What to do with width?
 
-            // CONTINUE: & (and probably all glyphs with more than 1 hole) are not decoded
-            // properly. More specifically, the decoding only handles 2 move to operations
-            // where glyphs with more than 1 whole have 3 or more. The problem is that
-            // when I encounter the second move to operator I never open the path again
-            // (by setting state.path_open = true) even if I find more path construct
-            // operators
             DecodeState state{};
             decode_glyph(encoded_glyph_seq, global_subrs, local_subrs, state);
 

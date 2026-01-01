@@ -27,7 +27,7 @@ TEST(Type2CharstringTests, Test_ParseGlyphD) {
     EXPECT_EQ(glyph.polygons[0].interior_outlines.size(), 1);
 }
 
-TEST(Type2CharstringTests, DISABLED_Test_ParseGlyphB) {
+TEST(Type2CharstringTests, Test_ParseGlyphB) {
     const font::OTFFont otf_font =
         font::OTFFont(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
 
