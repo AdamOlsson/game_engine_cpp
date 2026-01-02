@@ -50,6 +50,8 @@ void graphics_pipeline::text::TextPipeline::load_font(
     std::vector<uint16_t> indices;
     for (const auto &glyph : font.glyphs) {
 
+        // Most OTF files contain empty glyphs, to preserve the character mapping we still
+        // add an empty draw command that renders nothing
         if (glyph.polygons.size() == 0) {
             index_draw_commands.push_back(vulkan::DrawIndexedIndirectCommand{
                 .indexCount = static_cast<uint32_t>(indices.size()),
@@ -67,29 +69,33 @@ void graphics_pipeline::text::TextPipeline::load_font(
         const std::vector<font::Vertex<float>> &polygon_outline =
             polygon.exterior_outline;
 
+        // TODO: The problem is that the interior vertices are never added to the vertex
+        // buffer, although triangulated
+        // - However, the triangulating creates a certain vertex order due to the bridging
+        // of the inner and outer outlines. This order needs to be maintained for the
+        // indices to persist.
         font::Outline<font::Vertex<float>> polygon_interior = {};
         if (polygon.interior_outlines.size() > 0) {
             polygon_interior = polygon.interior_outlines[0];
         }
 
-        const std::vector<font::ExteriorTriangle> &polygon_curves = glyph.curves;
+        const triangulation::Triangles<float> triangles =
+            triangulation::Earcut<float>::run(polygon_outline, polygon_interior);
 
         const size_t first_vertex_idx = vertices.size();
-        for (const auto &point : polygon_outline) {
+        for (const auto &point : triangles.vertices) {
             vertices.emplace_back(point.first, -1.0f * point.second, 0.0f, 0.0f, 0.0f,
                                   0.0f);
         }
 
-        const std::vector<std::array<size_t, 3>> triangles =
-            triangulation::Earcut<float>::run(polygon_outline, polygon_interior);
-
         const size_t first_index_idx = indices.size();
-        for (const auto &triangle : triangles) {
+        for (const auto &triangle : triangles.indices) {
             indices.push_back(triangle[0] + first_vertex_idx);
             indices.push_back(triangle[1] + first_vertex_idx);
             indices.push_back(triangle[2] + first_vertex_idx);
         }
 
+        const std::vector<font::ExteriorTriangle> &polygon_curves = glyph.curves;
         for (const font::ExteriorTriangle &triangle : polygon_curves) {
             const float clockwise_winding = triangle.clockwise_winding ? 1.0f : 0.0f;
             indices.push_back(vertices.size());

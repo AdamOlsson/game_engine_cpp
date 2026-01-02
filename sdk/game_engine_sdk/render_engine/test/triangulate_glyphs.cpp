@@ -1,4 +1,5 @@
 #include "font/OTFFont.h"
+#include "triangulation/Triangles.h"
 #include "triangulation/earcut.h"
 #include <gtest/gtest.h>
 
@@ -24,11 +25,12 @@ TEST(TriangulateGlyphsTest, Test_TriangulateAllGlyphs) {
             hole = polygon.interior_outlines[0];
         }
 
-        const std::vector<std::array<size_t, 3>> triangles =
+        const triangulation::Triangles<float> triangles =
             triangulation::Earcut<float>::run(outline, hole);
 
-        const size_t additional = hole.size() > 0 ? 1 : 0;
-        ASSERT_EQ(triangles.size(), outline.size() + hole.size() - 2 + additional);
+        const size_t additional = hole.size() > 0 ? 2 : 0;
+        ASSERT_EQ(triangles.indices.size(),
+                  outline.size() + hole.size() - 2 + additional);
         count++;
     }
     ASSERT_TRUE(count > 0);
@@ -38,7 +40,7 @@ TEST(TriangulateGlyphsTest, Test_TriangulateGlyph) {
     const font::OTFFont otf_font =
         font::OTFFont(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
 
-    const uint16_t index = otf_font.glyph_index(font::Unicode("d"));
+    const uint16_t index = otf_font.glyph_index(font::Unicode("2"));
     const font::Glyph glyph = otf_font.glyphs[index];
 
     const font::Polygon &polygon = glyph.polygons[0];
@@ -50,8 +52,8 @@ TEST(TriangulateGlyphsTest, Test_TriangulateGlyph) {
         hole = polygon.interior_outlines[0];
     }
 
-    const std::vector<std::array<size_t, 3>> triangles =
+    const triangulation::Triangles<float> triangles =
         triangulation::Earcut<float>::run(outline, hole);
-    const size_t additional = hole.size() > 0 ? 1 : 0;
-    ASSERT_EQ(triangles.size(), outline.size() + hole.size() - 2 + additional);
+    const size_t additional = hole.size() > 0 ? 2 : 0;
+    ASSERT_EQ(triangles.indices.size(), outline.size() + hole.size() - 2 + additional);
 }

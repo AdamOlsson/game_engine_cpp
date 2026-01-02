@@ -2,6 +2,7 @@
 
 #include "ads/DoubleLinkedList.h"
 #include "math/area.h"
+#include "triangulation/Triangles.h"
 #include "util/assert.h"
 #include <cfloat>
 #include <vector>
@@ -9,9 +10,8 @@ namespace triangulation {
 
 template <typename T> class Earcut {
   public:
-    static std::vector<std::array<size_t, 3>>
-    run(const std::vector<std::pair<T, T>> &bridged_vertices,
-        const std::vector<std::pair<T, T>> &interior_vertices) {
+    static Triangles<T> run(const std::vector<std::pair<T, T>> &bridged_vertices,
+                            const std::vector<std::pair<T, T>> &interior_vertices) {
         Earcut<T> ec;
         return ec.run_(bridged_vertices, interior_vertices);
     }
@@ -28,12 +28,11 @@ template <typename T> class Earcut {
     std::vector<size_t> m_prev_id;
 
     Earcut() = default;
-    std::vector<std::array<size_t, 3>>
-    run_(const std::vector<std::pair<T, T>> &exterior_vertices,
-         const std::vector<std::pair<T, T>> &interior_vertices) {
+    Triangles<T> run_(const std::vector<std::pair<T, T>> &exterior_vertices,
+                      const std::vector<std::pair<T, T>> &interior_vertices) {
 
         if (exterior_vertices.size() < 3) {
-            return std::vector<std::array<size_t, 3>>{};
+            return Triangles<T>{};
         }
 
         const std::vector<std::pair<T, T>> bridged_vertices =
@@ -117,7 +116,8 @@ template <typename T> class Earcut {
             i = (i + 1) % bridged_vertices.size();
         }
 
-        return triangles;
+        return Triangles<T>{.vertices = std::move(bridged_vertices),
+                            .indices = std::move(triangles)};
     }
 
     void reclassify_vertex(const size_t i, const std::vector<std::pair<T, T>> &vertices) {
@@ -181,7 +181,7 @@ template <typename T> class Earcut {
             const T cross_a = cross_prod(vab, vpa);
             const T cross_b = cross_prod(vbc, vpb);
             const T cross_c = cross_prod(vca, vpc);
-            if (cross_a < 0 && cross_b < 0 && cross_c < 0) {
+            if (cross_a <= 0.0f && cross_b <= 0.0f && cross_c <= 0.0f) {
                 // point p is inside the triangle
                 return false;
             }
@@ -191,14 +191,15 @@ template <typename T> class Earcut {
 
     bool is_convex(const std::pair<T, T> &v_prev, const std::pair<T, T> &v_curr,
                    const std::pair<T, T> &v_next) {
-        const auto va = make_vector(v_curr, v_prev);
-        const auto vb = make_vector(v_curr, v_next);
-        const auto cross = cross_prod(va, vb);
-        return cross < 0;
+        const std::pair<float, float> va = make_vector(v_curr, v_prev);
+        const std::pair<float, float> vb = make_vector(v_curr, v_next);
+        const float cross = cross_prod(va, vb);
+        return cross < 0.0f;
     }
 
     std::pair<T, T> make_vector(const std::pair<T, T> &from, const std::pair<T, T> &to) {
-        return std::make_pair<int, int>(to.first - from.first, to.second - from.second);
+        return std::make_pair<float, float>(to.first - from.first,
+                                            to.second - from.second);
     }
 
     T cross_prod(const std::pair<T, T> &va, const std::pair<T, T> &vb) {
@@ -291,7 +292,7 @@ template <typename T> class Earcut {
         // mutually visible and the algorithm terminates.
 
         std::vector<std::pair<T, T>> merged_vertices;
-        merged_vertices.reserve(exterior.size() + interior.size());
+        merged_vertices.reserve(exterior.size() + interior.size() + 2);
 
         for (size_t i = 0; i < exterior.size(); i++) {
             merged_vertices.push_back(exterior[i]);
@@ -300,8 +301,9 @@ template <typename T> class Earcut {
                     merged_vertices.push_back(
                         interior[(j + interior_bridge_vertex) % interior.size()]);
                 }
-                // We need to start and end on the interior bridge
+                // We need to start and end with a bridge to and from the interior
                 merged_vertices.push_back(interior[interior_bridge_vertex]);
+                merged_vertices.push_back(exterior[i]);
             }
         }
 

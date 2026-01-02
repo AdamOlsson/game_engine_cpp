@@ -157,7 +157,7 @@ class ExampleTextRendering : public Game {
         auto descriptor = m_descriptor_set.get();
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
         m_pipeline->render(command_buffer, descriptor, &push_constant,
-                           font::Unicode("A"));
+                           font::Unicode("B"));
 
         render_pass.end_submit_present();
 

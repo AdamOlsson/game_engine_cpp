@@ -1,20 +1,20 @@
 #include "triangulation/earcut.h"
 #include <gtest/gtest.h>
 
-TEST(TriangulationEarClipTests, Test_EarClipTriangle) {
+TEST(TriangulationEarCutTests, Test_EarCutTriangle) {
     // Note the counter clockwise ordering, positive y up
     const std::vector<std::pair<int, int>> polygon = {{0, 0}, {10, 0}, {5, 5}};
 
     const auto triangles = triangulation::Earcut<int>::run(polygon, {});
 
-    EXPECT_EQ(1, triangles.size());
+    EXPECT_EQ(1, triangles.indices.size());
 
-    EXPECT_EQ(triangles[0][0], 2);
-    EXPECT_EQ(triangles[0][1], 0);
-    EXPECT_EQ(triangles[0][2], 1);
+    EXPECT_EQ(triangles.indices[0][0], 2);
+    EXPECT_EQ(triangles.indices[0][1], 0);
+    EXPECT_EQ(triangles.indices[0][2], 1);
 }
 
-TEST(TriangulationEarClipTests, Test_EarClipTriangleWithHole) {
+TEST(TriangulationEarCutTests, Test_EarCutTriangleWithHole) {
     // Note the counter clockwise ordering, positive y up, holes clockwise ordering
     const std::vector<std::pair<int, int>> polygon = {{0, 0}, {10, 0}, {5, 5}};
     const std::vector<std::pair<int, int>> hole = {{2, 1}, {5, 4}, {8, 1}};
@@ -22,32 +22,28 @@ TEST(TriangulationEarClipTests, Test_EarClipTriangleWithHole) {
     const auto triangles = triangulation::Earcut<int>::run(polygon, hole);
 
     // Expected number of triangles is number of vertices - 2, the number of vertices
-    // is 3 for exterior and 3 for hole but the bridging adds 1 as well
-    EXPECT_EQ(6 - 2 + 1, triangles.size());
-
-    /*EXPECT_EQ(triangles[0][0], 2);*/
-    /*EXPECT_EQ(triangles[0][1], 0);*/
-    /*EXPECT_EQ(triangles[0][2], 1);*/
+    // is 3 for exterior and 3 for hole but the bridging adds 2 as well
+    EXPECT_EQ(6 - 2 + 2, triangles.indices.size());
 }
 
-TEST(TriangulationEarClipTests, Test_EarClipQuad) {
+TEST(TriangulationEarCutTests, Test_EarCutQuad) {
     // Note the counter clockwise ordering, positive y up
     const std::vector<std::pair<int, int>> polygon = {{-5, -5}, {5, -5}, {5, 5}, {-5, 5}};
 
     const auto triangles = triangulation::Earcut<int>::run(polygon, {});
 
-    EXPECT_EQ(2, triangles.size());
+    EXPECT_EQ(2, triangles.indices.size());
 
-    EXPECT_EQ(triangles[0][0], 3);
-    EXPECT_EQ(triangles[0][1], 0);
-    EXPECT_EQ(triangles[0][2], 1);
+    EXPECT_EQ(triangles.indices[0][0], 3);
+    EXPECT_EQ(triangles.indices[0][1], 0);
+    EXPECT_EQ(triangles.indices[0][2], 1);
 
-    EXPECT_EQ(triangles[1][0], 3);
-    EXPECT_EQ(triangles[1][1], 1);
-    EXPECT_EQ(triangles[1][2], 2);
+    EXPECT_EQ(triangles.indices[1][0], 3);
+    EXPECT_EQ(triangles.indices[1][1], 1);
+    EXPECT_EQ(triangles.indices[1][2], 2);
 }
 
-TEST(TriangulationEarClipTests, Test_EarClipQuadWithHole) {
+TEST(TriangulationEarCutTests, Test_EarCutQuadWithHole) {
     // Note the counter clockwise ordering, positive y up, holes clockwise ordering
     const std::vector<std::pair<int, int>> polygon = {{-5, -5}, {5, -5}, {5, 5}, {-5, 5}};
     const std::vector<std::pair<int, int>> hole = {{4, -4}, {-4, -4}, {-4, 4}, {4, 4}};
@@ -55,19 +51,11 @@ TEST(TriangulationEarClipTests, Test_EarClipQuadWithHole) {
     const auto triangles = triangulation::Earcut<int>::run(polygon, hole);
 
     // Expected number of triangles is number of vertices - 2, the number of vertices
-    // is 4 for exterior and 4 for hole but the bridging adds 1 as well
-    EXPECT_EQ(8 - 2 + 1, triangles.size());
-
-    /*EXPECT_EQ(triangles[0][0], 3);*/
-    /*EXPECT_EQ(triangles[0][1], 0);*/
-    /*EXPECT_EQ(triangles[0][2], 1);*/
-
-    /*EXPECT_EQ(triangles[1][0], 3);*/
-    /*EXPECT_EQ(triangles[1][1], 1);*/
-    /*EXPECT_EQ(triangles[1][2], 2);*/
+    // is 4 for exterior and 4 for hole but the bridging adds 2 as well
+    EXPECT_EQ(8 - 2 + 2, triangles.indices.size());
 }
 
-TEST(TriangulationEarClipTests, Test_EarClipSimplePolygon) {
+TEST(TriangulationEarCutTests, Test_EarCutSimplePolygon) {
     // Note the counter clockwise ordering, positive y up
     const std::vector<std::pair<int, int>> polygon = {
         {3, 48},   {52, 8},    {99, 50}, {138, 25}, {175, 77},
@@ -75,37 +63,37 @@ TEST(TriangulationEarClipTests, Test_EarClipSimplePolygon) {
 
     const auto triangles = triangulation::Earcut<int>::run(polygon, {});
 
-    EXPECT_EQ(8, triangles.size());
+    EXPECT_EQ(8, triangles.indices.size());
 
-    EXPECT_EQ(triangles[0][0], 2);
-    EXPECT_EQ(triangles[0][1], 3);
-    EXPECT_EQ(triangles[0][2], 4);
+    EXPECT_EQ(triangles.indices[0][0], 2);
+    EXPECT_EQ(triangles.indices[0][1], 3);
+    EXPECT_EQ(triangles.indices[0][2], 4);
 
-    EXPECT_EQ(triangles[1][0], 2);
-    EXPECT_EQ(triangles[1][1], 4);
-    EXPECT_EQ(triangles[1][2], 5);
+    EXPECT_EQ(triangles.indices[1][0], 2);
+    EXPECT_EQ(triangles.indices[1][1], 4);
+    EXPECT_EQ(triangles.indices[1][2], 5);
 
-    EXPECT_EQ(triangles[2][0], 2);
-    EXPECT_EQ(triangles[2][1], 5);
-    EXPECT_EQ(triangles[2][2], 6);
+    EXPECT_EQ(triangles.indices[2][0], 2);
+    EXPECT_EQ(triangles.indices[2][1], 5);
+    EXPECT_EQ(triangles.indices[2][2], 6);
 
-    EXPECT_EQ(triangles[3][0], 2);
-    EXPECT_EQ(triangles[3][1], 6);
-    EXPECT_EQ(triangles[3][2], 7);
+    EXPECT_EQ(triangles.indices[3][0], 2);
+    EXPECT_EQ(triangles.indices[3][1], 6);
+    EXPECT_EQ(triangles.indices[3][2], 7);
 
-    EXPECT_EQ(triangles[4][0], 8);
-    EXPECT_EQ(triangles[4][1], 9);
-    EXPECT_EQ(triangles[4][2], 0);
+    EXPECT_EQ(triangles.indices[4][0], 8);
+    EXPECT_EQ(triangles.indices[4][1], 9);
+    EXPECT_EQ(triangles.indices[4][2], 0);
 
-    EXPECT_EQ(triangles[5][0], 8);
-    EXPECT_EQ(triangles[5][1], 0);
-    EXPECT_EQ(triangles[5][2], 1);
+    EXPECT_EQ(triangles.indices[5][0], 8);
+    EXPECT_EQ(triangles.indices[5][1], 0);
+    EXPECT_EQ(triangles.indices[5][2], 1);
 
-    EXPECT_EQ(triangles[6][0], 1);
-    EXPECT_EQ(triangles[6][1], 2);
-    EXPECT_EQ(triangles[6][2], 7);
+    EXPECT_EQ(triangles.indices[6][0], 1);
+    EXPECT_EQ(triangles.indices[6][1], 2);
+    EXPECT_EQ(triangles.indices[6][2], 7);
 
-    EXPECT_EQ(triangles[7][0], 1);
-    EXPECT_EQ(triangles[7][1], 7);
-    EXPECT_EQ(triangles[7][2], 8);
+    EXPECT_EQ(triangles.indices[7][0], 1);
+    EXPECT_EQ(triangles.indices[7][1], 7);
+    EXPECT_EQ(triangles.indices[7][2], 8);
 }

@@ -222,8 +222,8 @@ void font::detail::otf_font::cff::Type2Charstring::handle_rmoveto(
     font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands) {
 
     if (state.current_outline.size() != 0) {
-        if (state.x != state.contour_start.first &&
-            state.y != state.contour_start.second) {
+        if (!(state.x == state.contour_start.first &&
+              state.y == state.contour_start.second)) {
             state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
                                                state.contour_start.first,
                                                state.contour_start.second);
@@ -248,15 +248,16 @@ void font::detail::otf_font::cff::Type2Charstring::handle_hmoveto(
     font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands) {
 
     if (state.current_outline.size() != 0) {
-        if (state.x != state.contour_start.first &&
-            state.y != state.contour_start.second) {
+        if (!(state.x == state.contour_start.first &&
+              state.y == state.contour_start.second)) {
             state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
                                                state.contour_start.first,
                                                state.contour_start.second);
         }
         state.outlines.push_back(std::move(state.current_outline));
         state.current_outline = {};
-        /*std::cout << std::format("hmoveto (closed path): ({},{})", state.x, state.y)*/
+        /*std::cout << std::format("hmoveto (closed path): ({},{})", state.x,
+         * state.y)*/
         /*          << std::endl;*/
     }
 
@@ -271,8 +272,8 @@ void font::detail::otf_font::cff::Type2Charstring::handle_vmoveto(
     font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands) {
 
     if (state.current_outline.size() != 0) {
-        if (state.x != state.contour_start.first &&
-            state.y != state.contour_start.second) {
+        if (!(state.x == state.contour_start.first &&
+              state.y == state.contour_start.second)) {
             state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
                                                state.contour_start.first,
                                                state.contour_start.second);
@@ -309,7 +310,8 @@ void font::detail::otf_font::cff::Type2Charstring::handle_rlineto(
         state.y += ds[i].second;
         state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>, state.x,
                                            state.y);
-        /*std::cout << std::format("rlineto: ({},{}) ", state.x, state.y) << std::endl;*/
+        /*std::cout << std::format("rlineto: ({},{}) ", state.x, state.y) <<
+         * std::endl;*/
     }
 }
 
@@ -331,7 +333,8 @@ void font::detail::otf_font::cff::Type2Charstring::handle_vlineto(
         }
         state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>, state.x,
                                            state.y);
-        /*std::cout << std::format("vlineto ({},{})", state.x, state.y) << std::endl;*/
+        /*std::cout << std::format("vlineto ({},{})", state.x, state.y) <<
+         * std::endl;*/
     }
 }
 
@@ -353,7 +356,8 @@ void font::detail::otf_font::cff::Type2Charstring::handle_hlineto(
         }
         state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>, state.x,
                                            state.y);
-        /*std::cout << std::format("hlineto ({},{})", state.x, state.y) << std::endl;*/
+        /*std::cout << std::format("hlineto ({},{})", state.x, state.y) <<
+         * std::endl;*/
     }
 }
 
@@ -540,11 +544,11 @@ void font::detail::otf_font::cff::Type2Charstring::handle_endchar(
 
     /*state.path_open = false;*/
 
-    // Most fonts contain atleast one "empty" glyph. If we encounter an empty glyph, do
-    // not create an outline
+    // Most fonts contain atleast one "empty" glyph. If we encounter an empty glyph,
+    // do not create an outline
     if (state.current_outline.size() != 0) {
-        if (state.x != state.contour_start.first &&
-            state.y != state.contour_start.second) {
+        if (!(state.x == state.contour_start.first &&
+              state.y == state.contour_start.second)) {
             state.current_outline.emplace_back(std::in_place_type<OnCurvePoint>,
                                                state.contour_start.first,
                                                state.contour_start.second);
