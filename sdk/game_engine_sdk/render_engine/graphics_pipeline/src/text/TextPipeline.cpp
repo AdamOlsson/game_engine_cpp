@@ -69,18 +69,8 @@ void graphics_pipeline::text::TextPipeline::load_font(
         const std::vector<font::Vertex<float>> &polygon_outline =
             polygon.exterior_outline;
 
-        // TODO: The problem is that the interior vertices are never added to the vertex
-        // buffer, although triangulated
-        // - However, the triangulating creates a certain vertex order due to the bridging
-        // of the inner and outer outlines. This order needs to be maintained for the
-        // indices to persist.
-        font::Outline<font::Vertex<float>> polygon_interior = {};
-        if (polygon.interior_outlines.size() > 0) {
-            polygon_interior = polygon.interior_outlines[0];
-        }
-
         const triangulation::Triangles<float> triangles =
-            triangulation::Earcut<float>::run(polygon_outline, polygon_interior);
+            triangulation::Earcut<float>::run(polygon_outline, polygon.interior_outlines);
 
         const size_t first_vertex_idx = vertices.size();
         for (const auto &point : triangles.vertices) {

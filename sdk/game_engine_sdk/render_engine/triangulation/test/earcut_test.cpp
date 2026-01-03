@@ -17,7 +17,7 @@ TEST(TriangulationEarCutTests, Test_EarCutTriangle) {
 TEST(TriangulationEarCutTests, Test_EarCutTriangleWithHole) {
     // Note the counter clockwise ordering, positive y up, holes clockwise ordering
     const std::vector<std::pair<int, int>> polygon = {{0, 0}, {10, 0}, {5, 5}};
-    const std::vector<std::pair<int, int>> hole = {{2, 1}, {5, 4}, {8, 1}};
+    const std::vector<std::vector<std::pair<int, int>>> hole = {{{2, 1}, {5, 4}, {8, 1}}};
 
     const auto triangles = triangulation::Earcut<int>::run(polygon, hole);
 
@@ -46,9 +46,10 @@ TEST(TriangulationEarCutTests, Test_EarCutQuad) {
 TEST(TriangulationEarCutTests, Test_EarCutQuadWithHole) {
     // Note the counter clockwise ordering, positive y up, holes clockwise ordering
     const std::vector<std::pair<int, int>> polygon = {{-5, -5}, {5, -5}, {5, 5}, {-5, 5}};
-    const std::vector<std::pair<int, int>> hole = {{4, -4}, {-4, -4}, {-4, 4}, {4, 4}};
+    const std::vector<std::vector<std::pair<int, int>>> holes = {
+        {{4, -4}, {-4, -4}, {-4, 4}, {4, 4}}};
 
-    const auto triangles = triangulation::Earcut<int>::run(polygon, hole);
+    const auto triangles = triangulation::Earcut<int>::run(polygon, holes);
 
     // Expected number of triangles is number of vertices - 2, the number of vertices
     // is 4 for exterior and 4 for hole but the bridging adds 2 as well
@@ -96,4 +97,29 @@ TEST(TriangulationEarCutTests, Test_EarCutSimplePolygon) {
     EXPECT_EQ(triangles.indices[7][0], 1);
     EXPECT_EQ(triangles.indices[7][1], 7);
     EXPECT_EQ(triangles.indices[7][2], 8);
+}
+
+TEST(TriangulationEarCutTests,
+     DISABLED_Test_EarCutSimplePolygonMinimumAngleReflexVertex) {
+    // Note the counter clockwise ordering, positive y up
+    const std::vector<std::pair<float, float>> external_outline = {
+        {0, 5}, {9, 5}, {7, 4}, {8, 4}, {10, 0}, {10, 8}, {0, 8}};
+    const std::vector<std::vector<std::pair<float, float>>> internal_outlines = {
+        {{1, 6}, {1, 7}, {2, 6}}};
+
+    const auto triangles =
+        triangulation::Earcut<float>::run(external_outline, internal_outlines);
+}
+
+TEST(TriangulationEarCutTests, DISABLED_Test_EarCutSimplePolygonWith2Holes) {
+    // Note the counter clockwise ordering, positive y up
+    const std::vector<std::pair<float, float>> external_outline = {
+        {0, 0}, {4, 0}, {3.2, 8}, {0, 8}};
+    const std::vector<std::vector<std::pair<float, float>>> internal_outlines = {
+        {{1, 1}, {2, 1.5}, {1, 2}},
+        {{1.5, 3}, {2.5, 3.5}, {1.5, 4}},
+    };
+
+    const auto triangles =
+        triangulation::Earcut<float>::run(external_outline, internal_outlines);
 }

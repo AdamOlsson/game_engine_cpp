@@ -19,18 +19,20 @@ TEST(TriangulateGlyphsTest, Test_TriangulateAllGlyphs) {
         }
 
         const font::Outline<font::Vertex<float>> &outline = polygon.exterior_outline;
+        const triangulation::Triangles<float> triangles =
+            triangulation::Earcut<float>::run(outline, polygon.interior_outlines);
 
-        font::Outline<font::Vertex<float>> hole = {};
-        if (polygon.interior_outlines.size() > 0) {
-            hole = polygon.interior_outlines[0];
+        const size_t additional = polygon.interior_outlines.size() > 0 ? 2 : 0;
+        const size_t internal_size =
+            polygon.interior_outlines.size() > 0 ? polygon.interior_outlines.size() : 0;
+
+        int expected_number_of_indices = fmax(outline.size() - 2, 0);
+        for (const auto &internal_outline : polygon.interior_outlines) {
+            expected_number_of_indices += (internal_outline.size() + 2);
+            break;
         }
 
-        const triangulation::Triangles<float> triangles =
-            triangulation::Earcut<float>::run(outline, hole);
-
-        const size_t additional = hole.size() > 0 ? 2 : 0;
-        ASSERT_EQ(triangles.indices.size(),
-                  outline.size() + hole.size() - 2 + additional);
+        ASSERT_EQ(triangles.indices.size(), expected_number_of_indices);
         count++;
     }
     ASSERT_TRUE(count > 0);
@@ -46,14 +48,13 @@ TEST(TriangulateGlyphsTest, Test_TriangulateGlyph) {
     const font::Polygon &polygon = glyph.polygons[0];
 
     const font::Outline<font::Vertex<float>> &outline = polygon.exterior_outline;
-
-    font::Outline<font::Vertex<float>> hole = {};
-    if (polygon.interior_outlines.size() > 0) {
-        hole = polygon.interior_outlines[0];
-    }
-
     const triangulation::Triangles<float> triangles =
-        triangulation::Earcut<float>::run(outline, hole);
-    const size_t additional = hole.size() > 0 ? 2 : 0;
-    ASSERT_EQ(triangles.indices.size(), outline.size() + hole.size() - 2 + additional);
+        triangulation::Earcut<float>::run(outline, polygon.interior_outlines);
+
+    int expected_number_of_indices = fmax(outline.size() - 2, 0);
+    for (const auto &internal_outline : polygon.interior_outlines) {
+        expected_number_of_indices += (internal_outline.size() + 2);
+        break;
+    }
+    ASSERT_EQ(triangles.indices.size(), expected_number_of_indices);
 }

@@ -10,8 +10,9 @@ namespace triangulation {
 
 template <typename T> class Earcut {
   public:
-    static Triangles<T> run(const std::vector<std::pair<T, T>> &bridged_vertices,
-                            const std::vector<std::pair<T, T>> &interior_vertices) {
+    static Triangles<T>
+    run(const std::vector<std::pair<T, T>> &bridged_vertices,
+        const std::vector<std::vector<std::pair<T, T>>> &interior_vertices) {
         Earcut<T> ec;
         return ec.run_(bridged_vertices, interior_vertices);
     }
@@ -28,8 +29,9 @@ template <typename T> class Earcut {
     std::vector<size_t> m_prev_id;
 
     Earcut() = default;
-    Triangles<T> run_(const std::vector<std::pair<T, T>> &exterior_vertices,
-                      const std::vector<std::pair<T, T>> &interior_vertices) {
+    Triangles<T>
+    run_(const std::vector<std::pair<T, T>> &exterior_vertices,
+         const std::vector<std::vector<std::pair<T, T>>> &interior_vertices) {
 
         if (exterior_vertices.size() < 3) {
             return Triangles<T>{};
@@ -70,9 +72,9 @@ template <typename T> class Earcut {
                 continue;
             }
 
-            m_is_ear_vertex[i] =
-                is_ear(bridged_vertices[m_prev_id[i]], bridged_vertices[i],
-                       bridged_vertices[m_next_id[i]], bridged_vertices);
+            m_is_ear_vertex[i] = is_ear(
+                bridged_vertices[m_prev_id[i]], bridged_vertices[i],
+                bridged_vertices[m_next_id[i]], bridged_vertices, m_reflex_vertices);
             /*m_ear_vertices.push_back(i);*/
 
             DEBUG_CODE({
@@ -138,7 +140,8 @@ template <typename T> class Earcut {
         // removed, if it is convex we need to check if it is an ear
         if (now_conv) {
             /*const bool was_ear = m_is_ear_vertex[i];*/
-            const bool now_ear = is_ear(v_prev, v_curr, v_next, vertices);
+            const bool now_ear =
+                is_ear(v_prev, v_curr, v_next, vertices, m_reflex_vertices);
             m_is_ear_vertex[i] = now_ear;
 
             /*if (!was_ear && now_ear) {*/
@@ -158,18 +161,18 @@ template <typename T> class Earcut {
 
     bool is_ear(const std::pair<T, T> &v_prev, const std::pair<T, T> &v_curr,
                 const std::pair<T, T> &v_next,
-                const std::vector<std::pair<T, T>> &vertices) {
+                const std::vector<std::pair<T, T>> &vertices,
+                const ads::DoubleLinkedList<size_t> &reflex_vertices) {
 
         // Create edges pointing in a counter clockwise order
         const std::pair<T, T> vab = make_vector(v_prev, v_curr);
         const std::pair<T, T> vbc = make_vector(v_curr, v_next);
         const std::pair<T, T> vca = make_vector(v_next, v_prev);
 
-        for (const size_t &other_vertice : m_reflex_vertices) {
+        for (const size_t &other_vertice : reflex_vertices) {
             const auto &p = vertices[other_vertice];
 
-            if (!m_is_reflex_vertex[other_vertice] || p == v_prev || p == v_curr ||
-                p == v_next) {
+            if (p == v_prev || p == v_curr || p == v_next) {
                 continue;
             }
 
@@ -206,43 +209,164 @@ template <typename T> class Earcut {
         return va.first * vb.second - va.second * vb.first;
     }
 
-    std::vector<std::pair<T, T>>
-    bridge_exterior_and_interior(const std::vector<std::pair<T, T>> &exterior,
-                                 const std::vector<std::pair<T, T>> &interior) {
+    std::vector<std::pair<T, T>> bridge_exterior_and_interior(
+        const std::vector<std::pair<T, T>> &exterior,
+        const std::vector<std::vector<std::pair<T, T>>> &interiors) {
 
-        if (interior.size() == 0) {
+        if (interiors.size() == 0) {
             return exterior;
         }
 
-        DEBUG_CODE({
-            const bool exterior_winding = math::signed_area(exterior) < 0.0f;
-            const bool interior_winding = math::signed_area(interior) < 0.0f;
-            DEBUG_ASSERT(
-                exterior_winding != interior_winding,
-                "Error: Exterior and interior winding orders need to be different.");
-        });
+        ads::DoubleLinkedList<size_t> exterior_reflex_vertices;
+        for (size_t i = 0; i < exterior.size(); i++) {
+            const auto prev = exterior[i + exterior.size() - 1];
+            const auto curr = exterior[i];
+            const auto next = exterior[i + 1];
+            if (!is_convex(prev, curr, next)) {
+                exterior_reflex_vertices.push_back(i);
+            }
+        }
 
-        // Find the interior vertex with the larges x
+        std::vector<std::pair<T, T>> bridged_vertices = exterior;
+        /*std::vector<bool> is_on_exterior(bridged_vertices.size(), true);*/
+
+        for (const auto &interior : interiors) {
+
+            DEBUG_ASSERT(interior.size() != 0,
+                         "Error: Did not expect an internal polygon with no vertices.");
+
+            DEBUG_CODE({
+                const bool exterior_winding = math::signed_area(exterior) < 0.0f;
+                const bool interior_winding = math::signed_area(interior) < 0.0f;
+                DEBUG_ASSERT(
+                    exterior_winding != interior_winding,
+                    "Error: Exterior and interior winding orders need to be different.");
+            });
+
+            // Find the interior vertex with the larges x
+            const size_t interior_bridge_vertex = find_vertex_with_largest_x(interior);
+            const std::pair<T, T> &M = interior[interior_bridge_vertex];
+
+            const std::pair<size_t, std::pair<float, float>> intersection_point =
+                find_nearest_intersecting_edge(M, bridged_vertices);
+            const size_t closest_edge_id = intersection_point.first;
+            const std::pair<float, float> I = intersection_point.second;
+
+            DEBUG_ASSERT(closest_edge_id < bridged_vertices.size(),
+                         "Error: Failed to find intersection edge.");
+
+            const std::pair<float, float> &start = bridged_vertices[closest_edge_id];
+            const std::pair<float, float> &end =
+                bridged_vertices[(closest_edge_id + 1) % bridged_vertices.size()];
+
+            // If I is a vertex of the outer polygon, then M and I are mutually
+            // visible and the algorithm terminates
+            if ((I.first - start.first) < std::numeric_limits<float>::epsilon() &&
+                (I.second - start.second) < std::numeric_limits<float>::epsilon()) {
+
+                bridged_vertices = bridge(bridged_vertices, interior, closest_edge_id,
+                                          interior_bridge_vertex);
+                break;
+                /*continue;*/
+            }
+
+            if ((I.first - end.first) < std::numeric_limits<float>::epsilon() &&
+                (I.second - end.second) < std::numeric_limits<float>::epsilon()) {
+                bridged_vertices = bridge(bridged_vertices, interior,
+                                          (closest_edge_id + 1) % bridged_vertices.size(),
+                                          interior_bridge_vertex);
+                break;
+                /*continue;*/
+            }
+
+            //  Select the vertex from the edge with the largest X
+            const size_t exterior_bridge_vertex =
+                start.first >= end.first
+                    ? closest_edge_id
+                    : (closest_edge_id + 1) % bridged_vertices.size();
+
+            const std::pair<T, T> &P = bridged_vertices[exterior_bridge_vertex];
+
+            // Search the reflex vertices of the outer polygon, not including P if it
+            // happens to be reflex. If all of these vertices are strictly outside
+            // triangle ⟨M, I, P ⟩, then M and P are mutually visible and the
+            // algorithm terminates.
+            const bool I_is_ear = is_ear(P, I, M, exterior, exterior_reflex_vertices);
+            if (I_is_ear) {
+                bridged_vertices = bridge(bridged_vertices, interior,
+                                          exterior_bridge_vertex, interior_bridge_vertex);
+                break;
+                /*continue;*/
+            }
+
+            // TODO: Otherwise, at least one reflex vertex lies in ⟨M, I, P ⟩. Search
+            // for the reflex R that minimizes the angle between ⟨M, I⟩ and ⟨M, R⟩;
+            // then M and R are mutually visible and the algorithm terminates.
+            const std::pair<float, float> v_mi = make_vector(M, I);
+            for (const size_t &i : exterior_reflex_vertices) {
+                const std::pair<float, float> R = exterior[i];
+                const std::pair<float, float> v_mr = make_vector(M, R);
+                DEBUG_ASSERT(false, "Not yet implemented.");
+            }
+
+            bridged_vertices = bridge(bridged_vertices, interior, exterior_bridge_vertex,
+                                      interior_bridge_vertex);
+            break;
+        }
+
+        return bridged_vertices;
+    }
+
+    std::vector<std::pair<T, T>> bridge(const std::vector<std::pair<T, T>> &v1,
+                                        const std::vector<std::pair<T, T>> &v2,
+                                        const size_t split, const size_t v2_start) {
+
+        std::vector<std::pair<T, T>> new_bridged_vertices;
+        new_bridged_vertices.reserve(v1.size() + v2.size() + 2);
+
+        for (size_t i = 0; i < v1.size(); i++) {
+            new_bridged_vertices.push_back(v1[i]);
+            if (i == split) {
+                for (size_t j = 0; j < v2.size(); j++) {
+                    new_bridged_vertices.push_back(v2[(j + v2_start) % v2.size()]);
+                }
+                // We need to start and end with a bridge to and from the interior
+                new_bridged_vertices.push_back(v2[v2_start]);
+                new_bridged_vertices.push_back(v1[i]);
+            }
+        }
+        return new_bridged_vertices;
+    }
+
+    size_t find_vertex_with_largest_x(const std::vector<std::pair<T, T>> &vertices) {
+        DEBUG_ASSERT(vertices.size() > 0, "Error: Did not expect empty vector.");
         size_t interior_bridge_vertex = 0;
-        T max_interior_x_found = interior[0].first;
-        for (size_t i = 1; i < interior.size(); i++) {
-            if (interior[i].first > max_interior_x_found) {
-                max_interior_x_found = interior[i].first;
+        T max_interior_x_found = vertices[0].first;
+        for (size_t i = 1; i < vertices.size(); i++) {
+            if (vertices[i].first > max_interior_x_found) {
+                max_interior_x_found = vertices[i].first;
                 interior_bridge_vertex = i;
             }
         }
-        const std::pair<T, T> &M = interior[interior_bridge_vertex];
+        return interior_bridge_vertex;
+    }
+
+    std::pair<size_t, std::pair<T, T>>
+    find_nearest_intersecting_edge(const std::pair<T, T> &M,
+                                   const std::vector<std::pair<T, T>> &vertices) {
 
         float min_x = FLT_MAX;
-        size_t closest_edge_id = exterior.size();
-        for (size_t i = 0; i < exterior.size(); i++) {
-            const auto &start = exterior[i];
-            const auto &end = exterior[(i + 1) % exterior.size()];
+        size_t closest_edge_id = vertices.size();
+        std::pair<float, float> intersection_point = {
+            FLT_MAX, FLT_MAX}; // Store the intersection point
+
+        for (size_t i = 0; i < vertices.size(); i++) {
+            const auto &start = vertices[i];
+            const auto &end = vertices[(i + 1) % vertices.size()];
 
             if (M.first >= start.first && M.first >= end.first) {
                 continue;
             }
-
             if (start.second > M.second || end.second < M.second) {
                 continue;
             }
@@ -266,48 +390,11 @@ template <typename T> class Earcut {
             if (intersection_x < min_x) {
                 min_x = intersection_x;
                 closest_edge_id = i;
+                // Store the intersection point
+                intersection_point = {intersection_x, M.second};
             }
         }
-
-        DEBUG_ASSERT(closest_edge_id < exterior.size(),
-                     "Error: Failed to find intersection edge.");
-
-        //  Select the vertex from the edge with the largest X
-        const auto &start = exterior[closest_edge_id];
-        const auto &end = exterior[(closest_edge_id + 1) % exterior.size()];
-        const size_t exterior_bridge_vertex =
-            start.first >= end.first ? closest_edge_id
-                                     : (closest_edge_id + 1) % exterior.size();
-
-        // TODO: If I is a vertex of the outer polygon, then M and I are mutually visible
-        // and the algorithm terminates
-        /*if (min_t_edge_id < exterior.size()) {}*/
-
-        // TODO: Search the reflex vertices of the outer polygon, not including P if it
-        // happens to be reflex. If all of these vertices are strictly outside triangle
-        // ⟨M, I, P ⟩, then M and P are mutually visible and the algorithm terminates.
-
-        // TODO:  Otherwise, at least one reflex vertex lies in ⟨M, I, P ⟩. Search for the
-        // reflex R that minimizes the angle between ⟨M, I⟩ and ⟨M, R⟩; then M and R are
-        // mutually visible and the algorithm terminates.
-
-        std::vector<std::pair<T, T>> merged_vertices;
-        merged_vertices.reserve(exterior.size() + interior.size() + 2);
-
-        for (size_t i = 0; i < exterior.size(); i++) {
-            merged_vertices.push_back(exterior[i]);
-            if (i == exterior_bridge_vertex) {
-                for (size_t j = 0; j < interior.size(); j++) {
-                    merged_vertices.push_back(
-                        interior[(j + interior_bridge_vertex) % interior.size()]);
-                }
-                // We need to start and end with a bridge to and from the interior
-                merged_vertices.push_back(interior[interior_bridge_vertex]);
-                merged_vertices.push_back(exterior[i]);
-            }
-        }
-
-        return merged_vertices;
+        return std::make_pair(closest_edge_id, std::move(intersection_point));
     }
 };
 } // namespace triangulation
