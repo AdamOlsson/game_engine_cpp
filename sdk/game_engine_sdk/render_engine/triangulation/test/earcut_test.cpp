@@ -99,27 +99,124 @@ TEST(TriangulationEarCutTests, Test_EarCutSimplePolygon) {
     EXPECT_EQ(triangles.indices[7][2], 8);
 }
 
-TEST(TriangulationEarCutTests,
-     DISABLED_Test_EarCutSimplePolygonMinimumAngleReflexVertex) {
+TEST(TriangulationEarCutTests, Test_IsConvex) {
+    EXPECT_FALSE(triangulation::detail::EarcutImpl<float>::is_convex(
+        std::pair<float, float>(0, 5), std::pair<float, float>(9, 5),
+        std::pair<float, float>(7, 4)));
+}
+
+TEST(TriangulationEarCutTests, Test_EarCutSimplePolygonMinimumAngleReflexVertex) {
     // Note the counter clockwise ordering, positive y up
     const std::vector<std::pair<float, float>> external_outline = {
         {0, 5}, {9, 5}, {7, 4}, {8, 4}, {10, 0}, {10, 8}, {0, 8}};
     const std::vector<std::vector<std::pair<float, float>>> internal_outlines = {
         {{1, 6}, {1, 7}, {2, 6}}};
 
-    const auto triangles =
-        triangulation::Earcut<float>::run(external_outline, internal_outlines);
+    const std::vector<std::pair<float, float>> expected_bridged_vertices = {
+        {0, 5}, {9, 5}, {2, 6}, {1, 6},  {1, 7},  {2, 6},
+        {9, 5}, {7, 4}, {8, 4}, {10, 0}, {10, 8}, {0, 8}};
+
+    const auto bridged_vertices =
+        triangulation::detail::EarcutImpl<float>::bridge_exterior_and_interior(
+            external_outline, internal_outlines);
+
+    EXPECT_EQ(expected_bridged_vertices.size(), bridged_vertices.size());
+    for (size_t i = 0; i < bridged_vertices.size(); i++) {
+        EXPECT_EQ(expected_bridged_vertices[i], bridged_vertices[i]);
+    }
 }
 
-TEST(TriangulationEarCutTests, DISABLED_Test_EarCutSimplePolygonWith2Holes) {
+TEST(TriangulationEarCutTests, Test_EarCutSimplePolygonWith2HolesExample1) {
     // Note the counter clockwise ordering, positive y up
     const std::vector<std::pair<float, float>> external_outline = {
         {0, 0}, {4, 0}, {3.2, 8}, {0, 8}};
-    const std::vector<std::vector<std::pair<float, float>>> internal_outlines = {
-        {{1, 1}, {2, 1.5}, {1, 2}},
-        {{1.5, 3}, {2.5, 3.5}, {1.5, 4}},
-    };
+    const std::vector<std::vector<std::pair<float, float>>> internal_outlines_one_hole = {
+        {{1.5, 3}, {1.5, 4}, {2.5, 3.5}}};
 
-    const auto triangles =
-        triangulation::Earcut<float>::run(external_outline, internal_outlines);
+    const std::vector<std::pair<float, float>> expected_bridged_vertices_one_hole = {
+        {0, 0},     {4, 0}, {2.5, 3.5}, {1.5, 3}, {1.5, 4},
+        {2.5, 3.5}, {4, 0}, {3.2, 8},   {0, 8}};
+
+    const auto bridged_vertices_one_hole =
+        triangulation::detail::EarcutImpl<float>::bridge_exterior_and_interior(
+            external_outline, internal_outlines_one_hole);
+
+    EXPECT_EQ(expected_bridged_vertices_one_hole.size(),
+              bridged_vertices_one_hole.size());
+    for (size_t i = 0; i < expected_bridged_vertices_one_hole.size(); i++) {
+        EXPECT_EQ(bridged_vertices_one_hole[i], expected_bridged_vertices_one_hole[i]);
+    }
+
+    const std::vector<std::vector<std::pair<float, float>>> internal_outlines_two_holes =
+        {
+            {{1, 1}, {1, 2}, {2, 1.5}},
+            {{1.5, 3}, {1.5, 4}, {2.5, 3.5}},
+        };
+
+    const std::vector<std::pair<float, float>> expected_bridged_vertices_two_holes = {
+        {0, 0},     {4, 0},   {2, 1.5}, {1, 1},     {1, 2}, {2, 1.5}, {4, 0},
+        {2.5, 3.5}, {1.5, 3}, {1.5, 4}, {2.5, 3.5}, {4, 0}, {3.2, 8}, {0, 8}};
+
+    const auto bridged_vertices_two_holes =
+        triangulation::detail::EarcutImpl<float>::bridge_exterior_and_interior(
+            external_outline, internal_outlines_two_holes);
+    EXPECT_EQ(expected_bridged_vertices_two_holes.size(),
+              bridged_vertices_two_holes.size());
+    for (size_t i = 0; i < expected_bridged_vertices_two_holes.size(); i++) {
+        EXPECT_EQ(bridged_vertices_two_holes[i], expected_bridged_vertices_two_holes[i]);
+    }
+
+    const triangulation::Triangles triangles =
+        triangulation::Earcut<float>::run(external_outline, internal_outlines_two_holes);
+    const auto vertices = triangles.vertices;
+    const std::vector<triangulation::Triangle> indices = triangles.indices;
+
+    EXPECT_EQ(12, triangles.indices.size());
+}
+
+TEST(TriangulationEarCutTests, Test_EarCutSimplePolygonWith2HolesExample2) {
+    const std::vector<std::pair<float, float>> external_outline = {
+        {0, 0}, {4, 0}, {3, 10}, {0, 10}};
+    const std::vector<std::vector<std::pair<float, float>>> internal_outlines_one_hole = {
+        {{1.5, 1}, {1.5, 2}, {2.5, 1.5}}};
+
+    const std::vector<std::pair<float, float>> expected_bridged_vertices_one_hole = {
+        {0, 0},     {4, 0}, {2.5, 1.5}, {1.5, 1}, {1.5, 2},
+        {2.5, 1.5}, {4, 0}, {3, 10},    {0, 10}};
+
+    const auto bridged_vertices_one_hole =
+        triangulation::detail::EarcutImpl<float>::bridge_exterior_and_interior(
+            external_outline, internal_outlines_one_hole);
+
+    EXPECT_EQ(expected_bridged_vertices_one_hole.size(),
+              bridged_vertices_one_hole.size());
+    for (size_t i = 0; i < expected_bridged_vertices_one_hole.size(); i++) {
+        EXPECT_EQ(bridged_vertices_one_hole[i], expected_bridged_vertices_one_hole[i]);
+    }
+
+    const std::vector<std::vector<std::pair<float, float>>> internal_outlines_two_holes =
+        {
+            {{1.5, 1}, {1.5, 2}, {2.5, 1.5}},
+            {{1, 3}, {1, 4}, {2, 3.5}},
+        };
+
+    const std::vector<std::pair<float, float>> expected_bridged_vertices_two_holes = {
+        {0, 0},   {4, 0}, {2.5, 1.5}, {1.5, 1}, {1.5, 2}, {2.5, 1.5}, {4, 0},
+        {2, 3.5}, {1, 3}, {1, 4},     {2, 3.5}, {4, 0},   {3, 10},    {0, 10}};
+
+    const auto bridged_vertices_two_holes =
+        triangulation::detail::EarcutImpl<float>::bridge_exterior_and_interior(
+            external_outline, internal_outlines_two_holes);
+    EXPECT_EQ(expected_bridged_vertices_two_holes.size(),
+              bridged_vertices_two_holes.size());
+    for (size_t i = 0; i < expected_bridged_vertices_two_holes.size(); i++) {
+        EXPECT_EQ(bridged_vertices_two_holes[i], expected_bridged_vertices_two_holes[i]);
+    }
+
+    const triangulation::Triangles triangles =
+        triangulation::Earcut<float>::run(external_outline, internal_outlines_two_holes);
+    const auto vertices = triangles.vertices;
+    const std::vector<triangulation::Triangle> indices = triangles.indices;
+
+    EXPECT_EQ(12, triangles.indices.size());
 }

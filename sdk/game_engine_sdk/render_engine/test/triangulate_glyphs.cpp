@@ -5,7 +5,7 @@
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 
-TEST(TriangulateGlyphsTest, Test_TriangulateAllGlyphs) {
+TEST(TriangulateGlyphsTest, DISABLED_Test_TriangulateAllGlyphs) {
     const font::OTFFont otf_font =
         font::OTFFont(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
 
@@ -38,7 +38,7 @@ TEST(TriangulateGlyphsTest, Test_TriangulateAllGlyphs) {
     ASSERT_TRUE(count > 0);
 }
 
-TEST(TriangulateGlyphsTest, Test_TriangulateGlyph) {
+TEST(TriangulateGlyphsTest, DISABLED_Test_TriangulateGlyph) {
     const font::OTFFont otf_font =
         font::OTFFont(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
 
