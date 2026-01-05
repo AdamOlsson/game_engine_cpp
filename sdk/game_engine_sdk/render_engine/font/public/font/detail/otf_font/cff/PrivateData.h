@@ -50,12 +50,12 @@ struct PrivateData {
 
         PrivateData private_data{};
 
-        const auto dict = CFFDict::parse(encoded_bytes);
+        const auto dict = CFFDict::parse(encoded_bytes.begin(), encoded_bytes.end());
 
-        for (auto i = 0; i < dict.operators.size(); i++) {
+        for (size_t i = 0; i < dict.operators.size(); i++) {
 
             const int operator_ = dict.operators[i];
-            const auto operands = dict.operands[i];
+            const std::vector<int> operands = dict.operands[i];
 
             /*std::cout << std::format("{}: ", operator_);*/
             /*for (int o : operands) {*/

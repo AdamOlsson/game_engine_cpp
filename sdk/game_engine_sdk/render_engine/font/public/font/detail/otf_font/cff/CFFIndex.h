@@ -1,6 +1,7 @@
 #pragma once
 
 #include "font/detail/ifstream_util.h"
+#include "font/detail/otf_font/cff/CFFStandardStrings.h"
 #include <cstdint>
 #include <memory>
 #include <span>
@@ -70,6 +71,14 @@ struct CFFIndex {
 
     friend std::ostream &operator<<(std::ostream &os, const CFFIndex &obj) {
         return os << obj.to_string();
+    }
+
+    static std::string lookup_string(const CFFIndex &string_index, const int idx) {
+        if (idx <= N_STD_STRING) {
+            return CFF_STANDARD_STRINGS[idx];
+        }
+        const std::span<uint8_t> str = string_index[idx - N_STD_STRING];
+        return std::string(str.begin(), str.end());
     }
 };
 }; // namespace font::detail::otf_font::cff

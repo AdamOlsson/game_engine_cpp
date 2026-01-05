@@ -62,18 +62,17 @@ struct CFFDict {
         int operator_ = *data;
         if (operator_ == 12) {
             int next = *(++data);
-            operator_ = (next << 8) | next;
+            operator_ = (operator_ << 8) | next;
         }
 
         return std::make_pair(operator_, operands);
     }
 
-    static CFFDict parse(const std::vector<uint8_t> &encoded_bytes) {
+    template <std::input_iterator Iter>
+    static CFFDict parse(Iter &&start, const Iter &end) {
         CFFDict dict{};
-
-        const auto iter_end = encoded_bytes.end();
-        for (auto iter = encoded_bytes.begin(); iter != iter_end; iter++) {
-            auto operator_operands = decode_until_operator(iter, iter_end);
+        for (Iter &iter = start; iter != end; iter++) {
+            auto operator_operands = decode_until_operator(iter, end);
             dict.operators.push_back(operator_operands.first);
             dict.operands.push_back(std::move(operator_operands.second));
         }

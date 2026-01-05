@@ -71,16 +71,37 @@ enum Type2PathConstructOperators {
     HLineTo = 6,
     VLineTo = 7,
     RRCurveTo = 8,
+    RLineCurve = 24,
     RCurveLine = 25,
     VVCurveTo = 26,
     HHCurveTo = 27,
     VHCurveTo = 30,
     HVCurveTo = 31,
-    // Flex = ... // 12 35
-    // HFlex = ... // 12 34
-    // HFlex1 = ... // 12 36
-    // Flex1 = ... // 12 37
-    // TODO: And more...
+    HFlex = 0x0C22,  // 12 34
+    Flex = 0x0C23,   // 12 35
+    HFlex1 = 0x0C24, // 12 36
+    Flex1 = 0x0C25,  // 12 37
+
+    And = 0x0C03,    // 12 3
+    Or = 0x0C04,     // 12 4
+    Not = 0x0C05,    // 12 5
+    Abs = 0x0C09,    // 12 9
+    Add = 0x0C0A,    // 12 10
+    Sub = 0x0C0B,    // 12 11
+    Div = 0x0C0C,    // 12 12
+    Neg = 0x0C0E,    // 12 14
+    Eq = 0x0C0F,     // 12 15
+    Drop = 0x0C12,   // 12 18
+    Put = 0x0C14,    // 12 20
+    Get = 0x0C15,    // 12 21
+    IfElse = 0x0C16, // 12 22
+    Random = 0x0C17, // 12 23
+    Mul = 0x0C18,    // 12 24
+    Sqrt = 0x0C1A,   // 12 26
+    Dup = 0x0C1B,    // 12 27
+    Exch = 0x0C1C,   // 12 28
+    Index = 0x0C1D,  // 12 29
+    Roll = 0x0C1E,   // 12 30
 };
 
 enum Type2HintOperators {
@@ -254,12 +275,37 @@ struct Type2Charstring {
             }
 
             case Type2Operators::Return: {
-                /*std::cout << "return" << std::endl;*/
                 DEBUG_ASSERT(
                     iter + 1 == encoded_glyph_seq.end(),
                     "Error: return operator found when there are operators following.");
 
                 break;
+            }
+
+            case Type2PathConstructOperators::And:
+            case Type2PathConstructOperators::Or:
+            case Type2PathConstructOperators::Not:
+            case Type2PathConstructOperators::Abs:
+            case Type2PathConstructOperators::Add:
+            case Type2PathConstructOperators::Sub:
+            case Type2PathConstructOperators::Div:
+            case Type2PathConstructOperators::Neg:
+            case Type2PathConstructOperators::Eq:
+            case Type2PathConstructOperators::Drop:
+            case Type2PathConstructOperators::Put:
+            case Type2PathConstructOperators::Get:
+            case Type2PathConstructOperators::IfElse:
+            case Type2PathConstructOperators::Random:
+            case Type2PathConstructOperators::Mul:
+            case Type2PathConstructOperators::Sqrt:
+            case Type2PathConstructOperators::Dup:
+            case Type2PathConstructOperators::Exch:
+            case Type2PathConstructOperators::Index:
+            case Type2PathConstructOperators::Roll: {
+                DEBUG_ASSERT(
+                    false,
+                    std::format("Error: Arithmetic operator {} not yet implemented.",
+                                oper));
             }
 
             default: {

@@ -1,9 +1,8 @@
 #pragma once
 
-#include "CFFDict.h"
 #include "CFFIndex.h"
-#include "CFFStandardStrings.h"
 #include "PrivateData.h"
+#include "TopData.h"
 #include "Type2Charstring.h"
 
 #include "font/detail/ifstream_util.h"
@@ -26,23 +25,6 @@ using Offset4 = uint32_t;
 
 namespace font::detail::otf_font::cff {
 
-enum TopDictValue {
-    Version = 0,
-    Notice = 1,
-    FullName = 2,
-    FamilyName = 3,
-    Weight = 4,
-    FontBBox = 5,
-    Charset = 15,
-    Encoding = 16,
-    CharStrings = 17,
-    Private = 18,
-
-    UnderlinePosition = 3075, // 12 3
-
-    // TODO: More here
-};
-
 enum EncodingID {
     Standard = 0,
     Expert = 1,
@@ -58,24 +40,7 @@ struct FontTableCFF {
 
     std::string name;
 
-    struct Top {
-        std::string version = "";
-        std::string notice = "";
-        std::string copyright = "";
-        std::string full_name = "";
-        std::string family_name = "";
-        std::string weight = "";
-        int32_t underline_position = 0;
-        int32_t underline_thickness = 0;
-        std::array<int, 4> font_bbox{0};
-        uint8_t charstring_type = 2;
-        int32_t charset = 0;
-        int32_t encoding = 0;
-        int32_t charstrings = 0;
-        int32_t private_size = 0;
-        int32_t private_offset = 0;
-    } top;
-
+    TopData top_data;
     PrivateData private_data;
 
     std::vector<font::Glyph> glyphs;
@@ -100,31 +65,31 @@ struct FontTableCFF {
         const auto string_index = CFFIndex::read_index(stream);
         const auto global_subroutines = CFFIndex::read_index(stream);
 
-        cff.top = parse_top_data(top_index, string_index);
+        cff.top_data = TopData::parse(top_index, string_index);
 
-        if (cff.top.encoding != EncodingID::Standard) {
+        if (cff.top_data.encoding != EncodingID::Standard) {
             throw std::runtime_error("Error: Only standard encoding implemented.");
         }
 
-        stream.seekg(start_cff_data + std::streamoff(cff.top.private_offset));
+        stream.seekg(start_cff_data + std::streamoff(cff.top_data.private_offset));
         DEBUG_ASSERT(stream.good(),
                      "Error: Filestream not okay after seeking to private data.");
-        const auto private_bytes = read_n_bytes(stream, cff.top.private_size);
+        const auto private_bytes = read_n_bytes(stream, cff.top_data.private_size);
         cff.private_data = PrivateData::parse(private_bytes);
 
-        stream.seekg(start_cff_data +
-                     std::streamoff(cff.top.private_offset + cff.private_data.subrs));
+        stream.seekg(start_cff_data + std::streamoff(cff.top_data.private_offset +
+                                                     cff.private_data.subrs));
         DEBUG_ASSERT(stream.good(),
                      "Error: Filestream not okay after seeking to local subroutines.");
         const auto local_subroutines = CFFIndex::read_index(stream);
 
-        stream.seekg(start_cff_data + std::streamoff(cff.top.charstrings));
+        stream.seekg(start_cff_data + std::streamoff(cff.top_data.charstrings));
         DEBUG_ASSERT(stream.good(),
                      "Error: Filestream not okay after seeking to charstring data.");
         const auto charstring_index = CFFIndex::read_index(stream);
         /*std::cout << "Charstring Index: " << charstring_index << std::endl;*/
 
-        stream.seekg(start_cff_data + std::streamoff(cff.top.charset));
+        stream.seekg(start_cff_data + std::streamoff(cff.top_data.charset));
         DEBUG_ASSERT(stream.good(),
                      "Error: Filestream not okay after seeking to charset data.");
         const std::vector<std::string> charset =
@@ -150,32 +115,6 @@ struct FontTableCFF {
             }
 
             glyph.polygons = construct_glyph_polygons(std::move(glyph_outlines));
-
-            // We assume that the first outline is always the outer outline of a glyph
-            /*const bool outer_winding_order_clockwise =*/
-            /*    is_clockwise_winding(glyph_outlines[0].vertices);*/
-
-            /*for (GlyphOutline &outline : glyph_outlines) {*/
-            /*    const bool clockwise_winding = is_clockwise_winding(outline.vertices);*/
-            /**/
-            /*    // If the outline has the same winding order, it is a separate polygon*/
-            /*    // such as the characters i, % or !. If the outline has the opposite*/
-            /*    // winding order, it is a hole in the current polygon*/
-            /*    if (outer_winding_order_clockwise == clockwise_winding) {*/
-            /*        // New polygon*/
-            /*        glyph.polygons.emplace_back();*/
-            /*        Polygon &poly = glyph.polygons.back();*/
-            /*        poly.exterior_outline = std::move(outline.vertices);*/
-            /*    } else {*/
-            /*        // Hole in current polygon*/
-            /*        Polygon &poly = glyph.polygons.back();*/
-            /*        poly.interior_outlines.push_back(std::move(outline.vertices));*/
-            /*    }*/
-            /**/
-            /*    for (auto &curve : outline.curves) {*/
-            /*        glyph.curves.push_back(std::move(curve));*/
-            /*    }*/
-            /*}*/
 
             cff.glyphs.push_back(std::move(glyph));
         }
@@ -255,116 +194,6 @@ struct FontTableCFF {
         return (crossings % 2) == 1;
     }
 
-    static Top parse_top_data(const auto &top_index, const auto &string_index) {
-        auto top = Top{};
-        const auto data = top_index[0];
-
-        // TODO: Make use of CFFDict::parse()
-        std::stack<int> values;
-        for (auto data_iter = data.begin(); data_iter != data.end(); data_iter++) {
-            DEBUG_ASSERT(values.size() == 0, "Error: Expected stack to be empty.");
-
-            bool is_operator = false;
-            while (!is_operator) {
-                values.push(CFFDict::decode_one_value(data_iter));
-                const auto next = *(++data_iter);
-                is_operator = 0 <= next && next <= 21;
-            }
-
-            // Note: "operator" is reserved keyword, therefore the underscore
-            const int operator_ = *data_iter;
-            if (operator_ == 12) {
-                const int operator_2 = *(++data_iter);
-                const int combined_operator = operator_ << 8 | operator_2;
-
-                switch (combined_operator) {
-                case TopDictValue::UnderlinePosition: {
-                    top.underline_position = values.top();
-                    values.pop();
-                    break;
-                }
-                default: {
-                    throw std::runtime_error(std::format(
-                        "Operator {} {} is not yet implemented",
-                        static_cast<int>(operator_), static_cast<int>(operator_2)));
-                    break;
-                }
-                };
-                continue;
-            }
-
-            switch (operator_) {
-            case TopDictValue::Version: {
-                top.version = lookup_string(string_index, values.top());
-                values.pop();
-                break;
-            }
-            case TopDictValue::Notice: {
-                top.notice = lookup_string(string_index, values.top());
-                values.pop();
-                break;
-            }
-            case TopDictValue::FullName: {
-                top.full_name = lookup_string(string_index, values.top());
-                values.pop();
-                break;
-            }
-            case TopDictValue::FamilyName: {
-                top.family_name = lookup_string(string_index, values.top());
-                values.pop();
-                break;
-            }
-            case TopDictValue::Weight: {
-                top.weight = lookup_string(string_index, values.top());
-                values.pop();
-                break;
-            }
-            case TopDictValue::FontBBox: {
-                DEBUG_ASSERT(values.size() == 4,
-                             "Error: Font bounding box expects 4 values");
-                top.font_bbox[3] = values.top();
-                values.pop();
-                top.font_bbox[2] = values.top();
-                values.pop();
-                top.font_bbox[1] = values.top();
-                values.pop();
-                top.font_bbox[0] = values.top();
-                values.pop();
-                break;
-            }
-            case TopDictValue::Charset: {
-                top.charset = values.top();
-                values.pop();
-                break;
-            }
-            case TopDictValue::Encoding: {
-                top.encoding = values.top();
-                values.pop();
-                break;
-            }
-            case TopDictValue::CharStrings: {
-                top.charstrings = values.top();
-                values.pop();
-                break;
-            }
-            case TopDictValue::Private: {
-                top.private_offset = values.top();
-                values.pop();
-                top.private_size = values.top();
-                values.pop();
-                break;
-            }
-            default:
-                throw std::runtime_error(std::format("Operator {} is not yet implemented",
-                                                     static_cast<int>(operator_)));
-                values.pop();
-                break;
-            }
-        }
-
-        return top;
-    }
-
     static std::vector<std::string> read_charsets_data(std::ifstream &stream,
                                                        const uint16_t &num_glyphs,
                                                        const CFFIndex &string_index) {
@@ -376,17 +205,9 @@ struct FontTableCFF {
         glyph_names.reserve(num_glyphs);
         for (auto i = 0; i < num_glyphs; i++) {
             int sid = read_uint16(stream);
-            glyph_names.emplace_back(lookup_string(string_index, sid));
+            glyph_names.emplace_back(CFFIndex::lookup_string(string_index, sid));
         }
         return glyph_names;
-    }
-
-    static std::string lookup_string(const CFFIndex &string_index, const int idx) {
-        if (idx <= N_STD_STRING) {
-            return CFF_STANDARD_STRINGS[idx];
-        }
-        const std::span<uint8_t> str = string_index[idx - N_STD_STRING];
-        return std::string(str.begin(), str.end());
     }
 
     std::string to_string() const {
@@ -399,25 +220,7 @@ struct FontTableCFF {
             << "\t\toff_size: " << static_cast<int>(header.off_size) << "\n"
             << "\t}" << "\n"
             << "\tname: " << name << "\n"
-            << "\ttop: {" << "\n"
-            << "\t\tversion: " << top.version << "\n"
-            << "\t\tnotice: " << top.notice << "\n"
-            << "\t\tcopyright: " << top.copyright << "\n"
-            << "\t\tfull_name: " << top.full_name << "\n"
-            << "\t\tfamily_name: " << top.family_name << "\n"
-            << "\t\tweight: " << top.weight << "\n"
-            << "\t\tunderline_position: " << static_cast<int>(top.underline_position)
-            << "\n"
-            << "\t\tunderline_thickness: " << static_cast<int>(top.underline_thickness)
-            << "\n"
-            << "\t\tfont_bbox: " << top.font_bbox[0] << " " << top.font_bbox[1] << " "
-            << top.font_bbox[2] << " " << top.font_bbox[3] << "\n"
-            << "\t\tcharset: " << top.charset << "\n"
-            << "\t\tencoding: " << top.encoding << "\n"
-            << "\t\tcharstring_type: " << static_cast<int>(top.charstring_type) << "\n"
-            << "\t\tcharstrings: " << top.charstrings << "\n"
-            << "\t\tprivate_size: " << top.private_size << "\n"
-            << "\t\tprivate_offset: " << top.private_offset << "\n"
+            << "\ttop_data: " << top_data << "\n"
             << "\t}" << "\n"
             << "}";
         return oss.str();
