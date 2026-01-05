@@ -13,6 +13,7 @@ class OTFFont {
 
   public:
     std::vector<Glyph> glyphs;
+    OTFFont() = default;
 
     OTFFont(const std::string &filepath);
 

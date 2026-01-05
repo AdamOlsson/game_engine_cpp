@@ -1,4 +1,5 @@
 #include "camera/Camera.h"
+#include "font/GlyphNames.h"
 #include "font/OTFFont.h"
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
@@ -24,10 +25,11 @@ constexpr auto ZOOM_SCALE_FACTOR = 0.1f;
 // - DONE Handle glyphs with multiple holes such as B
 // - DONE Handle compound glyphs with no holes such as i and !
 // - DONE Handle compound glyphs with holes such as %
+// - DONE Render the english alphabet for my font
 // - Implement all other Type2Charstring operators
-// - Render the english alphabet for my font
 // - Render the english alphabet for the two other fonts
 // - Render sentences
+//      - Parse kerning map
 // - Refactor the usage and internals of OTFFont to be nice
 // - Move ModelMatrix class to sdk
 
@@ -49,6 +51,8 @@ class ExampleTextRendering : public Game {
     std::unique_ptr<graphics_pipeline::text::TextPipelineDescriptorSet> m_descriptor_set;
     std::unique_ptr<graphics_pipeline::text::TextPipeline> m_pipeline;
 
+    font::OTFFont m_otf_font;
+
   public:
     ExampleTextRendering()
         : m_mouse_last_position(window::ViewportPoint(-10000, -1000)) {}
@@ -62,18 +66,25 @@ class ExampleTextRendering : public Game {
         /*auto otf_filestream = open_filestream(ASSET_FILE("ftystrategycidencv.otf"));*/
         /*auto otf_filestream =
          * open_filestream(ASSET_FILE("dustismo-roman-italic.ttf"));*/
-        auto otf_font =
+        font::OTFFont otf_font =
             font::OTFFont(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
+        m_otf_font = otf_font;
 
         m_glyph_positions = std::make_unique<
             vulkan::buffers::SwapStorageBuffer<graphics_pipeline::text::TextPipelineSBO>>(
             ctx, 2, otf_font.glyphs.size());
 
-        const auto scale = 0.1f;
-        for (auto i = 0; i < otf_font.glyphs.size(); i++) {
+        const float scale = 0.1f;
+        const size_t num_columns = 8;
+        const float column_width = 100;
+        const float row_height = 100;
+        for (size_t i = 0; i < otf_font.glyphs.size(); i++) {
+            const float x = static_cast<float>(i % num_columns) * column_width;
+            const float y = static_cast<float>(i / num_columns) * row_height;
+
             // TODO: Each instance should represent one text (not only one glyph)
             m_glyph_positions->push_back(graphics_pipeline::text::TextPipelineSBO{
-                .model_matrix = ModelMatrix().scale(scale)});
+                .model_matrix = ModelMatrix().translate(x, y, 0.0f).scale(scale)});
             /*std::cout << otf_font.glyphs[i].name << " " << std::endl;*/
         }
         m_glyph_positions->transfer();
@@ -156,8 +167,21 @@ class ExampleTextRendering : public Game {
 
         auto descriptor = m_descriptor_set.get();
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
-        m_pipeline->render(command_buffer, descriptor, &push_constant,
-                           font::Unicode("%"));
+
+        for (const font::Glyph &glyph : m_otf_font.glyphs) {
+            char c = ' ';
+            if (glyph.name.size() == 1) {
+                c = glyph.name[0];
+            } else if (glyph.name.size() > 1) {
+                const std::optional<char> maybe_c = font::GlyphNames::to_char(glyph.name);
+                if (maybe_c.has_value()) {
+                    c = maybe_c.value();
+                }
+            }
+
+            m_pipeline->render(command_buffer, descriptor, &push_constant,
+                               font::Unicode(c));
+        }
 
         render_pass.end_submit_present();
 
