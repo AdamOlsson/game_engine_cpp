@@ -20,10 +20,10 @@ constexpr auto ZOOM_SCALE_FACTOR = 0.1f;
 // - DONE Implement triangulation on on-curve points to get the interior of the glyph.
 // - DONE Render the glyphs using the indices returned from the triangulation
 // - DONE Implement Loop-Blinn Algorithm with the off-point curves to render smooth glyphs
-// - Handle glyphs with single holes such as A and D
-// - Handle glyphs with multiple holes such as B
-// - Handle compund glyphs with no holes such as i and !
-// - Handle compund glyphs with holes such as %
+// - DONE Handle glyphs with single holes such as A and D
+// - DONE Handle glyphs with multiple holes such as B
+// - DONE Handle compound glyphs with no holes such as i and !
+// - DONE Handle compound glyphs with holes such as %
 // - Implement all other Type2Charstring operators
 // - Render the english alphabet for my font
 // - Render the english alphabet for the two other fonts
@@ -157,7 +157,7 @@ class ExampleTextRendering : public Game {
         auto descriptor = m_descriptor_set.get();
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
         m_pipeline->render(command_buffer, descriptor, &push_constant,
-                           font::Unicode("B"));
+                           font::Unicode("%"));
 
         render_pass.end_submit_present();
 

@@ -127,52 +127,132 @@ struct FontTableCFF {
         stream.seekg(start_cff_data + std::streamoff(cff.top.charset));
         DEBUG_ASSERT(stream.good(),
                      "Error: Filestream not okay after seeking to charset data.");
-        const auto charset =
+        const std::vector<std::string> charset =
             read_charsets_data(stream, charstring_index.count, string_index);
 
         std::vector<GlyphOutlineCollection> font_outlines = Type2Charstring::parse(
             charstring_index, global_subroutines, local_subroutines);
 
+        // charstring_index[0] = ".notdef"
         cff.glyphs.reserve(charstring_index.count);
         for (size_t i = 0; i < charstring_index.count; i++) {
             std::vector<GlyphOutline> &glyph_outlines = font_outlines[i];
 
-            if (glyph_outlines.size() == 0) {
-                continue;
+            Glyph glyph{};
+
+            // Form the CFF specification:
+            // There is one less element in the glyph name array than nGlyphs because the
+            // .notdef glyph name is omitted
+            if (i == 0) {
+                glyph.name = ".notdef";
+            } else {
+                glyph.name = std::move(charset[i - 1]);
             }
+
+            glyph.polygons = construct_glyph_polygons(std::move(glyph_outlines));
 
             // We assume that the first outline is always the outer outline of a glyph
-            const bool outer_winding_order_clockwise =
-                is_clockwise_winding(glyph_outlines[0].vertices);
+            /*const bool outer_winding_order_clockwise =*/
+            /*    is_clockwise_winding(glyph_outlines[0].vertices);*/
 
-            Glyph glyph{};
-            glyph.name = std::move(charset[i - 1]);
-            for (GlyphOutline &outline : glyph_outlines) {
-                const bool clockwise_winding = is_clockwise_winding(outline.vertices);
-
-                // If the outline has the same winding order, it is a separate polygon
-                // such as the characters i, % or !. If the outline has the opposite
-                // winding order, it is a hole in the current polygon
-                if (outer_winding_order_clockwise == clockwise_winding) {
-                    // New polygon
-                    glyph.polygons.emplace_back();
-                    Polygon &poly = glyph.polygons.back();
-                    poly.exterior_outline = std::move(outline.vertices);
-                } else {
-                    // Hole in current polygon
-                    Polygon &poly = glyph.polygons.back();
-                    poly.interior_outlines.push_back(std::move(outline.vertices));
-                }
-
-                for (auto &curve : outline.curves) {
-                    glyph.curves.push_back(std::move(curve));
-                }
-            }
+            /*for (GlyphOutline &outline : glyph_outlines) {*/
+            /*    const bool clockwise_winding = is_clockwise_winding(outline.vertices);*/
+            /**/
+            /*    // If the outline has the same winding order, it is a separate polygon*/
+            /*    // such as the characters i, % or !. If the outline has the opposite*/
+            /*    // winding order, it is a hole in the current polygon*/
+            /*    if (outer_winding_order_clockwise == clockwise_winding) {*/
+            /*        // New polygon*/
+            /*        glyph.polygons.emplace_back();*/
+            /*        Polygon &poly = glyph.polygons.back();*/
+            /*        poly.exterior_outline = std::move(outline.vertices);*/
+            /*    } else {*/
+            /*        // Hole in current polygon*/
+            /*        Polygon &poly = glyph.polygons.back();*/
+            /*        poly.interior_outlines.push_back(std::move(outline.vertices));*/
+            /*    }*/
+            /**/
+            /*    for (auto &curve : outline.curves) {*/
+            /*        glyph.curves.push_back(std::move(curve));*/
+            /*    }*/
+            /*}*/
 
             cff.glyphs.push_back(std::move(glyph));
         }
 
         return cff;
+    }
+
+    static std::vector<font::Polygon>
+    construct_glyph_polygons(std::vector<GlyphOutline> &&glyph_outlines) {
+        std::vector<size_t> exterior_outlines;
+        exterior_outlines.reserve(glyph_outlines.size());
+        std::vector<size_t> interior_outlines;
+        interior_outlines.reserve(glyph_outlines.size());
+        for (size_t i = 0; i < glyph_outlines.size(); i++) {
+            if (glyph_outlines[i].vertices.size() == 0) {
+                continue;
+            } else if (is_counter_clockwise_winding(glyph_outlines[i].vertices)) {
+                exterior_outlines.push_back(i);
+            } else {
+                interior_outlines.push_back(i);
+            }
+        }
+
+        std::vector<font::Polygon> polygons;
+        polygons.reserve(exterior_outlines.size());
+        for (const size_t &exterior_id : exterior_outlines) {
+            Polygon polygon;
+            for (const size_t &interior_id : interior_outlines) {
+                // We test containment with the last vertex because it is always a point
+                // on the outline, then we won't have to deal with that a control point
+                // can be off the outline
+                if (glyph_outlines[interior_id].vertices.size() != 0 &&
+                    is_point_inside_outline(glyph_outlines[interior_id].vertices.back(),
+                                            glyph_outlines[exterior_id].vertices)) {
+                    polygon.interior_outlines.push_back(
+                        std::move(glyph_outlines[interior_id].vertices));
+
+                    polygon.curves.insert(polygon.curves.end(),
+                                          glyph_outlines[interior_id].curves.begin(),
+                                          glyph_outlines[interior_id].curves.end());
+                }
+            }
+
+            polygon.exterior_outline = std::move(glyph_outlines[exterior_id].vertices);
+            polygon.curves.insert(polygon.curves.end(),
+                                  glyph_outlines[exterior_id].curves.begin(),
+                                  glyph_outlines[exterior_id].curves.end());
+
+            polygons.push_back(std::move(polygon));
+        }
+
+        return polygons;
+    }
+
+    static bool
+    is_point_inside_outline(const std::pair<float, float> &p,
+                            const std::vector<std::pair<float, float>> &outline) {
+        size_t crossings = 0;
+        for (size_t i = 0; i < outline.size(); i++) {
+            const std::pair<float, float> &vi = outline[i];
+            const std::pair<float, float> &vj = outline[(i + 1) % outline.size()];
+
+            if (((vi.second <= p.second) && (vj.second > p.second)) ||
+                ((vi.second > p.second) && (vj.second <= p.second))) {
+
+                // Compute x-coordinate of intersection
+                float x_intersect = vi.first + (p.second - vi.second) /
+                                                   (vj.second - vi.second) *
+                                                   (vj.first - vi.first);
+
+                if (p.first < x_intersect) {
+                    crossings++;
+                }
+            }
+        }
+
+        return (crossings % 2) == 1;
     }
 
     static Top parse_top_data(const auto &top_index, const auto &string_index) {

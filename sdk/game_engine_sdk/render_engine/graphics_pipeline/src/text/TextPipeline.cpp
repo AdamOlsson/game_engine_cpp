@@ -64,47 +64,49 @@ void graphics_pipeline::text::TextPipeline::load_font(
             continue;
         }
 
-        const font::Polygon &polygon = glyph.polygons[0];
-
-        const std::vector<font::Vertex<float>> &polygon_outline =
-            polygon.exterior_outline;
-
-        const triangulation::Triangles<float> triangles =
-            triangulation::Earcut<float>::run(polygon_outline, polygon.interior_outlines);
-
-        const size_t first_vertex_idx = vertices.size();
-        for (const auto &point : triangles.vertices) {
-            vertices.emplace_back(point.first, -1.0f * point.second, 0.0f, 0.0f, 0.0f,
-                                  0.0f);
-        }
-
         const size_t first_index_idx = indices.size();
-        for (const auto &triangle : triangles.indices) {
-            indices.push_back(triangle[0] + first_vertex_idx);
-            indices.push_back(triangle[1] + first_vertex_idx);
-            indices.push_back(triangle[2] + first_vertex_idx);
-        }
+        const size_t first_vertex_idx = vertices.size();
 
-        const std::vector<font::ExteriorTriangle> &polygon_curves = glyph.curves;
-        for (const font::ExteriorTriangle &triangle : polygon_curves) {
-            const float clockwise_winding = triangle.clockwise_winding ? 1.0f : 0.0f;
-            indices.push_back(vertices.size());
-            vertices.emplace_back(triangle.vertices[0].first,
-                                  -1.0f * triangle.vertices[0].second, clockwise_winding,
-                                  triangle.uvw[0][0], triangle.uvw[0][1],
-                                  triangle.uvw[0][2]);
+        size_t polygon_offset = 0;
+        for (const font::Polygon &polygon : glyph.polygons) {
 
-            indices.push_back(vertices.size());
-            vertices.emplace_back(triangle.vertices[1].first,
-                                  -1.0f * triangle.vertices[1].second, clockwise_winding,
-                                  triangle.uvw[1][0], triangle.uvw[1][1],
-                                  triangle.uvw[1][2]);
+            const triangulation::Triangles<float> triangles =
+                triangulation::Earcut<float>::run(polygon.exterior_outline,
+                                                  polygon.interior_outlines);
 
-            indices.push_back(vertices.size());
-            vertices.emplace_back(triangle.vertices[2].first,
-                                  -1.0f * triangle.vertices[2].second, clockwise_winding,
-                                  triangle.uvw[2][0], triangle.uvw[2][1],
-                                  triangle.uvw[2][2]);
+            for (const auto &point : triangles.vertices) {
+                vertices.emplace_back(point.first, -1.0f * point.second, 0.0f, 0.0f, 0.0f,
+                                      0.0f);
+            }
+
+            for (const auto &triangle : triangles.indices) {
+                indices.push_back(triangle[0] + first_vertex_idx + polygon_offset);
+                indices.push_back(triangle[1] + first_vertex_idx + polygon_offset);
+                indices.push_back(triangle[2] + first_vertex_idx + polygon_offset);
+            }
+
+            for (const font::ExteriorTriangle &triangle : polygon.curves) {
+                const float clockwise_winding = triangle.clockwise_winding ? 1.0f : 0.0f;
+                indices.push_back(vertices.size());
+                vertices.emplace_back(triangle.vertices[0].first,
+                                      -1.0f * triangle.vertices[0].second,
+                                      clockwise_winding, triangle.uvw[0][0],
+                                      triangle.uvw[0][1], triangle.uvw[0][2]);
+
+                indices.push_back(vertices.size());
+                vertices.emplace_back(triangle.vertices[1].first,
+                                      -1.0f * triangle.vertices[1].second,
+                                      clockwise_winding, triangle.uvw[1][0],
+                                      triangle.uvw[1][1], triangle.uvw[1][2]);
+
+                indices.push_back(vertices.size());
+                vertices.emplace_back(triangle.vertices[2].first,
+                                      -1.0f * triangle.vertices[2].second,
+                                      clockwise_winding, triangle.uvw[2][0],
+                                      triangle.uvw[2][1], triangle.uvw[2][2]);
+            }
+
+            polygon_offset = vertices.size() - first_vertex_idx;
         }
 
         index_draw_commands.push_back(vulkan::DrawIndexedIndirectCommand{

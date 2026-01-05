@@ -26,12 +26,12 @@ template <typename T> using Outline = std::vector<T>;
 struct Polygon {
     Outline<Vertex<float>> exterior_outline;
     std::vector<Outline<Vertex<float>>> interior_outlines;
+    std::vector<ExteriorTriangle> curves;
 };
 
 struct Glyph {
     std::string name;
     std::vector<Polygon> polygons;
-    std::vector<ExteriorTriangle> curves;
 };
 
 } // namespace font
