@@ -13,7 +13,7 @@ font::OTFFont::OTFFont(const std::string &filepath) {
         font::detail::otf_font::SFntHeader::read_sfnt_header(otf_filestream);
     /*std::cout << m_sfnt_header << std::endl;*/
 
-    /*std::cout << "Found tables:" << std::endl;*/
+    std::cout << "Found tables:" << std::endl;
     for (const auto &t : *m_sfnt_header.table_records) {
 
         if (!otf_filestream) {
@@ -25,7 +25,7 @@ font::OTFFont::OTFFont(const std::string &filepath) {
         /*std::cout << "Seeking to " << t.offset << " (0x" << std::hex << t.offset <<
          * ")"*/
         /*          << std::endl;*/
-        /*std::cout << " # " << t.table_tag << std::endl;*/
+        std::cout << " # " << t.table_tag << std::endl;
 
         if (t.table_tag == "head") {
             // TODO: Calculate checksum of TableRecord

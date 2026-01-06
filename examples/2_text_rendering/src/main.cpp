@@ -26,7 +26,7 @@ constexpr auto ZOOM_SCALE_FACTOR = 0.1f;
 // - DONE Handle compound glyphs with no holes such as i and !
 // - DONE Handle compound glyphs with holes such as %
 // - DONE Render the english alphabet for my font
-// - Implement all other Type2Charstring operators
+// - DONE Implement all other Type2Charstring operators
 // - Render the english alphabet for the two other fonts
 // - Render sentences
 //      - Parse kerning map

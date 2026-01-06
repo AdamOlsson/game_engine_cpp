@@ -43,7 +43,6 @@ struct OnCurvePoint {
 using OutlineControlPoints = std::vector<std::variant<OffCurvePoint, OnCurvePoint>>;
 
 struct DecodeState {
-    /*bool path_open = false;*/
     int x = 0;
     int y = 0;
     int width = 0;
@@ -77,10 +76,10 @@ enum Type2PathConstructOperators {
     HHCurveTo = 27,
     VHCurveTo = 30,
     HVCurveTo = 31,
-    HFlex = 0x0C22,  // 12 34
-    Flex = 0x0C23,   // 12 35
-    HFlex1 = 0x0C24, // 12 36
-    Flex1 = 0x0C25,  // 12 37
+    HFlex = 0x0C22,  // 12 34 ---
+    Flex = 0x0C23,   // 12 35 ---
+    HFlex1 = 0x0C24, // 12 36 ---
+    Flex1 = 0x0C25,  // 12 37 ---
 
     And = 0x0C03,    // 12 3
     Or = 0x0C04,     // 12 4
@@ -242,11 +241,11 @@ struct Type2Charstring {
                 break;
 
             case Type2PathConstructOperators::VHCurveTo:
-                handle_vhcurveline(state, operands);
+                handle_vhcurveto(state, operands);
                 break;
 
             case Type2PathConstructOperators::HVCurveTo:
-                handle_hvcurveline(state, operands);
+                handle_hvcurveto(state, operands);
                 break;
 
             case Type2PathConstructOperators::RRCurveTo:
@@ -282,6 +281,28 @@ struct Type2Charstring {
                 break;
             }
 
+            case Type2PathConstructOperators::RLineCurve: {
+                handle_rlinecurve(state, operands);
+                break;
+            }
+
+            case Type2PathConstructOperators::Flex: {
+                handle_flex(state, operands);
+                break;
+            }
+
+            case Type2PathConstructOperators::HFlex: {
+                handle_hflex(state, operands);
+                break;
+            }
+            case Type2PathConstructOperators::HFlex1: {
+                handle_hflex1(state, operands);
+                break;
+            }
+            case Type2PathConstructOperators::Flex1: {
+                handle_flex1(state, operands);
+                break;
+            }
             case Type2PathConstructOperators::And:
             case Type2PathConstructOperators::Or:
             case Type2PathConstructOperators::Not:
@@ -404,13 +425,20 @@ struct Type2Charstring {
     static void handle_vlineto(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
     static void handle_hlineto(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
 
-    static void handle_rcurveline(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
-    static void handle_vhcurveline(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
-    static void handle_hvcurveline(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
-    
     static void handle_rrcurveto(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
     static void handle_vvcurveto(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
     static void handle_hhcurveto(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
+
+    static void handle_rcurveline(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
+    static void handle_vhcurveto(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
+    static void handle_hvcurveto(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
+    
+    static void handle_rlinecurve(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
+
+    static void handle_flex(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
+    static void handle_hflex(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
+    static void handle_hflex1(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
+    static void handle_flex1(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
 
     static void handle_endchar(font::detail::otf_font::cff::DecodeState &state, std::stack<int> &operands);
     // clang-format on
@@ -421,6 +449,10 @@ struct Type2Charstring {
     static void handle_callgsubr(font::detail::otf_font::cff::DecodeState &state,
                                  std::stack<int> &operands, const CFFIndex &global_subrs,
                                  const CFFIndex &local_subrs);
+
+    static void append_bezier(font::detail::otf_font::cff::DecodeState &state,
+                              const int x1, const int y1, const int x2, const int y2,
+                              const int x3, const int y3);
 
     static constexpr bool
     is_off_curve_point(const std::variant<OffCurvePoint, OnCurvePoint> &p);
