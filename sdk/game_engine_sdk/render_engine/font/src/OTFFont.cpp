@@ -8,12 +8,12 @@
 
 font::OTFFont::OTFFont(const std::string &filepath) {
 
-    auto otf_filestream = font::detail::open_filestream(filepath);
+    std::ifstream otf_filestream = font::detail::open_filestream(filepath);
     auto m_sfnt_header =
         font::detail::otf_font::SFntHeader::read_sfnt_header(otf_filestream);
     /*std::cout << m_sfnt_header << std::endl;*/
 
-    std::cout << "Found tables:" << std::endl;
+    /*std::cout << "Found tables:" << std::endl;*/
     for (const auto &t : *m_sfnt_header.table_records) {
 
         if (!otf_filestream) {
@@ -22,10 +22,15 @@ font::OTFFont::OTFFont(const std::string &filepath) {
         }
 
         otf_filestream.seekg(t.offset);
+        if (!validate_table(otf_filestream, t)) {
+            throw std::runtime_error(
+                std::format("Error: Table {} checksums does not match.", t.table_tag));
+        }
+
         /*std::cout << "Seeking to " << t.offset << " (0x" << std::hex << t.offset <<
          * ")"*/
         /*          << std::endl;*/
-        std::cout << " # " << t.table_tag << std::endl;
+        /*std::cout << " # " << t.table_tag << std::endl;*/
 
         if (t.table_tag == "head") {
             // TODO: Calculate checksum of TableRecord
@@ -62,4 +67,49 @@ font::OTFFont::OTFFont(const std::string &filepath) {
 
 size_t font::OTFFont::glyph_index(const Unicode &unicode) const {
     return m_font_table_cmap.get_glyph_id(unicode[0]);
+}
+
+uint32_t font::OTFFont::calculate_table_checksum(const std::vector<uint8_t> &table) {
+    uint32_t sum = 0;
+    size_t length = table.size();
+
+    // Process the table in 4-byte (32-bit) chunks
+    for (size_t i = 0; i + 3 < length; i += 4) {
+        uint32_t value = (static_cast<uint32_t>(table[i]) << 24) |
+                         (static_cast<uint32_t>(table[i + 1]) << 16) |
+                         (static_cast<uint32_t>(table[i + 2]) << 8) |
+                         static_cast<uint32_t>(table[i + 3]);
+        sum += value;
+    }
+
+    // Handle remaining bytes (if table size is not a multiple of 4)
+    size_t remainder = length % 4;
+    if (remainder > 0) {
+        uint32_t value = 0;
+        for (size_t i = length - remainder; i < length; i++) {
+            value = (value << 8) | static_cast<uint32_t>(table[i]);
+        }
+        // Pad with zeros to make it 32-bit
+        value <<= (4 - remainder) * 8;
+        sum += value;
+    }
+
+    return sum;
+}
+
+bool font::OTFFont::validate_table(std::ifstream &stream,
+                                   const font::detail::otf_font::TableRecord &record) {
+    stream.seekg(record.offset);
+    std::vector<uint8_t> table = font::detail::read_n_bytes(stream, record.length);
+    stream.seekg(record.offset); // reset filestream pointer
+
+    if (record.table_tag == "head") {
+        // Zero out the checkSumAdjustment field (bytes 8-11) before validation
+        if (table.size() >= 12) {
+            table[8] = table[9] = table[10] = table[11] = 0;
+        }
+    }
+
+    const uint32_t checksum = calculate_table_checksum(table);
+    return checksum == record.checksum;
 }

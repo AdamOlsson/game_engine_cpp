@@ -28,6 +28,7 @@ constexpr auto ZOOM_SCALE_FACTOR = 0.1f;
 // - DONE Render the english alphabet for my font
 // - DONE Implement all other Type2Charstring operators
 // - Render the english alphabet for the two other fonts
+//      - Implement charset formats 1 and 2 (FontTableCFF.h)
 // - Render sentences
 //      - Parse kerning map
 // - Refactor the usage and internals of OTFFont to be nice
@@ -63,9 +64,7 @@ class ExampleTextRendering : public Game {
 
     void setup(std::shared_ptr<vulkan::context::GraphicsContext> &ctx) override {
 
-        /*auto otf_filestream = open_filestream(ASSET_FILE("ftystrategycidencv.otf"));*/
-        /*auto otf_filestream =
-         * open_filestream(ASSET_FILE("dustismo-roman-italic.ttf"));*/
+        /*font::OTFFont otf_font = font::OTFFont(ASSET_FILE("ftystrategycidencv.otf"));*/
         font::OTFFont otf_font =
             font::OTFFont(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
         m_otf_font = otf_font;

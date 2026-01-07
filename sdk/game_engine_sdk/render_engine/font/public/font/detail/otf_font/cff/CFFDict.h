@@ -10,34 +10,31 @@ struct CFFDict {
     template <std::input_iterator Iter>
     static std::pair<int, std::vector<int>> decode_until_operator(Iter &data,
                                                                   const Iter &end) {
+        bool is_real_number = false;
         std::vector<int> operands;
         while (data != end) {
             const int b0 = *data;
             if (32 <= b0 && b0 <= 246) {
-                /*std::cout << "decode1: " << std::dec << static_cast<int>(b0) << " ";*/
-                operands.push_back(CFFDict::decode1(b0));
+                if (is_real_number) {
+                    operands.push_back(b0);
+                } else {
+                    operands.push_back(CFFDict::decode1(b0));
+                }
                 data++;
                 continue;
             } else if (247 <= b0 && b0 <= 250) {
                 const auto b1 = *(++data);
-                /*std::cout << "decode2: " << std::dec << static_cast<int>(b0) << " ";*/
-                /*std::cout << std::dec << static_cast<int>(b1) << " ";*/
                 operands.push_back(CFFDict::decode2(b0, b1));
                 data++;
                 continue;
             } else if (251 <= b0 && b0 <= 254) {
                 const auto b1 = *(++data);
-                /*std::cout << "decode3: " << std::dec << static_cast<int>(b0) << " ";*/
-                /*std::cout << std::dec << static_cast<int>(b1) << " ";*/
                 operands.push_back(CFFDict::decode3(b0, b1));
                 data++;
                 continue;
             } else if (b0 == 28) {
                 const auto b1 = *(++data);
                 const auto b2 = *(++data);
-                /*std::cout << "decode3: " << std::dec << static_cast<int>(b0) << " ";*/
-                /*std::cout << std::dec << static_cast<int>(b1) << " ";*/
-                /*std::cout << std::dec << static_cast<int>(b2) << " ";*/
                 operands.push_back(CFFDict::decode4(b1, b2));
                 data++;
                 continue;
@@ -46,15 +43,23 @@ struct CFFDict {
                 const auto b2 = *(++data);
                 const auto b3 = *(++data);
                 const auto b4 = *(++data);
-                /*std::cout << "decode4: " << std::dec << static_cast<int>(b0) << " ";*/
-                /*std::cout << std::dec << static_cast<int>(b1) << " ";*/
-                /*std::cout << std::dec << static_cast<int>(b2) << " ";*/
-                /*std::cout << std::dec << static_cast<int>(b3) << " ";*/
                 operands.push_back(CFFDict::decode5(b1, b2, b3, b4));
                 data++;
                 continue;
             } else if (b0 == 30) {
-                DEBUG_ASSERT(false, "Error: operator 30 is not implemented.");
+                // Real number start with 30. Append it here so the real number parsing
+                // can start
+                is_real_number = true;
+                operands.push_back(b0);
+                data++;
+                continue;
+            } else if (b0 == 255) {
+                // Real numbers must end with 0xf or 0xff. Finding 255 is simply finding
+                // the end of the encoded real number. Append it to the operands so that
+                // the real number parsing can end.
+                is_real_number = false;
+                operands.push_back(b0);
+                data++;
             }
             break;
         }
@@ -111,42 +116,6 @@ struct CFFDict {
         return b1 << 24 | b2 << 16 | b3 << 8 | b4;
     }
 
-    template <std::input_iterator Iter> static int decode_one_value(Iter &data) {
-        const auto b0 = *data;
-        if (32 <= b0 && b0 <= 246) {
-            /*std::cout << "decode1: " << std::dec << static_cast<int>(b0) << " ";*/
-            return CFFDict::decode1(b0);
-        } else if (247 <= b0 && b0 <= 250) {
-            const auto b1 = *(++data);
-            /*std::cout << "decode2: " << std::dec << static_cast<int>(b0) << " ";*/
-            /*std::cout << std::dec << static_cast<int>(b1) << " ";*/
-            return CFFDict::decode2(b0, b1);
-        } else if (251 <= b0 && b0 <= 254) {
-            const auto b1 = *(++data);
-            /*std::cout << "decode3: " << std::dec << static_cast<int>(b0) << " ";*/
-            /*std::cout << std::dec << static_cast<int>(b1) << " ";*/
-            return CFFDict::decode3(b0, b1);
-        } else if (b0 == 28) {
-            const auto b1 = *(++data);
-            const auto b2 = *(++data);
-            /*std::cout << "decode3: " << std::dec << static_cast<int>(b0) << " ";*/
-            /*std::cout << std::dec << static_cast<int>(b1) << " ";*/
-            /*std::cout << std::dec << static_cast<int>(b2) << " ";*/
-            return CFFDict::decode4(b1, b2);
-        } else if (b0 == 29) {
-            const auto b1 = *(++data);
-            const auto b2 = *(++data);
-            const auto b3 = *(++data);
-            const auto b4 = *(++data);
-            /*std::cout << "decode4: " << std::dec << static_cast<int>(b0) << " ";*/
-            /*std::cout << std::dec << static_cast<int>(b1) << " ";*/
-            /*std::cout << std::dec << static_cast<int>(b2) << " ";*/
-            /*std::cout << std::dec << static_cast<int>(b3) << " ";*/
-            return CFFDict::decode5(b1, b2, b3, b4);
-        }
-        throw std::runtime_error(std::format("Unkown operand {}.", static_cast<int>(b0)));
-    }
-
     static float parse_real_number(const std::vector<int> &bytes) {
         DEBUG_ASSERT(bytes[0] == 0x1e, "Error: byte sequence is not a real number.");
 
@@ -154,14 +123,14 @@ struct CFFDict {
         nibbles.reserve(bytes.size() * 2);
         // Note: first byte of real number is always 0x1e and last value is alway 0xf or
         // 0xff
-        for (auto i = 1; i < bytes.size(); i++) {
+        for (size_t i = 1; i < bytes.size(); i++) {
             uint8_t two_nibbles =
                 bytes[i]; // No information is lost as these values are originally uint8
             nibbles.push_back((two_nibbles >> 4) & 0xf);
             nibbles.push_back(two_nibbles & 0xf);
         }
 
-        // There are up to 0xf nibbles at the end of the encoding
+        // There are up to 2 0xf (0xf or oxff) nibbles at the end of the encoding
         if (nibbles.back() == 0xf) {
             nibbles.pop_back();
         }
@@ -179,7 +148,7 @@ struct CFFDict {
 
         // Find the nibble index of the decimal point (nibble is 4-bit value)
         int decimal_point_nibble_index = -1;
-        for (auto i = 0; i < nibbles.size(); i++) {
+        for (size_t i = 0; i < nibbles.size(); i++) {
             if (nibbles[i] == 0xa) {
                 decimal_point_nibble_index = i;
                 break;
@@ -202,7 +171,13 @@ struct CFFDict {
             } else if (nibble == 0xe) {
                 sign = -1.0f;
             } else {
-                DEBUG_ASSERT(false, std::format("Error: unexpected nibble {}.", nibble));
+                std::string bytes_str = "";
+                for (uint8_t b : bytes) {
+                    bytes_str += std::format("{} ", b);
+                }
+                DEBUG_ASSERT(false,
+                             std::format("Error: unexpected nibble {}. (bytes: {})",
+                                         nibble, bytes_str));
             }
         }
 
@@ -224,7 +199,13 @@ struct CFFDict {
                              "Error: expected next nibble to be a number.");
                 number *= powf(10.0f, -next_nibble);
             } else {
-                DEBUG_ASSERT(false, std::format("Error: unexpected nibble {}.", nibble));
+                std::string bytes_str = "";
+                for (uint8_t b : bytes) {
+                    bytes_str += std::format("{} ", b);
+                }
+                DEBUG_ASSERT(false,
+                             std::format("Error: unexpected nibble {}. (bytes: {})",
+                                         nibble, bytes_str));
             }
         }
 

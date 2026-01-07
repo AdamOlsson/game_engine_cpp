@@ -49,6 +49,18 @@ struct PrivateData {
     static PrivateData parse(const std::vector<uint8_t> &encoded_bytes) {
 
         PrivateData private_data{};
+        // 251 84 200 22
+        // 235 86 10
+        // 43 6
+        // 156 197 21
+        // 227 6
+        // 169 248 105 158 224 5
+        // 251 77 6
+        // 157 54 5 14
+
+        /*for (int i : encoded_bytes) {*/ /*    std::cout << i << " ";*/
+        /*}*/
+        /*std::cout << std::endl;*/
 
         const auto dict = CFFDict::parse(encoded_bytes.begin(), encoded_bytes.end());
 
@@ -56,12 +68,6 @@ struct PrivateData {
 
             const int operator_ = dict.operators[i];
             const std::vector<int> operands = dict.operands[i];
-
-            /*std::cout << std::format("{}: ", operator_);*/
-            /*for (int o : operands) {*/
-            /*    std::cout << o << " ";*/
-            /*}*/
-            /*std::cout << std::endl;*/
 
             switch (operator_) {
             case PrivateDataOperators::BlueValues:
@@ -81,31 +87,43 @@ struct PrivateData {
                 break;
 
             case PrivateDataOperators::BlueScale:
-                private_data.blue_scale = CFFDict::parse_real_number(operands);
+                if (operands.size() > 1) {
+                    private_data.blue_scale = CFFDict::parse_real_number(operands);
+                } else {
+                    private_data.blue_scale = operands[0];
+                }
                 break;
 
             case PrivateDataOperators::BlueShift:
-                DEBUG_ASSERT(operands.size() == 1,
-                             "Error: expected blue shift to only contain 1 value");
-                private_data.blue_shift = operands[0];
+                if (operands.size() > 1) {
+                    private_data.blue_shift = CFFDict::parse_real_number(operands);
+                } else {
+                    private_data.blue_shift = operands[0];
+                }
                 break;
 
             case PrivateDataOperators::BlueFuzz:
-                DEBUG_ASSERT(operands.size() == 1,
-                             "Error: expected blue fuzz to only contain 1 value");
-                private_data.blue_fuzz = operands[0];
+                if (operands.size() > 1) {
+                    private_data.blue_fuzz = CFFDict::parse_real_number(operands);
+                } else {
+                    private_data.blue_fuzz = operands[0];
+                }
                 break;
 
             case PrivateDataOperators::StdHW:
-                DEBUG_ASSERT(operands.size() == 1,
-                             "Error: expected std hw to only contain 1 value");
-                private_data.std_hw = operands[0];
+                if (operands.size() > 1) {
+                    private_data.std_hw = CFFDict::parse_real_number(operands);
+                } else {
+                    private_data.std_hw = operands[0];
+                }
                 break;
 
             case PrivateDataOperators::StdVW:
-                DEBUG_ASSERT(operands.size() == 1,
-                             "Error: expected std vw to only contain 1 value");
-                private_data.std_vw = operands[0];
+                if (operands.size() > 1) {
+                    private_data.std_vw = CFFDict::parse_real_number(operands);
+                } else {
+                    private_data.std_vw = operands[0];
+                }
                 break;
 
             case PrivateDataOperators::StemSnapH:
@@ -123,19 +141,28 @@ struct PrivateData {
                 break;
 
             case PrivateDataOperators::LanguageGroup:
-                DEBUG_ASSERT(operands.size() == 1,
-                             "Error: expected language group to only contain 1 value");
-                private_data.language_group = operands[0];
+                if (operands.size() > 1) {
+                    private_data.language_group = CFFDict::parse_real_number(operands);
+                } else {
+                    private_data.language_group = operands[0];
+                }
                 break;
 
             case PrivateDataOperators::ExpansionFactor:
-                private_data.expansion_factor = CFFDict::parse_real_number(operands);
+                if (operands.size() > 1) {
+                    private_data.expansion_factor = CFFDict::parse_real_number(operands);
+                } else {
+                    private_data.expansion_factor = operands[0];
+                }
                 break;
 
             case PrivateDataOperators::InitialRandomSeed:
-                DEBUG_ASSERT(operands.size() == 1,
-                             "Error: expected subroutine offset to only contain 1 value");
-                private_data.initial_random_seed = operands[0];
+                if (operands.size() > 1) {
+                    private_data.initial_random_seed =
+                        CFFDict::parse_real_number(operands);
+                } else {
+                    private_data.initial_random_seed = operands[0];
+                }
                 break;
 
             case PrivateDataOperators::Subrs:
@@ -145,15 +172,19 @@ struct PrivateData {
                 break;
 
             case PrivateDataOperators::DefaultWidthX:
-                DEBUG_ASSERT(operands.size() == 1,
-                             "Error: expected default width x to only contain 1 value");
-                private_data.default_width_x = operands[0];
+                if (operands.size() > 1) {
+                    private_data.default_width_x = CFFDict::parse_real_number(operands);
+                } else {
+                    private_data.default_width_x = operands[0];
+                }
                 break;
 
             case PrivateDataOperators::NominalWidthX:
-                DEBUG_ASSERT(operands.size() == 1,
-                             "Error: expected nominal width x to only contain 1 value");
-                private_data.nominal_width_x = operands[0];
+                if (operands.size() > 1) {
+                    private_data.nominal_width_x = CFFDict::parse_real_number(operands);
+                } else {
+                    private_data.nominal_width_x = operands[0];
+                }
                 break;
             }
         }

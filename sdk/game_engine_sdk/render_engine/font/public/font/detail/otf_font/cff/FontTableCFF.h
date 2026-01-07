@@ -1,11 +1,13 @@
 #pragma once
 
 #include "CFFIndex.h"
+#include "Charset.h"
 #include "PrivateData.h"
 #include "TopData.h"
 #include "Type2Charstring.h"
 
 #include "font/detail/ifstream_util.h"
+
 #include "font/winding.h"
 #include "util/assert.h"
 #include <cstdint>
@@ -58,14 +60,23 @@ struct FontTableCFF {
                 },
         };
 
-        const auto name = CFFIndex::read_index(stream);
+        const CFFIndex name = CFFIndex::read_index(stream);
         cff.name = std::string(name[0].begin(), name[0].end());
 
         const auto top_index = CFFIndex::read_index(stream);
+
+        std::cout << "Top dict index count: " << top_index.count << std::endl;
+
         const auto string_index = CFFIndex::read_index(stream);
         const auto global_subroutines = CFFIndex::read_index(stream);
 
-        cff.top_data = TopData::parse(top_index, string_index);
+        cff.top_data = TopData::parse(top_index[0], string_index);
+
+        if (cff.top_data.charstring_type != 2) {
+            throw std::runtime_error(
+                std::format("Error: charstring type {} is not supported",
+                            cff.top_data.charstring_type));
+        }
 
         if (cff.top_data.encoding != EncodingID::Standard) {
             throw std::runtime_error("Error: Only standard encoding implemented.");
@@ -92,8 +103,8 @@ struct FontTableCFF {
         stream.seekg(start_cff_data + std::streamoff(cff.top_data.charset));
         DEBUG_ASSERT(stream.good(),
                      "Error: Filestream not okay after seeking to charset data.");
-        const std::vector<std::string> charset =
-            read_charsets_data(stream, charstring_index.count, string_index);
+        struct Charset charset =
+            Charset::read(stream, charstring_index.count, string_index);
 
         std::vector<GlyphOutlineCollection> font_outlines = Type2Charstring::parse(
             charstring_index, global_subroutines, local_subroutines);
@@ -111,7 +122,7 @@ struct FontTableCFF {
             if (i == 0) {
                 glyph.name = ".notdef";
             } else {
-                glyph.name = std::move(charset[i - 1]);
+                glyph.name = std::move(charset.glyph_names[i - 1]);
             }
 
             glyph.polygons = construct_glyph_polygons(std::move(glyph_outlines));
@@ -192,22 +203,6 @@ struct FontTableCFF {
         }
 
         return (crossings % 2) == 1;
-    }
-
-    static std::vector<std::string> read_charsets_data(std::ifstream &stream,
-                                                       const uint16_t &num_glyphs,
-                                                       const CFFIndex &string_index) {
-
-        const int charset_format = read_uint8(stream);
-        DEBUG_ASSERT(charset_format == 0,
-                     "Error: Only format charset format 0 is implemented");
-        std::vector<std::string> glyph_names{};
-        glyph_names.reserve(num_glyphs);
-        for (auto i = 0; i < num_glyphs; i++) {
-            int sid = read_uint16(stream);
-            glyph_names.emplace_back(CFFIndex::lookup_string(string_index, sid));
-        }
-        return glyph_names;
     }
 
     std::string to_string() const {

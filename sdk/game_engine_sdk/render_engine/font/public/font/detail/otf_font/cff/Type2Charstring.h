@@ -120,6 +120,7 @@ struct Type2Charstring {
         std::vector<GlyphVertexCollection> font_outlines;
         font_outlines.reserve(charstring_index.count);
         for (auto i = 0; i < charstring_index.count; i++) {
+
             const auto encoded_glyph_seq = charstring_index[i];
             // TODO: What to do with width?
 
@@ -141,6 +142,11 @@ struct Type2Charstring {
     static void decode_glyph(const std::span<uint8_t> &encoded_glyph_seq,
                              const CFFIndex &global_subrs, const CFFIndex &local_subrs,
                              DecodeState &state) {
+
+        /*for (int i : encoded_glyph_seq) {*/
+        /*    std::cout << i << " ";*/
+        /*}*/
+        /*std::cout << std::endl;*/
 
         std::vector<std::stack<int>> operand_stacks;
         std::vector<int> operators;
@@ -359,7 +365,7 @@ struct Type2Charstring {
     static void decode_until_next_operator(Iter &data, const Iter &end,
                                            std::stack<int> &decoded) {
         while (data != end) {
-            const auto b0 = *data;
+            const int b0 = *data;
             if (32 <= b0 && b0 <= 246) {
                 decoded.push(CFFDict::decode1(b0));
                 data++;
@@ -382,7 +388,7 @@ struct Type2Charstring {
 
             } else if (251 <= b0 && b0 <= 254) {
                 data++;
-                const auto b1 = *data;
+                const int b1 = *data;
                 data++;
                 decoded.push(CFFDict::decode3(b0, b1));
                 // std::cout << std::format("decode3 - b0: {}, b1 = {} = {} ",
@@ -400,8 +406,7 @@ struct Type2Charstring {
         }
     }
 
-    static size_t subroutine_index_correction(const int index,
-                                              const int num_subroutines) {
+    static int subroutine_index_correction(const int index, const int num_subroutines) {
         if (num_subroutines < 1240) {
             return index + 107;
         } else if (num_subroutines < 33900) {
@@ -460,5 +465,4 @@ struct Type2Charstring {
     static constexpr std::pair<int, int>
     decay_to_point(const std::variant<OffCurvePoint, OnCurvePoint> &p);
 };
-
 }; // namespace font::detail::otf_font::cff

@@ -17,6 +17,11 @@ TEST(CFFDictTest, Test_ParseRealNumber) {
     expected_number = 0.140541e-3;
     result = font::detail::otf_font::cff::CFFDict::parse_real_number(encoded_real_number);
     EXPECT_NEAR(expected_number, result, 1e-6);
+
+    encoded_real_number = {0x1e, 160, 69, 69, 69, 0xff};
+    expected_number = 0.0454545;
+    result = font::detail::otf_font::cff::CFFDict::parse_real_number(encoded_real_number);
+    EXPECT_NEAR(expected_number, result, 1e-6);
 }
 
 TEST(CFFDictTest, Test_ParseDelta) {

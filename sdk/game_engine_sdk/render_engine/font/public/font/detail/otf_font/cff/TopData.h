@@ -11,6 +11,8 @@ enum TopDictOperators {
     FamilyName = 3,
     Weight = 4,
     FontBBox = 5,
+    UniqueId = 13,
+    XUID = 14,
     Charset = 15,
     Encoding = 16,
     CharStrings = 17,
@@ -47,20 +49,27 @@ struct TopData {
     std::string full_name = "";
     std::string family_name = "";
     std::string weight = "";
+    bool is_fixed_pitch = false;
+    int32_t italic_angle = 0;
     int32_t underline_position = 0;
     int32_t underline_thickness = 0;
-    std::array<int, 4> font_bbox{0};
+    int32_t paint_type = 0;
     uint8_t charstring_type = 2;
+    std::array<float, 6> font_matrix = {0.001f, 0.0f, 0.0f, 0.001f, 0.0f, 0.0f};
+    int32_t unique_id = 0;
+    std::array<int, 4> font_bbox{0};
+    int32_t stroke_width = 0;
+    std::array<int, 0> xuid{};
     int32_t charset = 0;
     int32_t encoding = 0;
     int32_t charstrings = 0;
     int32_t private_size = 0;
     int32_t private_offset = 0;
+    int32_t synthetic_base = 0;
+    std::string post_script = "";
 
-    static TopData parse(const CFFIndex &top_index, const CFFIndex &string_index) {
+    static TopData parse(const std::span<uint8_t> &data, const CFFIndex &string_index) {
         TopData top{};
-        const std::span<uint8_t> &data = top_index[0];
-
         const CFFDict dict = CFFDict::parse(data.begin(), data.end());
 
         for (size_t i = 0; i < dict.operators.size(); i++) {
@@ -143,7 +152,32 @@ struct TopData {
                 break;
             }
 
-            case TopDictOperators::Copyright:
+            case TopDictOperators::Copyright: {
+                top.copyright = CFFIndex::lookup_string(string_index, operands[0]);
+                break;
+            }
+
+            case TopDictOperators::UniqueId: {
+                if (operands.size() > 1) {
+                    top.unique_id = CFFDict::parse_real_number(operands);
+                } else {
+                    top.unique_id = operands[0];
+                }
+                break;
+            }
+
+            case TopDictOperators::UIDBase:
+            case TopDictOperators::FontName:
+            case TopDictOperators::FDArray:
+            case TopDictOperators::FDSelect:
+            case TopDictOperators::CIDFontVersion:
+            case TopDictOperators::CIDFontRevision:
+            case TopDictOperators::CIDFontType:
+            case TopDictOperators::CIDCount:
+            case TopDictOperators::ROS: {
+                DEBUG_ASSERT(false, "Error: CID fonts are not supported.");
+            }
+
             case TopDictOperators::IsFixedPitch:
             case TopDictOperators::ItalicAngle:
             case TopDictOperators::UnderlinePosition:
@@ -154,22 +188,14 @@ struct TopData {
             case TopDictOperators::SyntheticBase:
             case TopDictOperators::PostScript:
             case TopDictOperators::BaseFontName:
-            case TopDictOperators::BaseFontBlend:
-            case TopDictOperators::ROS:
-            case TopDictOperators::CIDFontVersion:
-            case TopDictOperators::CIDFontRevision:
-            case TopDictOperators::CIDFontType:
-            case TopDictOperators::CIDCount:
-            case TopDictOperators::UIDBase:
-            case TopDictOperators::FDArray:
-            case TopDictOperators::FDSelect:
-            case TopDictOperators::FontName: {
+            case TopDictOperators::BaseFontBlend: {
                 break;
             }
 
             default:
-                throw std::runtime_error(std::format(
-                    "Operator {} is not yet implemented ", static_cast<int>(operator_)));
+                throw std::runtime_error(
+                    std::format("Top dict operator {} is not yet implemented ",
+                                static_cast<int>(operator_)));
                 break;
             }
         }

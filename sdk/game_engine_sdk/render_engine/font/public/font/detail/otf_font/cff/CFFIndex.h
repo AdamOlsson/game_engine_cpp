@@ -2,6 +2,7 @@
 
 #include "font/detail/ifstream_util.h"
 #include "font/detail/otf_font/cff/CFFStandardStrings.h"
+#include "util/assert.h"
 #include <cstdint>
 #include <memory>
 #include <span>
@@ -54,6 +55,9 @@ struct CFFIndex {
     };
 
     std::span<uint8_t> operator[](const size_t index) const {
+        DEBUG_ASSERT(index < count, std::format("Error: attempted to access beyond "
+                                                "CFFIndex count. (index: {}, count: {})",
+                                                index, count));
         return std::span(data->data() + offsets->at(index) - offsets->at(0),
                          offsets->at(index + 1) - offsets->at(index));
     }
