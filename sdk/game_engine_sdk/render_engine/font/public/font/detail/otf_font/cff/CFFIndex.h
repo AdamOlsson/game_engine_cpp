@@ -18,14 +18,14 @@ struct CFFIndex {
 
     static CFFIndex read_index(std::ifstream &stream) {
 
-        const auto count = read_uint16(stream);
+        const uint16_t count = read_uint16(stream);
 
         // Empty index consists only of the two bytes in the count
         if (count == 0) {
             return CFFIndex{};
         }
 
-        const auto off_size = read_uint8(stream);
+        const uint8_t off_size = read_uint8(stream);
 
         auto offsets = std::make_unique<std::vector<uint32_t>>();
         offsets->reserve(count + 1);
@@ -35,11 +35,12 @@ struct CFFIndex {
             } else if (off_size == 2) {
                 offsets->push_back(read_uint16(stream));
             } else if (off_size == 3) {
-                std::runtime_error("What the hell, uint24_t?");
+                throw std::runtime_error("What the hell, uint24_t?");
             } else if (off_size == 4) {
                 offsets->push_back(read_uint32(stream));
             } else {
-                std::runtime_error("Unkown offset size value.");
+                throw std::runtime_error(
+                    std::format("Unkown offset size value {}.", off_size));
             }
         }
 

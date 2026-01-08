@@ -15,7 +15,6 @@
 constexpr auto INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
 constexpr auto ZOOM_SCALE_FACTOR = 0.1f;
 
-// https://developer.nvidia.com/gpugems/gpugems3/part-iv-image-effects/chapter-25-rendering-vector-art-gpu
 // TODO:
 // TextPipeline:
 // - DONE Implement triangulation on on-curve points to get the interior of the glyph.
@@ -28,7 +27,8 @@ constexpr auto ZOOM_SCALE_FACTOR = 0.1f;
 // - DONE Render the english alphabet for my font
 // - DONE Implement all other Type2Charstring operators
 // - Render the english alphabet for the two other fonts
-//      - Implement charset formats 1 and 2 (FontTableCFF.h)
+//      - Make sure the Rabbid Highway font can be renderer
+//      - Handle the glyph indexing not working in TypeLightSans font
 // - Render sentences
 //      - Parse kerning map
 // - Refactor the usage and internals of OTFFont to be nice
@@ -64,9 +64,9 @@ class ExampleTextRendering : public Game {
 
     void setup(std::shared_ptr<vulkan::context::GraphicsContext> &ctx) override {
 
-        /*font::OTFFont otf_font = font::OTFFont(ASSET_FILE("ftystrategycidencv.otf"));*/
-        font::OTFFont otf_font =
-            font::OTFFont(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
+        font::OTFFont otf_font = font::OTFFont(ASSET_FILE("TypeLightSans-KV84p.otf"));
+        /*font::OTFFont otf_font =*/
+        /*    font::OTFFont(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));*/
         m_otf_font = otf_font;
 
         m_glyph_positions = std::make_unique<

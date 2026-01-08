@@ -77,12 +77,8 @@ struct SFntHeader {
     static SFntHeader read_sfnt_header(std::ifstream &stream) {
         uint32_t tag = read_uint32(stream);
 
-        if (tag == TTCF) {
-            throw std::runtime_error("OpenType Collection files are not supported.");
-        }
-
-        if (tag == TTF) {
-            throw std::runtime_error("OpenType outline types are not supported.");
+        if (tag != OTTO) {
+            throw std::runtime_error("Error: Only OpenType font files are supported");
         }
 
         auto header = SFntHeader{

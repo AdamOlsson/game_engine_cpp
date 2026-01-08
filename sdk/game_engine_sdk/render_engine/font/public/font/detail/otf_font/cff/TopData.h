@@ -67,9 +67,18 @@ struct TopData {
     int32_t private_offset = 0;
     int32_t synthetic_base = 0;
     std::string post_script = "";
+    std::string base_font_name = "";
+    std::vector<int> base_font_blend;
 
     static TopData parse(const std::span<uint8_t> &data, const CFFIndex &string_index) {
         TopData top{};
+
+        /*std::cout << "Encoded Top Data: ";*/
+        /*for (int i : data) {*/
+        /*    std::cout << i << " ";*/
+        /*}*/
+        /*std::cout << std::endl;*/
+
         const CFFDict dict = CFFDict::parse(data.begin(), data.end());
 
         for (size_t i = 0; i < dict.operators.size(); i++) {
@@ -146,7 +155,7 @@ struct TopData {
 
             case TopDictOperators::Private: {
                 DEBUG_ASSERT(operands.size() == 2,
-                             "Error: expected private to only contain 1 value");
+                             "Error: expected private to only contain 2 values");
                 top.private_size = operands[0];
                 top.private_offset = operands[1];
                 break;
@@ -166,6 +175,104 @@ struct TopData {
                 break;
             }
 
+            case TopDictOperators::CharstringType: {
+                if (operands.size() != 1) {
+                    throw std::runtime_error(
+                        std::format("Error: Expected TopData charstring type to only "
+                                    "contain 1 value, but found {} values",
+                                    operands.size()));
+                }
+
+                if (operands[0] != 2) {
+                    throw std::runtime_error(std::format(
+                        "Error: Charstring type {} not implemented.", operands[0]));
+                }
+                top.charstring_type = operands[0];
+                break;
+            }
+
+            case TopDictOperators::IsFixedPitch: {
+                DEBUG_ASSERT(
+                    operands.size() == 1,
+                    std::format(
+                        "Error: is_fixed_pitch expected only one value, but found {}",
+                        operands.size()));
+                top.is_fixed_pitch = operands[0];
+                break;
+            }
+
+            case TopDictOperators::ItalicAngle: {
+                if (operands.size() > 1) {
+                    top.italic_angle = CFFDict::parse_real_number(operands);
+                } else {
+                    top.italic_angle = operands[0];
+                }
+                break;
+            }
+
+            case TopDictOperators::UnderlinePosition: {
+                if (operands.size() > 1) {
+                    top.underline_position = CFFDict::parse_real_number(operands);
+                } else {
+                    top.underline_position = operands[0];
+                }
+                break;
+            }
+
+            case TopDictOperators::UnderlineThickness: {
+                if (operands.size() > 1) {
+                    top.underline_thickness = CFFDict::parse_real_number(operands);
+                } else {
+                    top.underline_thickness = operands[0];
+                }
+                break;
+            }
+
+            case TopDictOperators::PaintType: {
+                if (operands.size() > 1) {
+                    top.paint_type = CFFDict::parse_real_number(operands);
+                } else {
+                    top.paint_type = operands[0];
+                }
+                break;
+            }
+
+            case TopDictOperators::FontMatrix: {
+                DEBUG_ASSERT(operands.size() == 4,
+                             std::format("Error: Expected font matrix to be an array of "
+                                         "4 values, but found {} values",
+                                         operands.size()));
+                top.font_matrix[0] = operands[0];
+                top.font_matrix[1] = operands[1];
+                top.font_matrix[2] = operands[2];
+                top.font_matrix[3] = operands[3];
+                break;
+            }
+
+            case TopDictOperators::SyntheticBase: {
+                if (operands.size() > 1) {
+                    top.synthetic_base = CFFDict::parse_real_number(operands);
+                } else {
+                    top.synthetic_base = operands[0];
+                }
+                break;
+            }
+
+            case TopDictOperators::PostScript: {
+                top.post_script = CFFIndex::lookup_string(string_index, operands[0]);
+                break;
+            }
+
+            case TopDictOperators::BaseFontName: {
+                top.base_font_name = CFFIndex::lookup_string(string_index, operands[0]);
+                break;
+            }
+
+            case TopDictOperators::BaseFontBlend: {
+                top.base_font_blend = CFFDict::parse_delta(operands);
+                break;
+            }
+
             case TopDictOperators::UIDBase:
             case TopDictOperators::FontName:
             case TopDictOperators::FDArray:
@@ -175,21 +282,7 @@ struct TopData {
             case TopDictOperators::CIDFontType:
             case TopDictOperators::CIDCount:
             case TopDictOperators::ROS: {
-                DEBUG_ASSERT(false, "Error: CID fonts are not supported.");
-            }
-
-            case TopDictOperators::IsFixedPitch:
-            case TopDictOperators::ItalicAngle:
-            case TopDictOperators::UnderlinePosition:
-            case TopDictOperators::UnderlineThickness:
-            case TopDictOperators::PaintType:
-            case TopDictOperators::CharstringType:
-            case TopDictOperators::FontMatrix:
-            case TopDictOperators::SyntheticBase:
-            case TopDictOperators::PostScript:
-            case TopDictOperators::BaseFontName:
-            case TopDictOperators::BaseFontBlend: {
-                break;
+                throw std::runtime_error("Error: CID fonts are not supported.");
             }
 
             default:

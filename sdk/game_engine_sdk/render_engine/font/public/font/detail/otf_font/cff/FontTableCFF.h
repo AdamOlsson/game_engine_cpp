@@ -60,16 +60,19 @@ struct FontTableCFF {
                 },
         };
 
+        stream.seekg(start_cff_data + std::streamoff(cff.header.hdr_size));
         const CFFIndex name = CFFIndex::read_index(stream);
         cff.name = std::string(name[0].begin(), name[0].end());
 
-        const auto top_index = CFFIndex::read_index(stream);
-
-        std::cout << "Top dict index count: " << top_index.count << std::endl;
-
-        const auto string_index = CFFIndex::read_index(stream);
-        const auto global_subroutines = CFFIndex::read_index(stream);
-
+        const CFFIndex top_index = CFFIndex::read_index(stream);
+        const CFFIndex string_index = CFFIndex::read_index(stream);
+        const CFFIndex global_subroutines = CFFIndex::read_index(stream);
+        // Encoded Top Data: 248 30 0 248 27 2 248 28 3 248 29 4 139 12 1 139 12 2 251 0
+        // 12 3 192 12 4 254 94 251 128 251 162 250 87 5 29 0 0 2 248 15 29 0 0 0 3 29 0 0
+        // 63 117 18 29 0 0 4 163 17
+        // Leads:
+        // - Why does looking up the full_name in the string index give "Summary
+        // Unavailable"?
         cff.top_data = TopData::parse(top_index[0], string_index);
 
         if (cff.top_data.charstring_type != 2) {
@@ -85,14 +88,22 @@ struct FontTableCFF {
         stream.seekg(start_cff_data + std::streamoff(cff.top_data.private_offset));
         DEBUG_ASSERT(stream.good(),
                      "Error: Filestream not okay after seeking to private data.");
-        const auto private_bytes = read_n_bytes(stream, cff.top_data.private_size);
+        const std::vector<uint8_t> private_bytes =
+            read_n_bytes(stream, cff.top_data.private_size);
         cff.private_data = PrivateData::parse(private_bytes);
 
-        stream.seekg(start_cff_data + std::streamoff(cff.top_data.private_offset +
-                                                     cff.private_data.subrs));
-        DEBUG_ASSERT(stream.good(),
-                     "Error: Filestream not okay after seeking to local subroutines.");
-        const auto local_subroutines = CFFIndex::read_index(stream);
+        CFFIndex local_subroutines = CFFIndex::read_index(stream);
+        if (cff.private_data.subrs > 0) {
+            stream.seekg(start_cff_data + std::streamoff(cff.top_data.private_offset +
+                                                         cff.private_data.subrs));
+            DEBUG_ASSERT(
+                stream.good(),
+                "Error: Filestream not okay after seeking to local subroutines.");
+
+            local_subroutines = CFFIndex::read_index(stream);
+        } else {
+            local_subroutines = CFFIndex{};
+        }
 
         stream.seekg(start_cff_data + std::streamoff(cff.top_data.charstrings));
         DEBUG_ASSERT(stream.good(),
@@ -125,84 +136,12 @@ struct FontTableCFF {
                 glyph.name = std::move(charset.glyph_names[i - 1]);
             }
 
-            glyph.polygons = construct_glyph_polygons(std::move(glyph_outlines));
+            glyph.polygons = Glyph::construct_polygons(std::move(glyph_outlines));
 
             cff.glyphs.push_back(std::move(glyph));
         }
 
         return cff;
-    }
-
-    static std::vector<font::Polygon>
-    construct_glyph_polygons(std::vector<GlyphOutline> &&glyph_outlines) {
-        std::vector<size_t> exterior_outlines;
-        exterior_outlines.reserve(glyph_outlines.size());
-        std::vector<size_t> interior_outlines;
-        interior_outlines.reserve(glyph_outlines.size());
-        for (size_t i = 0; i < glyph_outlines.size(); i++) {
-            if (glyph_outlines[i].vertices.size() == 0) {
-                continue;
-            } else if (is_counter_clockwise_winding(glyph_outlines[i].vertices)) {
-                exterior_outlines.push_back(i);
-            } else {
-                interior_outlines.push_back(i);
-            }
-        }
-
-        std::vector<font::Polygon> polygons;
-        polygons.reserve(exterior_outlines.size());
-        for (const size_t &exterior_id : exterior_outlines) {
-            Polygon polygon;
-            for (const size_t &interior_id : interior_outlines) {
-                // We test containment with the last vertex because it is always a point
-                // on the outline, then we won't have to deal with that a control point
-                // can be off the outline
-                if (glyph_outlines[interior_id].vertices.size() != 0 &&
-                    is_point_inside_outline(glyph_outlines[interior_id].vertices.back(),
-                                            glyph_outlines[exterior_id].vertices)) {
-                    polygon.interior_outlines.push_back(
-                        std::move(glyph_outlines[interior_id].vertices));
-
-                    polygon.curves.insert(polygon.curves.end(),
-                                          glyph_outlines[interior_id].curves.begin(),
-                                          glyph_outlines[interior_id].curves.end());
-                }
-            }
-
-            polygon.exterior_outline = std::move(glyph_outlines[exterior_id].vertices);
-            polygon.curves.insert(polygon.curves.end(),
-                                  glyph_outlines[exterior_id].curves.begin(),
-                                  glyph_outlines[exterior_id].curves.end());
-
-            polygons.push_back(std::move(polygon));
-        }
-
-        return polygons;
-    }
-
-    static bool
-    is_point_inside_outline(const std::pair<float, float> &p,
-                            const std::vector<std::pair<float, float>> &outline) {
-        size_t crossings = 0;
-        for (size_t i = 0; i < outline.size(); i++) {
-            const std::pair<float, float> &vi = outline[i];
-            const std::pair<float, float> &vj = outline[(i + 1) % outline.size()];
-
-            if (((vi.second <= p.second) && (vj.second > p.second)) ||
-                ((vi.second > p.second) && (vj.second <= p.second))) {
-
-                // Compute x-coordinate of intersection
-                float x_intersect = vi.first + (p.second - vi.second) /
-                                                   (vj.second - vi.second) *
-                                                   (vj.first - vi.first);
-
-                if (p.first < x_intersect) {
-                    crossings++;
-                }
-            }
-        }
-
-        return (crossings % 2) == 1;
     }
 
     std::string to_string() const {

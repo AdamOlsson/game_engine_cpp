@@ -117,12 +117,17 @@ struct Type2Charstring {
                                                      const CFFIndex &global_subrs,
                                                      const CFFIndex &local_subrs) {
 
-        std::vector<GlyphVertexCollection> font_outlines;
+        std::vector<GlyphOutlineCollection> font_outlines;
         font_outlines.reserve(charstring_index.count);
         for (auto i = 0; i < charstring_index.count; i++) {
 
             const auto encoded_glyph_seq = charstring_index[i];
             // TODO: What to do with width?
+
+            /*for (int i : encoded_glyph_seq) {*/
+            /*    std::cout << i << " ";*/
+            /*}*/
+            /*std::cout << std::endl;*/
 
             DecodeState state{};
             decode_glyph(encoded_glyph_seq, global_subrs, local_subrs, state);
@@ -142,11 +147,6 @@ struct Type2Charstring {
     static void decode_glyph(const std::span<uint8_t> &encoded_glyph_seq,
                              const CFFIndex &global_subrs, const CFFIndex &local_subrs,
                              DecodeState &state) {
-
-        /*for (int i : encoded_glyph_seq) {*/
-        /*    std::cout << i << " ";*/
-        /*}*/
-        /*std::cout << std::endl;*/
 
         std::vector<std::stack<int>> operand_stacks;
         std::vector<int> operators;
@@ -301,14 +301,17 @@ struct Type2Charstring {
                 handle_hflex(state, operands);
                 break;
             }
+
             case Type2PathConstructOperators::HFlex1: {
                 handle_hflex1(state, operands);
                 break;
             }
+
             case Type2PathConstructOperators::Flex1: {
                 handle_flex1(state, operands);
                 break;
             }
+
             case Type2PathConstructOperators::And:
             case Type2PathConstructOperators::Or:
             case Type2PathConstructOperators::Not:
@@ -366,7 +369,16 @@ struct Type2Charstring {
                                            std::stack<int> &decoded) {
         while (data != end) {
             const int b0 = *data;
-            if (32 <= b0 && b0 <= 246) {
+            if (b0 == 28) {
+                int16_t value = 0;
+                data++;
+                value |= (*data & 0xFF) << 8;
+                data++;
+                value |= (*data & 0xFF);
+                data++;
+                decoded.push(value);
+                continue;
+            } else if (32 <= b0 && b0 <= 246) {
                 decoded.push(CFFDict::decode1(b0));
                 data++;
                 // std::cout << std::format("decode1 - b0: {} = {} ",

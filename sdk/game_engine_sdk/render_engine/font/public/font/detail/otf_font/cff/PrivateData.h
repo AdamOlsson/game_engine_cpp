@@ -62,7 +62,7 @@ struct PrivateData {
         /*}*/
         /*std::cout << std::endl;*/
 
-        const auto dict = CFFDict::parse(encoded_bytes.begin(), encoded_bytes.end());
+        const CFFDict dict = CFFDict::parse(encoded_bytes.begin(), encoded_bytes.end());
 
         for (size_t i = 0; i < dict.operators.size(); i++) {
 

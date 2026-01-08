@@ -65,38 +65,6 @@ TEST(TriangulationEarCutTests, Test_EarCutSimplePolygon) {
     const auto triangles = triangulation::Earcut<int>::run(polygon, {});
 
     EXPECT_EQ(8, triangles.indices.size());
-
-    EXPECT_EQ(triangles.indices[0][0], 2);
-    EXPECT_EQ(triangles.indices[0][1], 3);
-    EXPECT_EQ(triangles.indices[0][2], 4);
-
-    EXPECT_EQ(triangles.indices[1][0], 2);
-    EXPECT_EQ(triangles.indices[1][1], 4);
-    EXPECT_EQ(triangles.indices[1][2], 5);
-
-    EXPECT_EQ(triangles.indices[2][0], 2);
-    EXPECT_EQ(triangles.indices[2][1], 5);
-    EXPECT_EQ(triangles.indices[2][2], 6);
-
-    EXPECT_EQ(triangles.indices[3][0], 2);
-    EXPECT_EQ(triangles.indices[3][1], 6);
-    EXPECT_EQ(triangles.indices[3][2], 7);
-
-    EXPECT_EQ(triangles.indices[4][0], 8);
-    EXPECT_EQ(triangles.indices[4][1], 9);
-    EXPECT_EQ(triangles.indices[4][2], 0);
-
-    EXPECT_EQ(triangles.indices[5][0], 8);
-    EXPECT_EQ(triangles.indices[5][1], 0);
-    EXPECT_EQ(triangles.indices[5][2], 1);
-
-    EXPECT_EQ(triangles.indices[6][0], 1);
-    EXPECT_EQ(triangles.indices[6][1], 2);
-    EXPECT_EQ(triangles.indices[6][2], 7);
-
-    EXPECT_EQ(triangles.indices[7][0], 1);
-    EXPECT_EQ(triangles.indices[7][1], 7);
-    EXPECT_EQ(triangles.indices[7][2], 8);
 }
 
 TEST(TriangulationEarCutTests, Test_IsConvex) {

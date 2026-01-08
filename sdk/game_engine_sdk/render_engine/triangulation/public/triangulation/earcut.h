@@ -21,9 +21,8 @@ template <typename T> class Earcut {
     std::vector<bool> m_is_reflex_vertex;
     ads::DoubleLinkedList<size_t> m_reflex_vertices;
 
-    std::vector<bool> m_is_removed;
     std::vector<bool> m_is_ear_vertex;
-    /*ads::DoubleLinkedList<size_t> m_ear_vertices;*/
+    ads::DoubleLinkedList<size_t> m_ear_vertices;
 
     std::vector<size_t> m_next_id;
     std::vector<size_t> m_prev_id;
@@ -37,12 +36,15 @@ template <typename T> class Earcut {
             return Triangles<T>{};
         }
 
+        DEBUG_ASSERT(math::signed_area(exterior_vertices) < 0.0f,
+                     "Error: Earcut requires exterior vertices to be in counter "
+                     "clockwise winding order.");
+
         const std::vector<std::pair<T, T>> bridged_vertices =
             detail::EarcutImpl<T>::bridge_exterior_and_interior(exterior_vertices,
                                                                 interior_vertices);
 
         m_is_reflex_vertex.resize(bridged_vertices.size());
-        m_is_removed.resize(bridged_vertices.size());
         m_next_id.resize(bridged_vertices.size());
         m_prev_id.resize(bridged_vertices.size());
 
@@ -62,8 +64,6 @@ template <typename T> class Earcut {
             if (!is_conv) {
                 m_reflex_vertices.push_back(i);
             }
-
-            m_is_removed[i] = false;
         }
 
         // Determine which bridged_vertices are m_is_ear_vertex
@@ -76,7 +76,7 @@ template <typename T> class Earcut {
             m_is_ear_vertex[i] = detail::EarcutImpl<T>::is_ear(
                 bridged_vertices[m_prev_id[i]], bridged_vertices[i],
                 bridged_vertices[m_next_id[i]], bridged_vertices, m_reflex_vertices);
-            /*m_ear_vertices.push_back(i);*/
+            m_ear_vertices.push_back(i);
 
             DEBUG_CODE({
                 if (m_is_ear_vertex[i]) {
@@ -90,16 +90,10 @@ template <typename T> class Earcut {
 
         std::vector<std::array<size_t, 3>> triangles;
         triangles.reserve(bridged_vertices.size() - 2);
-        size_t i = 0;
-        // IMPROVEMENT: Use doubly linked list for ears and pop from front when removing
-        // indices. This would save some iterations where i is not an ear.
-        while (triangles.size() < bridged_vertices.size() - 2) {
-            if (!m_is_ear_vertex[i] || m_is_removed[i]) {
-                i = (i + 1) % bridged_vertices.size();
-                continue;
-            }
-            /*const size_t i = m_ear_vertices.front();*/
-            /*m_ear_vertices.pop_front();*/
+
+        while (m_ear_vertices.size() > 0) {
+            const size_t i = m_ear_vertices.front();
+            m_ear_vertices.pop_front();
 
             triangles.emplace_back(std::array{m_prev_id[i], i, m_next_id[i]});
 
@@ -109,14 +103,11 @@ template <typename T> class Earcut {
 
             m_next_id[m_prev_id[i]] = m_next_id[i];
             m_prev_id[m_next_id[i]] = m_prev_id[i];
-            m_is_removed[i] = true;
             m_is_ear_vertex[i] = false;
             m_is_reflex_vertex[i] = false;
 
             reclassify_vertex(m_prev_id[i], bridged_vertices);
             reclassify_vertex(m_next_id[i], bridged_vertices);
-
-            i = (i + 1) % bridged_vertices.size();
         }
 
         return Triangles<T>{.vertices = std::move(bridged_vertices),
@@ -140,16 +131,16 @@ template <typename T> class Earcut {
         // Wether the vertex became an ear or remain an ear after the adjacent vertex was
         // removed, if it is convex we need to check if it is an ear
         if (now_conv) {
-            /*const bool was_ear = m_is_ear_vertex[i];*/
+            const bool was_ear = m_is_ear_vertex[i];
             const bool now_ear = detail::EarcutImpl<T>::is_ear(
                 v_prev, v_curr, v_next, vertices, m_reflex_vertices);
             m_is_ear_vertex[i] = now_ear;
 
-            /*if (!was_ear && now_ear) {*/
-            /*    m_ear_vertices.push_back(i);*/
-            /*} else if (was_ear && !now_ear) {*/
-            /*    m_ear_vertices.remove(i);*/
-            /*}*/
+            if (!was_ear && now_ear) {
+                m_ear_vertices.push_back(i);
+            } else if (was_ear && !now_ear) {
+                m_ear_vertices.remove(i);
+            }
         }
 
         DEBUG_CODE({
