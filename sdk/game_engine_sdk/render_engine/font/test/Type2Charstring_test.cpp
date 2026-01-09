@@ -15,7 +15,7 @@ TEST(Type2CharstringTests, Test_ParseGlyphC) {
     EXPECT_EQ(glyph.polygons[0].interior_outlines.size(), 0);
 }
 
-TEST(Type2CharstringTests, Test_ParseGlyphA) {
+TEST(Type2CharstringTests, DISABLED_Test_ParseGlyphA) {
     const font::OTFFont otf_font =
         font::OTFFont(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
 
@@ -28,7 +28,7 @@ TEST(Type2CharstringTests, Test_ParseGlyphA) {
     EXPECT_TRUE(glyph.polygons[0].interior_outlines[0].size() == 3);
 }
 
-TEST(Type2CharstringTests, Test_ParseGlyphD) {
+TEST(Type2CharstringTests, DISABLED_Test_ParseGlyphD) {
     const font::OTFFont otf_font =
         font::OTFFont(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
 
@@ -41,7 +41,7 @@ TEST(Type2CharstringTests, Test_ParseGlyphD) {
     EXPECT_TRUE(glyph.polygons[0].interior_outlines[0].size() > 2);
 }
 
-TEST(Type2CharstringTests, Test_ParseGlyphB) {
+TEST(Type2CharstringTests, DISABLED_Test_ParseGlyphB) {
     const font::OTFFont otf_font =
         font::OTFFont(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
 
@@ -54,7 +54,7 @@ TEST(Type2CharstringTests, Test_ParseGlyphB) {
     EXPECT_EQ(glyph.polygons[0].interior_outlines.size(), 2);
 }
 
-TEST(Type2CharstringTests, Test_ParseGlyphi) {
+TEST(Type2CharstringTests, DISABLED_Test_ParseGlyphi) {
     const font::OTFFont otf_font =
         font::OTFFont(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
 

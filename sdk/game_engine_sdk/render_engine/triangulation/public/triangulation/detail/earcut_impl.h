@@ -267,12 +267,38 @@ template <typename T> class EarcutImpl {
             const auto &start = vertices[i];
             const auto &end = vertices[(i + 1) % vertices.size()];
 
-            if (M.first >= start.first && M.first >= end.first) {
-                continue;
+            // Check that at least one vertex of the edge is pass M x-value;
+            if (start.first <= M.first) {
+                if (end.first > M.first) {
+                    // edge pointing right
+                } else {
+                    continue;
+                }
             }
-            if (start.second > M.second || end.second < M.second) {
-                continue;
+
+            /*if (M.first >= start.first && M.first >= end.first) {*/
+            /*    continue;*/
+            /*}*/
+
+            // Note: I acknoledge that this is an odd if-statement but it is
+            // easier to follow with the description of the algorithm
+            if (start.second < M.second) {
+                if (end.second >= M.second) {
+                    // Upward crossing
+                } else {
+                    continue;
+                }
+            } else {
+                if (end.second < M.second) {
+                    // Downward crossing
+                } else {
+                    continue;
+                }
             }
+
+            /*if (start.second > M.second || end.second < M.second) {*/
+            /*    continue;*/
+            /*}*/
 
             // Check for horizontal edge
             if (std::abs(end.second - start.second) < std::numeric_limits<T>::epsilon()) {

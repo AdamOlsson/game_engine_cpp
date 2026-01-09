@@ -1,24 +1,102 @@
-#include "font/Glyph.h"
+#include "font/winding.h"
 #include <gtest/gtest.h>
 
-TEST(CFFDictTest, Test_PointContainment) {
-    std::pair<float, float> p = {0.0f, 100.0f};
+TEST(CFFDictTest, Test_PointContainmentOpenSet) {
+    /*
+     *        x--x
+     *        |  |
+     *      p x--x
+     */
+    std::pair<float, float> p = {0.0f, 0.0f};
     std::vector<std::pair<float, float>> outline = {
-        {0, 200}, {0, 100}, {100, 100}, {100, 200}};
-    EXPECT_FALSE(font::Glyph::is_point_inside_outline(p, outline));
+        {0, 0}, {100, 0}, {100, 100}, {0, 100}};
+    EXPECT_FALSE(font::winding_number_containment_open_set(p, outline));
 
-    p = {-10.0f, 100.0f};
-    EXPECT_FALSE(font::Glyph::is_point_inside_outline(p, outline));
+    /*
+     *        x--x
+     *        |  |
+     *   p x  x--x
+     */
+    p = {-10.0f, 0.0f};
+    outline = {{0, 0}, {100, 0}, {100, 100}, {0, 100}};
+    EXPECT_FALSE(font::winding_number_containment_open_set(p, outline));
 
-    p = {0.0f, 100.0f};
-    outline = {{100, 200}, {200, 100}, {200, 200}};
-    EXPECT_FALSE(font::Glyph::is_point_inside_outline(p, outline));
+    /*
+     *        x--x
+     *        |  |
+     *        x--x  p x
+     */
+    p = {110.0f, 0.0f};
+    outline = {{0, 0}, {100, 0}, {100, 100}, {0, 100}};
+    EXPECT_FALSE(font::winding_number_containment_open_set(p, outline));
 
+    /*      p x
+     *        x--x
+     *        |  |
+     *        x--x
+     */
+    p = {0.0f, 110.0f};
+    outline = {{0, 0}, {100, 0}, {100, 100}, {0, 100}};
+    EXPECT_FALSE(font::winding_number_containment_open_set(p, outline));
+
+    /*
+     *        x--x
+     *        |  |
+     *        x--x
+     *      p x
+     */
+    p = {0.0f, -10.0f};
+    outline = {{0, 0}, {100, 0}, {100, 100}, {0, 100}};
+    EXPECT_FALSE(font::winding_number_containment_open_set(p, outline));
+
+    /*
+     *        x--x
+     *        \ /
+     *   p x   x
+     */
+    p = {0.0f, 0.0f};
+    outline = {{100, 100}, {200, 0}, {300, 100}};
+    EXPECT_FALSE(font::winding_number_containment_open_set(p, outline));
+
+    /*
+     *        x--x
+     *        \ /
+     *      p xx
+     */
+    p = {150.0f, 0.0f};
+    outline = {{100, 100}, {200, 0}, {300, 100}};
+    EXPECT_FALSE(font::winding_number_containment_open_set(p, outline));
+
+    /*
+     *        x------x
+     *        |      |
+     *        | p x  |
+     *        |      |
+     *        x------x
+     */
     p = {0.0f, 0.0f};
     outline = {{-10, 10}, {-10, -10}, {10, -10}, {10, 10}};
-    EXPECT_TRUE(font::Glyph::is_point_inside_outline(p, outline));
+    EXPECT_TRUE(font::winding_number_containment_open_set(p, outline));
 
+    /*
+     *        x------x
+     *        |      |
+     *        | p x  x
+     *        |      |
+     *        x------x
+     */
     p = {0.0f, 0.0f};
     outline = {{-10, 10}, {-10, -10}, {10, -10}, {10, 0.0f}, {10, 10}};
-    EXPECT_TRUE(font::Glyph::is_point_inside_outline(p, outline));
+    EXPECT_TRUE(font::winding_number_containment_open_set(p, outline));
+
+    /*
+     *        x------x
+     *       /        \
+     *       x  p x   x
+     *       \        /
+     *        x------x
+     */
+    p = {0.0f, 0.0f};
+    outline = {{-10, 10}, {-10, -10}, {10, -10}, {10, 0.0f}, {10, 10}, {-2, 5}};
+    EXPECT_TRUE(font::winding_number_containment_open_set(p, outline));
 }

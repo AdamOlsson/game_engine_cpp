@@ -1,5 +1,6 @@
 #include "font/Glyph.h"
 #include "font/winding.h"
+#include "math/area.h"
 #include <functional>
 
 struct OutlineNode {
@@ -7,39 +8,6 @@ struct OutlineNode {
     size_t nesting_level = 0;
     std::vector<size_t> children;
 };
-
-bool font::Glyph::is_point_inside_outline(
-    const std::pair<float, float> &p,
-    const std::vector<std::pair<float, float>> &outline) {
-    size_t crossings = 0;
-    for (size_t i = 0; i < outline.size(); i++) {
-        const std::pair<float, float> &start = outline[i];
-        const std::pair<float, float> &end = outline[(i + 1) % outline.size()];
-
-        // Check for horizontal edge
-        if (std::abs(end.second - start.second) < std::numeric_limits<float>::epsilon()) {
-            continue;
-        }
-
-        // TODO: I might require that the edge passes over
-        // Check if the edge start,end passes over the y value of p
-        /*if (((start.second <= p.second) && (end.second > p.second)) ||*/
-        /*    ((start.second > p.second) && (end.second <= p.second))) {*/
-        if (((start.second < p.second) && (end.second > p.second)) ||
-            ((start.second > p.second) && (end.second < p.second))) {
-            // Compute x-coordinate of intersection
-            float x_intersect = start.first + (p.second - start.second) /
-                                                  (end.second - start.second) *
-                                                  (end.first - start.first);
-
-            if (p.first < x_intersect) {
-                crossings++;
-            }
-        }
-    }
-
-    return (crossings % 2) == 1;
-}
 
 bool outline_contains_outline(const std::vector<font::Vertex<float>> &outer,
                               const std::vector<font::Vertex<float>> &inner) {
@@ -50,7 +18,7 @@ bool outline_contains_outline(const std::vector<font::Vertex<float>> &outer,
     // We test containment with the last vertex because it is always a point
     // on the outline, then we won't have to deal with that a control point
     // can be off the outline
-    return font::Glyph::is_point_inside_outline(inner.back(), outer);
+    return font::winding_number_containment_open_set(inner.back(), outer);
 }
 
 std::vector<OutlineNode>
@@ -111,6 +79,12 @@ font::Glyph::construct_polygons(std::vector<font::GlyphOutline> &&glyph_outlines
 
     if (glyph_outlines.empty()) {
         return {};
+    }
+
+    for (auto &outline : glyph_outlines) {
+        if (font::is_clockwise_winding(outline.vertices)) {
+            std::ranges::reverse(outline.vertices);
+        }
     }
 
     const std::vector<OutlineNode> nodes = build_containment_tree(glyph_outlines);

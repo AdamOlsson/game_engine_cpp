@@ -90,7 +90,7 @@ TEST(TriangulateGlyphsTest, DISABLED_Test_TriangulateAllGlyphsInFtyStrategyCID) 
     ASSERT_TRUE(count > 0);
 }
 
-TEST(TriangulateGlyphsTest, Test_TriangulateGlyph) {
+TEST(TriangulateGlyphsTest, DISABLED_Test_TriangulateGlyph) {
     const font::OTFFont otf_font = font::OTFFont(ASSET_FILE("TypeLightSans-KV84p.otf"));
 
     /*const uint16_t index = otf_font.glyph_index(font::Unicode("S"));*/

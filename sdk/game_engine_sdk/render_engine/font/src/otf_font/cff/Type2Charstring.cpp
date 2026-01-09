@@ -809,13 +809,10 @@ void font::detail::otf_font::cff::Type2Charstring::handle_callsubr(
         operands.pop();
     }
 
-    std::cout << "Local subr count: " << local_subrs.count << std::endl;
-    std::cout << "Global subr count: " << global_subrs.count << std::endl;
-    // TODO: Either
-    // - The subroutine_index_correction is wrong
-    // - local_subr parsing is wrong
+    /*std::cout << "Local subr count: " << local_subrs.count << std::endl;*/
+    /*std::cout << "Global subr count: " << global_subrs.count << std::endl;*/
     for (int c : operands_vec) {
-        std::cout << "Unbiased local subroutine index: " << c << std::endl;
+        /*std::cout << "Unbiased local subroutine index: " << c << std::endl;*/
         const int subr_index = subroutine_index_correction(c, local_subrs.count);
         /*std::cout << std::format("callsubr: {}", subr_index) << std::endl;*/
         const auto subroutine = local_subrs[subr_index];
