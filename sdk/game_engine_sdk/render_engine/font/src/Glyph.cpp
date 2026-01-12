@@ -15,10 +15,14 @@ bool outline_contains_outline(const std::vector<font::Vertex<float>> &outer,
         return false;
     }
 
-    // We test containment with the last vertex because it is always a point
-    // on the outline, then we won't have to deal with that a control point
-    // can be off the outline
-    return font::winding_number_containment_open_set(inner.back(), outer);
+    for (const auto &v : inner) {
+        const bool is_contained = font::winding_number_containment_open_set(v, outer);
+        if (!is_contained) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 std::vector<OutlineNode>

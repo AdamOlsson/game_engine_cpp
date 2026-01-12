@@ -2,7 +2,7 @@
 #include "graphics_pipeline/text/GlyphVertex.h"
 #include "shaders/text_fragment_shader.h"
 #include "shaders/text_vertex_shader.h"
-#include "triangulation/earcut.h"
+#include "triangulation/mapbox/earcut.h"
 #include "vulkan/vulkan_core.h"
 
 graphics_pipeline::text::TextPipeline::TextPipeline(
@@ -70,19 +70,30 @@ void graphics_pipeline::text::TextPipeline::load_font(
         size_t polygon_offset = 0;
         for (const font::Polygon &polygon : glyph.polygons) {
 
-            const triangulation::Triangles<float> triangles =
-                triangulation::Earcut<float>::run(polygon.exterior_outline,
-                                                  polygon.interior_outlines);
+            std::vector<std::vector<std::pair<float, float>>> poly;
+            poly.reserve(1 + polygon.interior_outlines.size());
 
-            for (const auto &point : triangles.vertices) {
+            poly.push_back(polygon.exterior_outline);
+            for (auto &interior : polygon.interior_outlines) {
+                poly.push_back(interior);
+            }
+
+            const auto poly_indices = mapbox::earcut(poly);
+
+            /*const triangulation::Triangles<float> triangles =*/
+            /*    triangulation::Earcut<float>::run(polygon.exterior_outline,*/
+            /*                                      polygon.interior_outlines);*/
+
+            for (const auto &point : poly[0]) {
                 vertices.emplace_back(point.first, -1.0f * point.second, 0.0f, 0.0f, 0.0f,
                                       0.0f);
             }
 
-            for (const auto &triangle : triangles.indices) {
-                indices.push_back(triangle[0] + first_vertex_idx + polygon_offset);
-                indices.push_back(triangle[1] + first_vertex_idx + polygon_offset);
-                indices.push_back(triangle[2] + first_vertex_idx + polygon_offset);
+            for (const auto &triangle : poly_indices) {
+                indices.push_back(triangle + first_vertex_idx + polygon_offset);
+                /*indices.push_back(triangle[0] + first_vertex_idx + polygon_offset);*/
+                /*indices.push_back(triangle[1] + first_vertex_idx + polygon_offset);*/
+                /*indices.push_back(triangle[2] + first_vertex_idx + polygon_offset);*/
             }
 
             for (const font::ExteriorTriangle &triangle : polygon.curves) {

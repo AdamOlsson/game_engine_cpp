@@ -64,9 +64,9 @@ class ExampleTextRendering : public Game {
 
     void setup(std::shared_ptr<vulkan::context::GraphicsContext> &ctx) override {
 
-        font::OTFFont otf_font = font::OTFFont(ASSET_FILE("TypeLightSans-KV84p.otf"));
-        /*font::OTFFont otf_font =*/
-        /*    font::OTFFont(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));*/
+        /*font::OTFFont otf_font = font::OTFFont(ASSET_FILE("TypeLightSans-KV84p.otf"));*/
+        font::OTFFont otf_font =
+            font::OTFFont(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
         m_otf_font = otf_font;
 
         m_glyph_positions = std::make_unique<
