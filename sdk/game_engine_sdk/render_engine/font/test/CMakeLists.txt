@@ -7,12 +7,12 @@ endif()
 
 file(GLOB_RECURSE TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
-if(CMAKE_LOG_LEVEL_DEBUG)
+# if(CMAKE_LOG_LEVEL_DEBUG)
     message(STATUS "Found test source files:")
     foreach(source_file ${TEST_SOURCES})
         message(STATUS "    - ${source_file}")
     endforeach()
-endif()
+# endif()
 
 set(TEST_EXEC_NAME "font_tests")
 
@@ -34,6 +34,7 @@ target_link_libraries(${TEST_EXEC_NAME}
     PRIVATE
         render_engine::font
         GTest::gtest_main
+        TTFParser::ttfparser
 )
 
 target_compile_features(${TEST_EXEC_NAME} PRIVATE cxx_std_20)

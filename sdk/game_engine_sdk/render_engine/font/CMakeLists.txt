@@ -10,6 +10,11 @@ message(STATUS "    Build tests: ${GAME_ENGINE_SDK_BUILD_TEST}")
 
 project(font CXX)
 
+# Add cmake modules directory to the module path
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+include(FindTTFParser)
+
 file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/public/*.h")
 
@@ -33,6 +38,7 @@ target_link_libraries(${PROJECT_NAME}
         sdk::math
     PRIVATE 
         render_engine::triangulation
+        TTFParser::ttfparser
 )
 
 if(GAME_ENGINE_SDK_BUILD_TEST)
