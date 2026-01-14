@@ -1,6 +1,6 @@
 #pragma once
 #include "TextPipelineDescriptorSet.h"
-#include "font/OTFFont.h"
+#include "font/FontLoader.h"
 #include "graphics_pipeline/text/GlyphVertex.h"
 #include "vulkan/CommandBuffer.h"
 #include "vulkan/DrawIndexedIndirectCommand.h"
@@ -25,7 +25,7 @@ class TextPipeline {
     std::optional<vulkan::buffers::StorageBuffer<vulkan::DrawIndexedIndirectCommand>>
         m_draw_command_buffer;
 
-    std::optional<font::OTFFont> m_font;
+    std::optional<font::FontLoader> m_font_loader;
 
     vulkan::ShaderStageFlags m_push_constant_stage;
 
@@ -40,7 +40,7 @@ class TextPipeline {
                  const vulkan::PushConstantRange *push_constant_range);
 
     void load_font(vulkan::CommandBufferManager *command_buffer_manager,
-                   const font::OTFFont &font);
+                   font::FontLoader &&font_laoder);
 
     template <typename PushConstantType>
     void render(const vulkan::CommandBuffer &command_buffer,
@@ -71,9 +71,10 @@ class TextPipeline {
 
         const int num_draw_calls = 1;
         const int stride = m_draw_command_buffer->size_of_T();
-        const auto glyph_id = m_font->glyph_index(unicode);
+        const auto glyph_id = m_font_loader->get_glyph_index(unicode);
 
         auto draw_command_buffer_ref = m_draw_command_buffer->get_reference();
+
         const int offset = glyph_id * stride;
 
         vkCmdDrawIndexedIndirect(command_buffer, draw_command_buffer_ref.buffer, offset,

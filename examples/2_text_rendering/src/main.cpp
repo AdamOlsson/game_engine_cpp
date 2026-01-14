@@ -1,6 +1,5 @@
 #include "camera/Camera.h"
-#include "font/GlyphNames.h"
-#include "font/OTFFont.h"
+#include "font/FontLoader.h"
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
 #include "game_engine_sdk/render_engine/ModelMatrix.h"
@@ -52,8 +51,6 @@ class ExampleTextRendering : public Game {
     std::unique_ptr<graphics_pipeline::text::TextPipelineDescriptorSet> m_descriptor_set;
     std::unique_ptr<graphics_pipeline::text::TextPipeline> m_pipeline;
 
-    font::OTFFont m_otf_font;
-
   public:
     ExampleTextRendering()
         : m_mouse_last_position(window::ViewportPoint(-10000, -1000)) {}
@@ -64,22 +61,23 @@ class ExampleTextRendering : public Game {
 
     void setup(std::shared_ptr<vulkan::context::GraphicsContext> &ctx) override {
 
-        /*font::OTFFont otf_font = font::OTFFont(ASSET_FILE("TypeLightSans-KV84p.otf"));*/
-        font::OTFFont otf_font =
-            font::OTFFont(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
-        m_otf_font = otf_font;
+        font::FontLoader font_loader =
+            font::FontLoader(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
+        /*font::FontLoader(ASSET_FILE("TypeLightSans-KV84p.otf"));*/
 
         m_glyph_positions = std::make_unique<
             vulkan::buffers::SwapStorageBuffer<graphics_pipeline::text::TextPipelineSBO>>(
-            ctx, 2, otf_font.glyphs.size());
+            ctx, 2, font_loader.get_num_glyphs());
 
         const float scale = 0.1f;
         const size_t num_columns = 8;
         const float column_width = 100;
         const float row_height = 100;
-        for (size_t i = 0; i < otf_font.glyphs.size(); i++) {
-            const float x = static_cast<float>(i % num_columns) * column_width;
-            const float y = static_cast<float>(i / num_columns) * row_height;
+        for (size_t i = 0; i < font_loader.get_num_glyphs(); i++) {
+            /*const float x = static_cast<float>(i % num_columns) * column_width;*/
+            const float x = 0.0f;
+            /*const float y = static_cast<float>(i / num_columns) * row_height;*/
+            const float y = 0.0f;
 
             // TODO: Each instance should represent one text (not only one glyph)
             m_glyph_positions->push_back(graphics_pipeline::text::TextPipelineSBO{
@@ -113,7 +111,9 @@ class ExampleTextRendering : public Game {
                 ctx, m_descriptor_pool,
                 graphics_pipeline::text::TextPipelineDescriptorSetOpts{
                     .storage_buffer_refs = vulkan::DescriptorBufferInfo::from_vector(
-                        m_glyph_positions->get_buffer_references())});
+                        m_glyph_positions->get_buffer_references()
+
+                            )});
 
         auto &descriptor_layout = m_descriptor_set->get_layout();
         auto push_constant_range =
@@ -124,7 +124,7 @@ class ExampleTextRendering : public Game {
         m_pipeline = std::make_unique<graphics_pipeline::text::TextPipeline>(
             ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
             &descriptor_layout, &push_constant_range);
-        m_pipeline->load_font(m_command_buffer_manager.get(), otf_font);
+        m_pipeline->load_font(m_command_buffer_manager.get(), std::move(font_loader));
     }
 
     void register_mouse_event_handler(vulkan::context::GraphicsContext *ctx) {
@@ -167,20 +167,8 @@ class ExampleTextRendering : public Game {
         auto descriptor = m_descriptor_set.get();
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
 
-        for (const font::Glyph &glyph : m_otf_font.glyphs) {
-            char c = ' ';
-            if (glyph.name.size() == 1) {
-                c = glyph.name[0];
-            } else if (glyph.name.size() > 1) {
-                const std::optional<char> maybe_c = font::GlyphNames::to_char(glyph.name);
-                if (maybe_c.has_value()) {
-                    c = maybe_c.value();
-                }
-            }
-
-            m_pipeline->render(command_buffer, descriptor, &push_constant,
-                               font::Unicode(c));
-        }
+        m_pipeline->render(command_buffer, descriptor, &push_constant,
+                           font::Unicode("C"));
 
         render_pass.end_submit_present();
 

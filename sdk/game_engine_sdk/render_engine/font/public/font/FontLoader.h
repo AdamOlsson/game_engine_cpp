@@ -1,76 +1,82 @@
 #pragma once
 
-#include "font/OTFFont.h"
-#include <iostream>
+#include "font/Unicode.h"
 #include <string>
 
 #include <ft2build.h>
+#include <vector>
 #include FT_FREETYPE_H
 #include FT_OUTLINE_H
 
 namespace font {
 
-class OutlineBuilder {
-  public:
-    OutlineBuilder()
-        : m_funcs({
-              .move_to = &move_to_cb,
-              .line_to = &line_to_cb,
-              .conic_to = &conic_to_cb,
-              .cubic_to = &cubic_to_cb,
-              .shift = 0,
-              .delta = 0,
-          }) {}
+struct Outline {};
 
-    ~OutlineBuilder() {}
-
-    FT_Outline_Funcs *funcs() { return &m_funcs; }
-
-  private:
-    FT_Outline_Funcs m_funcs;
-
-    static OutlineBuilder &self(void *user_data) {
-        return *static_cast<OutlineBuilder *>(user_data);
-    }
-
-    static int move_to_cb(const FT_Vector *to, void *user_data) {
-        std::cout << std::format("M {} {}", to->x, to->y) << std::endl;
-        return 0;
-    }
-
-    static int line_to_cb(const FT_Vector *to, void *user_data) {
-        std::cout << std::format("L {} {}", to->x, to->y) << std::endl;
-        return 0;
-    }
-
-    static int conic_to_cb(const FT_Vector *control, const FT_Vector *to,
-                           void *user_data) {
-        std::cout << std::format("C {} {} {} {}", control->x, control->y, to->x, to->y)
-                  << std::endl;
-        return 0;
-    }
-
-    static int cubic_to_cb(const FT_Vector *control1, const FT_Vector *control2,
-                           const FT_Vector *to, void *user_data) {
-        std::cout << std::format("C {} {} {} {} {} {}", to->x, to->y, control1->x,
-                                 control1->y, control2->x, control2->y)
-                  << std::endl;
-        return 0;
-    }
+struct GlyphOutlines {
+    std::vector<std::vector<std::pair<float, float>>> line_segments;
+    // std::vector<std::pair<float, float>> curve_segments;
 };
 
 class FontLoader {
   public:
     FontLoader(const std::string &filepath);
     FontLoader(const std::vector<char> &font_data);
+    FontLoader(const FontLoader &) = delete;
+    FontLoader &operator=(const FontLoader &) = delete;
+
+    FontLoader(FontLoader &&other) noexcept;
+    FontLoader &operator=(FontLoader &&other) noexcept;
 
     ~FontLoader();
 
-    unsigned int get_glyph_index(const font::Unicode &codepoint);
-    void get_glyph_outline(const font::Unicode &codepoint);
+    class GlyphIterator {
+      public:
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = unsigned int; // Just the glyph index
+        using difference_type = std::ptrdiff_t;
+        using pointer = const value_type *;
+        using reference = const value_type &;
+
+        GlyphIterator(FT_Face face, FT_UInt glyph_index)
+            : m_face(face), m_glyph_index(glyph_index) {}
+
+        value_type operator*() const { return m_glyph_index; }
+
+        GlyphIterator &operator++() {
+            ++m_glyph_index;
+            return *this;
+        }
+
+        GlyphIterator operator++(int) {
+            GlyphIterator tmp = *this;
+            ++(*this);
+            return tmp;
+        }
+
+        bool operator==(const GlyphIterator &other) const {
+            return m_face == other.m_face && m_glyph_index == other.m_glyph_index;
+        }
+
+        bool operator!=(const GlyphIterator &other) const { return !(*this == other); }
+
+      private:
+        FT_Face m_face;
+        FT_UInt m_glyph_index;
+    };
+
+    GlyphIterator begin() const { return GlyphIterator(m_face, 0); }
+    GlyphIterator end() const {
+        return GlyphIterator(m_face, m_face ? m_face->num_glyphs : 0);
+    }
+
+    unsigned int get_glyph_index(const font::Unicode &codepoint) const;
+    std::array<char, 256> get_glyph_name(const font::Unicode &codepoint) const;
+    std::array<char, 256> get_glyph_name(const unsigned int gid) const;
+    GlyphOutlines get_glyph_outline(const font::Unicode &codepoint) const;
+    GlyphOutlines get_glyph_outline(const unsigned int gid) const;
+    signed long get_num_glyphs();
 
   private:
-    OutlineBuilder m_builder;
     FT_Library m_library;
     FT_Face m_face;
 };

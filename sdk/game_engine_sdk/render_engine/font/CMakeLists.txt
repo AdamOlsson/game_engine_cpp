@@ -37,9 +37,9 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC
         sdk::util
         sdk::math
+        FreeType::FreeType
     PRIVATE 
         render_engine::triangulation
-        FreeType::FreeType
 )
 
 if(GAME_ENGINE_SDK_BUILD_TEST)

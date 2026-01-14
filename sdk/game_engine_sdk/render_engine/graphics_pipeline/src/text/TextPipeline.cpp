@@ -1,4 +1,5 @@
 #include "graphics_pipeline/text/TextPipeline.h"
+#include "graphics_pipeline/Polygon.h"
 #include "graphics_pipeline/text/GlyphVertex.h"
 #include "shaders/text_fragment_shader.h"
 #include "shaders/text_vertex_shader.h"
@@ -42,92 +43,48 @@ graphics_pipeline::text::TextPipeline::TextPipeline(
 }
 
 void graphics_pipeline::text::TextPipeline::load_font(
-    vulkan::CommandBufferManager *command_buffer_manager, const font::OTFFont &font) {
+    vulkan::CommandBufferManager *command_buffer_manager,
+    font::FontLoader &&font_loader) {
 
     std::vector<vulkan::DrawIndexedIndirectCommand> index_draw_commands;
     size_t instance_offset_count = 0;
     std::vector<GlyphVertex> vertices;
     std::vector<uint16_t> indices;
-    for (const auto &glyph : font.glyphs) {
 
-        // Most OTF files contain empty glyphs, to preserve the character mapping we still
-        // add an empty draw command that renders nothing
-        if (glyph.polygons.size() == 0) {
-            index_draw_commands.push_back(vulkan::DrawIndexedIndirectCommand{
-                .indexCount = static_cast<uint32_t>(indices.size()),
-                .instanceCount = 1,
-                .firstIndex = static_cast<uint32_t>(indices.size()),
-                .firstInstance = static_cast<uint32_t>(instance_offset_count),
-            });
+    for (const auto glyph_index : font_loader) {
+        font::GlyphOutlines outlines = font_loader.get_glyph_outline(glyph_index);
 
-            instance_offset_count++;
-            continue;
-        }
+        const size_t first_index = indices.size();
+        if (!outlines.line_segments.empty()) {
+            const std::vector<graphics_pipeline::Polygon> glyph_polygons =
+                graphics_pipeline::Polygon::construct_polygons(outlines.line_segments);
 
-        const size_t first_index_idx = indices.size();
-        const size_t first_vertex_idx = vertices.size();
+            for (const graphics_pipeline::Polygon polygon : glyph_polygons) {
+                const size_t first_vertex = vertices.size();
+                const std::vector<unsigned int> triangle_indices =
+                    mapbox::earcut(polygon.get_outlines());
 
-        size_t polygon_offset = 0;
-        for (const font::Polygon &polygon : glyph.polygons) {
+                for (const std::vector<std::pair<float, float>> &outline :
+                     polygon.get_outlines()) {
+                    for (const std::pair<float, float> &vertex : outline) {
+                        vertices.emplace_back(vertex.first, vertex.second, 0.0f, 0.0f,
+                                              0.0f, 0.0f);
+                    }
+                }
 
-            std::vector<std::vector<std::pair<float, float>>> poly;
-            poly.reserve(1 + polygon.interior_outlines.size());
-
-            poly.push_back(polygon.exterior_outline);
-            for (auto &interior : polygon.interior_outlines) {
-                poly.push_back(interior);
+                for (const unsigned int index : triangle_indices) {
+                    indices.emplace_back(first_vertex + index);
+                }
             }
-
-            const auto poly_indices = mapbox::earcut(poly);
-
-            /*const triangulation::Triangles<float> triangles =*/
-            /*    triangulation::Earcut<float>::run(polygon.exterior_outline,*/
-            /*                                      polygon.interior_outlines);*/
-
-            for (const auto &point : poly[0]) {
-                vertices.emplace_back(point.first, -1.0f * point.second, 0.0f, 0.0f, 0.0f,
-                                      0.0f);
-            }
-
-            for (const auto &triangle : poly_indices) {
-                indices.push_back(triangle + first_vertex_idx + polygon_offset);
-                /*indices.push_back(triangle[0] + first_vertex_idx + polygon_offset);*/
-                /*indices.push_back(triangle[1] + first_vertex_idx + polygon_offset);*/
-                /*indices.push_back(triangle[2] + first_vertex_idx + polygon_offset);*/
-            }
-
-            for (const font::ExteriorTriangle &triangle : polygon.curves) {
-                const float clockwise_winding = triangle.clockwise_winding ? 1.0f : 0.0f;
-                indices.push_back(vertices.size());
-                vertices.emplace_back(triangle.vertices[0].first,
-                                      -1.0f * triangle.vertices[0].second,
-                                      clockwise_winding, triangle.uvw[0][0],
-                                      triangle.uvw[0][1], triangle.uvw[0][2]);
-
-                indices.push_back(vertices.size());
-                vertices.emplace_back(triangle.vertices[1].first,
-                                      -1.0f * triangle.vertices[1].second,
-                                      clockwise_winding, triangle.uvw[1][0],
-                                      triangle.uvw[1][1], triangle.uvw[1][2]);
-
-                indices.push_back(vertices.size());
-                vertices.emplace_back(triangle.vertices[2].first,
-                                      -1.0f * triangle.vertices[2].second,
-                                      clockwise_winding, triangle.uvw[2][0],
-                                      triangle.uvw[2][1], triangle.uvw[2][2]);
-            }
-
-            polygon_offset = vertices.size() - first_vertex_idx;
         }
 
         index_draw_commands.push_back(vulkan::DrawIndexedIndirectCommand{
-            .indexCount = static_cast<uint32_t>(indices.size() - first_index_idx),
+            .indexCount = static_cast<uint32_t>(indices.size() - first_index),
             .instanceCount = 1,
-            .firstIndex = static_cast<uint32_t>(first_index_idx),
+            .firstIndex = static_cast<uint32_t>(first_index),
             .firstInstance = static_cast<uint32_t>(instance_offset_count),
         });
 
-        // TODO: Handle multiple instances of a glyph
         instance_offset_count++;
     }
 
@@ -145,5 +102,5 @@ void graphics_pipeline::text::TextPipeline::load_font(
     }
 
     m_draw_command_buffer->transfer();
-    m_font = font;
+    m_font_loader = std::move(font_loader);
 }
