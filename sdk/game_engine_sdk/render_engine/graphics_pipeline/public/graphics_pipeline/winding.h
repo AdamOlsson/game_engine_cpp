@@ -10,6 +10,10 @@ constexpr bool is_clockwise_winding(const Triangle<float> &triangle) {
     return math::signed_area_triangle(triangle) > 0.0f;
 }
 
+constexpr bool is_counter_clockwise_winding(const Triangle<float> &triangle) {
+    return !is_clockwise_winding(triangle);
+}
+
 constexpr bool is_clockwise_winding(const float area) { return area > 0.0f; }
 
 constexpr bool is_clockwise_winding(const std::vector<Vertex<float>> &polygon) {

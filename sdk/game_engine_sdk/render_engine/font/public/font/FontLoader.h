@@ -14,7 +14,7 @@ struct Outline {};
 
 struct GlyphOutlines {
     std::vector<std::vector<std::pair<float, float>>> line_segments;
-    // std::vector<std::pair<float, float>> curve_segments;
+    std::vector<std::vector<std::array<std::pair<float, float>, 3>>> quadratic_curves;
 };
 
 class FontLoader {

@@ -56,6 +56,77 @@ std::vector<graphics_pipeline::Polygon> graphics_pipeline::Polygon::construct_po
     return polygons;
 }
 
+std::vector<graphics_pipeline::Polygon> graphics_pipeline::Polygon::construct_polygons(
+    const std::vector<std::vector<std::array<std::pair<float, float>, 3>>>
+        &quadratic_curve_segments) {
+
+    std::vector<std::vector<std::pair<float, float>>> on_curve_points(
+        quadratic_curve_segments.size());
+
+    // Extract all on curve points to do containment test
+    for (size_t i = 0; i < quadratic_curve_segments.size(); i++) {
+        const std::vector<std::array<std::pair<float, float>, 3>> &segment =
+            quadratic_curve_segments[i];
+        on_curve_points[i].reserve(segment.size());
+        for (const std::array<std::pair<float, float>, 3> &curve : segment) {
+            on_curve_points[i].push_back(curve[0]);
+        }
+        if (!segment.empty()) {
+            on_curve_points[i].push_back(segment.back()[2]);
+        }
+    }
+
+    std::vector<size_t> nesting_levels(on_curve_points.size());
+    std::vector<std::vector<size_t>> children(on_curve_points.size());
+
+    for (size_t i = 0; i < on_curve_points.size(); i++) {
+        if (on_curve_points[i].empty()) {
+            continue;
+        }
+        const auto &inner = on_curve_points[i];
+        for (size_t j = 0; j < on_curve_points.size(); j++) {
+            if (i == j || on_curve_points[j].empty()) {
+                continue;
+            }
+
+            const auto &outer = on_curve_points[j];
+            if (outline_contains_outline(inner, outer)) {
+                nesting_levels[i]++;
+                children[j].push_back(i);
+            }
+        }
+    }
+
+    std::vector<size_t> exterior_outlines;
+    exterior_outlines.reserve(on_curve_points.size());
+    for (size_t i = 0; i < nesting_levels.size(); i++) {
+        if (nesting_levels[i] % 2 == 0) {
+            exterior_outlines.push_back(i);
+        }
+    }
+
+    DEBUG_ASSERT(exterior_outlines.size() > 0,
+                 "Error: Failed to find any exterior outlines.");
+
+    std::vector<Polygon> polygons;
+    polygons.reserve(exterior_outlines.size());
+    for (const size_t &exterior_idx : exterior_outlines) {
+        std::vector<std::vector<std::array<std::pair<float, float>, 3>>>
+            polygon_quadratic_curves;
+        polygon_quadratic_curves.push_back(quadratic_curve_segments[exterior_idx]);
+
+        for (const auto &child_idx : children[exterior_idx]) {
+            if (nesting_levels[exterior_idx] == nesting_levels[child_idx] - 1) {
+                polygon_quadratic_curves.push_back(quadratic_curve_segments[child_idx]);
+            }
+        }
+
+        polygons.emplace_back(std::move(polygon_quadratic_curves));
+    }
+
+    return polygons;
+}
+
 graphics_pipeline::Polygon::Polygon(
     const std::vector<std::vector<std::pair<float, float>>> &outlines)
     : m_outlines(outlines) {
@@ -73,6 +144,60 @@ graphics_pipeline::Polygon::Polygon(
     }
 }
 
+graphics_pipeline::Polygon::Polygon(
+    const std::vector<std::vector<std::array<std::pair<float, float>, 3>>>
+        &quadratic_curves)
+    : m_quadratic_curves(quadratic_curves) {
+
+    // Ensure that the exterior outline is clockwise and interior is counter clockwise
+    if (m_quadratic_curves.size() > 1) {
+        DEBUG_ASSERT(
+            has_consistent_winding(m_quadratic_curves[0]),
+            "Error: Quadratic curve segment has inconsistent triangle winding orders.");
+
+        if (!is_clockwise_winding(m_quadratic_curves[0][0])) {
+            reverse_contour(m_quadratic_curves[0]);
+        }
+
+        for (size_t i = 1; i < m_quadratic_curves.size(); i++) {
+
+            DEBUG_ASSERT(has_consistent_winding(m_quadratic_curves[i]),
+                         "Error: Quadratic curve segment has inconsistent triangle "
+                         "winding orders.");
+
+            if (!is_counter_clockwise_winding(m_quadratic_curves[i][0])) {
+                reverse_contour(m_quadratic_curves[0]);
+            }
+        }
+    }
+}
+
+bool graphics_pipeline::Polygon::has_consistent_winding(
+    const std::vector<std::array<std::pair<float, float>, 3>> &contour) {
+    if (contour.empty()) {
+        return true;
+    }
+
+    const int initial_winding = int(is_clockwise_winding(contour[0]));
+    for (size_t i = 1; i < contour.size(); i++) {
+        const std::array<std::pair<float, float>, 3> &curve = contour[i];
+        if (initial_winding != int(is_clockwise_winding(curve))) {
+            return false;
+        }
+    }
+    return true;
+};
+
+void graphics_pipeline::Polygon::reverse_contour(
+    std::vector<std::array<std::pair<float, float>, 3>> &contour) {
+    std::ranges::reverse(contour);
+
+    // Also reverse each curve's points so p0->p1->p2 becomes p2->p1->p0
+    for (auto &curve : contour) {
+        std::swap(curve[0], curve[2]); // Swap p0 and p2, keep p1 (control point)
+    }
+}
+
 const std::vector<std::pair<float, float>> &
 graphics_pipeline::Polygon::get_exterior_outline() const {
     if (m_outlines.empty()) {
@@ -84,6 +209,11 @@ graphics_pipeline::Polygon::get_exterior_outline() const {
 const std::vector<std::vector<std::pair<float, float>>> &
 graphics_pipeline::Polygon::get_outlines() const {
     return m_outlines;
+}
+
+const std::vector<std::vector<std::array<std::pair<float, float>, 3>>> &
+graphics_pipeline::Polygon::get_quadratic_curves() const {
+    return m_quadratic_curves;
 }
 
 std::span<const std::vector<std::pair<float, float>>>

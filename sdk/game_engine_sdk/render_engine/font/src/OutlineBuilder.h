@@ -23,8 +23,8 @@ class OutlineBuilder {
 
     FT_Outline_Funcs *funcs() { return &m_funcs; }
 
+    std::vector<std::vector<std::array<std::pair<float, float>, 3>>> quadratic_curves;
     std::vector<std::vector<std::pair<float, float>>> line_segments;
-    // std::vector<std::pair<float, float>> curve_segments;
 
   private:
     FT_Outline_Funcs m_funcs;
@@ -34,7 +34,6 @@ class OutlineBuilder {
         OutlineBuilder *builder = static_cast<OutlineBuilder *>(user_data);
 
         builder->line_segments.emplace_back();
-
         builder->line_segments.back().emplace_back(to->x, to->y);
         return 0;
     }
@@ -53,7 +52,7 @@ class OutlineBuilder {
                   << std::endl;
         OutlineBuilder *builder = static_cast<OutlineBuilder *>(user_data);
 
-        // TODO: Not correct
+        // TODO: Handle quadratic bezier curves
         builder->line_segments.back().emplace_back(to->x, to->y);
         return 0;
     }
@@ -65,7 +64,7 @@ class OutlineBuilder {
                   << std::endl;
         OutlineBuilder *builder = static_cast<OutlineBuilder *>(user_data);
 
-        // TODO: Not correct
+        // CONTINUE: Handle cubic bezier curves
         builder->line_segments.back().emplace_back(to->x, to->y);
         return 0;
     }
