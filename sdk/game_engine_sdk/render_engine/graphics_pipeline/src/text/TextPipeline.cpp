@@ -1,6 +1,7 @@
 #include "graphics_pipeline/text/TextPipeline.h"
 #include "graphics_pipeline/Polygon.h"
 #include "graphics_pipeline/text/GlyphVertex.h"
+#include "graphics_pipeline/winding.h"
 #include "shaders/text_fragment_shader.h"
 #include "shaders/text_vertex_shader.h"
 #include "triangulation/mapbox/earcut.h"
@@ -57,13 +58,15 @@ void graphics_pipeline::text::TextPipeline::load_font(
         const size_t first_index = indices.size();
         if (!outlines.line_segments.empty()) {
             const std::vector<graphics_pipeline::Polygon> glyph_polygons =
-                graphics_pipeline::Polygon::construct_polygons(outlines.line_segments);
+                graphics_pipeline::Polygon::construct_polygons(outlines);
 
             for (const graphics_pipeline::Polygon polygon : glyph_polygons) {
                 const size_t first_vertex = vertices.size();
+
                 const std::vector<unsigned int> triangle_indices =
                     mapbox::earcut(polygon.get_outlines());
 
+                // First load write all vertices from earcut to the vertex buffer
                 for (const std::vector<std::pair<float, float>> &outline :
                      polygon.get_outlines()) {
                     for (const std::pair<float, float> &vertex : outline) {
@@ -72,8 +75,31 @@ void graphics_pipeline::text::TextPipeline::load_font(
                     }
                 }
 
+                // Secondly write the indices forming the triangles from earcut into to
+                // index buffer
                 for (const unsigned int index : triangle_indices) {
                     indices.emplace_back(first_vertex + index);
+                }
+
+                // Thirdly write all curve segments into vertex and index buffer (which by
+                // nature of bezier curves are already triangulated)
+                for (const std::vector<std::array<std::pair<float, float>, 3>> &outline :
+                     polygon.get_quadratic_curves()) {
+                    for (const std::array<std::pair<float, float>, 3> &curve : outline) {
+                        const float winding_order =
+                            is_counter_clockwise_winding(curve) ? 1.0f : 0.0f;
+                        indices.emplace_back(vertices.size());
+                        vertices.emplace_back(curve[0].first, curve[0].second,
+                                              winding_order, 0.0f, 0.0f, 1.0f);
+
+                        indices.emplace_back(vertices.size());
+                        vertices.emplace_back(curve[1].first, curve[1].second,
+                                              winding_order, 0.5f, 0.0f, 1.0f);
+
+                        indices.emplace_back(vertices.size());
+                        vertices.emplace_back(curve[2].first, curve[2].second,
+                                              winding_order, 1.0f, 1.0f, 1.0f);
+                    }
                 }
             }
         }

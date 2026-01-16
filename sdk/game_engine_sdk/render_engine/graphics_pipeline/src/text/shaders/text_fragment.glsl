@@ -9,8 +9,9 @@ layout(location = 0) out vec4 out_color;
 void main() {
     bool front_facing = in_winding_order == 0.0; 
 
-    const vec3 color = vec3(0.0, 0.4, 0.8);
+    vec3 color = vec3(1.0, 0.0, 0.8);
     if(in_is_interior == 1){
+        color = vec3(0.0, 0.4, 0.8);
         out_color = vec4(color, 1.0);
         return;
     } 

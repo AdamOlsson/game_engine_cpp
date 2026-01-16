@@ -1,5 +1,6 @@
 #include "font/FontLoader.h"
 #include "OutlineBuilder.h"
+#include <format>
 
 font::FontLoader::FontLoader(const std::string &filepath) {
     int error = FT_Init_FreeType(&m_library);
@@ -125,7 +126,10 @@ font::GlyphOutlines font::FontLoader::get_glyph_outline(const unsigned int gid) 
     OutlineBuilder builder;
     FT_Outline_Decompose(outline, builder.funcs(), &builder);
 
-    return GlyphOutlines{.line_segments = std::move(builder.line_segments)};
+    return GlyphOutlines{
+        .line_segments = std::move(builder.line_segments),
+        .quadratic_curves = std::move(builder.quadratic_curves),
+    };
 }
 
 signed long font::FontLoader::get_num_glyphs() { return m_face->num_glyphs; }

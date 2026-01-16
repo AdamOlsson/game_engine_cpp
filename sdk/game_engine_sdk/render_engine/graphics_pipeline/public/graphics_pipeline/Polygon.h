@@ -1,5 +1,6 @@
 #pragma once
 
+#include "font/FontLoader.h"
 #include <span>
 #include <vector>
 namespace graphics_pipeline {
@@ -7,7 +8,12 @@ namespace graphics_pipeline {
 class Polygon {
   public:
     Polygon(const std::vector<std::vector<std::pair<float, float>>> &outlines);
+
     Polygon(const std::vector<std::vector<std::array<std::pair<float, float>, 3>>>
+                &quadratic_curves);
+
+    Polygon(const std::vector<std::vector<std::pair<float, float>>> &outlines,
+            const std::vector<std::vector<std::array<std::pair<float, float>, 3>>>
                 &quadratic_curves);
 
     static std::vector<Polygon>
@@ -16,6 +22,9 @@ class Polygon {
     static std::vector<Polygon> construct_polygons(
         const std::vector<std::vector<std::array<std::pair<float, float>, 3>>>
             &quadratic_curves);
+
+    static std::vector<Polygon>
+    construct_polygons(const font::GlyphOutlines &glyph_outlines);
 
     const std::vector<std::vector<std::pair<float, float>>> &get_outlines() const;
     const std::vector<std::pair<float, float>> &get_exterior_outline() const;

@@ -127,6 +127,76 @@ std::vector<graphics_pipeline::Polygon> graphics_pipeline::Polygon::construct_po
     return polygons;
 }
 
+std::vector<graphics_pipeline::Polygon> graphics_pipeline::Polygon::construct_polygons(
+    const font::GlyphOutlines &glyph_outlines) {
+
+    const auto &outlines = glyph_outlines.line_segments;
+    const auto &curves = glyph_outlines.quadratic_curves;
+
+    std::vector<size_t> nesting_levels(outlines.size());
+    std::vector<std::vector<size_t>> children(outlines.size());
+
+    for (size_t i = 0; i < outlines.size(); i++) {
+        if (outlines[i].empty()) {
+            continue;
+        }
+        const auto &inner = outlines[i];
+        for (size_t j = 0; j < outlines.size(); j++) {
+            if (i == j || outlines[j].empty()) {
+                continue;
+            }
+
+            const auto &outer = outlines[j];
+            if (outline_contains_outline(inner, outer)) {
+                nesting_levels[i]++;
+                children[j].push_back(i);
+            }
+        }
+    }
+
+    std::vector<size_t> exterior_outlines;
+    exterior_outlines.reserve(outlines.size());
+    for (size_t i = 0; i < nesting_levels.size(); i++) {
+        if (nesting_levels[i] % 2 == 0) {
+            exterior_outlines.push_back(i);
+        }
+    }
+
+    DEBUG_ASSERT(exterior_outlines.size() > 0,
+                 "Error: Failed to find any exterior outlines.");
+
+    std::vector<Polygon> polygons;
+    polygons.reserve(exterior_outlines.size());
+    for (const size_t &exterior_idx : exterior_outlines) {
+        std::vector<std::vector<std::pair<float, float>>> polygon_line_segments;
+        std::vector<std::vector<std::array<std::pair<float, float>, 3>>>
+            polygon_curve_segments;
+
+        // Estimate the required memory
+        polygon_line_segments.reserve(children[exterior_idx].size());
+        polygon_curve_segments.reserve(curves.size());
+
+        polygon_line_segments.push_back(outlines[exterior_idx]);
+        if (!curves[exterior_idx].empty()) {
+            polygon_curve_segments.push_back(curves[exterior_idx]);
+        }
+
+        for (const auto &child_idx : children[exterior_idx]) {
+            if (nesting_levels[exterior_idx] == nesting_levels[child_idx] - 1) {
+                polygon_line_segments.push_back(outlines[child_idx]);
+                if (!curves[child_idx].empty()) {
+                    polygon_curve_segments.push_back(curves[child_idx]);
+                }
+            }
+        }
+
+        polygons.emplace_back(std::move(polygon_line_segments),
+                              std::move(polygon_curve_segments));
+    }
+
+    return polygons;
+}
+
 graphics_pipeline::Polygon::Polygon(
     const std::vector<std::vector<std::pair<float, float>>> &outlines)
     : m_outlines(outlines) {
@@ -169,6 +239,48 @@ graphics_pipeline::Polygon::Polygon(
                 reverse_contour(m_quadratic_curves[0]);
             }
         }
+    }
+}
+
+graphics_pipeline::Polygon::Polygon(
+    const std::vector<std::vector<std::pair<float, float>>> &outlines,
+    const std::vector<std::vector<std::array<std::pair<float, float>, 3>>>
+        &quadratic_curves)
+    : m_outlines(outlines), m_quadratic_curves(quadratic_curves) {
+
+    // Ensure that the extrior outline is clockwise and interior is counter clockwise
+    if (m_outlines.size() > 1) {
+        if (!is_clockwise_winding(m_outlines[0])) {
+            std::ranges::reverse(m_outlines[0]);
+        }
+
+        for (size_t i = 1; i < outlines.size(); i++) {
+            if (!is_counter_clockwise_winding(m_outlines[i])) {
+                std::ranges::reverse(m_outlines[i]);
+            }
+        }
+    }
+
+    if (m_quadratic_curves.size() > 1) {
+        /*DEBUG_ASSERT(*/
+        /*    has_consistent_winding(m_quadratic_curves[0]),*/
+        /*    "Error: Quadratic curve segment has inconsistent triangle winding
+         * orders.");*/
+
+        /*if (!is_clockwise_winding(m_quadratic_curves[0][0])) {*/
+        /*    reverse_contour(m_quadratic_curves[0]);*/
+        /*}*/
+        /**/
+        /*for (size_t i = 1; i < m_quadratic_curves.size(); i++) {*/
+        /**/
+        /*    DEBUG_ASSERT(has_consistent_winding(m_quadratic_curves[i]),*/
+        /*                 "Error: Quadratic curve segment has inconsistent triangle "*/
+        /*                 "winding orders.");*/
+        /**/
+        /*    if (!is_counter_clockwise_winding(m_quadratic_curves[i][0])) {*/
+        /*        reverse_contour(m_quadratic_curves[0]);*/
+        /*    }*/
+        /*}*/
     }
 }
 
