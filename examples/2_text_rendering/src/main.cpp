@@ -26,11 +26,7 @@ constexpr auto ZOOM_SCALE_FACTOR = 0.1f;
 // - DONE Render the english alphabet for my font
 // - DONE Implement all other Type2Charstring operators
 // - Render the english alphabet for the two other fonts
-//      - Make sure the Rabbid Highway font can be renderer
-//      - Handle the glyph indexing not working in TypeLightSans font
 // - Render sentences
-//      - Parse kerning map
-// - Refactor the usage and internals of OTFFont to be nice
 // - Move ModelMatrix class to sdk
 
 class ExampleTextRendering : public Game {
@@ -62,7 +58,9 @@ class ExampleTextRendering : public Game {
     void setup(std::shared_ptr<vulkan::context::GraphicsContext> &ctx) override {
 
         font::FontLoader font_loader =
-            font::FontLoader(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
+            /*font::FontLoader(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));*/
+            /*font::FontLoader(ASSET_FILE("ftystrategycidencv.otf"));*/
+            font::FontLoader(ASSET_FILE("Quaaykop-DYE1R.ttf"));
         /*font::FontLoader(ASSET_FILE("TypeLightSans-KV84p.otf"));*/
 
         m_glyph_positions = std::make_unique<

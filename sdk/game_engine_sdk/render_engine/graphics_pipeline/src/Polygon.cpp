@@ -217,30 +217,7 @@ graphics_pipeline::Polygon::Polygon(
 graphics_pipeline::Polygon::Polygon(
     const std::vector<std::vector<std::array<std::pair<float, float>, 3>>>
         &quadratic_curves)
-    : m_quadratic_curves(quadratic_curves) {
-
-    // Ensure that the exterior outline is clockwise and interior is counter clockwise
-    if (m_quadratic_curves.size() > 1) {
-        DEBUG_ASSERT(
-            has_consistent_winding(m_quadratic_curves[0]),
-            "Error: Quadratic curve segment has inconsistent triangle winding orders.");
-
-        if (!is_clockwise_winding(m_quadratic_curves[0][0])) {
-            reverse_contour(m_quadratic_curves[0]);
-        }
-
-        for (size_t i = 1; i < m_quadratic_curves.size(); i++) {
-
-            DEBUG_ASSERT(has_consistent_winding(m_quadratic_curves[i]),
-                         "Error: Quadratic curve segment has inconsistent triangle "
-                         "winding orders.");
-
-            if (!is_counter_clockwise_winding(m_quadratic_curves[i][0])) {
-                reverse_contour(m_quadratic_curves[0]);
-            }
-        }
-    }
-}
+    : m_quadratic_curves(quadratic_curves) {}
 
 graphics_pipeline::Polygon::Polygon(
     const std::vector<std::vector<std::pair<float, float>>> &outlines,
@@ -259,28 +236,6 @@ graphics_pipeline::Polygon::Polygon(
                 std::ranges::reverse(m_outlines[i]);
             }
         }
-    }
-
-    if (m_quadratic_curves.size() > 1) {
-        /*DEBUG_ASSERT(*/
-        /*    has_consistent_winding(m_quadratic_curves[0]),*/
-        /*    "Error: Quadratic curve segment has inconsistent triangle winding
-         * orders.");*/
-
-        /*if (!is_clockwise_winding(m_quadratic_curves[0][0])) {*/
-        /*    reverse_contour(m_quadratic_curves[0]);*/
-        /*}*/
-        /**/
-        /*for (size_t i = 1; i < m_quadratic_curves.size(); i++) {*/
-        /**/
-        /*    DEBUG_ASSERT(has_consistent_winding(m_quadratic_curves[i]),*/
-        /*                 "Error: Quadratic curve segment has inconsistent triangle "*/
-        /*                 "winding orders.");*/
-        /**/
-        /*    if (!is_counter_clockwise_winding(m_quadratic_curves[i][0])) {*/
-        /*        reverse_contour(m_quadratic_curves[0]);*/
-        /*    }*/
-        /*}*/
     }
 }
 

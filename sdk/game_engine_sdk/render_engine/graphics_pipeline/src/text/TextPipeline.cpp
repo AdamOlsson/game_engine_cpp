@@ -86,8 +86,28 @@ void graphics_pipeline::text::TextPipeline::load_font(
                 for (const std::vector<std::array<std::pair<float, float>, 3>> &outline :
                      polygon.get_quadratic_curves()) {
                     for (const std::array<std::pair<float, float>, 3> &curve : outline) {
-                        const float winding_order =
-                            is_counter_clockwise_winding(curve) ? 1.0f : 0.0f;
+                        // CONTINUE:
+                        // - Move winding.h to math
+                        // - Make OutlineBuilder.h use the new WindingOrder to decide on
+                        // how the winding order the curves are added
+                        // - Make below switch-statement better
+                        // - Implement a function on the TextPipeline to render all
+                        // available glyphs
+                        float winding_order = 0.0;
+                        switch (m_font_loader->get_format()) {
+                        case font::TrueType:
+                            winding_order =
+                                is_counter_clockwise_winding(curve) ? 0.0f : 1.0f;
+                            break;
+                        case font::CFF:
+                            winding_order =
+                                is_counter_clockwise_winding(curve) ? 1.0f : 0.0f;
+                            break;
+                        case font::Type1:
+                        case font::Unkown:
+                            break;
+                        }
+
                         indices.emplace_back(vertices.size());
                         vertices.emplace_back(curve[0].first, curve[0].second,
                                               winding_order, 0.0f, 0.0f, 1.0f);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "font/FontFormat.h"
 #include "font/Unicode.h"
 #include <string>
 
@@ -9,8 +10,6 @@
 #include FT_OUTLINE_H
 
 namespace font {
-
-struct Outline {};
 
 struct GlyphOutlines {
     std::vector<std::vector<std::pair<float, float>>> line_segments;
@@ -75,10 +74,12 @@ class FontLoader {
     GlyphOutlines get_glyph_outline(const font::Unicode &codepoint) const;
     GlyphOutlines get_glyph_outline(const unsigned int gid) const;
     signed long get_num_glyphs();
+    FontFormat get_format();
 
   private:
     FT_Library m_library;
     FT_Face m_face;
+    FontFormat m_format;
 };
 
 } // namespace font

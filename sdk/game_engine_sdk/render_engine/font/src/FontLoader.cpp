@@ -1,6 +1,7 @@
 #include "font/FontLoader.h"
 #include "OutlineBuilder.h"
 #include <format>
+#include FT_FONT_FORMATS_H
 
 font::FontLoader::FontLoader(const std::string &filepath) {
     int error = FT_Init_FreeType(&m_library);
@@ -21,6 +22,9 @@ font::FontLoader::FontLoader(const std::string &filepath) {
             std::format("Error: Failed to create font face from {} with error code {}.",
                         filepath, error));
     }
+
+    const auto font_format = FT_Get_Font_Format(m_face);
+    m_format = font_format::from_string(font_format);
 };
 
 font::FontLoader::FontLoader(const std::vector<char> &font_data) {
@@ -123,7 +127,7 @@ font::GlyphOutlines font::FontLoader::get_glyph_outline(const unsigned int gid) 
     matrix.yy = -0x10000; // -1.0 in 16.16 fixed point
     FT_Outline_Transform(outline, &matrix);
 
-    OutlineBuilder builder;
+    OutlineBuilder builder(m_format);
     FT_Outline_Decompose(outline, builder.funcs(), &builder);
 
     return GlyphOutlines{
@@ -133,3 +137,5 @@ font::GlyphOutlines font::FontLoader::get_glyph_outline(const unsigned int gid) 
 }
 
 signed long font::FontLoader::get_num_glyphs() { return m_face->num_glyphs; }
+
+font::FontFormat font::FontLoader::get_format() { return m_format; }

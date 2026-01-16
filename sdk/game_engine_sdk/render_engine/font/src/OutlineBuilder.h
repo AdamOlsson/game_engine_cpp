@@ -1,5 +1,7 @@
 #pragma once
 
+#include "font/FontFormat.h"
+#include "math/area.h"
 #include "math/interpolate.h"
 #include <ft2build.h>
 #include <vector>
@@ -10,15 +12,15 @@ namespace font {
 
 class OutlineBuilder {
   public:
-    OutlineBuilder()
-        : m_funcs({
-              .move_to = &move_to_cb,
-              .line_to = &line_to_cb,
-              .conic_to = &conic_to_cb,
-              .cubic_to = &cubic_to_cb,
-              .shift = 0,
-              .delta = 0,
-          }) {}
+    OutlineBuilder(const font::FontFormat format)
+        : m_format(format), m_funcs({
+                                .move_to = &move_to_cb,
+                                .line_to = &line_to_cb,
+                                .conic_to = &conic_to_cb,
+                                .cubic_to = &cubic_to_cb,
+                                .shift = 0,
+                                .delta = 0,
+                            }) {}
 
     ~OutlineBuilder() {}
 
@@ -29,9 +31,10 @@ class OutlineBuilder {
     std::vector<std::vector<std::pair<float, float>>> line_segments;
 
   private:
+    font::FontFormat m_format;
     FT_Outline_Funcs m_funcs;
 
-    static const size_t m_num_segments = 1; // Number of segments to split curves into
+    static const size_t m_num_segments = 4; // Number of segments to split curves into
 
     static int move_to_cb(const FT_Vector *to, void *user_data) {
         /*std::cout << std::format("M {} {}", to->x, to->y) << std::endl;*/
@@ -67,14 +70,20 @@ class OutlineBuilder {
 
         builder->quadratic_curves.back().push_back({p0, p1, p2});
 
-        builder->line_segments.back().emplace_back(to->x, to->y);
+        const std::array<std::pair<float, float>, 3> triangle = {p0, p1, p2};
 
-        for (size_t i = 0; i < m_num_segments; i++) {
-            const float t = i / static_cast<float>(m_num_segments);
-            builder->line_segments.back().emplace_back(
-                math::QuadraticBezer::eval(p0, p1, p2, t));
+        if (math::signed_area_triangle(triangle) > 0.0f) {
+            builder->line_segments.back().push_back(p1);
+        } else {
+
+            for (size_t i = 0; i < m_num_segments; i++) {
+                const float t = i / static_cast<float>(m_num_segments);
+                builder->line_segments.back().emplace_back(
+                    math::QuadraticBezer::eval(p0, p1, p2, t));
+            }
         }
 
+        builder->line_segments.back().emplace_back(to->x, to->y);
         builder->current_point = {to->x, to->y};
         return 0;
     }
@@ -85,8 +94,6 @@ class OutlineBuilder {
         /*                         control1->y, control2->x, control2->y)*/
         /*          << std::endl;*/
         OutlineBuilder *builder = static_cast<OutlineBuilder *>(user_data);
-
-        builder->line_segments.back().emplace_back(to->x, to->y);
 
         const std::pair<float, float> p0 = builder->current_point;
         const std::pair<float, float> p1 = {control1->x, control1->y};
@@ -106,19 +113,31 @@ class OutlineBuilder {
         builder->quadratic_curves.back().push_back(
             {second_half.p0, second_half.p1, second_half.p2});
 
-        // Split the first half into segments
-        for (size_t i = 0; i < m_num_segments; i++) {
-            const float t = i / static_cast<float>(m_num_segments);
-            builder->line_segments.back().emplace_back(first_half.eval(t));
+        // Note: this if statement assumes that curves always are defined in a counter
+        // clockise order. Could be wrong though.
+        const std::array<std::pair<float, float>, 3> triangle = {
+            first_half.p0, first_half.p1, first_half.p2};
+
+        if (math::signed_area_triangle(triangle) < 0.0f) {
+            builder->line_segments.back().push_back(first_half.p1);
+            builder->line_segments.back().push_back(second_half.p1);
+
+        } else {
+
+            // Split the first half into segments
+            for (size_t i = 0; i < m_num_segments; i++) {
+                const float t = i / static_cast<float>(m_num_segments);
+                builder->line_segments.back().emplace_back(first_half.eval(t));
+            }
+
+            // Split the second half into segments
+            for (size_t i = 0; i < m_num_segments; i++) {
+                const float t = i / static_cast<float>(m_num_segments);
+                builder->line_segments.back().emplace_back(second_half.eval(t));
+            }
         }
 
-        // Split the second half into segments
-        for (size_t i = 0; i < m_num_segments; i++) {
-            const float t = i / static_cast<float>(m_num_segments);
-            builder->line_segments.back().emplace_back(second_half.eval(t));
-        }
-
-        builder->line_segments.back().push_back({to->x, to->y});
+        builder->line_segments.back().emplace_back(to->x, to->y);
         builder->current_point = {to->x, to->y};
         return 0;
     }
