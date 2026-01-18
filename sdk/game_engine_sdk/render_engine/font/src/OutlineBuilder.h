@@ -32,7 +32,7 @@ class OutlineBuilder {
   private:
     FT_Outline_Funcs m_funcs;
 
-    static const size_t m_num_segments = 8; // Number of segments to split curves into
+    static const size_t m_num_segments = 16; // Number of segments to split curves into
 
     static int move_to_cb(const FT_Vector *to, void *user_data) {
         /*std::cout << std::format("M {} {}", to->x, to->y) << std::endl;*/
@@ -67,16 +67,11 @@ class OutlineBuilder {
         const std::pair<float, float> p1 = {control->x, control->y};
         const std::pair<float, float> p2 = {to->x, to->y};
 
+        // Note: Very detailed glyphs are not rendered properly. I believe this is due to
+        // the segmentation for the triangulation. A dynamic segmentation based on curve
+        // flattness would solve this.
         builder->quadratic_curves.back().push_back({p0, p1, p2});
-
         const std::array<std::pair<float, float>, 3> triangle = {p0, p1, p2};
-
-        // Note: I have assume that font files that use quadratic bezier curves have they
-        // exterior in clockwise winding (although is reversed because I flip the y-axis
-        // in FreeType). If I ever get a font that does use clockwise winding for the
-        // exterior, I need to implement logic here to check for winding based on format
-        // of the glyph.
-        /*if (math::is_clockwise_winding(triangle)) {*/
         if (math::is_clockwise_winding(triangle)) {
             builder->line_segments.back().push_back(p1);
         } else {
@@ -119,17 +114,12 @@ class OutlineBuilder {
         builder->quadratic_curves.back().push_back(
             {second_half.p0, second_half.p1, second_half.p2});
 
-        // Note: this if statement assumes that curves always are defined in a counter
-        // clockise order. Could be wrong though.
+        // Note: Very detailed glyphs are not rendered properly. I believe this is due to
+        // the segmentation for the triangulation. A dynamic segmentation based on curve
+        // flattness would solve this.
         const std::array<std::pair<float, float>, 3> triangle = {
             first_half.p0, first_half.p1, first_half.p2};
 
-        // Note: I have assume that font files that use cubic bezier curves have they
-        // exterior in counter clockwise winding (although is reversed because I flip the
-        // y-axis in FreeType). If I ever get a font that does use counter clockwise
-        // winding for the exterior, I need to implement logic here to check for winding
-        // based on format of the glyph.
-        /*if (math::signed_area_triangle(triangle) < 0.0f) {*/
         if (math::is_counter_clockwise_winding(triangle)) {
             builder->line_segments.back().push_back(first_half.p1);
             builder->line_segments.back().push_back(second_half.p1);

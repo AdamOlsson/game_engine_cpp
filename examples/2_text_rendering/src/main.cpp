@@ -25,8 +25,7 @@ constexpr auto ZOOM_SCALE_FACTOR = 0.1f;
 // - DONE Handle compound glyphs with holes such as %
 // - DONE Render the english alphabet for my font
 // - DONE Implement all other Type2Charstring operators
-// - Render the english alphabet for the two other fonts
-// - Fix "2" in rabbid highway font
+// - DONE Render the english alphabet for the two other fonts
 // - Render sentences
 // - Move ModelMatrix class to sdk
 
@@ -58,12 +57,12 @@ class ExampleTextRendering : public Game {
 
     void setup(std::shared_ptr<vulkan::context::GraphicsContext> &ctx) override {
 
-        font::FontLoader font_loader = font::FontLoader(
-            /*ASSET_FILE("Quaaykop-DYE1R.ttf")*/
-            ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf")
-            /*ASSET_FILE("ftystrategycidencv.otf")*/
-            /*ASSET_FILE("TypeLightSans-KV84p.otf")*/
-        );
+        font::FontLoader font_loader =
+            font::FontLoader(ASSET_FILE("Quaaykop-DYE1R.ttf")
+                             /*ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf")*/
+                             /*ASSET_FILE("ftystrategycidencv.otf")*/
+                             /*ASSET_FILE("TypeLightSans-KV84p.otf")*/
+            );
 
         m_glyph_positions = std::make_unique<
             vulkan::buffers::SwapStorageBuffer<graphics_pipeline::text::TextPipelineSBO>>(
@@ -71,13 +70,13 @@ class ExampleTextRendering : public Game {
 
         const float scale = 0.1f;
         const size_t num_columns = 8;
-        const float column_width = 100;
-        const float row_height = 100;
+        const float column_width = 200;
+        const float row_height = 200;
         for (size_t i = 0; i < font_loader.get_num_glyphs(); i++) {
-            const float x = static_cast<float>(i % num_columns) * column_width;
-            /*const float x = 0.0f;*/
-            const float y = static_cast<float>(i / num_columns) * row_height;
-            /*const float y = 0.0f;*/
+            /*const float x = static_cast<float>(i % num_columns) * column_width;*/
+            const float x = 0.0f;
+            /*const float y = static_cast<float>(i / num_columns) * row_height;*/
+            const float y = 0.0f;
 
             // TODO: Each instance should represent one text (not only one glyph)
             m_glyph_positions->push_back(graphics_pipeline::text::TextPipelineSBO{
@@ -91,7 +90,7 @@ class ExampleTextRendering : public Game {
         m_camera = camera::Camera2D(window_size.width, window_size.height,
                                     num_pixels_at_default_zoom);
         m_camera.configure_max_zoom(5.0f);
-        m_camera.configure_min_zoom(0.2f);
+        m_camera.configure_min_zoom(0.05f);
         m_camera.set_zoom(0.4f);
         register_mouse_event_handler(ctx.get());
 
@@ -167,9 +166,10 @@ class ExampleTextRendering : public Game {
         auto descriptor = m_descriptor_set.get();
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
 
-        m_pipeline->render_font_showcase(command_buffer, descriptor, &push_constant);
+        /*m_pipeline->render_font_showcase(command_buffer, descriptor, &push_constant);*/
+        m_pipeline->render(command_buffer, descriptor, &push_constant, 0x016F);
         /*m_pipeline->render(command_buffer, descriptor, &push_constant,*/
-        /*                   font::Unicode("@"));*/
+        /*                   font::Unicode("5"));*/
 
         render_pass.end_submit_present();
 
