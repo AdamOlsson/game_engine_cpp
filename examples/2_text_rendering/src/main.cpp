@@ -57,11 +57,12 @@ class ExampleTextRendering : public Game {
 
     void setup(std::shared_ptr<vulkan::context::GraphicsContext> &ctx) override {
 
-        font::FontLoader font_loader =
-            /*font::FontLoader(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));*/
-            /*font::FontLoader(ASSET_FILE("ftystrategycidencv.otf"));*/
-            font::FontLoader(ASSET_FILE("Quaaykop-DYE1R.ttf"));
-        /*font::FontLoader(ASSET_FILE("TypeLightSans-KV84p.otf"));*/
+        font::FontLoader font_loader = font::FontLoader(
+            /*ASSET_FILE("Quaaykop-DYE1R.ttf")*/
+            ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf")
+            /*ASSET_FILE("ftystrategycidencv.otf")*/
+            /*ASSET_FILE("TypeLightSans-KV84p.otf")*/
+        );
 
         m_glyph_positions = std::make_unique<
             vulkan::buffers::SwapStorageBuffer<graphics_pipeline::text::TextPipelineSBO>>(

@@ -1,6 +1,7 @@
 #include "font/FontLoader.h"
 #include "OutlineBuilder.h"
 #include <format>
+#include <iostream>
 #include FT_FONT_FORMATS_H
 
 font::FontLoader::FontLoader(const std::string &filepath) {
@@ -24,7 +25,7 @@ font::FontLoader::FontLoader(const std::string &filepath) {
     }
 
     const auto font_format = FT_Get_Font_Format(m_face);
-    m_format = font_format::from_string(font_format);
+    m_format = font::format::from_string(font_format);
 };
 
 font::FontLoader::FontLoader(const std::vector<char> &font_data) {
@@ -119,6 +120,21 @@ font::GlyphOutlines font::FontLoader::get_glyph_outline(const unsigned int gid) 
 
     FT_Outline *outline = &m_face->glyph->outline;
 
+    FontFill fill;
+    switch (FT_Outline_Get_Orientation(outline)) {
+    case FT_ORIENTATION_FILL_LEFT:
+        fill = FontFill::Left;
+        break;
+    case FT_ORIENTATION_FILL_RIGHT:
+        fill = FontFill::Right;
+        break;
+    case FT_ORIENTATION_NONE:
+        fill = FontFill::Unkown;
+        break;
+    default:
+        break;
+    }
+
     // Swap the y-axis to point downward for rendering
     FT_Matrix matrix;
     matrix.xx = 0x10000; // 1.0 in 16.16 fixed point
@@ -127,12 +143,13 @@ font::GlyphOutlines font::FontLoader::get_glyph_outline(const unsigned int gid) 
     matrix.yy = -0x10000; // -1.0 in 16.16 fixed point
     FT_Outline_Transform(outline, &matrix);
 
-    OutlineBuilder builder(m_format);
+    OutlineBuilder builder;
     FT_Outline_Decompose(outline, builder.funcs(), &builder);
 
     return GlyphOutlines{
         .line_segments = std::move(builder.line_segments),
         .quadratic_curves = std::move(builder.quadratic_curves),
+        .fill = fill,
     };
 }
 

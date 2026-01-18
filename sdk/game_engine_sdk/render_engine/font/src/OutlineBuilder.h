@@ -1,8 +1,7 @@
 #pragma once
 
-#include "font/FontFormat.h"
-#include "math/area.h"
 #include "math/interpolate.h"
+#include "math/winding.h"
 #include <ft2build.h>
 #include <vector>
 #include FT_FREETYPE_H
@@ -12,15 +11,15 @@ namespace font {
 
 class OutlineBuilder {
   public:
-    OutlineBuilder(const font::FontFormat format)
-        : m_format(format), m_funcs({
-                                .move_to = &move_to_cb,
-                                .line_to = &line_to_cb,
-                                .conic_to = &conic_to_cb,
-                                .cubic_to = &cubic_to_cb,
-                                .shift = 0,
-                                .delta = 0,
-                            }) {}
+    OutlineBuilder()
+        : m_funcs({
+              .move_to = &move_to_cb,
+              .line_to = &line_to_cb,
+              .conic_to = &conic_to_cb,
+              .cubic_to = &cubic_to_cb,
+              .shift = 0,
+              .delta = 0,
+          }) {}
 
     ~OutlineBuilder() {}
 
@@ -31,7 +30,6 @@ class OutlineBuilder {
     std::vector<std::vector<std::pair<float, float>>> line_segments;
 
   private:
-    font::FontFormat m_format;
     FT_Outline_Funcs m_funcs;
 
     static const size_t m_num_segments = 4; // Number of segments to split curves into
@@ -62,6 +60,7 @@ class OutlineBuilder {
         /*std::cout << std::format("C {} {} {} {}", control->x, control->y, to->x,
          * to->y)*/
         /*          << std::endl;*/
+        /*std::cout << "conic_to_cb" << std::endl;*/
         OutlineBuilder *builder = static_cast<OutlineBuilder *>(user_data);
 
         const std::pair<float, float> p0 = builder->current_point;
@@ -72,7 +71,13 @@ class OutlineBuilder {
 
         const std::array<std::pair<float, float>, 3> triangle = {p0, p1, p2};
 
-        if (math::signed_area_triangle(triangle) > 0.0f) {
+        // Note: I have assume that font files that use quadratic bezier curves have they
+        // exterior in clockwise winding (although is reversed because I flip the y-axis
+        // in FreeType). If I ever get a font that does use clockwise winding for the
+        // exterior, I need to implement logic here to check for winding based on format
+        // of the glyph.
+        /*if (math::is_clockwise_winding(triangle)) {*/
+        if (math::is_clockwise_winding(triangle)) {
             builder->line_segments.back().push_back(p1);
         } else {
 
@@ -93,6 +98,7 @@ class OutlineBuilder {
         /*std::cout << std::format("C {} {} {} {} {} {}", to->x, to->y, control1->x,*/
         /*                         control1->y, control2->x, control2->y)*/
         /*          << std::endl;*/
+        /*std::cout << "cubic_to_cb" << std::endl;*/
         OutlineBuilder *builder = static_cast<OutlineBuilder *>(user_data);
 
         const std::pair<float, float> p0 = builder->current_point;
@@ -118,10 +124,15 @@ class OutlineBuilder {
         const std::array<std::pair<float, float>, 3> triangle = {
             first_half.p0, first_half.p1, first_half.p2};
 
-        if (math::signed_area_triangle(triangle) < 0.0f) {
+        // Note: I have assume that font files that use cubic bezier curves have they
+        // exterior in counter clockwise winding (although is reversed because I flip the
+        // y-axis in FreeType). If I ever get a font that does use counter clockwise
+        // winding for the exterior, I need to implement logic here to check for winding
+        // based on format of the glyph.
+        /*if (math::signed_area_triangle(triangle) < 0.0f) {*/
+        if (math::is_counter_clockwise_winding(triangle)) {
             builder->line_segments.back().push_back(first_half.p1);
             builder->line_segments.back().push_back(second_half.p1);
-
         } else {
 
             // Split the first half into segments

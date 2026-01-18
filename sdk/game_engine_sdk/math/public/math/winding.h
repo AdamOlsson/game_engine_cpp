@@ -1,7 +1,7 @@
 #pragma once
 
 #include "math/area.h"
-namespace graphics_pipeline {
+namespace math {
 
 template <typename T> using Vertex = std::pair<T, T>;
 template <typename T> using Triangle = std::array<Vertex<T>, 3>;
@@ -142,4 +142,4 @@ constexpr bool winding_number_containment_closed_set(
     return winding != 0;
 }
 
-}; // namespace graphics_pipeline
+}; // namespace math

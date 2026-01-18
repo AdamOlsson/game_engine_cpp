@@ -1,7 +1,7 @@
 #include "graphics_pipeline/text/TextPipeline.h"
 #include "graphics_pipeline/Polygon.h"
 #include "graphics_pipeline/text/GlyphVertex.h"
-#include "graphics_pipeline/winding.h"
+#include "math/winding.h"
 #include "shaders/text_fragment_shader.h"
 #include "shaders/text_vertex_shader.h"
 #include "triangulation/mapbox/earcut.h"
@@ -54,6 +54,9 @@ void graphics_pipeline::text::TextPipeline::load_font(
 
     for (const auto glyph_index : font_loader) {
         font::GlyphOutlines outlines = font_loader.get_glyph_outline(glyph_index);
+        const font::FontFill exterior_fill = outlines.fill;
+        const float fill_right = exterior_fill == font::FontFill::Right ? 1.0 : 0.0;
+        const float fill_left = exterior_fill == font::FontFill::Right ? 0.0 : 1.0;
 
         const size_t first_index = indices.size();
         if (!outlines.line_segments.empty()) {
@@ -83,30 +86,22 @@ void graphics_pipeline::text::TextPipeline::load_font(
 
                 // Thirdly write all curve segments into vertex and index buffer (which by
                 // nature of bezier curves are already triangulated)
-                for (const std::vector<std::array<std::pair<float, float>, 3>> &outline :
-                     polygon.get_quadratic_curves()) {
+                const auto quad_curves = polygon.get_quadratic_curves();
+                for (size_t outline_index = 0; outline_index < quad_curves.size();
+                     outline_index++) {
+
+                    const std::vector<std::array<std::pair<float, float>, 3>> &outline =
+                        quad_curves[outline_index];
+
                     for (const std::array<std::pair<float, float>, 3> &curve : outline) {
-                        // CONTINUE:
-                        // - Move winding.h to math
-                        // - Make OutlineBuilder.h use the new WindingOrder to decide on
-                        // how the winding order the curves are added
-                        // - Make below switch-statement better
-                        // - Implement a function on the TextPipeline to render all
-                        // available glyphs
-                        float winding_order = 0.0;
-                        switch (m_font_loader->get_format()) {
-                        case font::TrueType:
-                            winding_order =
-                                is_counter_clockwise_winding(curve) ? 0.0f : 1.0f;
-                            break;
-                        case font::CFF:
-                            winding_order =
-                                is_counter_clockwise_winding(curve) ? 1.0f : 0.0f;
-                            break;
-                        case font::Type1:
-                        case font::Unkown:
-                            break;
-                        }
+                        const bool ccw = math::is_counter_clockwise_winding(curve);
+
+                        // CONTINUE: - Implement a function on the TextPipeline to render
+                        // all available glyphs
+                        const bool wants_right_fill =
+                            (exterior_fill == font::FontFill::Right);
+                        const float winding_order =
+                            (wants_right_fill == !ccw) ? 1.0f : -1.0f;
 
                         indices.emplace_back(vertices.size());
                         vertices.emplace_back(curve[0].first, curve[0].second,

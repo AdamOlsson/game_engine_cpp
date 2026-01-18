@@ -14,6 +14,7 @@ namespace font {
 struct GlyphOutlines {
     std::vector<std::vector<std::pair<float, float>>> line_segments;
     std::vector<std::vector<std::array<std::pair<float, float>, 3>>> quadratic_curves;
+    FontFill fill;
 };
 
 class FontLoader {

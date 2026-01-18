@@ -1,5 +1,5 @@
 #include "graphics_pipeline/Polygon.h"
-#include "graphics_pipeline/winding.h"
+#include "math/winding.h"
 #include "util/assert.h"
 
 std::vector<graphics_pipeline::Polygon> graphics_pipeline::Polygon::construct_polygons(
@@ -202,12 +202,12 @@ graphics_pipeline::Polygon::Polygon(
     : m_outlines(outlines) {
     // Ensure that the exterior outline is clockwise and interior is counter clockwise
     if (m_outlines.size() > 1) {
-        if (!is_clockwise_winding(m_outlines[0])) {
+        if (!math::is_clockwise_winding(m_outlines[0])) {
             std::ranges::reverse(m_outlines[0]);
         }
 
         for (size_t i = 1; i < outlines.size(); i++) {
-            if (!is_counter_clockwise_winding(m_outlines[i])) {
+            if (!math::is_counter_clockwise_winding(m_outlines[i])) {
                 std::ranges::reverse(m_outlines[i]);
             }
         }
@@ -227,12 +227,12 @@ graphics_pipeline::Polygon::Polygon(
 
     // Ensure that the extrior outline is clockwise and interior is counter clockwise
     if (m_outlines.size() > 1) {
-        if (!is_clockwise_winding(m_outlines[0])) {
+        if (!math::is_clockwise_winding(m_outlines[0])) {
             std::ranges::reverse(m_outlines[0]);
         }
 
         for (size_t i = 1; i < outlines.size(); i++) {
-            if (!is_counter_clockwise_winding(m_outlines[i])) {
+            if (!math::is_counter_clockwise_winding(m_outlines[i])) {
                 std::ranges::reverse(m_outlines[i]);
             }
         }
@@ -245,10 +245,10 @@ bool graphics_pipeline::Polygon::has_consistent_winding(
         return true;
     }
 
-    const int initial_winding = int(is_clockwise_winding(contour[0]));
+    const int initial_winding = int(math::is_clockwise_winding(contour[0]));
     for (size_t i = 1; i < contour.size(); i++) {
         const std::array<std::pair<float, float>, 3> &curve = contour[i];
-        if (initial_winding != int(is_clockwise_winding(curve))) {
+        if (initial_winding != int(math::is_clockwise_winding(curve))) {
             return false;
         }
     }
@@ -295,7 +295,7 @@ bool graphics_pipeline::Polygon::outline_contains_outline(
     const std::vector<std::pair<float, float>> &inner,
     const std::vector<std::pair<float, float>> &outer) {
     for (const auto &v : inner) {
-        if (!winding_number_containment_closed_set(v, outer)) {
+        if (!math::winding_number_containment_closed_set(v, outer)) {
             return false;
         }
     }
