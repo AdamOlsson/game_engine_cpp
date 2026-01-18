@@ -80,6 +80,20 @@ class TextPipeline {
         vkCmdDrawIndexedIndirect(command_buffer, draw_command_buffer_ref.buffer, offset,
                                  num_draw_calls, stride);
     }
+
+    template <typename PushConstantType>
+    void render_font_showcase(const vulkan::CommandBuffer &command_buffer,
+                              TextPipelineDescriptorSet *descriptor_set,
+                              PushConstantType *push_constant) {
+
+        DEBUG_ASSERT(m_glyph_vertex_buffer.has_value(),
+                     "Error: can't render font showcase because a font is not loaded");
+
+        for (const auto glyph_index : *m_font_loader) {
+            render(command_buffer, descriptor_set, push_constant,
+                   font::Unicode(glyph_index));
+        }
+    }
 };
 
 } // namespace graphics_pipeline::text

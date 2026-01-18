@@ -32,7 +32,7 @@ class OutlineBuilder {
   private:
     FT_Outline_Funcs m_funcs;
 
-    static const size_t m_num_segments = 4; // Number of segments to split curves into
+    static const size_t m_num_segments = 8; // Number of segments to split curves into
 
     static int move_to_cb(const FT_Vector *to, void *user_data) {
         /*std::cout << std::format("M {} {}", to->x, to->y) << std::endl;*/

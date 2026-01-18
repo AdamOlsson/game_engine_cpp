@@ -55,8 +55,6 @@ void graphics_pipeline::text::TextPipeline::load_font(
     for (const auto glyph_index : font_loader) {
         font::GlyphOutlines outlines = font_loader.get_glyph_outline(glyph_index);
         const font::FontFill exterior_fill = outlines.fill;
-        const float fill_right = exterior_fill == font::FontFill::Right ? 1.0 : 0.0;
-        const float fill_left = exterior_fill == font::FontFill::Right ? 0.0 : 1.0;
 
         const size_t first_index = indices.size();
         if (!outlines.line_segments.empty()) {

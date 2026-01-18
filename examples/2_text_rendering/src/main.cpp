@@ -26,6 +26,7 @@ constexpr auto ZOOM_SCALE_FACTOR = 0.1f;
 // - DONE Render the english alphabet for my font
 // - DONE Implement all other Type2Charstring operators
 // - Render the english alphabet for the two other fonts
+// - Fix "2" in rabbid highway font
 // - Render sentences
 // - Move ModelMatrix class to sdk
 
@@ -73,10 +74,10 @@ class ExampleTextRendering : public Game {
         const float column_width = 100;
         const float row_height = 100;
         for (size_t i = 0; i < font_loader.get_num_glyphs(); i++) {
-            /*const float x = static_cast<float>(i % num_columns) * column_width;*/
-            const float x = 0.0f;
-            /*const float y = static_cast<float>(i / num_columns) * row_height;*/
-            const float y = 0.0f;
+            const float x = static_cast<float>(i % num_columns) * column_width;
+            /*const float x = 0.0f;*/
+            const float y = static_cast<float>(i / num_columns) * row_height;
+            /*const float y = 0.0f;*/
 
             // TODO: Each instance should represent one text (not only one glyph)
             m_glyph_positions->push_back(graphics_pipeline::text::TextPipelineSBO{
@@ -166,8 +167,9 @@ class ExampleTextRendering : public Game {
         auto descriptor = m_descriptor_set.get();
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
 
-        m_pipeline->render(command_buffer, descriptor, &push_constant,
-                           font::Unicode("@"));
+        m_pipeline->render_font_showcase(command_buffer, descriptor, &push_constant);
+        /*m_pipeline->render(command_buffer, descriptor, &push_constant,*/
+        /*                   font::Unicode("@"));*/
 
         render_pass.end_submit_present();
 
