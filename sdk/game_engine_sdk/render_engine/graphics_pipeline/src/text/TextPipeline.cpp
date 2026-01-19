@@ -7,9 +7,25 @@
 #include "triangulation/mapbox/earcut.h"
 #include "vulkan/vulkan_core.h"
 
+// CONTINUE:
+// Static Text:
+//  For static text I could do an api on the TextPipeline like
+//  `TextString TextPipeline::create_text(const std::string)` where the function computes
+//  the draw commands for each character (as well as applies kerning) and load these draw
+//  commands to the device. The draw commands would be stored on the returning struct
+//  TextString. Whenever, this text should be rendered, the user passes the TextString
+//  struct to the render call, where the TextPipeline takes the information and uses it in
+//  an indirect draw call.
+//
+// Dynamic Text:
+//  We do not got the privilige to preload the dynamic text info buffers. Instead, we
+//  simply iterate over the string and make an indexed draw command using the draw
+//  commands stored on the TextPipeline from the font. However, I am still not sure how to
+//  handle positional data as well as kerning?
+//
+
 graphics_pipeline::text::TextPipeline::TextPipeline(
     std::shared_ptr<vulkan::context::GraphicsContext> ctx,
-    vulkan::CommandBufferManager *command_buffer_manager,
     vulkan::SwapChainManager *swap_chain_manager,
     const vulkan::DescriptorSetLayout *descriptor_set_layout,
     const vulkan::PushConstantRange *push_constant_range)

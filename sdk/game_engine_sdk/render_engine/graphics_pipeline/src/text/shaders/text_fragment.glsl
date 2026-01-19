@@ -9,7 +9,6 @@ void main() {
     
     // Handle filled polygon interiors
     if(in_is_interior == 1){
-        color = vec3(0.0, 0.4, 0.8);
         out_color = vec4(color, 1.0);
         return;
     } 

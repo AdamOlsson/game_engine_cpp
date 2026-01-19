@@ -32,7 +32,7 @@ class OutlineBuilder {
   private:
     FT_Outline_Funcs m_funcs;
 
-    static const size_t m_num_segments = 16; // Number of segments to split curves into
+    static const size_t m_num_segments = 6; // Number of segments to split curves into
 
     static int move_to_cb(const FT_Vector *to, void *user_data) {
         /*std::cout << std::format("M {} {}", to->x, to->y) << std::endl;*/
@@ -69,7 +69,10 @@ class OutlineBuilder {
 
         // Note: Very detailed glyphs are not rendered properly. I believe this is due to
         // the segmentation for the triangulation. A dynamic segmentation based on curve
-        // flattness would solve this.
+        // flattness would solve this. Another possible explanation could be that the
+        // Polygon hierarchy construction (Polygon.h) improperly assigns the correct
+        // interior outline to exterior outline. As as a result, the triangulation would
+        // have "wrong" points to work with causeing bad rendering.
         builder->quadratic_curves.back().push_back({p0, p1, p2});
         const std::array<std::pair<float, float>, 3> triangle = {p0, p1, p2};
         if (math::is_clockwise_winding(triangle)) {
@@ -116,7 +119,10 @@ class OutlineBuilder {
 
         // Note: Very detailed glyphs are not rendered properly. I believe this is due to
         // the segmentation for the triangulation. A dynamic segmentation based on curve
-        // flattness would solve this.
+        // flattness would solve this. Another possible explanation could be that the
+        // Polygon hierarchy construction (Polygon.h) improperly assigns the correct
+        // interior outline to exterior outline. As as a result, the triangulation would
+        // have "wrong" points to work with causeing bad rendering.
         const std::array<std::pair<float, float>, 3> triangle = {
             first_half.p0, first_half.p1, first_half.p2};
 
