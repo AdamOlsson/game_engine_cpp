@@ -32,6 +32,22 @@ graphics_pipeline::geometry::GeometryPipeline::GeometryPipeline(
 
     m_pipeline = vulkan::Pipeline(
         ctx, m_pipeline_layout, vulkan::ShaderModule(ctx, vert->bytes(), vert->length()),
-        vulkan::ShaderModule(ctx, frag->bytes(), frag->length()), *swap_chain_manager,
-        vulkan::PipelineOpts{});
+        vulkan::ShaderModule(ctx, frag->bytes(), frag->length()),
+        vulkan::PipelineOpts{
+            .viewport =
+                {
+                    .width = static_cast<float>(
+                        swap_chain_manager->m_swap_chain.m_extent.width),
+                    .height = static_cast<float>(
+                        swap_chain_manager->m_swap_chain.m_extent.height),
+                },
+            .scissor =
+                {
+                    .extent = swap_chain_manager->m_swap_chain.m_extent,
+                },
+            .pipeline_info =
+                {
+                    .render_pass = swap_chain_manager->m_swap_chain.m_render_pass,
+                },
+        });
 }

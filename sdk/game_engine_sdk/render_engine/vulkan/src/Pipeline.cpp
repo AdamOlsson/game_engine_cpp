@@ -6,12 +6,10 @@ vulkan::Pipeline::Pipeline(std::shared_ptr<vulkan::context::GraphicsContext> ctx
                            PipelineLayout &layout,
                            const ShaderModule &vertex_shader_module,
                            const ShaderModule &fragment_shader_module,
-                           SwapChainManager &swap_chain_manager,
                            const PipelineOpts &&opts)
     : m_ctx(ctx),
       m_pipeline(create_graphics_pipeline(&layout, vertex_shader_module,
-                                          fragment_shader_module, swap_chain_manager,
-                                          std::move(opts))) {}
+                                          fragment_shader_module, std::move(opts))) {}
 
 vulkan::Pipeline::~Pipeline() {
     if (m_pipeline == VK_NULL_HANDLE) {
@@ -41,8 +39,7 @@ vulkan::Pipeline &vulkan::Pipeline::operator=(Pipeline &&other) noexcept {
 
 VkPipeline vulkan::Pipeline::create_graphics_pipeline(
     PipelineLayout *layout, const ShaderModule &vertex_shader_module,
-    const ShaderModule &fragment_shader_module, SwapChainManager &swap_chain_manager,
-    const PipelineOpts &&opts) {
+    const ShaderModule &fragment_shader_module, const PipelineOpts &&opts) {
 
     VkPipelineShaderStageCreateInfo vertex_shader_stage_info{};
     vertex_shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -92,14 +89,14 @@ VkPipeline vulkan::Pipeline::create_graphics_pipeline(
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = (float)swap_chain_manager.m_swap_chain.m_extent.width;
-    viewport.height = (float)swap_chain_manager.m_swap_chain.m_extent.height;
+    viewport.width = opts.viewport.width;
+    viewport.height = opts.viewport.height;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     VkRect2D scissor{};
     scissor.offset = {0, 0};
-    scissor.extent = swap_chain_manager.m_swap_chain.m_extent;
+    scissor.extent = opts.scissor.extent;
 
     std::vector<VkDynamicState> dynamic_states = opts.dynamic_states.states;
     VkPipelineDynamicStateCreateInfo dynamic_state{};
@@ -160,7 +157,7 @@ VkPipeline vulkan::Pipeline::create_graphics_pipeline(
 
     VkGraphicsPipelineCreateInfo pipelineInfo{};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    pipelineInfo.renderPass = swap_chain_manager.m_swap_chain.m_render_pass;
+    pipelineInfo.renderPass = opts.pipeline_info.render_pass;
     pipelineInfo.stageCount = 2;
     pipelineInfo.pStages = shaderStages;
     pipelineInfo.pVertexInputState = &vertex_input_info;

@@ -46,7 +46,6 @@ graphics_pipeline::text::TextPipeline::TextPipeline(
         ctx, m_pipeline_layout,
         vulkan::ShaderModule(ctx, quad_vert->bytes(), quad_vert->length()),
         vulkan::ShaderModule(ctx, quad_frag->bytes(), quad_frag->length()),
-        *swap_chain_manager,
         vulkan::PipelineOpts{
             .vertex_input_info =
                 {
@@ -54,9 +53,26 @@ graphics_pipeline::text::TextPipeline::TextPipeline(
                     .attribute_descriptions_count = attribute_descriptions.size(),
                     .attribute_descriptions = attribute_descriptions.data(),
                 },
-            .rasterizer = {
-                .cull_mode = VK_CULL_MODE_NONE,
-            }});
+            .rasterizer =
+                {
+                    .cull_mode = VK_CULL_MODE_NONE,
+                },
+            .viewport =
+                {
+                    .width = static_cast<float>(
+                        swap_chain_manager->m_swap_chain.m_extent.width),
+                    .height = static_cast<float>(
+                        swap_chain_manager->m_swap_chain.m_extent.height),
+                },
+            .scissor =
+                {
+                    .extent = swap_chain_manager->m_swap_chain.m_extent,
+                },
+            .pipeline_info =
+                {
+                    .render_pass = swap_chain_manager->m_swap_chain.m_render_pass,
+                },
+        });
 }
 
 void graphics_pipeline::text::TextPipeline::load_font(

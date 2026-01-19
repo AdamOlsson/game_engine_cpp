@@ -5,6 +5,7 @@
 #include "vulkan/PipelineLayout.h"
 #include "vulkan/PushConstantRange.h"
 #include "vulkan/ShaderStage.h"
+#include "vulkan/SwapChainManager.h"
 #include "vulkan/buffers/IndexBuffer.h"
 #include "vulkan/buffers/VertexBuffer.h"
 #include "vulkan/context/GraphicsContext.h"

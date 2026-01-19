@@ -33,5 +33,22 @@ graphics_pipeline::quad::QuadPipeline::QuadPipeline(
         ctx, m_pipeline_layout,
         vulkan::ShaderModule(ctx, quad_vert->bytes(), quad_vert->length()),
         vulkan::ShaderModule(ctx, quad_frag->bytes(), quad_frag->length()),
-        *swap_chain_manager, vulkan::PipelineOpts{});
+        vulkan::PipelineOpts{
+            .viewport =
+                {
+                    .width = static_cast<float>(
+                        swap_chain_manager->m_swap_chain.m_extent.width),
+                    .height = static_cast<float>(
+                        swap_chain_manager->m_swap_chain.m_extent.height),
+                },
+            .scissor =
+                {
+                    .extent = swap_chain_manager->m_swap_chain.m_extent,
+                },
+
+            .pipeline_info =
+                {
+                    .render_pass = swap_chain_manager->m_swap_chain.m_render_pass,
+                },
+        });
 }
