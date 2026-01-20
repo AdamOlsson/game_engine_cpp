@@ -3,4 +3,5 @@ bin
 obj
 lib
 build
-**/.DS_Store
+.DS_Store/
+third_party/

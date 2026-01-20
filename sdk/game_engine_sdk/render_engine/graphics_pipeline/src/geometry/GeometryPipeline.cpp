@@ -5,11 +5,11 @@
 
 namespace {
 const std::vector<uint16_t> m_quad_indices = {0, 1, 2, 0, 2, 3};
-const std::vector<Vertex> m_quad_vertices = {
-    Vertex(-0.5f, -0.5f, 0.0f),
-    Vertex(-0.5f, 0.5f, 0.0f),
-    Vertex(0.5f, 0.5f, 0.0f),
-    Vertex(0.5f, -0.5f, 0.0f),
+const std::vector<vulkan::Vertex> m_quad_vertices = {
+    vulkan::Vertex(-0.5f, -0.5f, 0.0f),
+    vulkan::Vertex(-0.5f, 0.5f, 0.0f),
+    vulkan::Vertex(0.5f, 0.5f, 0.0f),
+    vulkan::Vertex(0.5f, -0.5f, 0.0f),
 };
 } // namespace
 
@@ -32,5 +32,22 @@ graphics_pipeline::geometry::GeometryPipeline::GeometryPipeline(
 
     m_pipeline = vulkan::Pipeline(
         ctx, m_pipeline_layout, vulkan::ShaderModule(ctx, vert->bytes(), vert->length()),
-        vulkan::ShaderModule(ctx, frag->bytes(), frag->length()), *swap_chain_manager);
+        vulkan::ShaderModule(ctx, frag->bytes(), frag->length()),
+        vulkan::PipelineOpts{
+            .viewport =
+                {
+                    .width = static_cast<float>(
+                        swap_chain_manager->m_swap_chain.m_extent.width),
+                    .height = static_cast<float>(
+                        swap_chain_manager->m_swap_chain.m_extent.height),
+                },
+            .scissor =
+                {
+                    .extent = swap_chain_manager->m_swap_chain.m_extent,
+                },
+            .pipeline_info =
+                {
+                    .render_pass = swap_chain_manager->m_swap_chain.m_render_pass,
+                },
+        });
 }

@@ -28,16 +28,15 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/public>
         $<INSTALL_INTERFACE:include>
-    # PRIVAT
         ${VULKAN_SDK_PATH}/include
 )
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC 
         render_engine::window
+        render_engine::image
         glfw
     PRIVATE 
         sdk::logger
         ${VULKAN_LIBRARY}
-        render_engine::image
 )

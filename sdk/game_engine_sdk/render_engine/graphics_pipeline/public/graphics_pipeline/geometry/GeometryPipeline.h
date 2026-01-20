@@ -15,7 +15,7 @@ class GeometryPipeline {
   private:
     std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
 
-    vulkan::buffers::VertexBuffer m_quad_vertex_buffer;
+    vulkan::buffers::VertexBuffer<vulkan::Vertex> m_quad_vertex_buffer;
     vulkan::buffers::IndexBuffer m_quad_index_buffer;
 
     VkShaderStageFlags m_push_constant_stage;

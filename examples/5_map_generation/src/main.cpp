@@ -1,11 +1,11 @@
 #include "camera/Camera.h"
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
-#include "game_engine_sdk/render_engine/ModelMatrix.h"
 #include "game_engine_sdk/render_engine/TilesetUVWT.h"
 #include "graphics_pipeline/quad/QuadPipeline.h"
 #include "graphics_pipeline/quad/QuadPipelineDescriptorSet.h"
 #include "graphics_pipeline/quad/QuadPipelineSBO.h"
+#include "math/Matrix.h"
 #include "tiles.h"
 #include "tiling/NoiseMap.h"
 #include "tiling/TileGrid.h"
@@ -140,7 +140,7 @@ class MapGeneration : public Game {
                     : m_tileset_uvwt.uvwt_for_tile_at(0, 0);
 
             m_quad_storage_buffer->push_back(graphics_pipeline::quad::QuadPipelineSBO{
-                .model_matrix = ModelMatrix()
+                .model_matrix = math::Matrix()
                                     .scale(glm::vec3(CELL_SIZE, CELL_SIZE, 1.0))
                                     .translate(x, y, 0),
                 .uvwt = uvwt,

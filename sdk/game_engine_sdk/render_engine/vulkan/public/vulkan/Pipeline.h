@@ -2,12 +2,47 @@
 
 #include "PipelineLayout.h"
 #include "ShaderModule.h"
-#include "SwapChainManager.h"
 #include "context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
 #include <memory>
 
 namespace vulkan {
+
+struct PipelineOpts {
+    struct {
+        std::optional<VkVertexInputBindingDescription> binding_description = std::nullopt;
+        uint32_t attribute_descriptions_count = 0;
+        VkVertexInputAttributeDescription *attribute_descriptions = nullptr;
+    } vertex_input_info;
+
+    struct {
+        VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    } assembler;
+
+    struct {
+        VkPolygonMode polygon_mode = VK_POLYGON_MODE_FILL;
+        VkFrontFace front_face = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        VkCullModeFlags cull_mode = VK_CULL_MODE_BACK_BIT;
+    } rasterizer;
+
+    struct {
+        std::vector<VkDynamicState> states{VK_DYNAMIC_STATE_VIEWPORT,
+                                           VK_DYNAMIC_STATE_SCISSOR};
+    } dynamic_states;
+    struct {
+        float width = 256.0f;
+        float height = 256.0f;
+    } viewport;
+
+    struct {
+        VkExtent2D extent;
+    } scissor;
+
+    struct {
+        VkRenderPass render_pass;
+    } pipeline_info;
+};
+
 class Pipeline {
   private:
     std::shared_ptr<context::GraphicsContext> m_ctx;
@@ -17,14 +52,13 @@ class Pipeline {
     VkPipeline create_graphics_pipeline(PipelineLayout *layout,
                                         const ShaderModule &vertex_shader_module,
                                         const ShaderModule &fragment_shader_module,
-                                        SwapChainManager &swap_chain_manager);
+                                        const PipelineOpts &&opts);
 
   public:
     Pipeline() = default;
-    Pipeline(std::shared_ptr<context::GraphicsContext> ctx, PipelineLayout &layout,
-             const ShaderModule &vertex_shader_module,
-             const ShaderModule &fragment_shader_module,
-             SwapChainManager &swap_chain_manager);
+    Pipeline(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
+             PipelineLayout &layout, const ShaderModule &vertex_shader_module,
+             const ShaderModule &fragment_shader_module, const PipelineOpts &&opts);
 
     ~Pipeline();
 

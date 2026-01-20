@@ -20,6 +20,15 @@
     } while (false)
 #endif
 
+#ifdef NDEBUG
+#define DEBUG_CODE(code) ((void)0)
+#else
+#define DEBUG_CODE(code)                                                                 \
+    do {                                                                                 \
+        code                                                                             \
+    } while (false)
+#endif
+
 std::ostream &operator<<(std::ostream &os, const glm::vec2 &vec);
 std::ostream &operator<<(std::ostream &os, const glm::vec3 &vec);
 std::ostream &operator<<(std::ostream &os, const glm::vec4 &vec);
