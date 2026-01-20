@@ -1,9 +1,9 @@
 #include "camera/Camera.h"
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
-#include "game_engine_sdk/render_engine/ModelMatrix.h"
 #include "graphics_pipeline/geometry/GeometryPipeline.h"
 #include "graphics_pipeline/geometry/GeometryPipelineSBO.h"
+#include "math/Matrix.h"
 #include "tiling/Position.h"
 #include "tiling/TileGrid.h"
 #include "tiling/search/AStar.h"
@@ -147,7 +147,7 @@ class ExamplePathing : public Game {
 
             m_tile_instances->push_back(graphics_pipeline::geometry::GeometryPipelineSBO{
                 .model_matrix =
-                    ModelMatrix().scale(TILE_SIZE, TILE_SIZE, 1.0f).translate(x, y, 0),
+                    math::Matrix().scale(TILE_SIZE, TILE_SIZE, 1.0f).translate(x, y, 0),
                 .border =
                     {
                         .color = util::colors::rgba(1.0f, 1.0f, 1.0f, 0.1f),

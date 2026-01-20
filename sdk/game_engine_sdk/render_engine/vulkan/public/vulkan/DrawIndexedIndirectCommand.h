@@ -4,5 +4,4 @@
 namespace vulkan {
 
 using DrawIndexedIndirectCommand = VkDrawIndexedIndirectCommand;
-
 } // namespace vulkan

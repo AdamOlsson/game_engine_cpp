@@ -2,6 +2,7 @@
 
 #include "font/FontFormat.h"
 #include "font/Unicode.h"
+#include <sstream>
 #include <string>
 
 #include <ft2build.h>
@@ -11,6 +12,20 @@
 
 namespace font {
 
+struct FontBBox {
+    int x_min;
+    int y_min;
+    int x_max;
+    int y_max;
+
+    std::string to_string() const {
+        std::ostringstream oss;
+        oss << "FontBBox{x_min:" << x_min << ", y_min:" << y_min << ", x_max:" << x_max
+            << ", y_max:" << y_max << "}";
+        return oss.str();
+    }
+};
+
 struct GlyphOutlines {
     std::vector<std::vector<std::pair<float, float>>> line_segments;
     std::vector<std::vector<std::array<std::pair<float, float>, 3>>> quadratic_curves;
@@ -19,6 +34,7 @@ struct GlyphOutlines {
 
 class FontLoader {
   public:
+    FontLoader() = default;
     FontLoader(const std::string &filepath);
     FontLoader(const std::vector<char> &font_data);
     FontLoader(const FontLoader &) = delete;
@@ -74,8 +90,9 @@ class FontLoader {
     std::array<char, 256> get_glyph_name(const unsigned int gid) const;
     GlyphOutlines get_glyph_outline(const font::Unicode &codepoint) const;
     GlyphOutlines get_glyph_outline(const unsigned int gid) const;
-    signed long get_num_glyphs();
-    FontFormat get_format();
+    signed long get_num_glyphs() const;
+    FontFormat get_format() const;
+    FontBBox get_font_bbox() const;
 
   private:
     FT_Library m_library;
@@ -84,3 +101,5 @@ class FontLoader {
 };
 
 } // namespace font
+
+std::ostream &operator<<(std::ostream &os, const font::FontBBox &bbox);

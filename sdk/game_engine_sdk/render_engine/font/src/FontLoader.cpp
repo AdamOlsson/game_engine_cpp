@@ -1,7 +1,6 @@
 #include "font/FontLoader.h"
 #include "OutlineBuilder.h"
 #include <format>
-#include <iostream>
 #include FT_FONT_FORMATS_H
 
 font::FontLoader::FontLoader(const std::string &filepath) {
@@ -153,6 +152,20 @@ font::GlyphOutlines font::FontLoader::get_glyph_outline(const unsigned int gid) 
     };
 }
 
-signed long font::FontLoader::get_num_glyphs() { return m_face->num_glyphs; }
+signed long font::FontLoader::get_num_glyphs() const { return m_face->num_glyphs; }
 
-font::FontFormat font::FontLoader::get_format() { return m_format; }
+font::FontFormat font::FontLoader::get_format() const { return m_format; }
+
+font::FontBBox font::FontLoader::get_font_bbox() const {
+    return FontBBox{
+        .x_min = static_cast<int>(m_face->bbox.xMin),
+        .y_min = static_cast<int>(m_face->bbox.yMin),
+        .x_max = static_cast<int>(m_face->bbox.xMax),
+        .y_max = static_cast<int>(m_face->bbox.yMax),
+    };
+}
+
+std::ostream &operator<<(std::ostream &os, const font::FontBBox &bbox) {
+    os << bbox.to_string();
+    return os;
+}
