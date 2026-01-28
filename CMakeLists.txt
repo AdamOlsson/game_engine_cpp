@@ -105,6 +105,7 @@ if(GAME_ENGINE_SDK_BUILD_EXAMPLES)
     add_subdirectory(examples/4_user_interface)
     add_subdirectory(examples/5_map_generation)
     add_subdirectory(examples/6_pathing)
+    add_subdirectory(examples/caravan_defence)
     message(STATUS "Configuring examples... DONE!")
 endif()
 
