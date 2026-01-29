@@ -116,6 +116,7 @@ class MapGeneration : public Game {
                         m_quad_storage_buffer->get_buffer_references()),
                     .combined_image_sampler_infos = {
                         vulkan::DescriptorImageInfo(m_tileset.view(), &m_sampler)}});
+
         auto &quad_descriptor_set_layout = m_quad_descriptor_set->get_layout();
         auto quad_push_constant_range =
             vulkan::PushConstantRange{.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,

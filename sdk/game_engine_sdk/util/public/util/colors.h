@@ -2,6 +2,9 @@
 #include <glm/glm.hpp>
 
 namespace util::colors {
+
+using Color = glm::vec4;
+
 // Primary Colors
 constexpr glm::vec4 RED = glm::vec4(0.8f, 0.0f, 0.0f, 1.0f);
 constexpr glm::vec4 GREEN = glm::vec4(0.0f, 0.8f, 0.0f, 1.0f);

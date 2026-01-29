@@ -28,7 +28,7 @@ class Camera2D {
   public:
     Camera2D();
     Camera2D(const float viewport_width, const float viewport_height,
-             const float base_ortho_height);
+             const float base_ortho_height = 200.0f);
     ~Camera2D() = default;
 
     void set_position(const float x, const float y);

@@ -28,6 +28,7 @@ class QuadPipelineDescriptorSet {
                               QuadPipelineDescriptorSetOpts &&opts);
 
     vulkan::DescriptorSetLayout &get_layout();
+    const vulkan::DescriptorSetLayout *get_layout_handle() const;
     SwapDescriptorSet *handle();
     vulkan::DescriptorSet get_next();
     vulkan::DescriptorSet get_current();

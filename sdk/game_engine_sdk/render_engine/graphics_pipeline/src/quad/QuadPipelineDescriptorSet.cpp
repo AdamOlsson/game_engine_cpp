@@ -39,6 +39,11 @@ graphics_pipeline::quad::QuadPipelineDescriptorSet::get_layout() {
     return m_descriptor_set.get_layout();
 }
 
+const vulkan::DescriptorSetLayout *
+graphics_pipeline::quad::QuadPipelineDescriptorSet::get_layout_handle() const {
+    return m_descriptor_set.get_layout_handle();
+}
+
 graphics_pipeline::SwapDescriptorSet *
 graphics_pipeline::quad::QuadPipelineDescriptorSet::handle() {
     return &m_descriptor_set;

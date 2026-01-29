@@ -18,7 +18,11 @@ class Matrix {
     Matrix(const glm::mat4 &mat);
     ~Matrix() = default;
 
-    Matrix(const Matrix &other);
+    Matrix(const Matrix &other) = default;
+    Matrix(Matrix &&other) noexcept = default;
+
+    Matrix &operator=(const Matrix &other) = default;
+    Matrix &operator=(Matrix &&other) noexcept = default;
 
     template <StaticCastableToFloat T>
     Matrix &translate(const T x, const T y, const T z) {
@@ -26,6 +30,7 @@ class Matrix {
         return *this;
     }
 
+    Matrix &translate(const glm::vec2 &vec);
     Matrix &translate(const glm::vec3 &vec);
 
     Matrix &scale(const float x, const float y, const float z);
