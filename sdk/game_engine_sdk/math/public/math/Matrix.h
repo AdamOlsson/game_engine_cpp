@@ -1,5 +1,4 @@
 #pragma once
-/*#include "game_engine_sdk/traits.h"*/
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/glm.hpp>
 
@@ -44,5 +43,7 @@ class Matrix {
     Matrix &rotate(const float angle, const glm::vec3 &axis);
 
     operator glm::mat4() const { return m_matrix; }
+
+    glm::vec2 position_2d() const { return glm::vec2(m_matrix[3].x, m_matrix[3].y); }
 };
 } // namespace math

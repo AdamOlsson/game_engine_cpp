@@ -5,6 +5,7 @@
 #include "graphics_pipeline/quad/QuadPipeline.h"
 #include "graphics_pipeline/quad/QuadPipelineSBO.h"
 #include "math/Matrix.h"
+#include "math/shape.h"
 #include "vulkan/CommandBufferManager.h"
 #include "vulkan/SwapChainManager.h"
 
@@ -12,10 +13,11 @@ constexpr glm::vec2 INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
 constexpr float ZOOM_SCALE_FACTOR = 0.1f;
 
 class Guard {
+  private:
   public:
     static constexpr float width = 50.0f;
     static constexpr float height = 50.0f;
-    camera::WorldPoint2D position;
+    camera::WorldPoint2D grid_position;
 
     math::Matrix model_matrix;
 
@@ -23,14 +25,21 @@ class Guard {
     static constexpr util::colors::Color color = util::colors::GREEN;
 
     Guard() = default;
-    Guard(const camera::WorldPoint2D &position)
-        : position(position),
-          model_matrix(math::Matrix().scale(width, height, 1.0f).translate(position)) {}
+    Guard(const camera::WorldPoint2D &grid_position)
+        : grid_position(grid_position),
+          model_matrix(
+              math::Matrix().scale(width, height, 1.0f).translate(grid_position)) {}
     Guard(Guard &&other) noexcept = default;
     Guard(const Guard &other) = default;
     Guard &operator=(const Guard &other) = default;
     Guard &operator=(Guard &&other) noexcept = default;
     ~Guard() {}
+
+    bool is_point_inside(const camera::WorldPoint2D &point) {
+        // World position with no regard to the world grid
+        const camera::WorldPoint2D position = model_matrix.position_2d();
+        return math::is_point_inside_rectangle(point, position, width, height);
+    }
 };
 
 class Caravan {
@@ -157,9 +166,10 @@ class CaravanDefence : public Game {
                 case window::MouseEvent::RIGHT_BUTTON_DOWN:
                     m_mouse_state.is_right_button_pressed = true;
                     break;
-                case window::MouseEvent::RIGHT_BUTTON_UP:
+                case window::MouseEvent::RIGHT_BUTTON_UP: {
                     m_mouse_state.is_right_button_pressed = false;
                     break;
+                }
                 case window::MouseEvent::CURSOR_MOVED:
                     if (m_mouse_state.is_right_button_pressed) {
                         camera::WorldPoint2D world_delta =
@@ -174,8 +184,16 @@ class CaravanDefence : public Game {
                     break;
                 case window::MouseEvent::LEFT_BUTTON_DOWN:
                     break;
-                case window::MouseEvent::LEFT_BUTTON_UP:
+                case window::MouseEvent::LEFT_BUTTON_UP: {
+                    const camera::WorldPoint2D world_point =
+                        m_camera.viewport_to_world(point);
+                    if (m_guard_1.is_point_inside(world_point)) {
+                        std::cout << "Clicked guard 1" << std::endl;
+                    } else if (m_guard_2.is_point_inside(world_point)) {
+                        std::cout << "Clicked guard 2" << std::endl;
+                    }
                     break;
+                }
                 }
             });
     }
