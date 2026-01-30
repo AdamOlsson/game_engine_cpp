@@ -8,6 +8,9 @@
 #include "vulkan/CommandBufferManager.h"
 #include "vulkan/SwapChainManager.h"
 
+constexpr glm::vec2 INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
+constexpr float ZOOM_SCALE_FACTOR = 0.1f;
+
 class Guard {
   public:
     static constexpr float width = 50.0f;
@@ -58,6 +61,10 @@ class CaravanDefence : public Game {
     std::unique_ptr<vulkan::CommandBufferManager> m_command_buffer_manager;
 
     camera::Camera2D m_camera;
+    struct {
+        window::ViewportPoint position;
+        bool is_right_button_pressed = false;
+    } m_mouse_state;
 
     vulkan::DescriptorPool m_quad_pool;
 
@@ -139,6 +146,38 @@ class CaravanDefence : public Game {
             .model_matrix = m_guard_2.model_matrix, .color = m_guard_2.color});
 
         m_quad_instances->transfer();
+
+        register_mouse_event_handler(ctx.get());
+    }
+
+    void register_mouse_event_handler(vulkan::context::GraphicsContext *ctx) {
+        ctx->window->register_mouse_event_callback(
+            [this](window::MouseEvent mouse_event, window::ViewportPoint &point) -> void {
+                switch (mouse_event) {
+                case window::MouseEvent::RIGHT_BUTTON_DOWN:
+                    m_mouse_state.is_right_button_pressed = true;
+                    break;
+                case window::MouseEvent::RIGHT_BUTTON_UP:
+                    m_mouse_state.is_right_button_pressed = false;
+                    break;
+                case window::MouseEvent::CURSOR_MOVED:
+                    if (m_mouse_state.is_right_button_pressed) {
+                        camera::WorldPoint2D world_delta =
+                            m_camera.viewport_delta_to_world(point -
+                                                             m_mouse_state.position);
+                        m_camera.set_relative_position(world_delta * INVERT_AXISES);
+                    }
+                    m_mouse_state.position = point;
+                    break;
+                case window::MouseEvent::SCROLL:
+                    m_camera.set_relative_zoom(point.y * ZOOM_SCALE_FACTOR);
+                    break;
+                case window::MouseEvent::LEFT_BUTTON_DOWN:
+                    break;
+                case window::MouseEvent::LEFT_BUTTON_UP:
+                    break;
+                }
+            });
     }
 
     void render() override {

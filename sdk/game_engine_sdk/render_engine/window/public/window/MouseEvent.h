@@ -3,13 +3,13 @@
 #include <functional>
 
 namespace window {
-enum class MouseEvent {
-    CURSOR_MOVED,
-    LEFT_BUTTON_DOWN,
-    LEFT_BUTTON_UP,
-    RIGHT_BUTTON_DOWN,
-    RIGHT_BUTTON_UP,
-    SCROLL,
+enum class MouseEvent : uint16_t {
+    CURSOR_MOVED = 0x1,
+    LEFT_BUTTON_DOWN = 0x2,
+    LEFT_BUTTON_UP = 0x3,
+    RIGHT_BUTTON_DOWN = 0x4,
+    RIGHT_BUTTON_UP = 0x5,
+    SCROLL = 0x6,
 };
 
 inline std::ostream &operator<<(std::ostream &os, MouseEvent type) {
