@@ -13,10 +13,10 @@ vulkan::SwapChainManager::SwapChainManager(
       m_submit_completed(vulkan::Semaphore(m_ctx, MAX_FRAMES_IN_FLIGHT)),
       m_in_flight_fence(vulkan::Fence(m_ctx, MAX_FRAMES_IN_FLIGHT)),
       m_window_size_swap_buffer(
-          vulkan::buffers::SwapUniformBuffer<window::WindowDimension<float>>(
-              m_ctx, MAX_FRAMES_IN_FLIGHT, 1)) {
+          vulkan::buffers::UniformBuffer<window::WindowDimension<float>>(
+              m_ctx, 1, MAX_FRAMES_IN_FLIGHT)) {
     m_window_size_swap_buffer.push_back(m_ctx->window->dimensions<float>());
-    m_window_size_swap_buffer.transfer();
+    m_window_size_swap_buffer.sync_all();
 }
 
 vulkan::SwapChainManager::~SwapChainManager() {}
@@ -76,5 +76,5 @@ void vulkan::SwapChainManager::set_image_index(RenderPass &render_pass) {
 
 std::vector<vulkan::buffers::GpuBufferRef>
 vulkan::SwapChainManager::get_window_size_swap_buffer_ref() {
-    return m_window_size_swap_buffer.get_buffer_references();
+    return m_window_size_swap_buffer.get_reference();
 }

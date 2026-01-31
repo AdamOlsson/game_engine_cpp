@@ -8,6 +8,7 @@
 #include "tiling/TileGrid.h"
 #include "tiling/search/AStar.h"
 #include "vulkan/DescriptorPool.h"
+#include "vulkan/buffers/GpuBuffer.h"
 #include "window/WindowConfig.h"
 #include <memory>
 
@@ -41,8 +42,8 @@ class ExamplePathing : public Game {
     window::ViewportPoint m_mouse_last_position = window::ViewportPoint();
     camera::Camera2D m_camera;
 
-    std::unique_ptr<vulkan::buffers::SwapStorageBuffer<
-        graphics_pipeline::geometry::GeometryPipelineSBO>>
+    std::unique_ptr<
+        vulkan::buffers::StorageBuffer<graphics_pipeline::geometry::GeometryPipelineSBO>>
         m_tile_instances;
     size_t m_num_instances;
     std::unique_ptr<graphics_pipeline::geometry::GeometryPipelineDescriptorSet>
@@ -120,16 +121,16 @@ class ExamplePathing : public Game {
         // multiply by 2 is simply to cover the entire screen and more
         m_num_tiles_width = (window_dims.width / TILE_SIZE) * 2;
         m_num_tiles_height = (window_dims.width / TILE_SIZE) * 2;
-        m_tile_instances = std::make_unique<vulkan::buffers::SwapStorageBuffer<
+        m_tile_instances = std::make_unique<vulkan::buffers::StorageBuffer<
             graphics_pipeline::geometry::GeometryPipelineSBO>>(
-            ctx, 2, m_num_tiles_width * m_num_tiles_height);
+            ctx, m_num_tiles_width * m_num_tiles_height, 2);
 
         m_descriptor_set =
             std::make_unique<graphics_pipeline::geometry::GeometryPipelineDescriptorSet>(
                 ctx, m_descriptor_pool,
                 graphics_pipeline::geometry::GeometryPipelineDescriptorSetOpts{
                     .storage_buffer_refs = vulkan::DescriptorBufferInfo::from_vector(
-                        m_tile_instances->get_buffer_references())});
+                        m_tile_instances->get_reference())});
 
         auto &descriptor_layout = m_descriptor_set->get_layout();
         auto quad_push_constant_range =
@@ -157,7 +158,7 @@ class ExamplePathing : public Game {
             m_num_instances++;
         }
 
-        m_tile_instances->transfer();
+        m_tile_instances->sync_all();
 
         m_grid = tiling::TileGrid<CellType>(m_num_tiles_width, m_num_tiles_height);
         m_camera.set_position(camera::WorldPoint2D(
@@ -237,10 +238,9 @@ class ExamplePathing : public Game {
         render_pass.begin();
 
         // Reset highlight from previous frame
-        auto &instance_buffer = m_tile_instances->get_buffer();
         const auto modified_instances = m_frame_states[m_swap_index].modified_instances;
         for (const auto &idx : modified_instances) {
-            instance_buffer[idx].color = util::colors::TRANSPARENT;
+            m_tile_instances->at(idx).color = util::colors::TRANSPARENT;
         }
 
         m_frame_states[m_swap_index].modified_instances.clear();
@@ -249,7 +249,7 @@ class ExamplePathing : public Game {
         for (const auto &wall : m_walls) {
             const auto wall_tile_index = static_cast<size_t>(wall.y) * m_num_tiles_width +
                                          static_cast<size_t>(wall.x);
-            instance_buffer[wall_tile_index].color =
+            m_tile_instances->at(wall_tile_index).color =
                 util::colors::rgba(0.8f, 0.8f, 0.8f, 1.0f);
             m_frame_states[m_swap_index].modified_instances.push_back(wall_tile_index);
         }
@@ -258,8 +258,7 @@ class ExamplePathing : public Game {
         for (const auto &pos : m_path) {
             const auto tile_index = pos.y * m_num_tiles_width + pos.x;
             if (0 <= tile_index && tile_index < m_num_tiles_width * m_num_tiles_height) {
-                auto &instance_buffer = m_tile_instances->get_buffer();
-                instance_buffer[tile_index].color =
+                m_tile_instances->at(tile_index).color =
                     util::colors::rgba(0.0f, 1.0f, 0.0f, 0.4f);
                 m_frame_states[m_swap_index].modified_instances.push_back(tile_index);
             }
@@ -273,8 +272,7 @@ class ExamplePathing : public Game {
             static_cast<size_t>(start_tile_x);
         if (0 <= start_tile_index &&
             start_tile_index < m_num_tiles_width * m_num_tiles_height) {
-            auto &instance_buffer = m_tile_instances->get_buffer();
-            instance_buffer[start_tile_index].color =
+            m_tile_instances->at(start_tile_index).color =
                 util::colors::rgba(0.0f, 0.0f, 1.0f, 0.4f);
             m_frame_states[m_swap_index].modified_instances.push_back(start_tile_index);
         }
@@ -288,8 +286,7 @@ class ExamplePathing : public Game {
                 static_cast<size_t>(end_tile_x);
             if (0 <= end_tile_index &&
                 end_tile_index < m_num_tiles_width * m_num_tiles_height) {
-                auto &instance_buffer = m_tile_instances->get_buffer();
-                instance_buffer[end_tile_index].color =
+                m_tile_instances->at(end_tile_index).color =
                     util::colors::rgba(1.0f, 0.0f, 0.0f, 0.4f);
                 m_frame_states[m_swap_index].modified_instances.push_back(end_tile_index);
             }
@@ -305,8 +302,7 @@ class ExamplePathing : public Game {
             static_cast<size_t>(cursor_tile_x);
         if (0 <= cursor_tile_index &&
             cursor_tile_index < m_num_tiles_width * m_num_tiles_height) {
-            auto &instance_buffer = m_tile_instances->get_buffer();
-            auto &current_color = instance_buffer[cursor_tile_index].color;
+            auto &current_color = m_tile_instances->at(cursor_tile_index).color;
             if (current_color == util::colors::TRANSPARENT) {
                 current_color = util::colors::rgba(0.2f, 0.2f, 0.2f, 1.0f);
             } else {
@@ -315,7 +311,7 @@ class ExamplePathing : public Game {
             m_frame_states[m_swap_index].modified_instances.push_back(cursor_tile_index);
         }
 
-        instance_buffer.transfer_delta();
+        m_tile_instances->sync_delta();
         auto descriptor = m_descriptor_set.get();
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
         m_pipeline->render(command_buffer, descriptor, &push_constant, m_num_instances);

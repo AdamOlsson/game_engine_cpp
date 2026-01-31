@@ -1,19 +1,12 @@
 #pragma once
 
-#include "common.h"
-#include "logger/io.h"
+#include "util/assert.h"
+#include "vulkan/buffers/common.h"
 #include "vulkan/context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
-#include <cstdint>
-#include <iostream>
 #include <memory>
-#include <utility>
-
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#include <glm/glm.hpp>
-
 namespace vulkan::buffers {
+
 enum class GpuBufferType { Uniform, Storage };
 
 struct GpuBufferRef {
@@ -21,6 +14,7 @@ struct GpuBufferRef {
     VkBuffer buffer;
     GpuBufferType type;
 };
+
 template <GpuBufferType BufferType> class BufferDescriptor;
 
 template <typename T, GpuBufferType BufferType> class GpuBuffer {
@@ -29,19 +23,39 @@ template <typename T, GpuBufferType BufferType> class GpuBuffer {
 
     std::vector<T> m_staging_buffer;
     std::vector<size_t> m_delta_ids;
-    size_t m_capacity;
 
+    size_t m_capacity;   // number of elements
     VkDeviceSize m_size; // number of bytes
-    VkBuffer m_buffer;
-    VkDeviceMemory m_buffer_memory;
-    void *m_buffer_mapped;
+
+    struct Buffer {
+        VkBuffer buffer_handle;
+        VkDeviceMemory buffer_memory;
+        void *buffer_mapped;
+    };
+
+    std::vector<Buffer> m_buffers;
+    std::vector<GpuBufferRef> m_refs;
+
+    struct {
+        size_t swap_size;
+        size_t current_idx = 0;
+        void rotate() { current_idx = ++current_idx % swap_size; }
+        size_t current() { return current_idx; }
+        size_t next() { return ++current_idx % swap_size; }
+    } m_swap_state;
 
   public:
     GpuBuffer() = default;
 
-    GpuBuffer(std::shared_ptr<vulkan::context::GraphicsContext> ctx, size_t capacity,
+    GpuBuffer(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
+              const size_t capacity, const size_t swap_size = 1,
               const std::optional<VkBufferUsageFlagBits> usage = std::nullopt)
-        : m_ctx(ctx), m_capacity(capacity), m_size(capacity * sizeof(T)) {
+        : m_ctx(ctx), m_capacity(capacity), m_size(capacity * sizeof(T)),
+          m_swap_state({.swap_size = swap_size}) {
+
+        if (m_swap_state.swap_size < 1) {
+            throw std::runtime_error("Error: swap_size needs to larger than 0.");
+        }
 
         VkBufferUsageFlagBits usage_;
         if constexpr (BufferType == GpuBufferType::Storage) {
@@ -54,26 +68,35 @@ template <typename T, GpuBufferType BufferType> class GpuBuffer {
             usage_ = static_cast<VkBufferUsageFlagBits>(usage_ | usage.value());
         }
 
-        create_buffer(m_ctx.get(), m_size, usage_,
-                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                          VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                      m_buffer, m_buffer_memory);
-
         m_staging_buffer.reserve(capacity);
         m_delta_ids.reserve(capacity);
 
-        vkMapMemory(m_ctx->logical_device, m_buffer_memory, 0, m_size, 0,
-                    &m_buffer_mapped);
-        memset(m_buffer_mapped, 0, m_size);
+        m_buffers.resize(m_swap_state.swap_size);
+        m_refs.reserve(m_swap_state.swap_size);
+        for (Buffer &b : m_buffers) {
+            create_buffer(m_ctx.get(), m_size, usage_,
+                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                              VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                          b.buffer_handle, b.buffer_memory);
+
+            vkMapMemory(m_ctx->logical_device, b.buffer_memory, 0, m_size, 0,
+                        &b.buffer_mapped);
+            memset(b.buffer_mapped, 0, m_size);
+
+            m_refs.push_back(GpuBufferRef{
+                .size = m_size, .buffer = b.buffer_handle, .type = BufferType});
+        }
     }
 
     ~GpuBuffer() {
-        if (m_buffer == VK_NULL_HANDLE) {
-            return;
+        for (Buffer &b : m_buffers) {
+            if (b.buffer_handle == VK_NULL_HANDLE) {
+                continue;
+            }
+            vkUnmapMemory(m_ctx->logical_device, b.buffer_memory);
+            vkFreeMemory(m_ctx->logical_device, b.buffer_memory, nullptr);
+            vkDestroyBuffer(m_ctx->logical_device, b.buffer_handle, nullptr);
         }
-        vkUnmapMemory(m_ctx->logical_device, m_buffer_memory);
-        vkFreeMemory(m_ctx->logical_device, m_buffer_memory, nullptr);
-        vkDestroyBuffer(m_ctx->logical_device, m_buffer, nullptr);
     }
 
     GpuBuffer(const GpuBuffer &other) = delete;
@@ -82,13 +105,9 @@ template <typename T, GpuBufferType BufferType> class GpuBuffer {
     GpuBuffer(GpuBuffer &&other) noexcept
         : m_ctx(std::move(other.m_ctx)), m_size(std::move(other.m_size)),
           m_staging_buffer(std::move(other.m_staging_buffer)),
-          m_buffer(std::move(other.m_buffer)),
-          m_buffer_memory(std::move(other.m_buffer_memory)),
-          m_buffer_mapped(std::move(other.m_buffer_mapped)),
-          m_capacity(other.m_capacity) {
-        other.m_buffer = VK_NULL_HANDLE;
-        other.m_buffer_memory = VK_NULL_HANDLE;
-        other.m_buffer_mapped = VK_NULL_HANDLE;
+          m_buffers(std::move(other.m_buffers)), m_capacity(other.m_capacity),
+          m_swap_state(other.m_swap_state), m_refs(std::move(m_refs)) {
+        other.m_buffers.clear();
         other.m_capacity = 0;
     }
 
@@ -97,23 +116,18 @@ template <typename T, GpuBufferType BufferType> class GpuBuffer {
             m_ctx = std::move(other.m_ctx);
             m_size = std::move(other.m_size);
             m_staging_buffer = std::move(other.m_staging_buffer);
-            m_buffer = std::move(other.m_buffer);
-            m_buffer_memory = std::move(other.m_buffer_memory);
-            m_buffer_mapped = std::move(other.m_buffer_mapped);
+            m_buffers = std::move(other.m_buffers);
+            m_swap_state = other.m_swap_state;
+            m_refs = std::move(other.m_refs);
             m_capacity = other.m_capacity;
 
-            other.m_buffer = VK_NULL_HANDLE;
-            other.m_buffer_memory = VK_NULL_HANDLE;
-            other.m_buffer_mapped = VK_NULL_HANDLE;
             other.m_capacity = 0;
         }
         return *this;
     }
 
-    GpuBufferRef get_reference() {
-        return {.size = m_size, .buffer = m_buffer, .type = BufferType};
-    }
     size_t size() const { return m_size; }
+    std::vector<GpuBufferRef> get_reference() { return m_refs; }
     size_t num_elements() const { return m_staging_buffer.size(); }
 
     size_t size_of_T() { return sizeof(T); }
@@ -125,13 +139,30 @@ template <typename T, GpuBufferType BufferType> class GpuBuffer {
         m_staging_buffer.clear();
     }
 
-    void transfer() {
-        memcpy(m_buffer_mapped, m_staging_buffer.data(), m_size);
+    void rotate() { m_swap_state.rotate(); }
+
+    void sync() {
+        // Transfer the current state of the staging buffer to the next device buffer not
+        // currently displayed
+        const size_t next_buffer = m_swap_state.next();
+        memcpy(m_buffers[next_buffer].buffer_mapped, m_staging_buffer.data(), m_size);
         m_delta_ids.clear();
     }
 
-    void transfer_delta() {
-        T *device_buffer = static_cast<T *>(m_buffer_mapped);
+    void sync_all() {
+        // Transfer the current state of the staging buffer to the all device buffers in
+        // the swap not currently displayed
+        for (auto i = 0; i < m_swap_state.swap_size; i++) {
+            memcpy(m_buffers[i].buffer_mapped, m_staging_buffer.data(), m_size);
+        }
+        m_delta_ids.clear();
+    }
+
+    void sync_delta() {
+        // Transfer the delta state of the staging buffer to the next device buffer not
+        // currently displayed
+        const size_t next_buffer = m_swap_state.next();
+        T *device_buffer = static_cast<T *>(m_buffers[next_buffer].buffer_mapped);
         for (auto id : m_delta_ids) {
             device_buffer[id] = m_staging_buffer[id];
         }
@@ -180,7 +211,22 @@ template <typename T, GpuBufferType BufferType> class GpuBuffer {
         return m_staging_buffer[index];
     }
 
+    T &at(size_t index) {
+        // Note: Its not necesarrily true that if a user indexes into the staging buffer,
+        // that they will update it. However, there is no other way of tracking if they do
+        // so we have to be defensive and asssume that changes are made. The type of
+        // indexing I refer to is:
+        //
+        // auto& buffer_memeber = gpu_buffer[index];
+        //
+        // In the const case, its not possible to update the reference so no need assume
+        // changes.
+        m_delta_ids.push_back(index);
+        return m_staging_buffer[index];
+    }
+
     const T &operator[](size_t index) const { return m_staging_buffer[index]; }
+    const T &at(size_t index) const { return m_staging_buffer[index]; }
 
     VkDescriptorSetLayoutBinding
     create_descriptor_set_layout_binding(uint32_t binding_num) {
@@ -207,30 +253,30 @@ template <typename T, GpuBufferType BufferType> class GpuBuffer {
         }
 
         // Print GPU buffer contents (if data has been transferred)
-        if (m_buffer_mapped != nullptr) {
-            std::cout << "\nGPU buffer contents:" << std::endl;
-            auto *mapped_data = static_cast<T *>(m_buffer_mapped);
-            /*size_t element_count = m_size / sizeof(T);*/
-            size_t element_count = m_staging_buffer.size();
-
-            for (size_t i = 0; i < element_count; ++i) {
-                std::cout << "[" << i << "]: " << mapped_data[i] << std::endl;
-            }
-
-            // Also show raw byte data for debugging
-            std::cout << "\nRaw byte data (first "
-                      << std::min(m_size, static_cast<VkDeviceSize>(64))
-                      << " bytes):" << std::endl;
-            unsigned char *byteData = static_cast<unsigned char *>(m_buffer_mapped);
-            for (size_t i = 0; i < std::min(m_size, static_cast<VkDeviceSize>(64)); i++) {
-                printf("%02x ", byteData[i]);
-                if ((i + 1) % 16 == 0)
-                    printf("\n");
-            }
-            if (m_size % 16 != 0) {
-                printf("\n");
-            }
-        }
+        /*if (m_buffer_mapped != nullptr) {*/
+        /*    std::cout << "\nGPU buffer contents:" << std::endl;*/
+        /*    auto *mapped_data = static_cast<T *>(m_buffer_mapped);*/
+        /*    size_t element_count = m_staging_buffer.size();*/
+        /**/
+        /*    for (size_t i = 0; i < element_count; ++i) {*/
+        /*        std::cout << "[" << i << "]: " << mapped_data[i] << std::endl;*/
+        /*    }*/
+        /**/
+        /*    // Also show raw byte data for debugging*/
+        /*    std::cout << "\nRaw byte data (first "*/
+        /*              << std::min(m_size, static_cast<VkDeviceSize>(64))*/
+        /*              << " bytes):" << std::endl;*/
+        /*    unsigned char *byteData = static_cast<unsigned char *>(m_buffer_mapped);*/
+        /*    for (size_t i = 0; i < std::min(m_size, static_cast<VkDeviceSize>(64)); i++)
+         * {*/
+        /*        printf("%02x ", byteData[i]);*/
+        /*        if ((i + 1) % 16 == 0)*/
+        /*            printf("\n");*/
+        /*    }*/
+        /*    if (m_size % 16 != 0) {*/
+        /*        printf("\n");*/
+        /*    }*/
+        /*}*/
 
         std::cout << "=== End Data Dump ===" << std::endl;
     }
@@ -239,7 +285,7 @@ template <typename T, GpuBufferType BufferType> class GpuBuffer {
 template <typename T> using StorageBuffer = GpuBuffer<T, GpuBufferType::Storage>;
 template <typename T> using UniformBuffer = GpuBuffer<T, GpuBufferType::Uniform>;
 
-template <GpuBufferType BufferType> class BufferDescriptor {
+template <GpuBufferType BufferType> class BufferDescriptor2 {
   public:
     static VkDescriptorSetLayoutBinding
     create_descriptor_set_layout_binding(uint32_t binding_num) {
@@ -257,70 +303,4 @@ template <GpuBufferType BufferType> class BufferDescriptor {
     }
 };
 
-template <typename T, GpuBufferType BufferType> class SwapGpuBuffer {
-  private:
-    size_t m_idx;
-    std::vector<GpuBuffer<T, BufferType>> m_buffers;
-    std::vector<GpuBufferRef> m_refs;
-
-  public:
-    SwapGpuBuffer() = default;
-
-    SwapGpuBuffer(std::shared_ptr<vulkan::context::GraphicsContext> &ctx, size_t num_bufs,
-                  size_t capacity)
-        : m_idx(0) {
-        // Initiate buffers
-        m_buffers.reserve(num_bufs);
-        for (auto i = 0; i < num_bufs; i++) {
-            m_buffers.emplace_back(ctx, capacity);
-        }
-
-        // Create buffer references
-        m_refs.reserve(num_bufs);
-        for (auto i = 0; i < m_buffers.size(); i++) {
-            m_refs.push_back(m_buffers[i].get_reference());
-        }
-    }
-
-    GpuBuffer<T, BufferType> &get_buffer() { return m_buffers[m_idx]; }
-
-    size_t size_of_T() { return sizeof(T); }
-
-    void rotate() { m_idx = ++m_idx % m_buffers.size(); }
-
-    void push_back(T &val) {
-        for (auto &buf : m_buffers) {
-            buf.push_back(val);
-        }
-    }
-
-    void push_back(T &&val) {
-        for (auto &buf : m_buffers) {
-            buf.push_back(val);
-        }
-    }
-
-    void push_back(const T &val) {
-        for (auto &buf : m_buffers) {
-            buf.push_back(val);
-        }
-    }
-
-    void transfer() {
-        for (auto &buf : m_buffers) {
-            buf.transfer();
-        }
-    }
-
-    void dump_data() {
-        for (auto &buf : m_buffers) {
-            buf.dump_data();
-        }
-    }
-
-    std::vector<GpuBufferRef> get_buffer_references() { return m_refs; }
-};
-
-template <typename T> using SwapStorageBuffer = SwapGpuBuffer<T, GpuBufferType::Storage>;
-template <typename T> using SwapUniformBuffer = SwapGpuBuffer<T, GpuBufferType::Uniform>;
 } // namespace vulkan::buffers

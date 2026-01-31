@@ -2,13 +2,13 @@
 #include "vulkan/vulkan_core.h"
 
 graphics_pipeline::SwapDescriptorSetBuilder::SwapDescriptorSetBuilder(size_t capacity)
-    : m_capacity(capacity) {}
+    : m_swap_size(capacity) {}
 
 graphics_pipeline::SwapDescriptorSetBuilder &
 graphics_pipeline::SwapDescriptorSetBuilder::add_storage_buffer(
     size_t binding, std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos,
     SwapDescriptorSetBuilderOptions &&options) {
-    if (buffer_infos.size() != m_capacity) {
+    if (buffer_infos.size() != m_swap_size) {
         throw std::runtime_error(
             "size of storage buffer reference needs to be equal to capacity");
     }
@@ -35,7 +35,7 @@ graphics_pipeline::SwapDescriptorSetBuilder &
 graphics_pipeline::SwapDescriptorSetBuilder::add_uniform_buffer(
     size_t binding, std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos,
     SwapDescriptorSetBuilderOptions &&options) {
-    if (buffer_infos.size() != m_capacity) {
+    if (buffer_infos.size() != m_swap_size) {
         throw std::runtime_error(
             "size of uniform buffer reference needs to be equal to capacity");
     }
@@ -76,16 +76,16 @@ graphics_pipeline::SwapDescriptorSetBuilder::allocate_descriptor_sets(
     vulkan::DescriptorPool &descriptor_pool,
     const VkDescriptorSetLayout &descriptor_set_layout) {
 
-    std::vector<VkDescriptorSetLayout> layouts(m_capacity, descriptor_set_layout);
+    std::vector<VkDescriptorSetLayout> layouts(m_swap_size, descriptor_set_layout);
 
     VkDescriptorSetAllocateInfo alloc_info{};
     alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     alloc_info.descriptorPool = descriptor_pool;
-    alloc_info.descriptorSetCount = static_cast<uint32_t>(m_capacity);
+    alloc_info.descriptorSetCount = static_cast<uint32_t>(m_swap_size);
     alloc_info.pSetLayouts = layouts.data();
 
     std::vector<VkDescriptorSet> descriptor_sets;
-    descriptor_sets.resize(m_capacity);
+    descriptor_sets.resize(m_swap_size);
     if (vkAllocateDescriptorSets(ctx->logical_device, &alloc_info,
                                  descriptor_sets.data()) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate descriptor sets!");
@@ -127,12 +127,12 @@ graphics_pipeline::SwapDescriptorSet graphics_pipeline::SwapDescriptorSetBuilder
     std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
     vulkan::DescriptorPool &descriptor_pool) {
 
-    if (m_storage_buffers_infos.size() % m_capacity != 0) {
+    if (m_storage_buffers_infos.size() % m_swap_size != 0) {
         throw std::runtime_error(
             "Number of storage buffers needs to be a multiple of capacity");
     }
 
-    if (m_uniform_buffers_infos.size() % m_capacity != 0) {
+    if (m_uniform_buffers_infos.size() % m_swap_size != 0) {
         throw std::runtime_error(
             "Number of uniform buffers needs to be a multiple of capacity");
     }
@@ -144,15 +144,15 @@ graphics_pipeline::SwapDescriptorSet graphics_pipeline::SwapDescriptorSetBuilder
         allocate_descriptor_sets(ctx, descriptor_pool, descriptor_set_layout);
 
     const size_t num_storage_buffers_per_set =
-        m_storage_buffers_infos.size() / m_capacity;
+        m_storage_buffers_infos.size() / m_swap_size;
     const size_t num_uniform_buffers_per_set =
-        m_uniform_buffers_infos.size() / m_capacity;
+        m_uniform_buffers_infos.size() / m_swap_size;
 
-    for (auto i = 0; i < m_capacity; i++) {
+    for (auto i = 0; i < m_swap_size; i++) {
         std::vector<VkWriteDescriptorSet> descriptor_writes = {};
 
         for (auto j = 0; j < num_storage_buffers_per_set; j++) {
-            const auto idx = j * m_capacity + i;
+            const auto idx = j * m_swap_size + i;
 
             descriptor_writes.push_back(create_buffer_descriptor_write(
                 VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, descriptor_sets[i],
@@ -160,7 +160,7 @@ graphics_pipeline::SwapDescriptorSet graphics_pipeline::SwapDescriptorSetBuilder
         }
 
         for (auto j = 0; j < num_uniform_buffers_per_set; j++) {
-            const auto idx = j * m_capacity + i;
+            const auto idx = j * m_swap_size + i;
             descriptor_writes.push_back(create_buffer_descriptor_write(
                 VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, descriptor_sets[i],
                 m_uniform_buffers_infos[idx].get(), m_uniform_buffer_bindings[idx]));

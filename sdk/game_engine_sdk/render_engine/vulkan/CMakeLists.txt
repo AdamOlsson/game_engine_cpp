@@ -37,6 +37,7 @@ target_link_libraries(${PROJECT_NAME}
         render_engine::image
         glfw
     PRIVATE 
+        sdk::util
         sdk::logger
         ${VULKAN_LIBRARY}
 )

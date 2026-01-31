@@ -9,6 +9,7 @@
 #include "vulkan/DescriptorPool.h"
 #include "vulkan/DescriptorSetLayout.h"
 #include "vulkan/SwapChainManager.h"
+#include "vulkan/buffers/GpuBuffer.h"
 #include "vulkan/buffers/IndexBuffer.h"
 #include "vulkan/buffers/VertexBuffer.h"
 
@@ -50,8 +51,8 @@ class TextRenderer {
 
     std::vector<std::pair<size_t, size_t>> m_glyph_draw_info;
 
-    vulkan::buffers::SwapStorageBuffer<TextSBO> m_text_instances;
-    vulkan::buffers::SwapStorageBuffer<GlyphSBO> m_glyph_instances;
+    vulkan::buffers::StorageBuffer<TextSBO> m_text_instances;
+    vulkan::buffers::StorageBuffer<GlyphSBO> m_glyph_instances;
 
     vulkan::DescriptorPool m_descriptor_pool;
     SwapDescriptorSet m_descriptor_sets;

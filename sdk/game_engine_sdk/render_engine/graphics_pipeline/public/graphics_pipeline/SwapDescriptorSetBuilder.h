@@ -17,7 +17,7 @@ class SwapDescriptorSetBuilder {
   private:
     DescriptorSetLayoutBuilder m_descriptor_set_layout_builder;
 
-    size_t m_capacity;
+    size_t m_swap_size;
 
     std::vector<size_t> m_storage_buffer_bindings;
     std::vector<vulkan::DescriptorBufferInfo> m_storage_buffers_infos;

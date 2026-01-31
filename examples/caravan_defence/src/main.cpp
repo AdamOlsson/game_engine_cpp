@@ -8,12 +8,15 @@
 #include "math/shape.h"
 #include "vulkan/CommandBufferManager.h"
 #include "vulkan/SwapChainManager.h"
+#include "vulkan/buffers/GpuBuffer.h"
 
 constexpr glm::vec2 INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
 constexpr float ZOOM_SCALE_FACTOR = 0.1f;
 
+// CONTINUE: Modify render data through the guard class
 class Guard {
   private:
+    // graphics_pipeline::quad::QuadPipelineSBO* render_data;
   public:
     static constexpr float width = 50.0f;
     static constexpr float height = 50.0f;
@@ -81,7 +84,7 @@ class CaravanDefence : public Game {
     Texture m_quad_texture;
 
     std::unique_ptr<
-        vulkan::buffers::SwapStorageBuffer<graphics_pipeline::quad::QuadPipelineSBO>>
+        vulkan::buffers::StorageBuffer<graphics_pipeline::quad::QuadPipelineSBO>>
         m_quad_instances;
     std::unique_ptr<graphics_pipeline::quad::QuadPipelineDescriptorSet> m_quad_descriptor;
     std::unique_ptr<graphics_pipeline::quad::QuadPipeline> m_quad_pipeline;
@@ -119,16 +122,21 @@ class CaravanDefence : public Game {
         pool_opts.num_combined_image_samplers = 1;
         m_quad_pool = vulkan::DescriptorPool(ctx, std::move(pool_opts));
 
+        /*m_quad_instances = std::make_unique<*/
+        /*    vulkan::buffers::SwapStorageBuffer<graphics_pipeline::quad::QuadPipelineSBO>>(*/
+        /*    ctx, max_frames_in_flight, 256);*/
         m_quad_instances = std::make_unique<
-            vulkan::buffers::SwapStorageBuffer<graphics_pipeline::quad::QuadPipelineSBO>>(
-            ctx, max_frames_in_flight, 256);
+            vulkan::buffers::StorageBuffer<graphics_pipeline::quad::QuadPipelineSBO>>(
+            ctx, 256, max_frames_in_flight);
 
         m_quad_descriptor =
             std::make_unique<graphics_pipeline::quad::QuadPipelineDescriptorSet>(
                 ctx, m_quad_pool,
                 graphics_pipeline::quad::QuadPipelineDescriptorSetOpts{
+                    /*.storage_buffer_refs = vulkan::DescriptorBufferInfo::from_vector(*/
+                    /*    m_quad_instances->get_buffer_references()),*/
                     .storage_buffer_refs = vulkan::DescriptorBufferInfo::from_vector(
-                        m_quad_instances->get_buffer_references()),
+                        m_quad_instances->get_reference()),
                     .combined_image_sampler_infos = {
                         vulkan::DescriptorImageInfo(m_quad_texture.view(), &m_sampler)}});
 
@@ -154,7 +162,7 @@ class CaravanDefence : public Game {
         m_quad_instances->push_back(graphics_pipeline::quad::QuadPipelineSBO{
             .model_matrix = m_guard_2.model_matrix, .color = m_guard_2.color});
 
-        m_quad_instances->transfer();
+        m_quad_instances->sync_all();
 
         register_mouse_event_handler(ctx.get());
     }
@@ -204,6 +212,8 @@ class CaravanDefence : public Game {
         vulkan::RenderPass render_pass =
             m_swap_chain_manager->get_render_pass(command_buffer);
         render_pass.begin();
+
+        m_quad_instances->sync();
 
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
         auto descriptor = m_quad_descriptor.get();

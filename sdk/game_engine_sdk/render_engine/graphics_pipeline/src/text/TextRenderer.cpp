@@ -18,8 +18,8 @@ graphics_pipeline::text::TextRenderer::TextRenderer(
     const auto layout = TextRenderer::get_descriptor_set_layout(ctx);
     m_text_pipeline = TextPipeline(ctx, swap_chain_manager, &layout, push_constant_range);
 
-    m_text_instances = vulkan::buffers::SwapStorageBuffer<TextSBO>(ctx, 2, 16);
-    m_glyph_instances = vulkan::buffers::SwapStorageBuffer<GlyphSBO>(ctx, 2, 1024);
+    m_text_instances = vulkan::buffers::StorageBuffer<TextSBO>(ctx, 16, 2);
+    m_glyph_instances = vulkan::buffers::StorageBuffer<GlyphSBO>(ctx, 1024, 2);
 
     m_descriptor_pool = vulkan::DescriptorPool(
         ctx, vulkan::DescriptorPoolOpts{.max_num_descriptor_sets = 2,
@@ -27,10 +27,10 @@ graphics_pipeline::text::TextRenderer::TextRenderer(
                                         .num_uniform_buffers = 0,
                                         .num_combined_image_samplers = 0});
     auto builder = SwapDescriptorSetBuilder(2);
-    builder.add_storage_buffer(0, vulkan::DescriptorBufferInfo::from_vector(
-                                      m_text_instances.get_buffer_references()));
-    builder.add_storage_buffer(1, vulkan::DescriptorBufferInfo::from_vector(
-                                      m_glyph_instances.get_buffer_references()));
+    builder.add_storage_buffer(
+        0, vulkan::DescriptorBufferInfo::from_vector(m_text_instances.get_reference()));
+    builder.add_storage_buffer(
+        1, vulkan::DescriptorBufferInfo::from_vector(m_glyph_instances.get_reference()));
     m_descriptor_sets = builder.build(ctx, m_descriptor_pool);
 }
 
@@ -166,8 +166,10 @@ graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoin
     }
     m_text_count++;
 
-    m_text_instances.transfer();
-    m_glyph_instances.transfer();
+    /*m_text_instances.transfer();*/
+    /*m_glyph_instances.transfer();*/
+    m_text_instances.sync_all();
+    m_glyph_instances.sync_all();
 
     return TextString{
         .first_glyph = first_glyph,
@@ -221,8 +223,8 @@ graphics_pipeline::text::TextRenderer::get_font_showcase_text() {
 
     m_text_count++;
 
-    m_text_instances.transfer();
-    m_glyph_instances.transfer();
+    m_text_instances.sync_all();
+    m_glyph_instances.sync_all();
 
     return TextString{
         .first_glyph = first_glyph,

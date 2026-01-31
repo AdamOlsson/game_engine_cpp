@@ -20,7 +20,7 @@ class SwapChainManager {
     vulkan::Semaphore m_image_available;
     vulkan::Semaphore m_submit_completed;
 
-    vulkan::buffers::SwapUniformBuffer<window::WindowDimension<float>>
+    vulkan::buffers::UniformBuffer<window::WindowDimension<float>>
         m_window_size_swap_buffer;
 
   public:

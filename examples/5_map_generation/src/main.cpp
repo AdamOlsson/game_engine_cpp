@@ -10,6 +10,7 @@
 #include "tiling/NoiseMap.h"
 #include "tiling/TileGrid.h"
 #include "tiling/wang/WangTiles.h"
+#include "vulkan/buffers/GpuBuffer.h"
 #include "vulkan/vulkan_core.h"
 #include "window/WindowConfig.h"
 #include <memory>
@@ -34,7 +35,7 @@ class MapGeneration : public Game {
 
     vulkan::DescriptorPool m_descriptor_pool;
     std::unique_ptr<
-        vulkan::buffers::SwapStorageBuffer<graphics_pipeline::quad::QuadPipelineSBO>>
+        vulkan::buffers::StorageBuffer<graphics_pipeline::quad::QuadPipelineSBO>>
         m_quad_storage_buffer;
     std::unique_ptr<graphics_pipeline::quad::QuadPipelineDescriptorSet>
         m_quad_descriptor_set;
@@ -98,8 +99,8 @@ class MapGeneration : public Game {
         m_tileset_uvwt = TilesetUVWT(m_tileset, TileSize(24, 24));
 
         m_quad_storage_buffer = std::make_unique<
-            vulkan::buffers::SwapStorageBuffer<graphics_pipeline::quad::QuadPipelineSBO>>(
-            ctx, MAX_FRAMES_IN_FLIGHT, grid.width() * grid.height());
+            vulkan::buffers::StorageBuffer<graphics_pipeline::quad::QuadPipelineSBO>>(
+            ctx, grid.width() * grid.height(), MAX_FRAMES_IN_FLIGHT);
 
         m_descriptor_pool = vulkan::DescriptorPool(
             ctx,
@@ -113,7 +114,7 @@ class MapGeneration : public Game {
                 ctx, m_descriptor_pool,
                 graphics_pipeline::quad::QuadPipelineDescriptorSetOpts{
                     .storage_buffer_refs = vulkan::DescriptorBufferInfo::from_vector(
-                        m_quad_storage_buffer->get_buffer_references()),
+                        m_quad_storage_buffer->get_reference()),
                     .combined_image_sampler_infos = {
                         vulkan::DescriptorImageInfo(m_tileset.view(), &m_sampler)}});
 
@@ -148,7 +149,7 @@ class MapGeneration : public Game {
             });
             m_num_instances++;
         }
-        m_quad_storage_buffer->transfer();
+        m_quad_storage_buffer->sync_all();
     }
 
     void register_mouse_event_handler(vulkan::context::GraphicsContext *ctx) {
