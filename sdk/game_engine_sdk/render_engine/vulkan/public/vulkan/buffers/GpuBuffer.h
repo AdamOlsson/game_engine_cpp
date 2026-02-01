@@ -129,7 +129,6 @@ template <typename T, GpuBufferType BufferType> class GpuBuffer {
     size_t size() const { return m_size; }
     std::vector<GpuBufferRef> get_reference() { return m_refs; }
     size_t num_elements() const { return m_staging_buffer.size(); }
-
     size_t size_of_T() { return sizeof(T); }
 
     void clear() {
@@ -169,14 +168,16 @@ template <typename T, GpuBufferType BufferType> class GpuBuffer {
         m_delta_ids.clear();
     }
 
-    void push_back(T &t) {
+    T &back() { return m_staging_buffer.back(); }
+
+    decltype(auto) push_back(T &t) {
         DEBUG_ASSERT(m_staging_buffer.size() < m_capacity,
                      "Exceeding the GPU buffers size!");
         m_delta_ids.push_back(m_staging_buffer.size() + 1);
         return m_staging_buffer.push_back(t);
     }
 
-    void push_back(const T &t) {
+    decltype(auto) push_back(const T &t) {
         DEBUG_ASSERT(m_staging_buffer.size() < m_capacity,
                      "Exceeding the GPU buffers size!");
         m_delta_ids.push_back(m_staging_buffer.size() + 1);
@@ -253,31 +254,36 @@ template <typename T, GpuBufferType BufferType> class GpuBuffer {
         }
 
         // Print GPU buffer contents (if data has been transferred)
-        /*if (m_buffer_mapped != nullptr) {*/
-        /*    std::cout << "\nGPU buffer contents:" << std::endl;*/
-        /*    auto *mapped_data = static_cast<T *>(m_buffer_mapped);*/
-        /*    size_t element_count = m_staging_buffer.size();*/
-        /**/
-        /*    for (size_t i = 0; i < element_count; ++i) {*/
-        /*        std::cout << "[" << i << "]: " << mapped_data[i] << std::endl;*/
-        /*    }*/
-        /**/
-        /*    // Also show raw byte data for debugging*/
-        /*    std::cout << "\nRaw byte data (first "*/
-        /*              << std::min(m_size, static_cast<VkDeviceSize>(64))*/
-        /*              << " bytes):" << std::endl;*/
-        /*    unsigned char *byteData = static_cast<unsigned char *>(m_buffer_mapped);*/
-        /*    for (size_t i = 0; i < std::min(m_size, static_cast<VkDeviceSize>(64)); i++)
-         * {*/
-        /*        printf("%02x ", byteData[i]);*/
-        /*        if ((i + 1) % 16 == 0)*/
-        /*            printf("\n");*/
-        /*    }*/
-        /*    if (m_size % 16 != 0) {*/
-        /*        printf("\n");*/
-        /*    }*/
-        /*}*/
+        std::cout << "\nGPU buffer contents:" << std::endl;
+        size_t count = 0;
+        for (auto &buffer : m_buffers) {
+            if (buffer.buffer_mapped != nullptr) {
+                auto *mapped_data = static_cast<T *>(buffer.buffer_mapped);
+                size_t element_count = m_staging_buffer.size();
 
+                std::cout << "\nSwap buffer " << count << ": " << std::endl;
+                for (size_t i = 0; i < element_count; ++i) {
+                    std::cout << "[" << i << "]: " << mapped_data[i] << std::endl;
+                }
+
+                // Also show raw byte data for debugging
+                std::cout << "\nRaw byte data (first "
+                          << std::min(m_size, static_cast<VkDeviceSize>(64))
+                          << " bytes):" << std::endl;
+                unsigned char *byteData =
+                    static_cast<unsigned char *>(buffer.buffer_mapped);
+                for (size_t i = 0; i < std::min(m_size, static_cast<VkDeviceSize>(64));
+                     i++) {
+                    printf("%02x ", byteData[i]);
+                    if ((i + 1) % 16 == 0)
+                        printf("\n");
+                }
+                if (m_size % 16 != 0) {
+                    printf("\n");
+                }
+            }
+            count++;
+        }
         std::cout << "=== End Data Dump ===" << std::endl;
     }
 };

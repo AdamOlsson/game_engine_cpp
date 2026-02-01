@@ -339,7 +339,7 @@ int main() {
     std::cout << "\n";
 
     GameEngineConfig config{
-        .window_config = window::WindowConfig{.dims = window::WindowDimension(1920, 960),
+        .window_config = window::WindowConfig{.dims = window::WindowDimension(1080, 960),
                                               .title = "6_pathing"},
     };
 
