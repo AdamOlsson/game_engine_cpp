@@ -197,7 +197,6 @@ class ExamplePathing : public Game {
                     m_is_left_mouse_pressed = true;
                     break;
                 case window::MouseEvent::LEFT_BUTTON_UP: {
-
                     if (m_is_left_shift_pressed) {
                         break;
                     }
@@ -311,7 +310,7 @@ class ExamplePathing : public Game {
             m_frame_states[m_swap_index].modified_instances.push_back(cursor_tile_index);
         }
 
-        m_tile_instances->sync_delta();
+        m_tile_instances->sync();
         auto descriptor = m_descriptor_set.get();
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
         m_pipeline->render(command_buffer, descriptor, &push_constant, m_num_instances);
@@ -339,7 +338,7 @@ int main() {
     std::cout << "\n";
 
     GameEngineConfig config{
-        .window_config = window::WindowConfig{.dims = window::WindowDimension(1080, 960),
+        .window_config = window::WindowConfig{.dims = window::WindowDimension(800, 800),
                                               .title = "6_pathing"},
     };
 

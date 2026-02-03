@@ -9,7 +9,15 @@ Window::Window(const WindowConfig &config) : m_config(config) {
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     m_window = glfwCreateWindow(config.dims.width, config.dims.height, config.title,
                                 nullptr, nullptr);
+
     glfwSetWindowUserPointer(m_window, this);
+
+    // High dpi: Window framebuffer size: (1600, 1600)
+    // Low dpi: Window framebuffer size: (800, 800)
+    glfwGetFramebufferSize(m_window, &m_frame_buffer.width, &m_frame_buffer.height);
+    glfwGetWindowSize(m_window, &m_window_size.width, &m_window_size.height);
+    m_px_per_coord.x = static_cast<double>(m_frame_buffer.width) / m_window_size.width;
+    m_px_per_coord.y = static_cast<double>(m_frame_buffer.height) / m_window_size.height;
 }
 
 Window::~Window() {
@@ -52,11 +60,17 @@ void Window::mouse_scroll_callback(GLFWwindow *window, double xoffset, double yo
     }
 }
 
+ViewportPoint Window::to_viewport(const Window *w, const double xpos, const double ypos) {
+    const double half_width = w->m_window_size.width / 2.0;
+    const double half_height = w->m_window_size.height / 2.0;
+    return ViewportPoint((xpos - half_width) * w->m_px_per_coord.x,
+                         (ypos - half_height) * w->m_px_per_coord.y);
+}
+
 void Window::cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
     auto w = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
     if (w->mouse_event_cb.has_value()) {
-        WindowDimension dims = w->m_config.dims;
-        auto p = ViewportPoint(xpos - dims.width / 2.0f, (ypos - dims.height / 2.0f));
+        auto p = to_viewport(w, xpos, ypos);
         w->mouse_event_cb.value()(MouseEvent::CURSOR_MOVED, p);
     }
 }
@@ -91,8 +105,7 @@ void Window::mouse_button_callback(GLFWwindow *window, int button, int action, i
     if (w != nullptr && w->mouse_event_cb.has_value()) {
         double xpos, ypos;
         glfwGetCursorPos(window, &xpos, &ypos);
-        WindowDimension dims = w->m_config.dims;
-        auto p = ViewportPoint(xpos - dims.width / 2.0f, (ypos - dims.height / 2.0f));
+        auto p = to_viewport(w, xpos, ypos);
         w->mouse_event_cb.value()(m_event, p);
     }
 }

@@ -18,6 +18,21 @@ class Window {
     WindowConfig m_config;
     GLFWwindow *m_window;
 
+    struct {
+        int width = 0;
+        int height = 0;
+    } m_frame_buffer;
+
+    struct {
+        int width = 0;
+        int height = 0;
+    } m_window_size;
+
+    struct {
+        double x = 0.0;
+        double y = 0.0;
+    } m_px_per_coord;
+
   public:
     Window(const WindowConfig &window_dims);
 
@@ -63,6 +78,8 @@ class Window {
                                       int mods);
     static void keyboard_callback(GLFWwindow *window, int key, int scancode, int action,
                                   int mods);
+    static ViewportPoint to_viewport(const Window *w, const double xpos,
+                                     const double ypos);
 };
 
 } // namespace window
