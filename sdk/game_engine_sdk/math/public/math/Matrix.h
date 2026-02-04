@@ -45,5 +45,8 @@ class Matrix {
     operator glm::mat4() const { return m_matrix; }
 
     glm::vec2 position_2d() const { return glm::vec2(m_matrix[3].x, m_matrix[3].y); }
+    glm::vec3 position_3d() const {
+        return glm::vec3(m_matrix[3].x, m_matrix[3].y, m_matrix[3].z);
+    }
 };
 } // namespace math

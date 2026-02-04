@@ -1,100 +1,18 @@
+#include "Caravan.h"
+#include "CaravanSlot.h"
+#include "Guard.h"
 #include "camera/Camera.h"
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
 #include "game_engine_sdk/render_engine/Texture.h"
 #include "graphics_pipeline/quad/QuadPipeline.h"
 #include "graphics_pipeline/quad/QuadPipelineSBO.h"
-#include "math/Matrix.h"
-#include "math/shape.h"
 #include "vulkan/CommandBufferManager.h"
 #include "vulkan/SwapChainManager.h"
 #include "vulkan/buffers/GpuBuffer.h"
 
 constexpr glm::vec2 INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
 constexpr float ZOOM_SCALE_FACTOR = 0.1f;
-
-class Guard {
-  private:
-    // Render data
-    math::Matrix m_model_matrix;
-    static constexpr util::colors::Color m_color = util::colors::GREEN;
-    static constexpr util::colors::Color m_selected_color = util::colors::YELLOW;
-    graphics_pipeline::quad::QuadPipelineSBO *m_render_data;
-
-    bool m_is_selected = false;
-
-  public:
-    static constexpr float width = 50.0f;
-    static constexpr float height = 50.0f;
-    camera::WorldPoint2D grid_position;
-
-    Guard() = default;
-    Guard(const camera::WorldPoint2D &grid_position)
-        : grid_position(grid_position),
-          m_model_matrix(
-              math::Matrix().scale(width, height, 1.0f).translate(grid_position)) {}
-    Guard(Guard &&other) noexcept = default;
-    Guard(const Guard &other) = default;
-    Guard &operator=(const Guard &other) = default;
-    Guard &operator=(Guard &&other) noexcept = default;
-    ~Guard() {}
-
-    bool is_point_inside(const camera::WorldPoint2D &point) {
-        // World position with no regard to the world grid
-        const camera::WorldPoint2D position = m_model_matrix.position_2d();
-        return math::is_point_inside_rectangle(point, position, width, height);
-    }
-
-    void set_render_data(graphics_pipeline::quad::QuadPipelineSBO *render_data) {
-        if (render_data == nullptr) {
-            return;
-        }
-        m_render_data = render_data;
-        m_render_data->model_matrix = m_model_matrix;
-        m_render_data->color = m_color;
-    }
-
-    void set_selected(const bool is_selected) {
-        m_is_selected = is_selected;
-        m_render_data->color = m_is_selected ? m_selected_color : m_color;
-    }
-
-    void toggle_selected() {
-        m_is_selected = !m_is_selected;
-        m_render_data->color = m_is_selected ? m_selected_color : m_color;
-    }
-};
-
-class Caravan {
-  private:
-    math::Matrix m_model_matrix;
-    static constexpr util::colors::Color m_color = util::colors::MAGENTA;
-    graphics_pipeline::quad::QuadPipelineSBO *m_render_data;
-
-  public:
-    static constexpr float width = 100.0f;
-    static constexpr float height = 200.0f;
-    camera::WorldPoint2D position;
-
-    Caravan() = default;
-    Caravan(const camera::WorldPoint2D &position)
-        : position(position),
-          m_model_matrix(math::Matrix().scale(width, height, 1.0f).translate(position)) {}
-    Caravan(Caravan &&other) noexcept = default;
-    Caravan(const Caravan &other) = default;
-    Caravan &operator=(const Caravan &other) = default;
-    Caravan &operator=(Caravan &&other) noexcept = default;
-    ~Caravan() {}
-
-    void set_render_data(graphics_pipeline::quad::QuadPipelineSBO *render_data) {
-        if (render_data == nullptr) {
-            return;
-        }
-        m_render_data = render_data;
-        m_render_data->model_matrix = m_model_matrix;
-        m_render_data->color = m_color;
-    }
-};
 
 class CaravanDefence : public Game {
   private:
@@ -103,7 +21,7 @@ class CaravanDefence : public Game {
 
     camera::Camera2D m_camera;
     struct {
-        window::ViewportPoint position;
+        window::ViewportPoint cursor_viewport_position;
         bool is_right_button_pressed = false;
     } m_mouse_state;
 
@@ -119,8 +37,12 @@ class CaravanDefence : public Game {
     std::unique_ptr<graphics_pipeline::quad::QuadPipeline> m_quad_pipeline;
 
     Caravan m_caravan;
-    Guard m_guard_1;
-    Guard m_guard_2;
+    std::vector<CaravanSlot> m_caravan_slots;
+    std::vector<Guard> m_guards;
+
+    struct {
+        std::optional<size_t> selected_guard = std::nullopt;
+    } m_game_state;
 
   public:
     CaravanDefence() {}
@@ -159,8 +81,6 @@ class CaravanDefence : public Game {
             std::make_unique<graphics_pipeline::quad::QuadPipelineDescriptorSet>(
                 ctx, m_quad_pool,
                 graphics_pipeline::quad::QuadPipelineDescriptorSetOpts{
-                    /*.storage_buffer_refs = vulkan::DescriptorBufferInfo::from_vector(*/
-                    /*    m_quad_instances->get_buffer_references()),*/
                     .storage_buffer_refs = vulkan::DescriptorBufferInfo::from_vector(
                         m_quad_instances->get_reference()),
                     .combined_image_sampler_infos = {
@@ -177,17 +97,44 @@ class CaravanDefence : public Game {
 
         // Add entities
         m_caravan = Caravan(camera::WorldPoint2D(0.0f, 0.0f));
-        m_guard_1 = Guard(camera::WorldPoint2D(-3.0f, -4.0f));
-        m_guard_2 = Guard(camera::WorldPoint2D(3.0f, -4.0f));
+        m_caravan_slots.push_back(CaravanSlot(camera::WorldPoint2D(-150.0f, -50.0f)));
+        m_caravan_slots.push_back(CaravanSlot(camera::WorldPoint2D(150.0f, -50.0f)));
+        m_caravan_slots.push_back(CaravanSlot(camera::WorldPoint2D(0.0f, -200.0f)));
+
+        m_guards.reserve(16); // 16 is magic
+        m_guards.push_back(Guard(&m_caravan_slots[0]));
+        m_guards.push_back(Guard(&m_caravan_slots[1]));
 
         // Fill buffers with entity render data
         m_caravan.set_render_data(&m_quad_instances->emplace_back());
-        m_guard_1.set_render_data(&m_quad_instances->emplace_back());
-        m_guard_2.set_render_data(&m_quad_instances->emplace_back());
+        m_caravan_slots[0].set_render_data(&m_quad_instances->emplace_back());
+        m_caravan_slots[1].set_render_data(&m_quad_instances->emplace_back());
+        m_caravan_slots[2].set_render_data(&m_quad_instances->emplace_back());
+        m_guards[0].set_render_data(&m_quad_instances->emplace_back());
+        m_guards[1].set_render_data(&m_quad_instances->emplace_back());
 
         m_quad_instances->sync_all();
 
         register_mouse_event_handler(ctx.get());
+    }
+
+    std::optional<size_t>
+    find_selected_caravan_slot(const camera::WorldPoint2D &click_point) {
+        for (size_t i = 0; i < m_caravan_slots.size(); i++) {
+            if (m_caravan_slots[i].is_point_inside(click_point)) {
+                return i;
+            }
+        }
+        return std::nullopt;
+    }
+
+    std::optional<size_t> find_selected_guard(const camera::WorldPoint2D &click_point) {
+        for (size_t i = 0; i < m_guards.size(); i++) {
+            if (m_guards[i].is_point_inside(click_point)) {
+                return i;
+            }
+        }
+        return std::nullopt;
     }
 
     void register_mouse_event_handler(vulkan::context::GraphicsContext *ctx) {
@@ -204,11 +151,11 @@ class CaravanDefence : public Game {
                 case window::MouseEvent::CURSOR_MOVED:
                     if (m_mouse_state.is_right_button_pressed) {
                         camera::WorldPoint2D world_delta =
-                            m_camera.viewport_delta_to_world(point -
-                                                             m_mouse_state.position);
+                            m_camera.viewport_delta_to_world(
+                                point - m_mouse_state.cursor_viewport_position);
                         m_camera.set_relative_position(world_delta * INVERT_AXISES);
                     }
-                    m_mouse_state.position = point;
+                    m_mouse_state.cursor_viewport_position = point;
                     break;
                 case window::MouseEvent::SCROLL:
                     m_camera.set_relative_zoom(point.y * ZOOM_SCALE_FACTOR);
@@ -216,15 +163,35 @@ class CaravanDefence : public Game {
                 case window::MouseEvent::LEFT_BUTTON_DOWN:
                     break;
                 case window::MouseEvent::LEFT_BUTTON_UP: {
-
-                    /*std::cout << "LEFT_BUTTON_UP: " << point << std::endl;*/
                     const camera::WorldPoint2D world_point =
                         m_camera.viewport_to_world(point);
-                    if (m_guard_1.is_point_inside(world_point)) {
-                        m_guard_1.toggle_selected();
-                    } else if (m_guard_2.is_point_inside(world_point)) {
-                        m_guard_2.toggle_selected();
+
+                    if (m_game_state.selected_guard.has_value()) {
+                        m_guards[m_game_state.selected_guard.value()].set_selected(false);
                     }
+
+                    const auto new_selected_guard = find_selected_guard(world_point);
+                    const auto clicked_caravan_slot =
+                        find_selected_caravan_slot(world_point);
+
+                    if (m_game_state.selected_guard.has_value() &&
+                        clicked_caravan_slot.has_value()) {
+                        CaravanSlot &slot = m_caravan_slots[clicked_caravan_slot.value()];
+                        Guard &guard = m_guards[m_game_state.selected_guard.value()];
+
+                        if (slot.is_free()) {
+                            CaravanSlot *old_slot = guard.get_caravan_slot();
+                            guard.set_caravan_slot(&slot);
+                            old_slot->clear_occupying_guard();
+                        }
+                    }
+
+                    m_game_state.selected_guard = new_selected_guard;
+
+                    if (m_game_state.selected_guard.has_value()) {
+                        m_guards[m_game_state.selected_guard.value()].set_selected(true);
+                    }
+
                     break;
                 }
                 }
@@ -238,11 +205,28 @@ class CaravanDefence : public Game {
             m_swap_chain_manager->get_render_pass(command_buffer);
         render_pass.begin();
 
+        // Only highlight slots when hover if a guard is selected
+        if (m_game_state.selected_guard.has_value()) {
+            const camera::WorldPoint2D cursor_world_point =
+                m_camera.viewport_to_world(m_mouse_state.cursor_viewport_position);
+            for (size_t i = 0; i < m_caravan_slots.size(); i++) {
+                if (!m_caravan_slots[i].is_visible()) {
+                    continue;
+                }
+
+                if (m_caravan_slots[i].is_point_inside(cursor_world_point)) {
+                    m_caravan_slots[i].set_highlighted(true);
+                } else {
+                    m_caravan_slots[i].set_highlighted(false);
+                }
+            }
+        }
+
         m_quad_instances->sync();
 
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
         auto descriptor = m_quad_descriptor.get();
-        const size_t num_instances = 3;
+        const size_t num_instances = 6;
         m_quad_pipeline->render(command_buffer, descriptor, &push_constant,
                                 num_instances);
 
