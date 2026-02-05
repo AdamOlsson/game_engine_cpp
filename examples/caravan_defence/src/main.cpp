@@ -6,8 +6,8 @@
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
 #include "game_engine_sdk/render_engine/Texture.h"
-#include "graphics_pipeline/quad/QuadPipeline.h"
 #include "graphics_pipeline/quad/QuadPipelineSBO.h"
+#include "graphics_pipeline/quad/QuadRenderer.h"
 #include "math/Vector2.h"
 #include "vulkan/CommandBufferManager.h"
 #include "vulkan/SwapChainManager.h"
@@ -37,7 +37,7 @@ class CaravanDefence : public Game {
         vulkan::buffers::StorageBuffer<graphics_pipeline::quad::QuadPipelineSBO>>
         m_quad_instances;
     std::unique_ptr<graphics_pipeline::quad::QuadPipelineDescriptorSet> m_quad_descriptor;
-    std::unique_ptr<graphics_pipeline::quad::QuadPipeline> m_quad_pipeline;
+    std::unique_ptr<graphics_pipeline::quad::QuadRenderer> m_quad_renderer;
 
     Caravan m_caravan;
     std::vector<CaravanSlot> m_caravan_slots;
@@ -104,9 +104,13 @@ class CaravanDefence : public Game {
         push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         push_constant_range.size = camera::Camera2D::matrix_size();
 
-        m_quad_pipeline = std::make_unique<graphics_pipeline::quad::QuadPipeline>(
+        /*m_quad_pipeline = std::make_unique<graphics_pipeline::quad::QuadPipeline>(*/
+        /*    ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),*/
+        /*    m_quad_descriptor->get_layout_handle(), &push_constant_range);*/
+        auto layout = m_quad_descriptor->get_layout_handle();
+        m_quad_renderer = std::make_unique<graphics_pipeline::quad::QuadRenderer>(
             ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
-            m_quad_descriptor->get_layout_handle(), &push_constant_range);
+            &push_constant_range, *layout);
 
         // Add entities
         m_caravan = Caravan(camera::WorldPoint2D(0.0f, 0.0f));
@@ -262,7 +266,7 @@ class CaravanDefence : public Game {
         auto descriptor = m_quad_descriptor.get();
         const size_t num_instances =
             1 + m_guards.size() + m_caravan_slots.size() + m_enemies.size();
-        m_quad_pipeline->render(command_buffer, descriptor, &push_constant,
+        m_quad_renderer->render(command_buffer, descriptor, &push_constant,
                                 num_instances);
 
         render_pass.end_submit_present();

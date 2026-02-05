@@ -2,9 +2,9 @@
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
 #include "game_engine_sdk/render_engine/TilesetUVWT.h"
-#include "graphics_pipeline/quad/QuadPipeline.h"
 #include "graphics_pipeline/quad/QuadPipelineDescriptorSet.h"
 #include "graphics_pipeline/quad/QuadPipelineSBO.h"
+#include "graphics_pipeline/quad/QuadRenderer.h"
 #include "math/Matrix.h"
 #include "tiles.h"
 #include "tiling/NoiseMap.h"
@@ -39,7 +39,8 @@ class MapGeneration : public Game {
         m_quad_storage_buffer;
     std::unique_ptr<graphics_pipeline::quad::QuadPipelineDescriptorSet>
         m_quad_descriptor_set;
-    std::unique_ptr<graphics_pipeline::quad::QuadPipeline> m_quad_pipeline;
+    std::unique_ptr<graphics_pipeline::quad::QuadRenderer> m_quad_renderer;
+
     size_t m_num_instances;
 
     Texture m_tileset;
@@ -123,9 +124,9 @@ class MapGeneration : public Game {
             vulkan::PushConstantRange{.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
                                       .offset = 0,
                                       .size = camera::Camera2D::matrix_size()};
-        m_quad_pipeline = std::make_unique<graphics_pipeline::quad::QuadPipeline>(
+        m_quad_renderer = std::make_unique<graphics_pipeline::quad::QuadRenderer>(
             ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
-            &quad_descriptor_set_layout, &quad_push_constant_range);
+            &quad_push_constant_range, quad_descriptor_set_layout);
 
         const auto num_tiles = grid.width() * grid.height();
         m_num_instances = 0;
@@ -191,7 +192,7 @@ class MapGeneration : public Game {
 
         auto descriptor = m_quad_descriptor_set.get();
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
-        m_quad_pipeline->render(command_buffer, descriptor, &push_constant,
+        m_quad_renderer->render(command_buffer, descriptor, &push_constant,
                                 m_num_instances);
 
         render_pass.end_submit_present();
