@@ -23,13 +23,13 @@ class CaravanSlot {
 
     Guard *m_occupying_guard = nullptr;
 
-  public:
-    static constexpr float width = 50.0f;
-    static constexpr float height = 50.0f;
+    static constexpr glm::vec2 m_size = glm::vec2(50.0f, 50.f);
 
+  public:
     CaravanSlot() = default;
     CaravanSlot(const camera::WorldPoint2D &position)
-        : m_model_matrix(math::Matrix().translate(position).scale(width, height, 1.0f)) {}
+        : m_model_matrix(
+              math::Matrix().translate(position).scale(m_size.x, m_size.y, 1.0f)) {}
     CaravanSlot(CaravanSlot &&other) noexcept = default;
     CaravanSlot(const CaravanSlot &other) = default;
     CaravanSlot &operator=(const CaravanSlot &other) = default;
@@ -39,7 +39,7 @@ class CaravanSlot {
     bool is_point_inside(const camera::WorldPoint2D &point) {
         // World position with no regard to the world grid
         const camera::WorldPoint2D position = m_model_matrix.position_2d();
-        return math::is_point_inside_rectangle(point, position, width, height);
+        return math::is_point_inside_rectangle(point, position, m_size.x, m_size.y);
     }
 
     void set_render_data(graphics_pipeline::quad::QuadPipelineSBO *render_data) {

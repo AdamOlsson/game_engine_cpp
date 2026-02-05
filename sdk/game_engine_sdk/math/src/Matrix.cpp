@@ -38,3 +38,8 @@ math::Matrix &math::Matrix::rotate(const float angle, const glm::vec3 &axis) {
     m_matrix = glm::rotate(m_matrix, angle, axis);
     return *this;
 }
+
+math::Matrix &math::Matrix::rotate_z(const float angle) {
+    m_matrix = glm::rotate(m_matrix, angle, glm::vec3(0.0f, 0.0f, 1.0f));
+    return *this;
+}

@@ -1,5 +1,6 @@
 #include "Caravan.h"
 #include "CaravanSlot.h"
+#include "Enemy.h"
 #include "Guard.h"
 #include "camera/Camera.h"
 #include "game_engine_sdk/Game.h"
@@ -7,9 +8,11 @@
 #include "game_engine_sdk/render_engine/Texture.h"
 #include "graphics_pipeline/quad/QuadPipeline.h"
 #include "graphics_pipeline/quad/QuadPipelineSBO.h"
+#include "math/Vector2.h"
 #include "vulkan/CommandBufferManager.h"
 #include "vulkan/SwapChainManager.h"
 #include "vulkan/buffers/GpuBuffer.h"
+#include <random>
 
 constexpr glm::vec2 INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
 constexpr float ZOOM_SCALE_FACTOR = 0.1f;
@@ -39,17 +42,27 @@ class CaravanDefence : public Game {
     Caravan m_caravan;
     std::vector<CaravanSlot> m_caravan_slots;
     std::vector<Guard> m_guards;
+    std::vector<Enemy> m_enemies;
 
     struct {
+        size_t time_elapsed_ms;
         std::optional<size_t> selected_guard = std::nullopt;
+
+        struct {
+            std::random_device device;
+            std::mt19937 gen;
+            void init() { gen = std::mt19937(device()); }
+            float uniform(const float from, const float to) {
+                std::uniform_real_distribution<float> dist(from, to);
+                return dist(gen);
+            }
+        } rng;
     } m_game_state;
 
   public:
     CaravanDefence() {}
 
     ~CaravanDefence() {};
-
-    void update(float dt) override {};
 
     void setup(std::shared_ptr<vulkan::context::GraphicsContext> &ctx) override {
 
@@ -105,6 +118,8 @@ class CaravanDefence : public Game {
         m_guards.push_back(Guard(&m_caravan_slots[0]));
         m_guards.push_back(Guard(&m_caravan_slots[1]));
 
+        m_enemies.reserve(64);
+
         // Fill buffers with entity render data
         m_caravan.set_render_data(&m_quad_instances->emplace_back());
         m_caravan_slots[0].set_render_data(&m_quad_instances->emplace_back());
@@ -117,6 +132,25 @@ class CaravanDefence : public Game {
 
         register_mouse_event_handler(ctx.get());
     }
+
+    void spawn_enemy() {
+        const float distance = m_game_state.rng.uniform(400.0f, 800.0f);
+        const float angle = m_game_state.rng.uniform(-45.0f, 225.0f);
+        const math::Vector2 position = math::Vector2(distance, 0.0f).rotate_z(-angle);
+        m_enemies.push_back(Enemy(position));
+        m_enemies.back().set_render_data(&m_quad_instances->emplace_back());
+    }
+
+    void update(const float dt) override {
+        const size_t time_elapsed_ms = m_game_state.time_elapsed_ms;
+
+        if (time_elapsed_ms > Enemy::spawn_rate_ms) {
+            spawn_enemy();
+            m_game_state.time_elapsed_ms = 0;
+        }
+
+        m_game_state.time_elapsed_ms += dt * 1000;
+    };
 
     std::optional<size_t>
     find_selected_caravan_slot(const camera::WorldPoint2D &click_point) {
@@ -226,7 +260,8 @@ class CaravanDefence : public Game {
 
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
         auto descriptor = m_quad_descriptor.get();
-        const size_t num_instances = 6;
+        const size_t num_instances =
+            1 + m_guards.size() + m_caravan_slots.size() + m_enemies.size();
         m_quad_pipeline->render(command_buffer, descriptor, &push_constant,
                                 num_instances);
 

@@ -1,11 +1,7 @@
 #pragma once
+#include "traits.h"
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/glm.hpp>
-
-template <typename T>
-concept StaticCastableToFloat = requires(T t) {
-    { static_cast<float>(t) };
-};
 
 namespace math {
 class Matrix {
@@ -29,6 +25,11 @@ class Matrix {
         return *this;
     }
 
+    template <StaticCastableToFloat T> Matrix &translate(const T x, const T y) {
+        m_matrix = glm::translate(m_matrix, glm::vec3(x, y, 0.0f));
+        return *this;
+    }
+
     Matrix &translate(const glm::vec2 &vec);
     Matrix &translate(const glm::vec3 &vec);
 
@@ -41,6 +42,7 @@ class Matrix {
     }
 
     Matrix &rotate(const float angle, const glm::vec3 &axis);
+    Matrix &rotate_z(const float angle);
 
     operator glm::mat4() const { return m_matrix; }
 

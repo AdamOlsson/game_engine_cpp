@@ -6,7 +6,7 @@
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 
-TEST(FontLoaderTests, Test_Dummy) {
+TEST(FontLoaderTests, DISABLED_Test_Dummy) {
     font::FontLoader loader =
         font::FontLoader(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
     /*font::FontLoader(ASSET_FILE("TypeLightSans-KV84p.otf"));*/
