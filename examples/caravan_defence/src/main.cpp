@@ -104,9 +104,6 @@ class CaravanDefence : public Game {
         push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         push_constant_range.size = camera::Camera2D::matrix_size();
 
-        /*m_quad_pipeline = std::make_unique<graphics_pipeline::quad::QuadPipeline>(*/
-        /*    ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),*/
-        /*    m_quad_descriptor->get_layout_handle(), &push_constant_range);*/
         auto layout = m_quad_descriptor->get_layout_handle();
         m_quad_renderer = std::make_unique<graphics_pipeline::quad::QuadRenderer>(
             ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
@@ -151,6 +148,16 @@ class CaravanDefence : public Game {
         if (time_elapsed_ms > Enemy::spawn_rate_ms) {
             spawn_enemy();
             m_game_state.time_elapsed_ms = 0;
+        }
+
+        for (size_t i = 0; i < m_enemies.size(); i++) {
+            Enemy &enemy = m_enemies[i];
+            enemy.move_towards(m_caravan.get_world_position(), dt);
+
+            if (m_caravan.is_point_inside(enemy.get_world_position())) {
+                enemy.die();
+                m_enemies.erase(m_enemies.begin() + i);
+            }
         }
 
         m_game_state.time_elapsed_ms += dt * 1000;

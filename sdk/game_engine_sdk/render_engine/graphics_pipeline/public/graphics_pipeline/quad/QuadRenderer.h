@@ -16,6 +16,7 @@ class QuadRenderer {
     vulkan::buffers::IndexBuffer m_quad_index_buffer;
 
     /*vulkan::DescriptorPool m_descriptor_pool;*/
+    /*vulkan::Sampler m_sampler;*/
     /*SwapDescriptorSet m_descriptor_sets;*/
 
     static vulkan::DescriptorSetLayout

@@ -11,12 +11,15 @@ GameEngine::GameEngine(std::unique_ptr<Game> game, GameEngineConfig &config)
 GameEngine::~GameEngine() {}
 
 void GameEngine::run() {
+
     m_game->setup(m_ctx);
 
+    TimePoint log_timer = Clock::now();
+    Duration log_frequency = std::chrono::seconds(5);
+    size_t count = 0;
+
     while (!m_window->should_window_close()) {
-
         m_window->process_window_events();
-
         TimePoint current_time = Clock::now();
         Duration elapsed = current_time - m_start_tick;
         int update_count = 0;
@@ -25,9 +28,17 @@ void GameEngine::run() {
             m_next_tick += m_tick_delta;
             update_count++;
         }
+        count += update_count;
+
+        // Log every 5 seconds
+        Duration log_elapsed = current_time - log_timer;
+        if (log_elapsed >= log_frequency) {
+            std::cout << "Updates in last 5s: " << count << std::endl;
+            count = 0;
+            log_timer = current_time;
+        }
 
         m_game->render();
     }
-
     m_ctx->wait_idle();
 }

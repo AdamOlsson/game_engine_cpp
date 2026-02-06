@@ -1,6 +1,8 @@
 #pragma once
 
+#include "math/traits.h"
 #include <algorithm>
+#include <format>
 #include <utility>
 #include <vector>
 namespace math {
@@ -97,11 +99,18 @@ struct CubicBezier {
     };
 };
 
-template <typename T>
-constexpr std::pair<T, T> lerp(const std::pair<T, T> &A, const std::pair<T, T> &B,
-                               const float t) {
-    return std::make_pair((1.0f - t) * A.first + t * B.first,
-                          (1.0f - t) * A.second + t * B.second);
+template <Point T> constexpr T lerp(const T &A, const T &B, const float t) {
+    if constexpr (std::same_as<T, std::pair<float, float>>) {
+        return std::make_pair((1.0f - t) * A.first + t * B.first,
+                              (1.0f - t) * A.second + t * B.second);
+    } else if constexpr (std::same_as<T, glm::vec2>) {
+        return glm::vec2((1.0f - t) * A.x + t * B.x, (1.0f - t) * A.y + t * B.y);
+    } else if constexpr (std::same_as<T, glm::vec3>) {
+        return glm::vec3((1.0f - t) * A.x + t * B.x, (1.0f - t) * A.y + t * B.y,
+                         (1.0f - t) * A.z + t * B.z);
+    } else {
+        throw std::runtime_error(std::format("Error: lerp() not implemented for type."));
+    }
 }
 
 constexpr std::pair<math::CubicBezier, math::CubicBezier>

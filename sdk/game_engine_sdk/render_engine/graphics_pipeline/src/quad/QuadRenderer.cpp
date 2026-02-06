@@ -1,5 +1,6 @@
 #include "graphics_pipeline/quad/QuadRenderer.h"
 #include "graphics_pipeline/DescriptorSetLayoutBuilder.h"
+#include "graphics_pipeline/SwapDescriptorSetBuilder.h"
 
 namespace {
 const std::vector<uint16_t> m_quad_indices = {0, 1, 2, 0, 2, 3};
@@ -22,15 +23,17 @@ graphics_pipeline::quad::QuadRenderer::QuadRenderer(
       m_quad_index_buffer(
           vulkan::buffers::IndexBuffer(m_ctx, m_quad_indices, command_buffer_manager)) {
 
-    /*const auto layout = QuadRenderer::get_descriptor_set_layout(ctx);*/
+    /*m_sampler = vulkan::Sampler(ctx, vulkan::Filter::NEAREST,*/
+    /*                            vulkan::SamplerAddressMode::CLAMP_TO_BORDER);*/
+    /*const auto layout_ = QuadRenderer::get_descriptor_set_layout(ctx);*/
     m_quad_pipeline = QuadPipeline(m_ctx, command_buffer_manager, swap_chain_manager,
                                    &layout, push_constant_range);
 
     /*m_descriptor_pool = vulkan::DescriptorPool(*/
     /*    ctx, vulkan::DescriptorPoolOpts{.max_num_descriptor_sets = 2,*/
-    /*                                    .num_storage_buffers = 2,*/
+    /*                                    .num_storage_buffers = 1,*/
     /*                                    .num_uniform_buffers = 0,*/
-    /*                                    .num_combined_image_samplers = 0});*/
+    /*                                    .num_combined_image_samplers = 1});*/
 
     /*auto builder = SwapDescriptorSetBuilder(2);*/
     /*builder.add_storage_buffer(*/

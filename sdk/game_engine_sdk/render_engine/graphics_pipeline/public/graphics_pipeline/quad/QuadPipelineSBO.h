@@ -12,6 +12,8 @@ struct QuadPipelineSBO {
     alignas(4) glm::uint32 texture_id = 0;
     alignas(16) glm::vec4 color = util::colors::TRANSPARENT;
 
+    void reset() { *this = QuadPipelineSBO{}; }
+
     std::string to_string() const {
         std::ostringstream oss;
         oss << "QuadPipelineUBO {\n"
