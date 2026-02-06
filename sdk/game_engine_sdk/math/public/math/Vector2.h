@@ -15,7 +15,7 @@ class Vector2 {
     float &y;
 
     template <StaticCastableToFloat T>
-    Vector2(const T x, const T y) : m_vec(x, y), x(m_vec.x), y(m_vec.y) {}
+    constexpr Vector2(const T x, const T y) : m_vec(x, y), x(m_vec.x), y(m_vec.y) {}
 
     template <StaticCastableToFloat T> Vector2 rotate_z(const T degrees) {
         const glm::mat4 transform = glm::rotate(glm::mat4(1.0f), glm::radians(degrees),
