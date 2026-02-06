@@ -6,6 +6,10 @@ vulkan::Sampler::Sampler(std::shared_ptr<vulkan::context::GraphicsContext> ctx)
     : m_ctx(ctx), m_sampler(create_sampler(vulkan::Filter::LINEAR,
                                            vulkan::SamplerAddressMode::REPEAT)) {}
 
+vulkan::Sampler::Sampler(std::shared_ptr<context::GraphicsContext> ctx,
+                         const SamplerOpts &opts)
+    : m_ctx(ctx), m_sampler(create_sampler(opts.filter, opts.address_mode)) {}
+
 vulkan::Sampler::Sampler(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
                          vulkan::Filter filter, SamplerAddressMode address_mode)
     : m_ctx(ctx), m_sampler(create_sampler(filter, address_mode)) {}

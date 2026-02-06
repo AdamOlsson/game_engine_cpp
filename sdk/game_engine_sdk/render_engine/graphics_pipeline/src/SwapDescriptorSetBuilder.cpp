@@ -70,6 +70,18 @@ graphics_pipeline::SwapDescriptorSetBuilder::add_combined_image_sampler(
     return *this;
 }
 
+graphics_pipeline::SwapDescriptorSetBuilder &
+graphics_pipeline::SwapDescriptorSetBuilder::add_combined_image_sampler(
+    size_t binding, std::vector<vulkan::DescriptorImageInfo> &&image_info) {
+    m_combined_image_sampler_infos.assign(image_info.begin(), image_info.end());
+    m_combined_image_sampler_binding = binding;
+    m_descriptor_set_layout_builder.add_combined_image_sampler_binding(
+        binding, m_combined_image_sampler_infos.size());
+    /*logger::debug("Num image sampler descriptors: ",*/
+    /*              m_combined_image_sampler_infos.size());*/
+    return *this;
+}
+
 std::vector<VkDescriptorSet>
 graphics_pipeline::SwapDescriptorSetBuilder::allocate_descriptor_sets(
     std::shared_ptr<vulkan::context::GraphicsContext> &ctx,

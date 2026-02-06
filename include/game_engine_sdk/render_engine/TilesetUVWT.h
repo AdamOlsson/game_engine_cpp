@@ -1,5 +1,5 @@
 #pragma once
-#include "game_engine_sdk/render_engine/Texture.h"
+#include "graphics_pipeline/Texture.h"
 
 class TileSize : public glm::vec2 {
     using glm::vec2::vec2;
@@ -20,7 +20,7 @@ class TilesetUVWT {
 
   public:
     TilesetUVWT() = default;
-    TilesetUVWT(Texture &tileset, TileSize size);
+    TilesetUVWT(graphics_pipeline::Texture &tileset, TileSize size);
     ~TilesetUVWT() = default;
 
     glm::vec4 uvwt_for_tile_at(unsigned int x, unsigned int y);

@@ -1,12 +1,14 @@
+
 #pragma once
 
-/*#include "game_engine_sdk/render_engine/resources/images/ImageResource.h"*/
+#include "ImageResource.h"
 #include "image/Image.h"
 #include "vulkan/CommandBufferManager.h"
 #include "vulkan/TextureImage.h"
 #include "vulkan/context/GraphicsContext.h"
 #include <memory>
 
+namespace graphics_pipeline {
 class Texture {
   private:
     std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
@@ -39,6 +41,16 @@ class Texture {
                       vulkan::CommandBufferManager *command_buffer_manager,
                       const uint8_t *bytes, const unsigned int length);
 
+    static Texture
+    from_image_resource(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
+                        vulkan::CommandBufferManager *command_buffer_manager,
+                        const ImageResource *resource);
+
+    static std::unique_ptr<Texture>
+    unique_from_image_resource(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
+                               vulkan::CommandBufferManager *command_buffer_manager,
+                               const ImageResource *resource);
+
     static std::unique_ptr<Texture> unique_from_image_resource_name(
         std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
         vulkan::CommandBufferManager *command_buffer_manager,
@@ -63,3 +75,4 @@ class Texture {
 
     vulkan::TextureImageDimension dimension() const;
 };
+} // namespace graphics_pipeline

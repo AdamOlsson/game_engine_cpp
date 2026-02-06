@@ -53,11 +53,17 @@ class CaravanSlot {
 
     void set_highlighted(const bool is_highlighted) {
         m_is_highlighted = is_highlighted;
+        DEBUG_ASSERT(
+            m_render_data != nullptr,
+            "Error: Trying to call set_highlighted() when render data is nullptr.");
         m_render_data->color = m_is_highlighted ? m_highlighted_color : m_color;
     }
 
     void toggle_selected() {
         m_is_highlighted = !m_is_highlighted;
+        DEBUG_ASSERT(
+            m_render_data != nullptr,
+            "Error: Trying to call toggle_highlighted() when render data is nullptr.");
         m_render_data->color = m_is_highlighted ? m_highlighted_color : m_color;
     }
 
@@ -65,11 +71,17 @@ class CaravanSlot {
 
     void set_visibility(const bool is_visible) {
         m_is_visible = is_visible;
+        DEBUG_ASSERT(
+            m_render_data != nullptr,
+            "Error: Trying to call set_visibility() when render data is nullptr.");
         m_render_data->color = m_is_visible ? m_color : util::colors::TRANSPARENT;
     }
 
     void toggle_visibility() {
         m_is_visible = !m_is_visible;
+        DEBUG_ASSERT(
+            m_render_data != nullptr,
+            "Error: Trying to call toggle_visibility() when render data is nullptr.");
         m_render_data->color = m_is_visible ? m_color : util::colors::TRANSPARENT;
     }
 

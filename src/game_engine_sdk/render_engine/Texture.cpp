@@ -61,22 +61,24 @@ Texture::unique_from_bytes(std::shared_ptr<vulkan::context::GraphicsContext> &ct
     return std::move(std::make_unique<Texture>(ctx, command_buffer_manager, image_data));
 }
 
-Texture
-Texture::from_image_resource(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
-                             vulkan::CommandBufferManager *command_buffer_manager,
-                             const ImageResource *resource) {
-    const auto image_data =
-        image::Image::load_rgba_image(resource->bytes(), resource->length());
-    return Texture(ctx, command_buffer_manager, image_data);
-}
+/*Texture*/
+/*Texture::from_image_resource(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,*/
+/*                             vulkan::CommandBufferManager *command_buffer_manager,*/
+/*                             const ImageResource *resource) {*/
+/*    const auto image_data =*/
+/*        image::Image::load_rgba_image(resource->bytes(), resource->length());*/
+/*    return Texture(ctx, command_buffer_manager, image_data);*/
+/*}*/
 
-std::unique_ptr<Texture> Texture::unique_from_image_resource(
-    std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
-    vulkan::CommandBufferManager *command_buffer_manager, const ImageResource *resource) {
-    const auto image_data =
-        image::Image::load_rgba_image(resource->bytes(), resource->length());
-    return std::move(std::make_unique<Texture>(ctx, command_buffer_manager, image_data));
-}
+/*std::unique_ptr<Texture> Texture::unique_from_image_resource(*/
+/*    std::shared_ptr<vulkan::context::GraphicsContext> &ctx,*/
+/*    vulkan::CommandBufferManager *command_buffer_manager, const ImageResource *resource)
+ * {*/
+/*    const auto image_data =*/
+/*        image::Image::load_rgba_image(resource->bytes(), resource->length());*/
+/*    return std::move(std::make_unique<Texture>(ctx, command_buffer_manager,
+ * image_data));*/
+/*}*/
 
 std::unique_ptr<Texture> Texture::unique_from_image_resource_name(
     std::shared_ptr<vulkan::context::GraphicsContext> &ctx,

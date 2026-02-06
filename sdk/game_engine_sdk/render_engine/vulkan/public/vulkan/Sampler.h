@@ -20,6 +20,11 @@ enum class SamplerMipmapMode {
     LINEAR = VK_SAMPLER_MIPMAP_MODE_LINEAR,
 };
 
+struct SamplerOpts {
+    vulkan::Filter filter = vulkan::Filter::LINEAR;
+    vulkan::SamplerAddressMode address_mode = vulkan::SamplerAddressMode::REPEAT;
+};
+
 class Sampler {
   private:
     std::shared_ptr<context::GraphicsContext> m_ctx;
@@ -33,6 +38,7 @@ class Sampler {
     Sampler(std::shared_ptr<context::GraphicsContext> ctx);
     Sampler(std::shared_ptr<context::GraphicsContext> ctx, vulkan::Filter filter,
             vulkan::SamplerAddressMode address_mode);
+    Sampler(std::shared_ptr<context::GraphicsContext> ctx, const SamplerOpts &opts);
     ~Sampler();
 
     Sampler(Sampler &&other) noexcept;

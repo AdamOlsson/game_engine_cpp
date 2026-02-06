@@ -51,6 +51,10 @@ class SwapDescriptorSetBuilder {
                                std::vector<vulkan::DescriptorImageInfo> &image_info);
 
     SwapDescriptorSetBuilder &
+    add_combined_image_sampler(size_t binding,
+                               std::vector<vulkan::DescriptorImageInfo> &&image_info);
+
+    SwapDescriptorSetBuilder &
     add_storage_buffer(size_t binding,
                        std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos);
 

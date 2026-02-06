@@ -1,6 +1,7 @@
 #include "game_engine_sdk/render_engine/TilesetUVWT.h"
 
-TilesetUVWT::TilesetUVWT(Texture &tileset, TileSize size) : m_tile_size(size) {
+TilesetUVWT::TilesetUVWT(graphics_pipeline::Texture &tileset, TileSize size)
+    : m_tile_size(size) {
     const auto dimension = tileset.dimension();
     m_atlas_width = dimension.width;
     m_atlas_height = dimension.height;
