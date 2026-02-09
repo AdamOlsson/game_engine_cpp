@@ -10,7 +10,7 @@ class Caravan {
   private:
     math::Matrix m_model_matrix;
     static constexpr util::colors::Color m_color = util::colors::MAGENTA;
-    graphics_pipeline::quad::QuadPipelineSBO *m_render_data;
+    graphics_pipeline::quad::QuadPipelineSBO *m_render_data = nullptr;
 
     static constexpr glm::vec2 m_size = glm::vec2(100.0f, 200.0f);
 

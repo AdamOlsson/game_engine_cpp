@@ -1,6 +1,6 @@
 #include "Guard.h"
 
-Guard::Guard(CaravanSlot *slot) {
+Guard::Guard(CaravanSlot *slot) : m_last_attack(Clock::now()) {
     DEBUG_ASSERT(slot != nullptr, "Error: Constructuring guard with nullptr");
     m_caravan_slot = slot;
     m_model_matrix = math::Matrix()
@@ -50,3 +50,18 @@ void Guard::set_caravan_slot(CaravanSlot *slot) {
 }
 
 CaravanSlot *Guard::get_caravan_slot() const { return m_caravan_slot; }
+
+bool Guard::in_attack_range(const camera::WorldPoint2D &point) const {
+    const camera::WorldPoint2D &guard_position = get_world_position();
+    return math::distance2(guard_position, point) < (m_attack_range * m_attack_range);
+}
+
+bool Guard::can_attack() {
+    const Duration elapsed = Clock::now() - m_last_attack;
+    return elapsed > m_attack_cooldown;
+}
+
+RangedAttack Guard::attack(const Enemy &e) {
+    m_last_attack = Clock::now();
+    return RangedAttack(get_world_position(), e.get_world_position());
+}

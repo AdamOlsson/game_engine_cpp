@@ -46,4 +46,6 @@ template <Vec2Or3 T> constexpr float distance2(const T &from, const T &to) {
     return length2(diff);
 }
 
+constexpr float angle_to_x_axis(const glm::vec2 &vec) { return std::atan2(vec.y, vec.x); }
+
 } // namespace math

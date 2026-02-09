@@ -2,6 +2,7 @@
 #include "CaravanSlot.h"
 #include "Enemy.h"
 #include "Guard.h"
+#include "RangedAttack.h"
 #include "camera/Camera.h"
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
@@ -31,6 +32,7 @@ class CaravanDefence : public Game {
     Caravan m_caravan;
     std::vector<CaravanSlot> m_caravan_slots;
     std::vector<Guard> m_guards;
+    std::vector<RangedAttack> m_attacks;
     std::vector<Enemy> m_enemies;
 
     struct {
@@ -89,8 +91,9 @@ class CaravanDefence : public Game {
 
         m_enemies.reserve(64);
 
-        m_guards[0].set_render_data(&m_quad_renderer->m_instances.emplace_back());
-        m_guards[1].set_render_data(&m_quad_renderer->m_instances.emplace_back());
+        for (Guard &g : m_guards) {
+            g.set_render_data(&m_quad_renderer->m_instances.emplace_back());
+        }
 
         m_quad_renderer->m_instances.sync_all();
 
@@ -105,19 +108,53 @@ class CaravanDefence : public Game {
         m_enemies.back().set_render_data(&m_quad_renderer->m_instances.emplace_back());
     }
 
-    void update(const float dt) override {
-        const size_t time_elapsed_ms = m_game_state.time_elapsed_ms;
+    void create_attack(Guard &guard, const Enemy &enemy) {
+        m_attacks.push_back(guard.attack(enemy.get_world_position()));
+        m_attacks.back().set_render_data(&m_quad_renderer->m_instances.emplace_back());
+    }
 
+    template <typename T> void update_all(const float dt, std::vector<T> &vec) {
+        for (T &t : vec) {
+            t.update(dt);
+        }
+    }
+
+    void update(const float dt) override {
+        update_all(dt, m_attacks);
+
+        for (int i = m_attacks.size() - 1; i >= 0; i--) {
+            if (!m_attacks[i].is_visible()) {
+                m_attacks[i].remove();
+                m_attacks.erase(m_attacks.begin() + i);
+            }
+        }
+
+        const size_t time_elapsed_ms = m_game_state.time_elapsed_ms;
         if (time_elapsed_ms > Enemy::spawn_rate_ms) {
             spawn_enemy();
             m_game_state.time_elapsed_ms = 0;
         }
 
         for (size_t i = 0; i < m_enemies.size(); i++) {
+            bool enemy_dead = false;
             Enemy &enemy = m_enemies[i];
             enemy.move_towards(m_caravan.get_world_position(), dt);
+            const camera::WorldPoint2D enemy_position = enemy.get_world_position();
 
-            if (m_caravan.is_point_inside(enemy.get_world_position())) {
+            for (Guard &guard : m_guards) {
+                if (!enemy_dead && guard.can_attack() &&
+                    guard.in_attack_range(enemy_position)) {
+                    create_attack(guard, enemy);
+                    enemy_dead = true;
+                    break;
+                }
+            }
+
+            if (!enemy_dead && m_caravan.is_point_inside(enemy.get_world_position())) {
+                enemy_dead = true;
+            }
+
+            if (enemy_dead) {
                 enemy.die();
                 m_enemies.erase(m_enemies.begin() + i);
             }
@@ -233,9 +270,9 @@ class CaravanDefence : public Game {
         m_quad_renderer->m_instances.sync();
 
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
-        /*auto descriptor = m_quad_descriptor.get();*/
-        const size_t num_instances =
-            1 + m_guards.size() + m_caravan_slots.size() + m_enemies.size();
+        /*const size_t num_instances = 1 + m_guards.size() + m_caravan_slots.size() +*/
+        /*                             m_enemies.size() + m_attacks.size();*/
+        const size_t num_instances = 256;
         m_quad_renderer->render(command_buffer, &push_constant, num_instances);
 
         render_pass.end_submit_present();

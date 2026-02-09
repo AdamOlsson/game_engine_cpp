@@ -34,12 +34,12 @@ math::Matrix &math::Matrix::scale(const glm::vec3 &&vec) {
     return *this;
 }
 
-math::Matrix &math::Matrix::rotate(const float angle, const glm::vec3 &axis) {
-    m_matrix = glm::rotate(m_matrix, angle, axis);
+math::Matrix &math::Matrix::rotate(const float radians, const glm::vec3 &axis) {
+    m_matrix = glm::rotate(m_matrix, radians, axis);
     return *this;
 }
 
-math::Matrix &math::Matrix::rotate_z(const float angle) {
-    m_matrix = glm::rotate(m_matrix, angle, glm::vec3(0.0f, 0.0f, 1.0f));
+math::Matrix &math::Matrix::rotate_z(const float radians) {
+    m_matrix = glm::rotate(m_matrix, radians, glm::vec3(0.0f, 0.0f, 1.0f));
     return *this;
 }

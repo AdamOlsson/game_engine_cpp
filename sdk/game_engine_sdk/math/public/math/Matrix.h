@@ -41,8 +41,8 @@ class Matrix {
         return *this;
     }
 
-    Matrix &rotate(const float angle, const glm::vec3 &axis);
-    Matrix &rotate_z(const float angle);
+    Matrix &rotate(const float radians, const glm::vec3 &axis);
+    Matrix &rotate_z(const float radians);
 
     operator glm::mat4() const { return m_matrix; }
 
