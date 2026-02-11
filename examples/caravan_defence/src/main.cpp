@@ -101,10 +101,28 @@ class CaravanDefence : public Game {
         register_mouse_event_handler(ctx.get());
     }
 
-    void spawn_enemy() {
-        const float distance = m_game_state.rng.uniform(400.0f, 800.0f);
-        const float angle = m_game_state.rng.uniform(-45.0f, 225.0f);
-        const math::Vector2 position = math::Vector2(distance, 0.0f).rotate_z(-angle);
+    void spawn_group_of_enemies() {
+
+        const size_t num_enemies = m_game_state.rng.uniform(1, 3);
+        const float group_distance = m_game_state.rng.uniform(600.0f, 1000.0f);
+        const float group_angle = m_game_state.rng.uniform(-45.0f, 225.0f);
+        const math::Vector2 group_center =
+            math::Vector2(group_distance, 0.0f).rotate_z(group_angle);
+
+        const int group_radius = 150;
+        for (size_t i = 0; i < num_enemies; i++) {
+            const float distance_from_group_center =
+                m_game_state.rng.uniform(-group_radius, group_radius);
+            const float angle_from_group_center = m_game_state.rng.uniform(0, 360);
+
+            const math::Vector2 enemy_position =
+                math::Vector2(distance_from_group_center, 0.0f)
+                    .rotate_z(angle_from_group_center);
+            spawn_enemy(group_center + enemy_position);
+        }
+    }
+
+    void spawn_enemy(const math::Vector2 &position) {
         m_enemies.push_back(Enemy(position));
         m_enemies.back().set_render_data(m_quad_renderer->request_render_slot());
     }
@@ -131,8 +149,8 @@ class CaravanDefence : public Game {
         }
 
         const size_t time_elapsed_ms = m_game_state.time_elapsed_ms;
-        if (time_elapsed_ms > Enemy::spawn_rate_ms) {
-            spawn_enemy();
+        if (time_elapsed_ms > (Enemy::spawn_rate_ms * 3)) {
+            spawn_group_of_enemies();
             m_game_state.time_elapsed_ms = 0;
         }
 

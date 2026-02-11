@@ -27,6 +27,28 @@ class Vector2 {
     }
 
     operator glm::vec2() const { return m_vec; }
+
+    Vector2 operator+(const Vector2 &other) const {
+        return Vector2(m_vec.x + other.m_vec.x, m_vec.y + other.m_vec.y);
+    }
+
+    Vector2 operator-(const Vector2 &other) const {
+        return Vector2(m_vec.x - other.m_vec.x, m_vec.y - other.m_vec.y);
+    }
+
+    Vector2 &operator+=(const Vector2 &other) {
+        m_vec.x += other.m_vec.x;
+        m_vec.y += other.m_vec.y;
+        return *this;
+    }
+
+    Vector2 &operator-=(const Vector2 &other) {
+        m_vec.x -= other.m_vec.x;
+        m_vec.y -= other.m_vec.y;
+        return *this;
+    }
+
+    Vector2 operator-() const { return Vector2(-m_vec.x, -m_vec.y); }
 };
 
 } // namespace math
