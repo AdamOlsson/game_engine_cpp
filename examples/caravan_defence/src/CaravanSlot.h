@@ -16,7 +16,7 @@ class CaravanSlot {
         util::colors::rgba(0.5f, 0.5f, 0.5f, 0.2f);
     static constexpr util::colors::Color m_highlighted_color =
         util::colors::rgba(0.5f, 0.5f, 0.5f, 0.8f);
-    graphics_pipeline::quad::QuadPipelineSBO *m_render_data;
+    graphics_pipeline::quad::QuadSBOHandle m_render_data_handle;
 
     bool m_is_highlighted = false;
     bool m_is_visible = true;
@@ -31,9 +31,11 @@ class CaravanSlot {
         : m_model_matrix(
               math::Matrix().translate(position).scale(m_size.x, m_size.y, 1.0f)) {}
     CaravanSlot(CaravanSlot &&other) noexcept = default;
-    CaravanSlot(const CaravanSlot &other) = default;
-    CaravanSlot &operator=(const CaravanSlot &other) = default;
     CaravanSlot &operator=(CaravanSlot &&other) noexcept = default;
+
+    CaravanSlot(const CaravanSlot &other) = delete;
+    CaravanSlot &operator=(const CaravanSlot &other) = delete;
+
     ~CaravanSlot() {}
 
     bool is_point_inside(const camera::WorldPoint2D &point) {
@@ -42,47 +44,49 @@ class CaravanSlot {
         return math::is_point_inside_rectangle(point, position, m_size.x, m_size.y);
     }
 
-    void set_render_data(graphics_pipeline::quad::QuadPipelineSBO *render_data) {
-        if (render_data == nullptr) {
-            return;
-        }
-        m_render_data = render_data;
-        m_render_data->model_matrix = m_model_matrix;
-        m_render_data->color = m_color;
+    void set_render_data(graphics_pipeline::quad::QuadSBOHandle &&render_data_handle) {
+        m_render_data_handle = std::move(render_data_handle);
+        m_render_data_handle.data->model_matrix = m_model_matrix;
+        m_render_data_handle.data->color = m_color;
     }
 
     void set_highlighted(const bool is_highlighted) {
         m_is_highlighted = is_highlighted;
-        DEBUG_ASSERT(
-            m_render_data != nullptr,
-            "Error: Trying to call set_highlighted() when render data is nullptr.");
-        m_render_data->color = m_is_highlighted ? m_highlighted_color : m_color;
+        /*DEBUG_ASSERT(*/
+        /*    m_render_data != nullptr,*/
+        /*    "Error: Trying to call set_highlighted() when render data is nullptr.");*/
+        m_render_data_handle.data->color =
+            m_is_highlighted ? m_highlighted_color : m_color;
     }
 
     void toggle_selected() {
         m_is_highlighted = !m_is_highlighted;
-        DEBUG_ASSERT(
-            m_render_data != nullptr,
-            "Error: Trying to call toggle_highlighted() when render data is nullptr.");
-        m_render_data->color = m_is_highlighted ? m_highlighted_color : m_color;
+        /*DEBUG_ASSERT(*/
+        /*    m_render_data != nullptr,*/
+        /*    "Error: Trying to call toggle_highlighted() when render data is
+         * nullptr.");*/
+        m_render_data_handle.data->color =
+            m_is_highlighted ? m_highlighted_color : m_color;
     }
 
     bool is_visible() const { return m_is_visible; }
 
     void set_visibility(const bool is_visible) {
         m_is_visible = is_visible;
-        DEBUG_ASSERT(
-            m_render_data != nullptr,
-            "Error: Trying to call set_visibility() when render data is nullptr.");
-        m_render_data->color = m_is_visible ? m_color : util::colors::TRANSPARENT;
+        /*DEBUG_ASSERT(*/
+        /*    m_render_data != nullptr,*/
+        /*    "Error: Trying to call set_visibility() when render data is nullptr.");*/
+        m_render_data_handle.data->color =
+            m_is_visible ? m_color : util::colors::TRANSPARENT;
     }
 
     void toggle_visibility() {
         m_is_visible = !m_is_visible;
-        DEBUG_ASSERT(
-            m_render_data != nullptr,
-            "Error: Trying to call toggle_visibility() when render data is nullptr.");
-        m_render_data->color = m_is_visible ? m_color : util::colors::TRANSPARENT;
+        /*DEBUG_ASSERT(*/
+        /*    m_render_data != nullptr,*/
+        /*    "Error: Trying to call toggle_visibility() when render data is nullptr.");*/
+        m_render_data_handle.data->color =
+            m_is_visible ? m_color : util::colors::TRANSPARENT;
     }
 
     camera::WorldPoint2D get_world_position() const {

@@ -16,6 +16,7 @@
 constexpr glm::vec2 INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
 constexpr float ZOOM_SCALE_FACTOR = 0.1f;
 
+// CONTINUE: Recycle render slots
 class CaravanDefence : public Game {
   private:
     std::unique_ptr<vulkan::SwapChainManager> m_swap_chain_manager;
@@ -80,10 +81,10 @@ class CaravanDefence : public Game {
         m_caravan_slots.push_back(CaravanSlot(camera::WorldPoint2D(150.0f, -50.0f)));
         m_caravan_slots.push_back(CaravanSlot(camera::WorldPoint2D(0.0f, -200.0f)));
 
-        m_caravan.set_render_data(&m_quad_renderer->m_instances.emplace_back());
-        m_caravan_slots[0].set_render_data(&m_quad_renderer->m_instances.emplace_back());
-        m_caravan_slots[1].set_render_data(&m_quad_renderer->m_instances.emplace_back());
-        m_caravan_slots[2].set_render_data(&m_quad_renderer->m_instances.emplace_back());
+        m_caravan.set_render_data(m_quad_renderer->request_render_slot());
+        m_caravan_slots[0].set_render_data(m_quad_renderer->request_render_slot());
+        m_caravan_slots[1].set_render_data(m_quad_renderer->request_render_slot());
+        m_caravan_slots[2].set_render_data(m_quad_renderer->request_render_slot());
 
         m_guards.reserve(16); // 16 is magic
         m_guards.push_back(Guard(&m_caravan_slots[0]));
@@ -92,10 +93,10 @@ class CaravanDefence : public Game {
         m_enemies.reserve(64);
 
         for (Guard &g : m_guards) {
-            g.set_render_data(&m_quad_renderer->m_instances.emplace_back());
+            g.set_render_data(m_quad_renderer->request_render_slot());
         }
 
-        m_quad_renderer->m_instances.sync_all();
+        m_quad_renderer->sync_render_slots();
 
         register_mouse_event_handler(ctx.get());
     }
@@ -105,12 +106,12 @@ class CaravanDefence : public Game {
         const float angle = m_game_state.rng.uniform(-45.0f, 225.0f);
         const math::Vector2 position = math::Vector2(distance, 0.0f).rotate_z(-angle);
         m_enemies.push_back(Enemy(position));
-        m_enemies.back().set_render_data(&m_quad_renderer->m_instances.emplace_back());
+        m_enemies.back().set_render_data(m_quad_renderer->request_render_slot());
     }
 
     void create_attack(Guard &guard, const Enemy &enemy) {
         m_attacks.push_back(guard.attack(enemy.get_world_position()));
-        m_attacks.back().set_render_data(&m_quad_renderer->m_instances.emplace_back());
+        m_attacks.back().set_render_data(m_quad_renderer->request_render_slot());
     }
 
     template <typename T> void update_all(const float dt, std::vector<T> &vec) {
@@ -267,7 +268,7 @@ class CaravanDefence : public Game {
             }
         }
 
-        m_quad_renderer->m_instances.sync();
+        m_quad_renderer->sync_render_slots();
 
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
         /*const size_t num_instances = 1 + m_guards.size() + m_caravan_slots.size() +*/

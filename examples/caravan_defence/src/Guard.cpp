@@ -16,28 +16,25 @@ bool Guard::is_point_inside(const camera::WorldPoint2D &point) {
     return math::is_point_inside_rectangle(point, position, m_size.x, m_size.y);
 }
 
-void Guard::set_render_data(graphics_pipeline::quad::QuadPipelineSBO *render_data) {
-    if (render_data == nullptr) {
-        return;
-    }
-    m_render_data = render_data;
-    m_render_data->model_matrix = m_model_matrix;
-    m_render_data->color = m_color;
+void Guard::set_render_data(graphics_pipeline::quad::QuadSBOHandle &&render_data_handle) {
+    m_render_data_handle = std::move(render_data_handle);
+    m_render_data_handle.data->model_matrix = m_model_matrix;
+    m_render_data_handle.data->color = m_color;
 }
 
 void Guard::set_selected(const bool is_selected) {
     m_is_selected = is_selected;
-    m_render_data->color = m_is_selected ? m_selected_color : m_color;
+    m_render_data_handle.data->color = m_is_selected ? m_selected_color : m_color;
 }
 
 void Guard::toggle_selected() {
     m_is_selected = !m_is_selected;
-    m_render_data->color = m_is_selected ? m_selected_color : m_color;
+    m_render_data_handle.data->color = m_is_selected ? m_selected_color : m_color;
 }
 
 void Guard::set_world_position(const camera::WorldPoint2D &position) {
     m_model_matrix = math::Matrix().translate(position).scale(m_size.x, m_size.y, 1.0f);
-    m_render_data->model_matrix = m_model_matrix;
+    m_render_data_handle.data->model_matrix = m_model_matrix;
 }
 
 camera::WorldPoint2D Guard::get_world_position() const {

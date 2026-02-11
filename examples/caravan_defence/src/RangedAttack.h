@@ -9,7 +9,8 @@ class RangedAttack {
     // Render data
     math::Matrix m_model_matrix;
     static constexpr util::colors::Color m_color = util::colors::ORANGE;
-    graphics_pipeline::quad::QuadPipelineSBO *m_render_data = nullptr;
+
+    graphics_pipeline::quad::QuadSBOHandle m_render_data_handle;
 
     float m_width;
     static constexpr float m_height = 10.0f;
@@ -30,31 +31,29 @@ class RangedAttack {
                              .scale(m_width, m_height, 0.0f);
     }
 
+    RangedAttack(RangedAttack &&other) noexcept = default;
+    RangedAttack &operator=(RangedAttack &&other) noexcept = default;
+
+    // Delete copy constructor and operator
+    RangedAttack(const RangedAttack &other) = delete;
+    RangedAttack &operator=(const RangedAttack &other) = delete;
+
     ~RangedAttack() { remove(); }
 
-    void remove() {
-        if (m_render_data == nullptr) {
-            return;
-        }
-        m_render_data->reset();
-        m_render_data = nullptr;
-    }
+    void remove() { m_render_data_handle.return_to_source(); }
 
-    void set_render_data(graphics_pipeline::quad::QuadPipelineSBO *render_data) {
-        if (render_data == nullptr) {
-            return;
-        }
-        m_render_data = render_data;
-        m_render_data->model_matrix = m_model_matrix;
-        m_render_data->color = m_color;
+    void set_render_data(graphics_pipeline::quad::QuadSBOHandle &&render_data_handle) {
+        m_render_data_handle = std::move(render_data_handle);
+        m_render_data_handle.data->model_matrix = m_model_matrix;
+        m_render_data_handle.data->color = m_color;
     }
 
     bool is_visible() { return m_is_visible; }
 
     void update(const float dt_s) {
-        DEBUG_ASSERT(
-            m_render_data != nullptr,
-            "Error: Trying call update() RangedAttack when render data is a nullptr.");
+        /*DEBUG_ASSERT( m_render_data != nullptr,*/
+        /*    "Error: Trying call update() RangedAttack when render data is a
+         * nullptr.");*/
 
         if (m_lifetime_count > m_lifetime_ms) {
             m_is_visible = false;

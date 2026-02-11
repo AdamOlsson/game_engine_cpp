@@ -12,7 +12,8 @@ class Enemy {
     // Render data
     math::Matrix m_model_matrix;
     static constexpr util::colors::Color m_color = util::colors::RED;
-    graphics_pipeline::quad::QuadPipelineSBO *m_render_data = nullptr;
+    /*graphics_pipeline::quad::QuadPipelineSBO *m_render_data = nullptr;*/
+    graphics_pipeline::quad::QuadSBOHandle m_render_data_handle;
 
     static constexpr glm::vec2 m_size = glm::vec2(50.0f, 50.0f);
     static constexpr float m_velocity = 25.0f;
@@ -25,18 +26,14 @@ class Enemy {
         : m_model_matrix(
               math::Matrix().translate(position).scale(m_size.x, m_size.y, 1.0f)) {}
 
-    ~Enemy() {
-        if (m_render_data == nullptr) {
-            return;
-        }
-
-        die();
-    }
+    ~Enemy() { die(); }
 
     Enemy(Enemy &&other) noexcept = default;
-    Enemy(const Enemy &other) = default;
-    Enemy &operator=(const Enemy &other) = default;
     Enemy &operator=(Enemy &&other) noexcept = default;
+
+    // Delete copy constructor and operator
+    Enemy(const Enemy &other) = delete;
+    Enemy &operator=(const Enemy &other) = delete;
 
     bool is_point_inside(const camera::WorldPoint2D &point) {
         // World position with no regard to the world grid
@@ -44,19 +41,16 @@ class Enemy {
         return math::is_point_inside_rectangle(point, position, m_size.x, m_size.y);
     }
 
-    void set_render_data(graphics_pipeline::quad::QuadPipelineSBO *render_data) {
-        if (render_data == nullptr) {
-            return;
-        }
-        m_render_data = render_data;
-        m_render_data->model_matrix = m_model_matrix;
-        m_render_data->color = m_color;
+    void set_render_data(graphics_pipeline::quad::QuadSBOHandle &&render_data_handle) {
+        m_render_data_handle = std::move(render_data_handle);
+        m_render_data_handle.data->model_matrix = m_model_matrix;
+        m_render_data_handle.data->color = m_color;
     }
 
     void set_world_position(const camera::WorldPoint2D &position) {
         m_model_matrix =
             math::Matrix().translate(position).scale(m_size.x, m_size.y, 1.0f);
-        m_render_data->model_matrix = m_model_matrix;
+        m_render_data_handle.data->model_matrix = m_model_matrix;
     }
 
     camera::WorldPoint2D get_world_position() const {
@@ -74,8 +68,5 @@ class Enemy {
         set_world_position(new_position);
     }
 
-    void die() {
-        m_render_data->reset();
-        m_render_data = nullptr;
-    }
+    void die() { m_render_data_handle.return_to_source(); }
 };

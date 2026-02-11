@@ -41,4 +41,39 @@ graphics_pipeline::quad::QuadRenderer::QuadRenderer(
     const auto &layout = m_descriptor_sets.get_layout();
     m_quad_pipeline = QuadPipeline(m_ctx, command_buffer_manager, swap_chain_manager,
                                    &layout, push_constant_range);
+
+    for (int i = opts.instance_buffer_opts.size - 1; i >= 0; i--) {
+        m_instances.emplace_back();
+        m_state.available_instance_ids.push(i);
+    }
+}
+
+graphics_pipeline::quad::QuadSBOHandle
+graphics_pipeline::quad::QuadRenderer::request_render_slot() {
+    // TODO: This way of returning slots is does not perfectly front load all instances,
+    // consider the case where we have stack 3,2,1,0 and request 2 slots. At this point we
+    // have stack 3,2. Depending on which slot is returned first we night end up with
+    // 3,2,0 OR 3,2,1 where the first case would requre the user to render 2 instances
+    // (where the first is blank) and the latter would require the user to render only 1
+    // instance. Instead I should transition to a datastructure like this:
+    // https://www.youtube.com/watch?v=L4xOCvELWlU
+    size_t id = m_state.available_instance_ids.top();
+    QuadPipelineSBO *slot = &m_instances[id];
+    m_state.available_instance_ids.pop();
+
+    auto return_fn = [this](size_t id) {
+        this->m_instances[id] = QuadPipelineSBO{};
+        /*this->m_state.available_instance_ids.push(id);*/
+    };
+
+    return QuadSBOHandle(id, slot, return_fn);
+}
+
+void graphics_pipeline::quad::QuadRenderer::return_render_slot(
+    graphics_pipeline::quad::QuadSBOHandle &handle) {
+    handle.return_to_source();
+}
+
+void graphics_pipeline::quad::QuadRenderer::sync_render_slots() {
+    m_instances.sync_all();
 }

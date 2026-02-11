@@ -16,7 +16,9 @@ class Guard {
     math::Matrix m_model_matrix;
     static constexpr util::colors::Color m_color = util::colors::GREEN;
     static constexpr util::colors::Color m_selected_color = util::colors::YELLOW;
-    graphics_pipeline::quad::QuadPipelineSBO *m_render_data = nullptr;
+
+    /*graphics_pipeline::quad::QuadPipelineSBO *m_render_data = nullptr;*/
+    graphics_pipeline::quad::QuadSBOHandle m_render_data_handle;
 
     bool m_is_selected = false;
     CaravanSlot *m_caravan_slot = nullptr;
@@ -37,13 +39,16 @@ class Guard {
     ~Guard() {}
 
     Guard(Guard &&other) noexcept = default;
-    Guard(const Guard &other) = default;
-    Guard &operator=(const Guard &other) = default;
     Guard &operator=(Guard &&other) noexcept = default;
+
+    // Delete copy constructor and operator
+    Guard(const Guard &other) = delete;
+    Guard &operator=(const Guard &other) = delete;
 
     bool is_point_inside(const camera::WorldPoint2D &point);
 
-    void set_render_data(graphics_pipeline::quad::QuadPipelineSBO *render_data);
+    /*void set_render_data(graphics_pipeline::quad::QuadPipelineSBO *render_data);*/
+    void set_render_data(graphics_pipeline::quad::QuadSBOHandle &&render_data_handle);
 
     void set_selected(const bool is_selected);
     void toggle_selected();
