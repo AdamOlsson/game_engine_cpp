@@ -1,6 +1,6 @@
-#include "Caravan.h"
 #include "CaravanSlot.h"
 #include "Enemy.h"
+#include "Entity.h"
 #include "Guard.h"
 #include "RangedAttack.h"
 #include "camera/Camera.h"
@@ -10,7 +10,6 @@
 #include "math/Vector2.h"
 #include "vulkan/CommandBufferManager.h"
 #include "vulkan/SwapChainManager.h"
-#include "vulkan/buffers/GpuBuffer.h"
 #include <random>
 
 constexpr glm::vec2 INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
@@ -30,7 +29,7 @@ class CaravanDefence : public Game {
 
     std::unique_ptr<graphics_pipeline::quad::QuadRenderer> m_quad_renderer;
 
-    Caravan m_caravan;
+    entity::Entity m_caravan;
     std::vector<CaravanSlot> m_caravan_slots;
     std::vector<Guard> m_guards;
     std::vector<RangedAttack> m_attacks;
@@ -76,7 +75,8 @@ class CaravanDefence : public Game {
             &push_constant_range, std::move(quad_opts));
 
         // Add entities
-        m_caravan = Caravan(camera::WorldPoint2D(0.0f, 0.0f));
+        /*m_caravan = Caravan(camera::WorldPoint2D(0.0f, 0.0f));*/
+        m_caravan = entity::Entity::create_caravan(camera::WorldPoint2D(0.0f, 0.0f));
         m_caravan_slots.push_back(CaravanSlot(camera::WorldPoint2D(-150.0f, -50.0f)));
         m_caravan_slots.push_back(CaravanSlot(camera::WorldPoint2D(150.0f, -50.0f)));
         m_caravan_slots.push_back(CaravanSlot(camera::WorldPoint2D(0.0f, -200.0f)));

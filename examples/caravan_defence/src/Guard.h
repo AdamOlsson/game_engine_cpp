@@ -17,7 +17,6 @@ class Guard {
     static constexpr util::colors::Color m_color = util::colors::GREEN;
     static constexpr util::colors::Color m_selected_color = util::colors::YELLOW;
 
-    /*graphics_pipeline::quad::QuadPipelineSBO *m_render_data = nullptr;*/
     graphics_pipeline::quad::QuadSBOHandle m_render_data_handle;
 
     bool m_is_selected = false;

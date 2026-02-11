@@ -1,4 +1,5 @@
 #pragma once
+#include "math/Vector2.h"
 #include "traits.h"
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/glm.hpp>
@@ -34,6 +35,8 @@ class Matrix {
     Matrix &translate(const glm::vec3 &vec);
 
     Matrix &scale(const float x, const float y, const float z);
+    Matrix &scale(const math::Vector2 &vec);
+    Matrix &scale(const math::Vector2 &&vec);
     Matrix &scale(const glm::vec3 &vec);
     Matrix &scale(const glm::vec3 &&vec);
     template <StaticCastableToFloat T> Matrix &scale(const T value) {

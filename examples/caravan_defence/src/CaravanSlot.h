@@ -30,6 +30,7 @@ class CaravanSlot {
     CaravanSlot(const camera::WorldPoint2D &position)
         : m_model_matrix(
               math::Matrix().translate(position).scale(m_size.x, m_size.y, 1.0f)) {}
+
     CaravanSlot(CaravanSlot &&other) noexcept = default;
     CaravanSlot &operator=(CaravanSlot &&other) noexcept = default;
 

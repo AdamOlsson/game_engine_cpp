@@ -12,7 +12,6 @@ class Enemy {
     // Render data
     math::Matrix m_model_matrix;
     static constexpr util::colors::Color m_color = util::colors::RED;
-    /*graphics_pipeline::quad::QuadPipelineSBO *m_render_data = nullptr;*/
     graphics_pipeline::quad::QuadSBOHandle m_render_data_handle;
 
     static constexpr glm::vec2 m_size = glm::vec2(50.0f, 50.0f);

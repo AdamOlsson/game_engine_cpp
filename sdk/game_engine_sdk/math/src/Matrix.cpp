@@ -1,4 +1,5 @@
 #include "math/Matrix.h"
+#include "math/Vector2.h"
 
 math::Matrix::Matrix()
     : m_matrix(glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f))) {}
@@ -31,6 +32,16 @@ math::Matrix &math::Matrix::scale(const glm::vec3 &vec) {
 
 math::Matrix &math::Matrix::scale(const glm::vec3 &&vec) {
     m_matrix = glm::scale(m_matrix, vec);
+    return *this;
+}
+
+math::Matrix &math::Matrix::scale(const math::Vector2 &vec) {
+    m_matrix = glm::scale(m_matrix, glm::vec3(vec.x, vec.y, 1.0f));
+    return *this;
+}
+
+math::Matrix &math::Matrix::scale(const math::Vector2 &&vec) {
+    m_matrix = glm::scale(m_matrix, glm::vec3(vec.x, vec.y, 1.0f));
     return *this;
 }
 
