@@ -1,13 +1,8 @@
-#include "CaravanSlot.h"
-#include "Enemy.h"
 #include "Entity.h"
-#include "Guard.h"
-#include "RangedAttack.h"
 #include "camera/Camera.h"
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
 #include "graphics_pipeline/quad/QuadRenderer.h"
-#include "math/Vector2.h"
 #include "vulkan/CommandBufferManager.h"
 #include "vulkan/SwapChainManager.h"
 #include <random>
@@ -15,7 +10,6 @@
 constexpr glm::vec2 INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
 constexpr float ZOOM_SCALE_FACTOR = 0.1f;
 
-// CONTINUE: Recycle render slots
 class CaravanDefence : public Game {
   private:
     std::unique_ptr<vulkan::SwapChainManager> m_swap_chain_manager;
@@ -30,10 +24,10 @@ class CaravanDefence : public Game {
     std::unique_ptr<graphics_pipeline::quad::QuadRenderer> m_quad_renderer;
 
     entity::Entity m_caravan;
-    std::vector<CaravanSlot> m_caravan_slots;
-    std::vector<Guard> m_guards;
-    std::vector<RangedAttack> m_attacks;
-    std::vector<Enemy> m_enemies;
+    std::vector<entity::Entity> m_caravan_slots;
+    std::vector<entity::Entity> m_guards;
+    std::vector<entity::Entity> m_attacks;
+    std::vector<entity::Entity> m_enemies;
 
     struct {
         size_t time_elapsed_ms;
@@ -75,11 +69,13 @@ class CaravanDefence : public Game {
             &push_constant_range, std::move(quad_opts));
 
         // Add entities
-        /*m_caravan = Caravan(camera::WorldPoint2D(0.0f, 0.0f));*/
         m_caravan = entity::Entity::create_caravan(camera::WorldPoint2D(0.0f, 0.0f));
-        m_caravan_slots.push_back(CaravanSlot(camera::WorldPoint2D(-150.0f, -50.0f)));
-        m_caravan_slots.push_back(CaravanSlot(camera::WorldPoint2D(150.0f, -50.0f)));
-        m_caravan_slots.push_back(CaravanSlot(camera::WorldPoint2D(0.0f, -200.0f)));
+        m_caravan_slots.push_back(
+            entity::Entity::create_caravan_slot(camera::WorldPoint2D(-150.0f, -50.0f)));
+        m_caravan_slots.push_back(
+            entity::Entity::create_caravan_slot(camera::WorldPoint2D(150.0f, -50.0f)));
+        m_caravan_slots.push_back(
+            entity::Entity::create_caravan_slot(camera::WorldPoint2D(0.0f, -200.0f)));
 
         m_caravan.set_render_data(m_quad_renderer->request_render_slot());
         m_caravan_slots[0].set_render_data(m_quad_renderer->request_render_slot());
@@ -87,13 +83,18 @@ class CaravanDefence : public Game {
         m_caravan_slots[2].set_render_data(m_quad_renderer->request_render_slot());
 
         m_guards.reserve(16); // 16 is magic
-        m_guards.push_back(Guard(&m_caravan_slots[0]));
-        m_guards.push_back(Guard(&m_caravan_slots[1]));
+        m_guards.push_back(
+            entity::Entity::create_guard(camera::WorldPoint2D(0.0f, 0.0f)));
+        m_guards.push_back(
+            entity::Entity::create_guard(camera::WorldPoint2D(0.0f, 0.0f)));
 
         m_enemies.reserve(64);
+        m_attacks.reserve(8);
 
-        for (Guard &g : m_guards) {
-            g.set_render_data(m_quad_renderer->request_render_slot());
+        for (size_t i = 0; i < m_guards.size(); i++) {
+            m_guards[i].set_render_data(m_quad_renderer->request_render_slot());
+            entity::set_caravan_slot(m_guards[i], &m_caravan_slots[i]);
+            entity::set_occupying_guard(m_caravan_slots[i], &m_guards[i]);
         }
 
         m_quad_renderer->sync_render_slots();
@@ -123,12 +124,12 @@ class CaravanDefence : public Game {
     }
 
     void spawn_enemy(const math::Vector2 &position) {
-        m_enemies.push_back(Enemy(position));
+        m_enemies.push_back(entity::Entity::create_enemy(position));
         m_enemies.back().set_render_data(m_quad_renderer->request_render_slot());
     }
 
-    void create_attack(Guard &guard, const Enemy &enemy) {
-        m_attacks.push_back(guard.attack(enemy.get_world_position()));
+    void create_attack(entity::Entity &guard, const entity::Entity &enemy) {
+        m_attacks.push_back(entity::attack(guard, enemy));
         m_attacks.back().set_render_data(m_quad_renderer->request_render_slot());
     }
 
@@ -143,26 +144,25 @@ class CaravanDefence : public Game {
 
         for (int i = m_attacks.size() - 1; i >= 0; i--) {
             if (!m_attacks[i].is_visible()) {
-                m_attacks[i].remove();
+                m_attacks[i].clear_render_data();
                 m_attacks.erase(m_attacks.begin() + i);
             }
         }
 
         const size_t time_elapsed_ms = m_game_state.time_elapsed_ms;
-        if (time_elapsed_ms > (Enemy::spawn_rate_ms * 3)) {
+        if (time_elapsed_ms > entity::enemy_t::spawn_rate_ms) {
             spawn_group_of_enemies();
             m_game_state.time_elapsed_ms = 0;
         }
 
         for (size_t i = 0; i < m_enemies.size(); i++) {
             bool enemy_dead = false;
-            Enemy &enemy = m_enemies[i];
-            enemy.move_towards(m_caravan.get_world_position(), dt);
-            const camera::WorldPoint2D enemy_position = enemy.get_world_position();
+            entity::Entity &enemy = m_enemies[i];
+            entity::move_towards(enemy, m_caravan.get_world_position(), dt);
 
-            for (Guard &guard : m_guards) {
-                if (!enemy_dead && guard.can_attack() &&
-                    guard.in_attack_range(enemy_position)) {
+            for (entity::Entity &guard : m_guards) {
+                if (!enemy_dead && entity::can_attack(guard) &&
+                    entity::in_attack_range(guard, enemy)) {
                     create_attack(guard, enemy);
                     enemy_dead = true;
                     break;
@@ -174,7 +174,7 @@ class CaravanDefence : public Game {
             }
 
             if (enemy_dead) {
-                enemy.die();
+                enemy.clear_render_data();
                 m_enemies.erase(m_enemies.begin() + i);
             }
         }
@@ -240,13 +240,16 @@ class CaravanDefence : public Game {
 
                     if (m_game_state.selected_guard.has_value() &&
                         clicked_caravan_slot.has_value()) {
-                        CaravanSlot &slot = m_caravan_slots[clicked_caravan_slot.value()];
-                        Guard &guard = m_guards[m_game_state.selected_guard.value()];
+                        entity::Entity &slot =
+                            m_caravan_slots[clicked_caravan_slot.value()];
+                        entity::Entity &guard =
+                            m_guards[m_game_state.selected_guard.value()];
 
-                        if (slot.is_free()) {
-                            CaravanSlot *old_slot = guard.get_caravan_slot();
-                            guard.set_caravan_slot(&slot);
-                            old_slot->clear_occupying_guard();
+                        if (entity::is_free(slot)) {
+                            entity::Entity *old_slot = entity::get_caravan_slot(guard);
+                            entity::set_caravan_slot(guard, &slot);
+                            entity::set_occupying_guard(slot, &guard);
+                            entity::clear_occupying_guard(*old_slot);
                         }
                     }
 
@@ -277,12 +280,8 @@ class CaravanDefence : public Game {
                 if (!m_caravan_slots[i].is_visible()) {
                     continue;
                 }
-
-                if (m_caravan_slots[i].is_point_inside(cursor_world_point)) {
-                    m_caravan_slots[i].set_highlighted(true);
-                } else {
-                    m_caravan_slots[i].set_highlighted(false);
-                }
+                m_caravan_slots[i].set_highlighted(
+                    m_caravan_slots[i].is_point_inside(cursor_world_point));
             }
         }
 
