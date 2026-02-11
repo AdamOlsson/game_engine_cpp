@@ -130,7 +130,8 @@ class Entity {
     bool m_is_selected = false;
     bool m_is_visible = true;
 
-    std::optional<graphics_pipeline::quad::QuadSBOHandle> m_render_data_handle;
+    graphics_pipeline::quad::QuadSBOHandle m_render_data_handle;
+    graphics_pipeline::quad::QuadRenderer *m_quad_renderer = nullptr;
 
     static_assert(all_have_color_field(static_cast<EntityVariant *>(nullptr)),
                   "All entity variants must have a color field.");
@@ -214,16 +215,18 @@ class Entity {
         return Entity(std::in_place_type<ranged_attack_t>, std::move(model));
     }
 
-    void set_render_data(graphics_pipeline::quad::QuadSBOHandle &&render_data_handle) {
-        m_render_data_handle = std::move(render_data_handle);
-        m_render_data_handle->data->model_matrix = m_model_matrix;
-        m_render_data_handle->data->color = get_color();
+    void set_render_data(graphics_pipeline::quad::QuadRenderer *renderer) {
+        m_quad_renderer = renderer;
+        m_render_data_handle = m_quad_renderer->request_render_slot();
+        auto &instance = m_quad_renderer->get_instance(m_render_data_handle);
+        instance.model_matrix = m_model_matrix;
+        instance.color = get_color();
     }
 
     void clear_render_data() {
-        if (m_render_data_handle.has_value()) {
-            m_render_data_handle->return_to_source();
-            m_render_data_handle = std::nullopt;
+        if (m_quad_renderer != nullptr) {
+            m_quad_renderer->return_render_slot(m_render_data_handle);
+            m_quad_renderer = nullptr;
         }
     }
 
@@ -236,10 +239,12 @@ class Entity {
 
     void set_world_position(const camera::WorldPoint2D &position) {
         m_model_matrix = math::Matrix().translate(position).scale(get_size());
-        if (m_render_data_handle.has_value()) {
-            m_render_data_handle->data->model_matrix = m_model_matrix;
+        if (m_quad_renderer != nullptr) {
+            auto &instance = m_quad_renderer->get_instance(m_render_data_handle);
+            instance.model_matrix = m_model_matrix;
         }
     }
+
     camera::WorldPoint2D get_world_position() const {
         return m_model_matrix.position_2d();
     }
@@ -248,9 +253,9 @@ class Entity {
     void toggle_visibility() { set_visibility(!m_is_visible); }
     void set_visibility(const bool is_visible) {
         m_is_visible = is_visible;
-        if (m_render_data_handle.has_value()) {
-            m_render_data_handle->data->color =
-                m_is_visible ? get_color() : util::colors::TRANSPARENT;
+        if (m_quad_renderer != nullptr) {
+            auto &instance = m_quad_renderer->get_instance(m_render_data_handle);
+            instance.color = m_is_visible ? get_color() : util::colors::TRANSPARENT;
         }
     }
 
@@ -258,9 +263,9 @@ class Entity {
     void toggle_highlighted() { set_highlighted(!m_is_highlighted); }
     void set_highlighted(bool is_highlighted) {
         m_is_highlighted = is_highlighted;
-        if (m_render_data_handle.has_value()) {
-            m_render_data_handle->data->color =
-                m_is_highlighted ? get_highlighted_color() : get_color();
+        if (m_quad_renderer != nullptr) {
+            auto &instance = m_quad_renderer->get_instance(m_render_data_handle);
+            instance.color = m_is_highlighted ? get_highlighted_color() : get_color();
         }
     }
 
@@ -268,9 +273,9 @@ class Entity {
     void toggle_selected() { set_selected(!m_is_selected); }
     void set_selected(const bool is_selected) {
         m_is_selected = is_selected;
-        if (m_render_data_handle.has_value()) {
-            m_render_data_handle->data->color =
-                m_is_selected ? get_selected_color() : get_color();
+        if (m_quad_renderer != nullptr) {
+            auto &instance = m_quad_renderer->get_instance(m_render_data_handle);
+            instance.color = m_is_selected ? get_selected_color() : get_color();
         }
     }
 

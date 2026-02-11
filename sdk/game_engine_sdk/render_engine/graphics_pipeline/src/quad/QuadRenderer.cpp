@@ -1,5 +1,6 @@
 #include "graphics_pipeline/quad/QuadRenderer.h"
 #include "graphics_pipeline/SwapDescriptorSetBuilder.h"
+#include <algorithm>
 
 namespace {
 const std::vector<uint16_t> m_quad_indices = {0, 1, 2, 0, 2, 3};
@@ -42,10 +43,20 @@ graphics_pipeline::quad::QuadRenderer::QuadRenderer(
     m_quad_pipeline = QuadPipeline(m_ctx, command_buffer_manager, swap_chain_manager,
                                    &layout, push_constant_range);
 
+    m_state.is_dirty.resize(opts.instance_buffer_opts.size);
+    std::fill(m_state.is_dirty.begin(), m_state.is_dirty.end(), false);
+
     for (int i = opts.instance_buffer_opts.size - 1; i >= 0; i--) {
         m_instances.emplace_back();
         m_state.available_instance_ids.push(i);
     }
+}
+
+graphics_pipeline::quad::QuadPipelineSBO &
+graphics_pipeline::quad::QuadRenderer::get_instance(
+    const graphics_pipeline::quad::QuadSBOHandle &handle) {
+    m_state.is_dirty[handle.id] = true;
+    return m_instances[handle.id];
 }
 
 graphics_pipeline::quad::QuadSBOHandle
@@ -61,19 +72,16 @@ graphics_pipeline::quad::QuadRenderer::request_render_slot() {
     QuadPipelineSBO *slot = &m_instances[id];
     m_state.available_instance_ids.pop();
 
-    auto return_fn = [this](size_t id) {
-        this->m_instances[id] = QuadPipelineSBO{};
-        /*this->m_state.available_instance_ids.push(id);*/
-    };
-
-    return QuadSBOHandle(id, slot, return_fn);
+    return QuadSBOHandle(id);
 }
 
 void graphics_pipeline::quad::QuadRenderer::return_render_slot(
     graphics_pipeline::quad::QuadSBOHandle &handle) {
-    handle.return_to_source();
+    m_state.is_dirty[handle.id] = true;
+    m_instances[handle.id] = QuadPipelineSBO{};
 }
 
 void graphics_pipeline::quad::QuadRenderer::sync_render_slots() {
     m_instances.sync_all();
+    std::fill(m_state.is_dirty.begin(), m_state.is_dirty.end(), false);
 }

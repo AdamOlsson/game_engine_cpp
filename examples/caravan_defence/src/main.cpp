@@ -77,10 +77,10 @@ class CaravanDefence : public Game {
         m_caravan_slots.push_back(
             entity::Entity::create_caravan_slot(camera::WorldPoint2D(0.0f, -200.0f)));
 
-        m_caravan.set_render_data(m_quad_renderer->request_render_slot());
-        m_caravan_slots[0].set_render_data(m_quad_renderer->request_render_slot());
-        m_caravan_slots[1].set_render_data(m_quad_renderer->request_render_slot());
-        m_caravan_slots[2].set_render_data(m_quad_renderer->request_render_slot());
+        m_caravan.set_render_data(m_quad_renderer.get());
+        m_caravan_slots[0].set_render_data(m_quad_renderer.get());
+        m_caravan_slots[1].set_render_data(m_quad_renderer.get());
+        m_caravan_slots[2].set_render_data(m_quad_renderer.get());
 
         m_guards.reserve(16); // 16 is magic
         m_guards.push_back(
@@ -92,7 +92,7 @@ class CaravanDefence : public Game {
         m_attacks.reserve(8);
 
         for (size_t i = 0; i < m_guards.size(); i++) {
-            m_guards[i].set_render_data(m_quad_renderer->request_render_slot());
+            m_guards[i].set_render_data(m_quad_renderer.get());
             entity::set_caravan_slot(m_guards[i], &m_caravan_slots[i]);
             entity::set_occupying_guard(m_caravan_slots[i], &m_guards[i]);
         }
@@ -125,12 +125,12 @@ class CaravanDefence : public Game {
 
     void spawn_enemy(const math::Vector2 &position) {
         m_enemies.push_back(entity::Entity::create_enemy(position));
-        m_enemies.back().set_render_data(m_quad_renderer->request_render_slot());
+        m_enemies.back().set_render_data(m_quad_renderer.get());
     }
 
     void create_attack(entity::Entity &guard, const entity::Entity &enemy) {
         m_attacks.push_back(entity::attack(guard, enemy));
-        m_attacks.back().set_render_data(m_quad_renderer->request_render_slot());
+        m_attacks.back().set_render_data(m_quad_renderer.get());
     }
 
     template <typename T> void update_all(const float dt, std::vector<T> &vec) {

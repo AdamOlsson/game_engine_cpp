@@ -46,6 +46,7 @@ class QuadRenderer {
     SwapDescriptorSet m_descriptor_sets;
 
     struct {
+        std::vector<bool> is_dirty;
         std::stack<size_t> available_instance_ids;
     } m_state;
 
@@ -58,44 +59,20 @@ class QuadRenderer {
                  const vulkan::PushConstantRange *push_constant_range,
                  QuadRendererOpts &&opts);
 
+    QuadRenderer(QuadRenderer &&) noexcept = delete;
+    QuadRenderer &operator=(QuadRenderer &&) noexcept = delete;
+
+    QuadRenderer(const QuadRenderer &) = delete;
+    QuadRenderer &operator=(const QuadRenderer &) = delete;
+
     void load_texture() {
         throw std::runtime_error("Error: load_texture() not yet implemented.");
     }
 
     QuadSBOHandle request_render_slot();
     void return_render_slot(graphics_pipeline::quad::QuadSBOHandle &handle);
+    QuadPipelineSBO &get_instance(const graphics_pipeline::quad::QuadSBOHandle &handle);
     void sync_render_slots();
-
-    /*template <typename PushConstantType>*/
-    /*void render(const vulkan::CommandBuffer &command_buffer,*/
-    /*            QuadPipelineDescriptorSet *descriptor_set,*/
-    /*            PushConstantType *push_constant, const int num_instances) {*/
-    /**/
-    /*    if (push_constant) {*/
-    /*        vkCmdPushConstants(command_buffer, m_quad_pipeline.get_layout(),*/
-    /*                           m_quad_pipeline.get_push_constant_stage(), 0,*/
-    /*                           sizeof(*push_constant), push_constant);*/
-    /*    }*/
-    /**/
-    /*    if (descriptor_set) {*/
-    /*        // TODO: Handle descriptor set*/
-    /*        const vulkan::DescriptorSet set = descriptor_set->get_current();*/
-    /*        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,*/
-    /*                                m_quad_pipeline.get_layout(), 0, 1, &set, 0,
-     * nullptr);*/
-    /*    }*/
-    /**/
-    /*    m_quad_pipeline.bind(command_buffer);*/
-    /**/
-    /*    const VkDeviceSize vertex_buffers_offset = 0;*/
-    /*    vkCmdBindVertexBuffers(command_buffer, 0, 1, &m_quad_vertex_buffer.buffer,*/
-    /*                           &vertex_buffers_offset);*/
-    /*    vkCmdBindIndexBuffer(command_buffer, m_quad_index_buffer.buffer, 0,*/
-    /*                         VK_INDEX_TYPE_UINT16);*/
-    /*    vkCmdDrawIndexed(command_buffer, m_quad_index_buffer.num_indices,
-     * num_instances,*/
-    /*                     0, 0, 0);*/
-    /*}*/
 
     template <typename PushConstantType>
     void render(const vulkan::CommandBuffer &command_buffer,
