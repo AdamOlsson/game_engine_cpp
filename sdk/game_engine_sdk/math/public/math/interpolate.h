@@ -103,6 +103,9 @@ template <Point T> constexpr T lerp(const T &A, const T &B, const float t) {
     if constexpr (std::same_as<T, std::pair<float, float>>) {
         return std::make_pair((1.0f - t) * A.first + t * B.first,
                               (1.0f - t) * A.second + t * B.second);
+    } else if constexpr (std::same_as<T, std::pair<int, int>>) {
+        return std::make_pair((1.0f - t) * A.first + t * B.first,
+                              (1.0f - t) * A.second + t * B.second);
     } else if constexpr (std::same_as<T, glm::vec2>) {
         return glm::vec2((1.0f - t) * A.x + t * B.x, (1.0f - t) * A.y + t * B.y);
     } else if constexpr (std::same_as<T, glm::vec3>) {
