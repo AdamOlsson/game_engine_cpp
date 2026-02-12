@@ -326,6 +326,7 @@ inline void clear_occupying_guard(Entity &slot_entity) {
     auto &slot = slot_entity.get<caravan_slot_t>();
     slot.occupying_guard = nullptr;
     slot_entity.set_highlighted(false);
+    slot_entity.set_visibility(true);
 }
 
 inline Entity *get_occupying_guard(Entity &slot_entity) {

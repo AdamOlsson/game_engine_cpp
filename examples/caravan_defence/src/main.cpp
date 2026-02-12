@@ -249,6 +249,7 @@ class CaravanDefence : public Game {
                             entity::Entity *old_slot = entity::get_caravan_slot(guard);
                             entity::set_caravan_slot(guard, &slot);
                             entity::set_occupying_guard(slot, &guard);
+
                             entity::clear_occupying_guard(*old_slot);
                         }
                     }
