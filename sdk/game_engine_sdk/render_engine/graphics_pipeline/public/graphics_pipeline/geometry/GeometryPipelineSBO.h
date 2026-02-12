@@ -3,9 +3,13 @@
 #include "logger/io.h"
 #include "util/colors.h"
 #include <glm/glm.hpp>
+#include <limits>
 #include <sstream>
 
 namespace graphics_pipeline::geometry {
+
+class GeometrySBOHandle;
+
 struct GeometryPipelineSBO {
     alignas(16) glm::mat4 model_matrix = glm::mat4(1.0f);
     alignas(16) glm::vec4 color = util::colors::TRANSPARENT;
@@ -32,4 +36,21 @@ struct GeometryPipelineSBO {
         return os << obj.to_string();
     }
 };
+
+class GeometrySBOHandle {
+  private:
+    friend class GeometryRenderer;
+    size_t id = std::numeric_limits<size_t>::max();
+
+  public:
+    GeometrySBOHandle() = default;
+    GeometrySBOHandle(size_t id) : id(id) {}
+
+    GeometrySBOHandle(const GeometrySBOHandle &) = delete;
+    GeometrySBOHandle(GeometrySBOHandle &&other) noexcept = default;
+
+    GeometrySBOHandle &operator=(const GeometrySBOHandle &&) = delete;
+    GeometrySBOHandle &operator=(GeometrySBOHandle &&other) noexcept = default;
+};
+
 } // namespace graphics_pipeline::geometry

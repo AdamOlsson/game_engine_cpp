@@ -1,10 +1,15 @@
 #pragma once
 
+#include "graphics_pipeline/SwapDescriptorSet.h"
 #include "graphics_pipeline/Texture.h"
 #include "graphics_pipeline/quad/QuadPipeline.h"
 #include "graphics_pipeline/quad/QuadPipelineSBO.h"
+#include "vulkan/DescriptorPool.h"
+#include "vulkan/Sampler.h"
 #include "vulkan/SwapChainManager.h"
 #include "vulkan/buffers/GpuBuffer.h"
+#include "vulkan/buffers/IndexBuffer.h"
+#include "vulkan/buffers/VertexBuffer.h"
 namespace graphics_pipeline::quad {
 
 struct QuadPipelineSBO;

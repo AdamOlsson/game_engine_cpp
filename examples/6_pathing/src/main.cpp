@@ -1,14 +1,13 @@
 #include "camera/Camera.h"
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
-#include "graphics_pipeline/geometry/GeometryPipeline.h"
 #include "graphics_pipeline/geometry/GeometryPipelineSBO.h"
+#include "graphics_pipeline/geometry/GeometryRenderer.h"
 #include "math/Matrix.h"
 #include "tiling/Position.h"
 #include "tiling/TileGrid.h"
 #include "tiling/search/AStar.h"
 #include "vulkan/DescriptorPool.h"
-#include "vulkan/buffers/GpuBuffer.h"
 #include "window/WindowConfig.h"
 #include <memory>
 
@@ -42,13 +41,9 @@ class ExamplePathing : public Game {
     window::ViewportPoint m_mouse_last_position = window::ViewportPoint();
     camera::Camera2D m_camera;
 
-    std::unique_ptr<
-        vulkan::buffers::StorageBuffer<graphics_pipeline::geometry::GeometryPipelineSBO>>
-        m_tile_instances;
     size_t m_num_instances;
-    std::unique_ptr<graphics_pipeline::geometry::GeometryPipelineDescriptorSet>
-        m_descriptor_set;
-    std::unique_ptr<graphics_pipeline::geometry::GeometryPipeline> m_pipeline;
+    std::vector<graphics_pipeline::geometry::GeometrySBOHandle> m_tile_data;
+    std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer> m_renderer;
 
     size_t m_swap_index;
     size_t m_num_tiles_width;
@@ -121,44 +116,37 @@ class ExamplePathing : public Game {
         // multiply by 2 is simply to cover the entire screen and more
         m_num_tiles_width = (window_dims.width / TILE_SIZE) * 2;
         m_num_tiles_height = (window_dims.width / TILE_SIZE) * 2;
-        m_tile_instances = std::make_unique<vulkan::buffers::StorageBuffer<
-            graphics_pipeline::geometry::GeometryPipelineSBO>>(
-            ctx, m_num_tiles_width * m_num_tiles_height, 2);
-
-        m_descriptor_set =
-            std::make_unique<graphics_pipeline::geometry::GeometryPipelineDescriptorSet>(
-                ctx, m_descriptor_pool,
-                graphics_pipeline::geometry::GeometryPipelineDescriptorSetOpts{
-                    .storage_buffer_refs = vulkan::DescriptorBufferInfo::from_vector(
-                        m_tile_instances->get_reference())});
-
-        auto &descriptor_layout = m_descriptor_set->get_layout();
         auto quad_push_constant_range =
             vulkan::PushConstantRange{.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
                                       .offset = 0,
                                       .size = camera::Camera2D::matrix_size()};
 
-        m_pipeline = std::make_unique<graphics_pipeline::geometry::GeometryPipeline>(
+        auto opts = graphics_pipeline::geometry::GeometryRendererOpts{};
+        opts.instance_buffer_opts.size = m_num_tiles_width * m_num_tiles_height;
+        m_renderer = std::make_unique<graphics_pipeline::geometry::GeometryRenderer>(
             ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
-            &descriptor_layout, &quad_push_constant_range);
+            &quad_push_constant_range, std::move(opts));
 
+        m_tile_data.reserve(m_num_tiles_width * m_num_tiles_height);
         for (auto i = 0; i < m_num_tiles_width * m_num_tiles_height; i++) {
+            graphics_pipeline::geometry::GeometrySBOHandle handle =
+                m_renderer->request_render_slot();
+            graphics_pipeline::geometry::GeometryPipelineSBO &instance =
+                m_renderer->get_instance(handle);
+            m_tile_data.push_back(std::move(handle));
+
             const int x = i % m_num_tiles_width;
             const int y = i / m_num_tiles_height;
-
-            m_tile_instances->push_back(graphics_pipeline::geometry::GeometryPipelineSBO{
-                .model_matrix =
-                    math::Matrix().scale(TILE_SIZE, TILE_SIZE, 1.0f).translate(x, y, 0),
-                .border =
-                    {
-                        .color = util::colors::rgba(1.0f, 1.0f, 1.0f, 0.1f),
-                        .width = 1,
-                    },
-            });
+            instance.model_matrix =
+                math::Matrix().scale(TILE_SIZE, TILE_SIZE, 1.0f).translate(x, y, 0);
+            instance.border = {
+                .color = util::colors::rgba(1.0f, 1.0f, 1.0f, 0.1f),
+                .width = 1,
+            };
             m_num_instances++;
         }
 
-        m_tile_instances->sync_all();
+        m_renderer->sync_render_slots();
 
         m_grid = tiling::TileGrid<CellType>(m_num_tiles_width, m_num_tiles_height);
         m_camera.set_position(camera::WorldPoint2D(
@@ -239,7 +227,9 @@ class ExamplePathing : public Game {
         // Reset highlight from previous frame
         const auto modified_instances = m_frame_states[m_swap_index].modified_instances;
         for (const auto &idx : modified_instances) {
-            m_tile_instances->at(idx).color = util::colors::TRANSPARENT;
+            auto &instance = m_renderer->get_instance(m_tile_data[idx]);
+            instance.color = util::colors::TRANSPARENT;
+            /*m_tile_instances->at(idx).color = util::colors::TRANSPARENT;*/
         }
 
         m_frame_states[m_swap_index].modified_instances.clear();
@@ -248,8 +238,10 @@ class ExamplePathing : public Game {
         for (const auto &wall : m_walls) {
             const auto wall_tile_index = static_cast<size_t>(wall.y) * m_num_tiles_width +
                                          static_cast<size_t>(wall.x);
-            m_tile_instances->at(wall_tile_index).color =
-                util::colors::rgba(0.8f, 0.8f, 0.8f, 1.0f);
+            auto &instance = m_renderer->get_instance(m_tile_data[wall_tile_index]);
+            instance.color = util::colors::rgba(0.8f, 0.8f, 0.8f, 1.0f);
+            /*m_tile_instances->at(wall_tile_index).color =*/
+            /*    util::colors::rgba(0.8f, 0.8f, 0.8f, 1.0f);*/
             m_frame_states[m_swap_index].modified_instances.push_back(wall_tile_index);
         }
 
@@ -257,8 +249,10 @@ class ExamplePathing : public Game {
         for (const auto &pos : m_path) {
             const auto tile_index = pos.y * m_num_tiles_width + pos.x;
             if (0 <= tile_index && tile_index < m_num_tiles_width * m_num_tiles_height) {
-                m_tile_instances->at(tile_index).color =
-                    util::colors::rgba(0.0f, 1.0f, 0.0f, 0.4f);
+                auto &instance = m_renderer->get_instance(m_tile_data[tile_index]);
+                instance.color = util::colors::rgba(0.0f, 1.0f, 0.0f, 0.4f);
+                /*m_tile_instances->at(tile_index).color =*/
+                /*    util::colors::rgba(0.0f, 1.0f, 0.0f, 0.4f);*/
                 m_frame_states[m_swap_index].modified_instances.push_back(tile_index);
             }
         }
@@ -271,8 +265,10 @@ class ExamplePathing : public Game {
             static_cast<size_t>(start_tile_x);
         if (0 <= start_tile_index &&
             start_tile_index < m_num_tiles_width * m_num_tiles_height) {
-            m_tile_instances->at(start_tile_index).color =
-                util::colors::rgba(0.0f, 0.0f, 1.0f, 0.4f);
+            auto &instance = m_renderer->get_instance(m_tile_data[start_tile_index]);
+            instance.color = util::colors::rgba(0.0f, 0.0f, 1.0f, 0.4f);
+            /*m_tile_instances->at(start_tile_index).color =*/
+            /*    util::colors::rgba(0.0f, 0.0f, 1.0f, 0.4f);*/
             m_frame_states[m_swap_index].modified_instances.push_back(start_tile_index);
         }
 
@@ -285,8 +281,10 @@ class ExamplePathing : public Game {
                 static_cast<size_t>(end_tile_x);
             if (0 <= end_tile_index &&
                 end_tile_index < m_num_tiles_width * m_num_tiles_height) {
-                m_tile_instances->at(end_tile_index).color =
-                    util::colors::rgba(1.0f, 0.0f, 0.0f, 0.4f);
+                auto &instance = m_renderer->get_instance(m_tile_data[end_tile_index]);
+                instance.color = util::colors::rgba(1.0f, 0.0f, 0.0f, 0.4f);
+                /*m_tile_instances->at(end_tile_index).color =*/
+                /*    util::colors::rgba(1.0f, 0.0f, 0.0f, 0.4f);*/
                 m_frame_states[m_swap_index].modified_instances.push_back(end_tile_index);
             }
         }
@@ -301,7 +299,9 @@ class ExamplePathing : public Game {
             static_cast<size_t>(cursor_tile_x);
         if (0 <= cursor_tile_index &&
             cursor_tile_index < m_num_tiles_width * m_num_tiles_height) {
-            auto &current_color = m_tile_instances->at(cursor_tile_index).color;
+            auto &current_color =
+                m_renderer->get_instance(m_tile_data[cursor_tile_index]).color;
+            /*auto &current_color = m_tile_instances->at(cursor_tile_index).color;*/
             if (current_color == util::colors::TRANSPARENT) {
                 current_color = util::colors::rgba(0.2f, 0.2f, 0.2f, 1.0f);
             } else {
@@ -310,16 +310,15 @@ class ExamplePathing : public Game {
             m_frame_states[m_swap_index].modified_instances.push_back(cursor_tile_index);
         }
 
-        m_tile_instances->sync();
-        auto descriptor = m_descriptor_set.get();
+        m_renderer->sync_render_slots();
+
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
-        m_pipeline->render(command_buffer, descriptor, &push_constant, m_num_instances);
+        m_renderer->render(command_buffer, &push_constant, m_num_instances);
 
         render_pass.end_submit_present();
 
-        m_tile_instances->rotate();
-        m_descriptor_set->rotate();
-        m_swap_index = ++m_swap_index % 2;
+        m_swap_index = 0;
+        /*++m_swap_index % 2;*/
     }
 };
 

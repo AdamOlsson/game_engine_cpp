@@ -1,13 +1,11 @@
 #pragma once
-#include "QuadPipelineDescriptorSet.h"
 #include "vulkan/CommandBuffer.h"
+#include "vulkan/CommandBufferManager.h"
 #include "vulkan/Pipeline.h"
 #include "vulkan/PipelineLayout.h"
 #include "vulkan/PushConstantRange.h"
 #include "vulkan/ShaderStage.h"
 #include "vulkan/SwapChainManager.h"
-#include "vulkan/buffers/IndexBuffer.h"
-#include "vulkan/buffers/VertexBuffer.h"
 #include "vulkan/context/GraphicsContext.h"
 #include <memory>
 
@@ -16,8 +14,6 @@ namespace graphics_pipeline::quad {
 class QuadPipeline {
   private:
     std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
-    /*vulkan::buffers::VertexBuffer<vulkan::Vertex> m_quad_vertex_buffer;*/
-    /*vulkan::buffers::IndexBuffer m_quad_index_buffer;*/
 
     vulkan::ShaderStageFlags m_push_constant_stage;
 
@@ -42,36 +38,6 @@ class QuadPipeline {
     void bind(const vulkan::CommandBuffer &cmd) const {
         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
     }
-
-    /*template <typename PushConstantType>*/
-    /*void render(const vulkan::CommandBuffer &command_buffer,*/
-    /*            QuadPipelineDescriptorSet *descriptor_set,*/
-    /*            PushConstantType *push_constant, const int num_instances) {*/
-    /**/
-    /*    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-     * m_pipeline);*/
-    /**/
-    /*    if (push_constant) {*/
-    /*        vkCmdPushConstants(command_buffer, m_pipeline_layout,
-     * m_push_constant_stage,*/
-    /*                           0, sizeof(*push_constant), push_constant);*/
-    /*    }*/
-    /**/
-    /*    if (descriptor_set) {*/
-    /*        const vulkan::DescriptorSet set = descriptor_set->get_current();*/
-    /*        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,*/
-    /*                                m_pipeline_layout, 0, 1, &set, 0, nullptr);*/
-    /*    }*/
-    /**/
-    /*    const VkDeviceSize vertex_buffers_offset = 0;*/
-    /*    vkCmdBindVertexBuffers(command_buffer, 0, 1, &m_quad_vertex_buffer.buffer,*/
-    /*                           &vertex_buffers_offset);*/
-    /*    vkCmdBindIndexBuffer(command_buffer, m_quad_index_buffer.buffer, 0,*/
-    /*                         VK_INDEX_TYPE_UINT16);*/
-    /*    vkCmdDrawIndexed(command_buffer, m_quad_index_buffer.num_indices,
-     * num_instances,*/
-    /*                     0, 0, 0);*/
-    /*}*/
 };
 
 } // namespace graphics_pipeline::quad
