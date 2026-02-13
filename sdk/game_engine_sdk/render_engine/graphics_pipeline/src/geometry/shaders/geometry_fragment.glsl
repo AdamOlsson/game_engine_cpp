@@ -1,13 +1,13 @@
 #version 450
 
+#define RECTANGLE 0
 #define CIRCLE 1
 #define TRIANGLE 2
-#define RECTANGLE 3
 
 layout(location = 0) in vec2 in_local_position;  // -0.5 to 0.5
 layout(location = 1) flat in vec2 in_geometry_dimensions;
 layout(location = 2) flat in vec4 in_color;
-layout(location = 3) flat in int in_geometry_type;
+layout(location = 3) flat in uint in_geometry_type;
 layout(location = 4) flat in float in_border_width_world;
 layout(location = 5) flat in float in_border_radius_world;
 layout(location = 6) flat in vec4 in_border_color;
@@ -18,6 +18,7 @@ float signed_distance_box(vec2 point, vec2 box_dimensions) {
     const vec2 q = abs(point) - (box_dimensions * 0.5);
     return min(max(q.x, q.y), 0.0) + length(max(q, 0.0));
 }
+
 
 void main() {
     if(in_geometry_type == RECTANGLE) {
@@ -35,6 +36,14 @@ void main() {
         if (is_on_border) {
             out_color = in_border_color;
         } else if(inside_outer_edge) {
+            out_color = in_color;
+        } else {
+            discard;
+        }
+    } else if(in_geometry_type == CIRCLE){
+        const float distance_from_center = length(in_local_position);
+    
+        if (distance_from_center < 0.5) {
             out_color = in_color;
         } else {
             discard;

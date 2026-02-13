@@ -35,6 +35,7 @@ class Matrix {
     Matrix &translate(const glm::vec3 &vec);
 
     Matrix &scale(const float x, const float y, const float z);
+    Matrix &scale(const float x, const float y);
     Matrix &scale(const math::Vector2 &vec);
     Matrix &scale(const math::Vector2 &&vec);
     Matrix &scale(const glm::vec3 &vec);

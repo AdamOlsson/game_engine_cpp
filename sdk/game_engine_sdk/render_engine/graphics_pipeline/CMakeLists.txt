@@ -21,21 +21,26 @@ execute_process(
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     RESULT_VARIABLE result
 )
+if(result)
+    message(FATAL_ERROR "Failed to compile quad shaders with error: ${result}")
+endif()
 
 execute_process(
     COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/src/geometry/shaders/compile_shaders.py
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     RESULT_VARIABLE result
 )
+if(result)
+    message(FATAL_ERROR "Failed to compile geometry shaders with error: ${result}")
+endif()
 
 execute_process(
     COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/src/text/shaders/compile_shaders.py
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     RESULT_VARIABLE result
 )
-
 if(result)
-    message(FATAL_ERROR "Failed to compile shaders with error: ${result}")
+    message(FATAL_ERROR "Failed to compile text shaders with error: ${result}")
 endif()
 
 add_library(${PROJECT_NAME} 

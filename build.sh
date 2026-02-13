@@ -1,34 +1,6 @@
 #!/bin/bash
 
-# Compile all vertex shaders
-echo "Compiling vertex shaders..."
-for shader in ./src/game_engine_sdk/render_engine/shaders/vertex/*.glsl; do
-    if [ -f "$shader" ]; then
-        output="${shader%.glsl}.spv"
-        echo "Compiling: $shader -> $output"
-        /Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc -fshader-stage=vert "$shader" -o "$output"
-        if [ $? -ne 0 ]; then
-            echo "Shader compilation failed for: $shader"
-            exit 1
-        fi
-    fi
-done
-
-# Compile all fragment shaders
-echo "Compiling fragment shaders..."
-for shader in ./src/game_engine_sdk/render_engine/shaders/fragment/*.glsl; do
-    if [ -f "$shader" ]; then
-        output="${shader%.glsl}.spv"
-        echo "Compiling: $shader -> $output"
-        /Users/adamolsson/VulkanSDK/1.3.296.0/macOS/bin/glslc -fshader-stage=frag "$shader" -o "$output"
-        if [ $? -ne 0 ]; then
-            echo "Shader compilation failed for: $shader"
-            exit 1
-        fi
-    fi
-done
-
-echo "All shaders compiled successfully!"
+set -e  # Exit immediately if any command fails
 
 python3 compile_assets.py
 ASSETS_COMPILE_STATUS=$?

@@ -1,8 +1,8 @@
 #version 450
 
+#define RECTANGLE 0
 #define CIRCLE 1
 #define TRIANGLE 2
-#define RECTANGLE 3
 
 struct Border {
     vec4 color;
@@ -14,6 +14,7 @@ struct GeometrySBO {
     mat4 model_matrix;
     vec4 color;
     Border border;
+    uint flags;
 };
 
 layout(binding = 0) readonly buffer GeometryStorageBuffer {
@@ -32,7 +33,7 @@ layout(location = 0) in vec3 in_local_position; // -0.5 to 0.5
 layout(location = 0) out vec2 out_local_position; // -0.5 to 0.5
 layout(location = 1) out vec2 out_geometry_dimensions;
 layout(location = 2) out vec4 out_color;
-layout(location = 3) out int out_geometry_type;
+layout(location = 3) out uint out_geometry_type;
 layout(location = 4) out float out_border_width_px;
 layout(location = 5) out float out_border_radius_px;
 layout(location = 6) out vec4 out_border_color;
@@ -50,12 +51,14 @@ void main() {
     
     const float geometry_width_world = instance.model_matrix[0][0];
     const float geometry_height_world = instance.model_matrix[1][1];
+    
+    const uint geometry_type = instance.flags & 0xFu; 
 
     gl_Position = clip_space_position;
     out_local_position = in_local_position.xy;
     out_geometry_dimensions = vec2(geometry_width_world, geometry_height_world);
     out_color = instance.color;
-    out_geometry_type = RECTANGLE;
+    out_geometry_type = geometry_type;
     out_border_width_px = instance.border.width;
     out_border_radius_px = instance.border.radius;
     out_border_color = instance.border.color;

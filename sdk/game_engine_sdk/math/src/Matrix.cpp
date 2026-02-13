@@ -20,6 +20,11 @@ math::Matrix &math::Matrix::translate(const glm::vec3 &vec) {
     return *this;
 }
 
+math::Matrix &math::Matrix::scale(const float x, const float y) {
+    m_matrix = glm::scale(m_matrix, glm::vec3(x, y, 1.0f));
+    return *this;
+}
+
 math::Matrix &math::Matrix::scale(const float x, const float y, const float z) {
     m_matrix = glm::scale(m_matrix, glm::vec3(x, y, z));
     return *this;

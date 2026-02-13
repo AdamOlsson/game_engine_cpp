@@ -1,5 +1,6 @@
 #pragma once
 #include "camera/Camera.h"
+#include "graphics_pipeline/geometry/GeometryRenderer.h"
 #include "graphics_pipeline/quad/QuadPipelineSBO.h"
 #include "math/Matrix.h"
 #include "math/Vector2.h"
@@ -51,7 +52,7 @@ struct enemy_t {
 struct guard_t {
     static constexpr util::colors::Color color = util::colors::GREEN;
     static constexpr util::colors::Color highlighted_color = util::colors::GREEN;
-    static constexpr util::colors::Color selected_color = util::colors::YELLOW;
+    static constexpr util::colors::Color selected_color = util::colors::GREEN;
 
     static constexpr math::Vector2 size = math::Vector2(50.0f, 50.0f);
 
@@ -125,13 +126,19 @@ class Entity {
         std::variant<caravan_t, caravan_slot_t, enemy_t, guard_t, ranged_attack_t>;
     EntityVariant m_type;
 
+    friend struct guard_t;
+
     math::Matrix m_model_matrix;
     bool m_is_highlighted = false;
     bool m_is_selected = false;
     bool m_is_visible = true;
 
-    graphics_pipeline::quad::QuadSBOHandle m_render_data_handle;
     graphics_pipeline::quad::QuadRenderer *m_quad_renderer = nullptr;
+    graphics_pipeline::quad::QuadSBOHandle m_render_data_handle;
+
+    graphics_pipeline::geometry::GeometryRenderer *m_geometry_renderer = nullptr;
+    std::optional<graphics_pipeline::geometry::GeometrySBOHandle>
+        m_highlight_render_data = std::nullopt;
 
     static_assert(all_have_color_field(static_cast<EntityVariant *>(nullptr)),
                   "All entity variants must have a color field.");
@@ -215,12 +222,15 @@ class Entity {
         return Entity(std::in_place_type<ranged_attack_t>, std::move(model));
     }
 
-    void set_render_data(graphics_pipeline::quad::QuadRenderer *renderer) {
-        m_quad_renderer = renderer;
+    void set_render_data(graphics_pipeline::quad::QuadRenderer *quad_renderer,
+                         graphics_pipeline::geometry::GeometryRenderer *geom_renderer) {
+        m_quad_renderer = quad_renderer;
         m_render_data_handle = m_quad_renderer->request_render_slot();
         auto &instance = m_quad_renderer->get_instance(m_render_data_handle);
         instance.model_matrix = m_model_matrix;
         instance.color = get_color();
+
+        m_geometry_renderer = geom_renderer;
     }
 
     void clear_render_data() {
@@ -262,10 +272,48 @@ class Entity {
     bool is_highlighted() { return m_is_highlighted; }
     void toggle_highlighted() { set_highlighted(!m_is_highlighted); }
     void set_highlighted(bool is_highlighted) {
+        const bool old_value = m_is_highlighted;
         m_is_highlighted = is_highlighted;
-        if (m_quad_renderer != nullptr) {
-            auto &instance = m_quad_renderer->get_instance(m_render_data_handle);
-            instance.color = m_is_highlighted ? get_highlighted_color() : get_color();
+        handle_highlight(old_value, is_highlighted);
+    }
+    void handle_highlight(const bool prev_value, const bool new_value) {
+        DEBUG_ASSERT(m_quad_renderer != nullptr,
+                     "Error: Changing the highlight value of an entity requires the "
+                     "render data to be set.");
+        DEBUG_ASSERT(m_geometry_renderer != nullptr,
+                     "Error: Changing the highlight value of an entity requires the "
+                     "render data to be set.");
+        if (m_quad_renderer == nullptr || prev_value == new_value) {
+            return;
+        }
+
+        auto &instance = m_quad_renderer->get_instance(m_render_data_handle);
+        instance.color = new_value ? get_highlighted_color() : get_color();
+
+        if (holds<guard_t>()) {
+            if (prev_value) {
+                DEBUG_ASSERT(
+                    m_highlight_render_data.has_value(),
+                    "Error: Expected highlight render data if guard is highlighted.");
+                m_geometry_renderer->return_render_slot(m_highlight_render_data.value());
+                m_highlight_render_data = std::nullopt;
+            } else {
+                DEBUG_ASSERT(
+                    !m_highlight_render_data.has_value(),
+                    "Error: Did not expect highlight render data if guard is not "
+                    "highlighted.");
+                const guard_t &guard = get<guard_t>();
+                m_highlight_render_data = m_geometry_renderer->request_render_slot();
+                auto &highlight_instance =
+                    m_geometry_renderer->get_instance(m_highlight_render_data.value());
+                highlight_instance.flags |= static_cast<uint32_t>(
+                    graphics_pipeline::geometry::GeometryShape::Circle);
+                highlight_instance.color = util::colors::rgba(1.0f, 1.0f, 1.0f, 0.15f);
+                highlight_instance.model_matrix =
+                    math::Matrix()
+                        .translate(get_world_position())
+                        .scale(guard.attack_range * 2, guard.attack_range * 2);
+            }
         }
     }
 
@@ -325,18 +373,17 @@ inline void clear_occupying_guard(Entity &slot_entity) {
     DEBUG_ASSERT(slot_entity.holds<caravan_slot_t>(), "Error: Expected caravan slot.");
     auto &slot = slot_entity.get<caravan_slot_t>();
     slot.occupying_guard = nullptr;
-    slot_entity.set_highlighted(false);
     slot_entity.set_visibility(true);
 }
 
 inline Entity *get_occupying_guard(Entity &slot_entity) {
     DEBUG_ASSERT(slot_entity.holds<caravan_slot_t>(), "Error: Expected caravan slot.");
-    auto &slot = slot_entity.template get<caravan_slot_t>();
+    auto &slot = slot_entity.get<caravan_slot_t>();
     return slot.occupying_guard;
 }
 
-inline bool is_occupied(CaravanSlotEntity auto &slot_entity) {
-    auto &slot = slot_entity.template get<caravan_slot_t>();
+inline bool is_occupied(Entity &slot_entity) {
+    auto &slot = slot_entity.get<caravan_slot_t>();
     return slot.occupying_guard != nullptr;
 }
 
@@ -364,7 +411,7 @@ inline void clear_caravan_slot(Entity &guard_entity) {
 
 inline Entity *get_caravan_slot(Entity &guard_entity) {
     DEBUG_ASSERT(guard_entity.holds<guard_t>(), "Error: Expected guard.");
-    auto &guard = guard_entity.template get<guard_t>();
+    auto &guard = guard_entity.get<guard_t>();
     return guard.caravan_slot;
 }
 

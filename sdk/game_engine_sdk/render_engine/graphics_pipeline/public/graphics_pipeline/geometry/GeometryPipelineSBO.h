@@ -10,6 +10,12 @@ namespace graphics_pipeline::geometry {
 
 class GeometrySBOHandle;
 
+enum class GeometryShape : uint32_t {
+    Rectangle = 0x0,
+    Circle = 0x1,
+    Triangle = 0x2,
+};
+
 struct GeometryPipelineSBO {
     alignas(16) glm::mat4 model_matrix = glm::mat4(1.0f);
     alignas(16) glm::vec4 color = util::colors::TRANSPARENT;
@@ -18,6 +24,7 @@ struct GeometryPipelineSBO {
         alignas(4) float width = 0.0f;
         alignas(4) float radius = 0.0f;
     } border;
+    alignas(4) uint32_t flags = 0;
 
     std::string to_string() const {
         std::ostringstream oss;
