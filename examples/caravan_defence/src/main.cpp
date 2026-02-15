@@ -135,7 +135,7 @@ class CaravanDefence : public Game {
         m_enemies.back().set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
     }
 
-    void create_attack(entity::Entity &guard, const entity::Entity &enemy) {
+    void create_attack(entity::Entity &guard, entity::Entity &enemy) {
         m_attacks.push_back(entity::attack(guard, enemy));
         m_attacks.back().set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
     }
@@ -163,24 +163,22 @@ class CaravanDefence : public Game {
         }
 
         for (size_t i = 0; i < m_enemies.size(); i++) {
-            bool enemy_dead = false;
             entity::Entity &enemy = m_enemies[i];
             entity::move_towards(enemy, m_caravan.get_world_position(), dt);
 
             for (entity::Entity &guard : m_guards) {
-                if (!enemy_dead && entity::can_attack(guard) &&
+                if (enemy.is_alive() && entity::can_attack(guard) &&
                     entity::in_attack_range(guard, enemy)) {
                     create_attack(guard, enemy);
-                    enemy_dead = true;
                     break;
                 }
             }
 
-            if (!enemy_dead && m_caravan.is_point_inside(enemy.get_world_position())) {
-                enemy_dead = true;
+            if (enemy.is_alive() &&
+                m_caravan.is_point_inside(enemy.get_world_position())) {
             }
 
-            if (enemy_dead) {
+            if (enemy.is_dead()) {
                 enemy.clear_render_data();
                 m_enemies.erase(m_enemies.begin() + i);
             }

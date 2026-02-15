@@ -41,12 +41,12 @@ math::Matrix &math::Matrix::scale(const glm::vec3 &&vec) {
 }
 
 math::Matrix &math::Matrix::scale(const math::Vector2 &vec) {
-    m_matrix = glm::scale(m_matrix, glm::vec3(vec.x, vec.y, 1.0f));
+    m_matrix = glm::scale(m_matrix, glm::vec3(vec.x(), vec.y(), 1.0f));
     return *this;
 }
 
 math::Matrix &math::Matrix::scale(const math::Vector2 &&vec) {
-    m_matrix = glm::scale(m_matrix, glm::vec3(vec.x, vec.y, 1.0f));
+    m_matrix = glm::scale(m_matrix, glm::vec3(vec.x(), vec.y(), 1.0f));
     return *this;
 }
 

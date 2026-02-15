@@ -56,6 +56,9 @@ constexpr glm::vec4 VIOLET = glm::vec4(0.93f, 0.51f, 0.93f, 1.0f);
 constexpr glm::vec4 INDIGO = glm::vec4(0.29f, 0.0f, 0.51f, 1.0f);
 constexpr glm::vec4 KHAKI = glm::vec4(0.94f, 0.9f, 0.55f, 1.0f);
 
+consteval glm::vec4 rgb(float r, float g, float b) noexcept {
+    return glm::vec4(r, g, b, 1.0f);
+}
 consteval glm::vec4 rgba(float r, float g, float b, float a = 1.0f) noexcept {
     return glm::vec4(r, g, b, a);
 }

@@ -16,6 +16,7 @@ struct caravan_t {
     static constexpr util::colors::Color highlighted_color = util::colors::MAGENTA;
     static constexpr util::colors::Color selected_color = util::colors::MAGENTA;
     static constexpr math::Vector2 size = math::Vector2(100.0f, 200.0f);
+    static constexpr float max_health = 10.0f;
 
     caravan_t() {}
     ~caravan_t() {}
@@ -29,6 +30,7 @@ struct caravan_slot_t {
     static constexpr util::colors::Color selected_color =
         util::colors::rgba(0.5f, 0.5f, 0.5f, 0.2f);
     static constexpr math::Vector2 size = math::Vector2(50.0f, 50.0f);
+    static constexpr float max_health = 10.0f;
 
     Entity *occupying_guard = nullptr;
 
@@ -41,6 +43,7 @@ struct enemy_t {
     static constexpr util::colors::Color highlighted_color = util::colors::RED;
     static constexpr util::colors::Color selected_color = util::colors::RED;
     static constexpr math::Vector2 size = math::Vector2(50.0f, 50.0f);
+    static constexpr float max_health = 2.0f;
 
     static constexpr float velocity = 25.0f;
     static constexpr size_t spawn_rate_ms = 3000;
@@ -53,8 +56,8 @@ struct guard_t {
     static constexpr util::colors::Color color = util::colors::GREEN;
     static constexpr util::colors::Color highlighted_color = util::colors::GREEN;
     static constexpr util::colors::Color selected_color = util::colors::GREEN;
-
     static constexpr math::Vector2 size = math::Vector2(50.0f, 50.0f);
+    static constexpr float max_health = 10.0f;
 
     using Clock = std::chrono::steady_clock;
     using TimePoint = std::chrono::time_point<Clock>;
@@ -74,6 +77,7 @@ struct ranged_attack_t {
     static constexpr util::colors::Color highlighted_color = util::colors::ORANGE;
     static constexpr util::colors::Color selected_color = util::colors::ORANGE;
     static constexpr math::Vector2 size = math::Vector2(0.0f, 10.0f);
+    static constexpr float max_health = 10.0f;
 
     float lifetime_count = 0.0f;
     static constexpr float lifetime_ms = 1000.0f;
@@ -140,6 +144,20 @@ class Entity {
     std::optional<graphics_pipeline::geometry::GeometrySBOHandle>
         m_highlight_render_data = std::nullopt;
 
+    struct {
+        float max = 100.0f;
+        float current = 100.0f;
+        float width = 10.0f;
+        math::Vector2 offset;
+        std::optional<graphics_pipeline::geometry::GeometrySBOHandle> bar = std::nullopt;
+
+        template <typename T> void init() {
+            max = T::max_health;
+            current = T::max_health;
+        }
+
+    } m_health;
+
     static_assert(all_have_color_field(static_cast<EntityVariant *>(nullptr)),
                   "All entity variants must have a color field.");
     static_assert(all_have_highlighted_color_field(static_cast<EntityVariant *>(nullptr)),
@@ -167,13 +185,19 @@ class Entity {
         return std::visit([](const auto &entity) { return entity.size; }, m_type);
     }
 
+    constexpr float get_max_health() const {
+        return std::visit([](const auto &entity) { return entity.max_health; }, m_type);
+    }
+
     template <typename T, typename... Args>
         requires(std::is_same_v<T, caravan_t> || std::is_same_v<T, caravan_slot_t> ||
                  std::is_same_v<T, enemy_t> || std::is_same_v<T, guard_t> ||
                  std::is_same_v<T, ranged_attack_t>)
     Entity(std::in_place_type_t<T>, math::Matrix &&model, Args &&...args)
         : m_type(std::in_place_type<T>, std::forward<Args>(args)...),
-          m_model_matrix(std::move(model)) {}
+          m_model_matrix(std::move(model)) {
+        m_health.init<T>();
+    }
 
   public:
     Entity() = default;
@@ -212,7 +236,7 @@ class Entity {
     static Entity create_ranged_attack(const camera::WorldPoint2D &start,
                                        const camera::WorldPoint2D &end) {
         const float width = math::distance(start, end);
-        const float height = ranged_attack_t::size.y;
+        const float height = ranged_attack_t::size.y();
         const camera::WorldPoint2D local_vec = end - start;
         const float rotation = math::angle_to_x_axis(local_vec);
         math::Matrix model = math::Matrix()
@@ -231,6 +255,29 @@ class Entity {
         instance.color = get_color();
 
         m_geometry_renderer = geom_renderer;
+
+        const auto entity_size = get_size();
+        m_health.offset =
+            std::move(math::Vector2(0.0f, (entity_size.y() / 2.0f) + 20.0f));
+        m_health.width = entity_size.x();
+        m_health.bar = m_geometry_renderer->request_render_slot();
+        auto &health_bar = m_geometry_renderer->get_instance(m_health.bar.value());
+        health_bar.flags |=
+            static_cast<uint32_t>(graphics_pipeline::geometry::GeometryShape::Rectangle);
+        health_bar.model_matrix = math::Matrix()
+                                      .translate(get_world_position() + m_health.offset)
+                                      .scale(m_health.width, 10.0f);
+
+        std::visit(
+            [&health_bar](const auto &entity) {
+                using T = std::decay_t<decltype(entity)>;
+                if constexpr (std::is_same_v<T, enemy_t>) {
+                    health_bar.color = util::colors::rgb(0.0f, 8.0f, 0.0f);
+                } else {
+                    health_bar.color = util::colors::TRANSPARENT;
+                }
+            },
+            m_type);
     }
 
     void clear_render_data() {
@@ -238,13 +285,20 @@ class Entity {
             m_quad_renderer->return_render_slot(m_render_data_handle);
             m_quad_renderer = nullptr;
         }
+
+        if (m_geometry_renderer != nullptr) {
+            if (m_health.bar.has_value()) {
+                m_geometry_renderer->return_render_slot(m_health.bar.value());
+            }
+            m_geometry_renderer = nullptr;
+        }
     }
 
     bool is_point_inside(const camera::WorldPoint2D &point) {
         // World position with no regard to the world grid
         const camera::WorldPoint2D position = m_model_matrix.position_2d();
         const math::Vector2 size = get_size();
-        return math::is_point_inside_rectangle(point, position, size.x, size.y);
+        return math::is_point_inside_rectangle(point, position, size.x(), size.y());
     }
 
     void set_world_position(const camera::WorldPoint2D &position) {
@@ -252,6 +306,18 @@ class Entity {
         if (m_quad_renderer != nullptr) {
             auto &instance = m_quad_renderer->get_instance(m_render_data_handle);
             instance.model_matrix = m_model_matrix;
+        }
+
+        if (m_geometry_renderer != nullptr) {
+            if (m_health.bar.has_value()) {
+                auto &health_bar =
+                    m_geometry_renderer->get_instance(m_health.bar.value());
+
+                health_bar.model_matrix =
+                    math::Matrix()
+                        .translate(position + m_health.offset)
+                        .scale(m_health.width * (m_health.current / m_health.max), 10.0f);
+            }
         }
     }
 
@@ -326,6 +392,10 @@ class Entity {
             instance.color = m_is_selected ? get_selected_color() : get_color();
         }
     }
+
+    void damage(const float dmg) { m_health.current -= dmg; }
+    bool is_dead() { return m_health.current <= 0.0f; }
+    bool is_alive() { return m_health.current > 0.0f; }
 
     void update(const float dt_s) {
         std::visit(
@@ -430,10 +500,11 @@ inline bool can_attack(Entity &guard_entity) {
     return (guard_t::Clock::now() - guard.last_attack) > guard.attack_cooldown;
 }
 
-inline Entity attack(Entity &guard_entity, const Entity &enemy_entity) {
+inline Entity attack(Entity &guard_entity, Entity &enemy_entity) {
     DEBUG_ASSERT(guard_entity.holds<guard_t>(), "Error: Expected guard.");
     auto &guard = guard_entity.get<guard_t>();
     guard.last_attack = guard_t::Clock::now();
+    enemy_entity.damage(1.0f);
     return Entity::create_ranged_attack(guard_entity.get_world_position(),
                                         enemy_entity.get_world_position());
 }
@@ -452,5 +523,4 @@ inline void move_towards(Entity &enemy_entity, const camera::WorldPoint2D &targe
 
     enemy_entity.set_world_position(new_position);
 }
-
 } // namespace entity
