@@ -51,13 +51,18 @@ class QuadRenderer {
     SwapDescriptorSet m_descriptor_sets;
 
     struct {
-        std::vector<bool> is_dirty;
-        std::stack<size_t> available_instance_ids;
-    } m_state;
+        size_t next_id;
+        size_t dense_count;
+        std::vector<size_t> sparse;
+        std::vector<size_t> reverse;
+        std::vector<size_t> available;
+        vulkan::buffers::StorageBuffer<QuadPipelineSBO> dense;
+    } m_sparse_set;
+
+    static constexpr size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
+    bool contains(size_t id) const;
 
   public:
-    vulkan::buffers::StorageBuffer<QuadPipelineSBO> m_instances;
-
     QuadRenderer(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
                  vulkan::CommandBufferManager *command_buffer_manager,
                  vulkan::SwapChainManager *swap_chain_manager,

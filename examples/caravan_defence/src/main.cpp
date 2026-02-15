@@ -265,7 +265,6 @@ class CaravanDefence : public Game {
                     }
 
                     if (new_selected_guard.has_value()) {
-                        logger::debug("Clicked guard!");
                         m_guards[new_selected_guard.value()].set_selected(true);
                         m_guards[new_selected_guard.value()].set_highlighted(true);
                     }

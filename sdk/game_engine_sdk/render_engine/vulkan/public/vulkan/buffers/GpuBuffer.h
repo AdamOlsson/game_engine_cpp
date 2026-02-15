@@ -126,6 +126,7 @@ template <typename T, GpuBufferType BufferType> class GpuBuffer {
         return *this;
     }
 
+    void resize(const size_t size) { m_staging_buffer.resize(size); }
     size_t size() const { return m_size; }
     std::vector<GpuBufferRef> get_reference() { return m_refs; }
     size_t num_elements() const { return m_staging_buffer.size(); }

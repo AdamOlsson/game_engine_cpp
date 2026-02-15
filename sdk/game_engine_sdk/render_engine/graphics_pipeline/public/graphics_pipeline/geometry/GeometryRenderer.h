@@ -8,8 +8,8 @@
 #include "vulkan/buffers/GpuBuffer.h"
 #include "vulkan/buffers/IndexBuffer.h"
 #include "vulkan/buffers/VertexBuffer.h"
+#include <limits>
 #include <memory>
-#include <stack>
 
 namespace graphics_pipeline::geometry {
 
@@ -41,14 +41,17 @@ class GeometryRenderer {
 
     SwapDescriptorSet m_descriptor_sets;
 
-    vulkan::buffers::StorageBuffer<GeometryPipelineSBO> m_instances;
-
     struct {
-        std::vector<bool> is_dirty;
-        std::stack<size_t> available_instance_ids;
-    } m_state;
+        size_t next_id;
+        size_t dense_count;
+        std::vector<size_t> sparse;
+        std::vector<size_t> reverse;
+        std::vector<size_t> available;
+        vulkan::buffers::StorageBuffer<GeometryPipelineSBO> dense;
+    } m_sparse_set;
 
-    size_t m_next_instance_id = 0;
+    static constexpr size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
+    bool contains(size_t id) const;
 
   public:
     GeometryRenderer(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,

@@ -1,6 +1,5 @@
 #include "graphics_pipeline/geometry/GeometryRenderer.h"
 #include "graphics_pipeline/SwapDescriptorSetBuilder.h"
-#include <algorithm>
 
 namespace {
 
@@ -29,13 +28,13 @@ GeometryRenderer::GeometryRenderer(std::shared_ptr<vulkan::context::GraphicsCont
     m_descriptor_pool = vulkan::DescriptorPool(m_ctx, opts.pool_opts);
 
     const size_t max_frames_in_flight = 2;
-    m_instances =
+    m_sparse_set.dense =
         vulkan::buffers::StorageBuffer<graphics_pipeline::geometry::GeometryPipelineSBO>(
             m_ctx, opts.instance_buffer_opts.size, max_frames_in_flight);
 
     auto builder = SwapDescriptorSetBuilder(max_frames_in_flight);
     builder.add_storage_buffer(
-        0, vulkan::DescriptorBufferInfo::from_vector(m_instances.get_reference()));
+        0, vulkan::DescriptorBufferInfo::from_vector(m_sparse_set.dense.get_reference()));
     m_descriptor_sets = builder.build(ctx, m_descriptor_pool);
 
     const auto &layout = m_descriptor_sets.get_layout();
@@ -43,44 +42,63 @@ GeometryRenderer::GeometryRenderer(std::shared_ptr<vulkan::context::GraphicsCont
     m_geometry_pipeline = std::make_unique<GeometryPipeline>(
         m_ctx, command_buffer_manager, swap_chain_manager, &layout, push_constant_range);
 
-    m_state.is_dirty.resize(opts.instance_buffer_opts.size);
-    std::fill(m_state.is_dirty.begin(), m_state.is_dirty.end(), false);
-
-    for (int i = opts.instance_buffer_opts.size - 1; i >= 0; i--) {
-        m_instances.emplace_back();
-        m_state.available_instance_ids.push(i);
-    }
+    m_sparse_set.next_id = 0;
+    m_sparse_set.dense_count = 0;
+    m_sparse_set.sparse.resize(opts.instance_buffer_opts.size, INVALID_INDEX);
+    m_sparse_set.reverse.reserve(opts.instance_buffer_opts.size);
+    m_sparse_set.available.reserve(opts.instance_buffer_opts.size);
+    m_sparse_set.available.reserve(opts.instance_buffer_opts.size);
+    m_sparse_set.dense.resize(opts.instance_buffer_opts.size);
 }
 
 GeometryPipelineSBO &GeometryRenderer::get_instance(const GeometrySBOHandle &handle) {
-    m_state.is_dirty[handle.id] = true;
-    return m_instances[handle.id];
+    return m_sparse_set.dense[m_sparse_set.sparse[handle.id]];
 }
 
 GeometrySBOHandle GeometryRenderer::request_render_slot() {
-    size_t id = m_next_instance_id++;
+    size_t id = m_sparse_set.available.empty() ? m_sparse_set.next_id++
+                                               : m_sparse_set.available.back();
 
-    // NOTE: No bounds checking - may crash as requested
-    // TODO: Add proper capacity management later
+    DEBUG_ASSERT(id < m_sparse_set.dense.num_elements(),
+                 "Error: new render slot id is larger than GpuBuffer size.");
 
-    if (id >= m_instances.size()) {
-        m_instances.emplace_back(GeometryPipelineSBO{});
-        m_state.is_dirty.push_back(true);
-    } else {
-        m_state.is_dirty[id] = true;
+    if (!m_sparse_set.available.empty()) {
+        m_sparse_set.available.pop_back();
     }
+
+    m_sparse_set.sparse[id] = m_sparse_set.dense_count++;
+    m_sparse_set.reverse.push_back(id);
 
     return GeometrySBOHandle(id);
 }
 
 void GeometryRenderer::return_render_slot(GeometrySBOHandle &handle) {
-    m_instances[handle.id] = GeometryPipelineSBO{};
-    m_state.is_dirty[handle.id] = true;
+    const size_t id = handle.id;
+    if (!contains(id)) {
+        return;
+    }
+
+    size_t dense_index = m_sparse_set.sparse[id];
+    size_t last_dense_index = m_sparse_set.dense_count - 1;
+    size_t last_id = m_sparse_set.reverse[last_dense_index];
+
+    if (dense_index != last_dense_index) {
+        m_sparse_set.dense[dense_index] = std::move(m_sparse_set.dense[last_dense_index]);
+        m_sparse_set.reverse[dense_index] = last_id;
+        m_sparse_set.sparse[last_id] = dense_index;
+    }
+
+    m_sparse_set.dense[last_dense_index] = GeometryPipelineSBO{};
+    m_sparse_set.reverse.pop_back();
+    m_sparse_set.sparse[id] = INVALID_INDEX;
+    m_sparse_set.available.push_back(id);
+    m_sparse_set.dense_count--;
 }
 
-void GeometryRenderer::sync_render_slots() {
-    m_instances.sync_all();
-    std::fill(m_state.is_dirty.begin(), m_state.is_dirty.end(), false);
+void GeometryRenderer::sync_render_slots() { m_sparse_set.dense.sync_all(); }
+
+bool GeometryRenderer::contains(size_t id) const {
+    return id < m_sparse_set.sparse.size() && m_sparse_set.sparse[id] != INVALID_INDEX;
 }
 
 } // namespace graphics_pipeline::geometry

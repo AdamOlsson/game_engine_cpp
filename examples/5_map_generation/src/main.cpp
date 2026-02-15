@@ -9,7 +9,6 @@
 #include "tiling/NoiseMap.h"
 #include "tiling/TileGrid.h"
 #include "tiling/wang/WangTiles.h"
-#include "vulkan/buffers/GpuBuffer.h"
 #include "vulkan/vulkan_core.h"
 #include "window/WindowConfig.h"
 #include <memory>
@@ -33,6 +32,7 @@ class MapGeneration : public Game {
     vulkan::Sampler m_sampler;
 
     std::unique_ptr<graphics_pipeline::quad::QuadRenderer> m_quad_renderer;
+    std::vector<graphics_pipeline::quad::QuadSBOHandle> m_handles;
 
     size_t m_num_instances;
 
@@ -117,16 +117,19 @@ class MapGeneration : public Game {
                     ? m_tileset_uvwt.uvwt_for_tile_at(tileset_index->x, tileset_index->y)
                     : m_tileset_uvwt.uvwt_for_tile_at(0, 0);
 
-            m_quad_renderer->m_instances.push_back(
-                graphics_pipeline::quad::QuadPipelineSBO{
-                    .model_matrix = math::Matrix()
+            graphics_pipeline::quad::QuadSBOHandle handle =
+                m_quad_renderer->request_render_slot();
+            graphics_pipeline::quad::QuadPipelineSBO &instance =
+                m_quad_renderer->get_instance(handle);
+            instance.model_matrix = math::Matrix()
                                         .scale(glm::vec3(CELL_SIZE, CELL_SIZE, 1.0))
-                                        .translate(x, y, 0),
-                    .uvwt = uvwt,
-                });
+                                        .translate(x, y, 0);
+            instance.uvwt = uvwt;
+            m_handles.push_back(std::move(handle));
+
             m_num_instances++;
         }
-        m_quad_renderer->m_instances.sync_all();
+        m_quad_renderer->sync_render_slots();
     }
 
     void register_mouse_event_handler(vulkan::context::GraphicsContext *ctx) {
