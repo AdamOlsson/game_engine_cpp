@@ -4,6 +4,7 @@
 #include "graphics_pipeline/quad/QuadPipelineSBO.h"
 #include "math/Matrix.h"
 #include "math/Vector2.h"
+#include "math/Vector4.h"
 #include "math/interpolate.h"
 #include "math/shape.h"
 #include <variant>
@@ -12,9 +13,9 @@ namespace entity {
 class Entity;
 
 struct caravan_t {
-    static constexpr util::colors::Color color = util::colors::MAGENTA;
-    static constexpr util::colors::Color highlighted_color = util::colors::MAGENTA;
-    static constexpr util::colors::Color selected_color = util::colors::MAGENTA;
+    static constexpr util::colors::Color color = util::colors::DARK_PURPLE;
+    static constexpr util::colors::Color highlighted_color = util::colors::DARK_PURPLE;
+    static constexpr util::colors::Color selected_color = util::colors::DARK_PURPLE;
     static constexpr math::Vector2 size = math::Vector2(100.0f, 200.0f);
     static constexpr float velocity = 0.0f;
     static constexpr float max_health = 10.0f;
@@ -40,24 +41,30 @@ struct caravan_slot_t {
     ~caravan_slot_t() {}
 };
 
+enum class EnemyType : uint32_t { A = 0, B = 1 };
+
 struct enemy_t {
-    static constexpr util::colors::Color color = util::colors::RED;
-    static constexpr util::colors::Color highlighted_color = util::colors::RED;
-    static constexpr util::colors::Color selected_color = util::colors::RED;
+    static constexpr util::colors::Color color = util::colors::DARK_RED;
+    static constexpr util::colors::Color highlighted_color = util::colors::DARK_RED;
+    static constexpr util::colors::Color selected_color = util::colors::DARK_RED;
     static constexpr math::Vector2 size = math::Vector2(50.0f, 50.0f);
     static constexpr float velocity = 40.0f;
     static constexpr float max_health = 2.0f;
 
     static constexpr size_t spawn_rate_ms = 3000;
 
+    static constexpr util::colors::Color type_a_color = util::colors::DARK_RED;
+    static constexpr util::colors::Color type_b_color = util::colors::DARK_ORANGE;
+    EnemyType type = EnemyType::A;
+
     enemy_t() {}
     ~enemy_t() {}
 };
 
 struct guard_t {
-    static constexpr util::colors::Color color = util::colors::GREEN;
-    static constexpr util::colors::Color highlighted_color = util::colors::GREEN;
-    static constexpr util::colors::Color selected_color = util::colors::GREEN;
+    static constexpr util::colors::Color color = util::colors::DARK_GREEN;
+    static constexpr util::colors::Color highlighted_color = util::colors::DARK_GREEN;
+    static constexpr util::colors::Color selected_color = util::colors::DARK_GREEN;
     static constexpr math::Vector2 size = math::Vector2(50.0f, 50.0f);
     static constexpr float velocity = 0.0f;
     static constexpr float max_health = 10.0f;
@@ -84,7 +91,7 @@ struct ranged_attack_t {
     static constexpr float max_health = 10.0f;
 
     float lifetime_count = 0.0f;
-    static constexpr float lifetime_ms = 1000.0f;
+    static constexpr float lifetime_ms = 800.0f;
 
     ranged_attack_t() {}
     ~ranged_attack_t() {}
@@ -151,7 +158,8 @@ class Entity {
     bool m_is_visible = true;
 
     graphics_pipeline::quad::QuadRenderer *m_quad_renderer = nullptr;
-    graphics_pipeline::quad::QuadSBOHandle m_render_data_handle;
+    std::optional<graphics_pipeline::quad::QuadSBOHandle> m_render_data_handle =
+        std::nullopt;
 
     graphics_pipeline::geometry::GeometryRenderer *m_geometry_renderer = nullptr;
     std::optional<graphics_pipeline::geometry::GeometrySBOHandle>
@@ -266,9 +274,26 @@ class Entity {
                          graphics_pipeline::geometry::GeometryRenderer *geom_renderer) {
         m_quad_renderer = quad_renderer;
         m_render_data_handle = m_quad_renderer->request_render_slot();
-        auto &instance = m_quad_renderer->get_instance(m_render_data_handle);
+        auto &instance = m_quad_renderer->get_instance(m_render_data_handle.value());
         instance.model_matrix = m_model_matrix;
         instance.color = get_color();
+
+        if (holds<enemy_t>()) {
+            instance.texture_id = 0;
+            instance.sampling_mode =
+                static_cast<uint32_t>(graphics_pipeline::quad::TextureSamplerMode::SDF);
+            instance.uvwt = math::Vector4(0.0f, 0.0f, 0.2f, 0.2f);
+
+            enemy_t &enemy = get<enemy_t>();
+            switch (enemy.type) {
+            case EnemyType::A:
+                instance.color = enemy_t::type_a_color;
+                break;
+            case EnemyType::B:
+                instance.color = enemy_t::type_b_color;
+                break;
+            }
+        }
 
         m_geometry_renderer = geom_renderer;
 
@@ -284,22 +309,16 @@ class Entity {
                                       .translate(get_world_position() + m_health.offset)
                                       .scale(m_health.width, 10.0f);
 
-        std::visit(
-            [&health_bar](const auto &entity) {
-                using T = std::decay_t<decltype(entity)>;
-                if constexpr (std::is_same_v<T, enemy_t> ||
-                              std::is_same_v<T, caravan_t>) {
-                    health_bar.color = util::colors::rgb(0.0f, 8.0f, 0.0f);
-                } else {
-                    health_bar.color = util::colors::TRANSPARENT;
-                }
-            },
-            m_type);
+        if (holds<enemy_t>() || holds<caravan_t>()) {
+            health_bar.color = util::colors::rgb(0.0f, 8.0f, 0.0f);
+        } else {
+            health_bar.color = util::colors::TRANSPARENT;
+        }
     }
 
     void clear_render_data() {
         if (m_quad_renderer != nullptr) {
-            m_quad_renderer->return_render_slot(m_render_data_handle);
+            m_quad_renderer->return_render_slot(m_render_data_handle.value());
             m_quad_renderer = nullptr;
         }
 
@@ -321,7 +340,7 @@ class Entity {
     void set_world_position(const camera::WorldPoint2D &position) {
         m_model_matrix = math::Matrix().translate(position).scale(get_size());
         if (m_quad_renderer != nullptr) {
-            auto &instance = m_quad_renderer->get_instance(m_render_data_handle);
+            auto &instance = m_quad_renderer->get_instance(m_render_data_handle.value());
             instance.model_matrix = m_model_matrix;
         }
 
@@ -337,7 +356,7 @@ class Entity {
     void set_visibility(const bool is_visible) {
         m_is_visible = is_visible;
         if (m_quad_renderer != nullptr) {
-            auto &instance = m_quad_renderer->get_instance(m_render_data_handle);
+            auto &instance = m_quad_renderer->get_instance(m_render_data_handle.value());
             instance.color = m_is_visible ? get_color() : util::colors::TRANSPARENT;
         }
     }
@@ -360,7 +379,7 @@ class Entity {
             return;
         }
 
-        auto &instance = m_quad_renderer->get_instance(m_render_data_handle);
+        auto &instance = m_quad_renderer->get_instance(m_render_data_handle.value());
         instance.color = new_value ? get_highlighted_color() : get_color();
 
         if (holds<guard_t>()) {
@@ -395,7 +414,7 @@ class Entity {
     void set_selected(const bool is_selected) {
         m_is_selected = is_selected;
         if (m_quad_renderer != nullptr) {
-            auto &instance = m_quad_renderer->get_instance(m_render_data_handle);
+            auto &instance = m_quad_renderer->get_instance(m_render_data_handle.value());
             instance.color = m_is_selected ? get_selected_color() : get_color();
         }
     }
@@ -453,6 +472,9 @@ concept EnemyEntity = requires(E &e) {
     { e.template get<enemy_t>() } -> std::same_as<enemy_t &>;
 };
 
+// ###################################################
+// ################### Caravan Slot ##################
+// ###################################################
 inline void set_occupying_guard(Entity &slot_entity, Entity *guard_entity) {
     DEBUG_ASSERT(slot_entity.holds<caravan_slot_t>(), "Error: Expected caravan slot.");
     auto &slot = slot_entity.get<caravan_slot_t>();
@@ -474,6 +496,7 @@ inline Entity *get_occupying_guard(Entity &slot_entity) {
 }
 
 inline bool is_occupied(Entity &slot_entity) {
+    DEBUG_ASSERT(slot_entity.holds<caravan_slot_t>(), "Error: Expected caravan slot.");
     auto &slot = slot_entity.get<caravan_slot_t>();
     return slot.occupying_guard != nullptr;
 }
@@ -484,6 +507,9 @@ inline bool is_free(Entity &slot_entity) {
     return slot.occupying_guard == nullptr;
 }
 
+// ###################################################
+// ###################### Guard ######################
+// ###################################################
 inline void set_caravan_slot(Entity &guard_entity, Entity *slot_entity) {
     DEBUG_ASSERT(guard_entity.holds<guard_t>(), "Error: Expected guard.");
     DEBUG_ASSERT(slot_entity != nullptr,
@@ -530,6 +556,9 @@ inline Entity attack(Entity &guard_entity, Entity &enemy_entity) {
                                         enemy_entity.get_world_position());
 }
 
+// ###################################################
+// ###################### Enemy ######################
+// ###################################################
 inline void move_towards(Entity &enemy_entity, const camera::WorldPoint2D &target,
                          const float dt) {
     DEBUG_ASSERT(enemy_entity.holds<enemy_t>(), "Error: Expected enemy.");
@@ -544,4 +573,11 @@ inline void move_towards(Entity &enemy_entity, const camera::WorldPoint2D &targe
 
     enemy_entity.set_world_position(new_position);
 }
+
+inline void set_enemy_type(Entity &enemy_entity, const EnemyType type) {
+    DEBUG_ASSERT(enemy_entity.holds<enemy_t>(), "Error: Expected enemy.");
+    auto &enemy = enemy_entity.get<enemy_t>();
+    enemy.type = type;
+}
+
 } // namespace entity

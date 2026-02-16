@@ -7,6 +7,7 @@
 #include "vulkan/SwapChainManager.h"
 #include <random>
 
+#define ASSET_FILE(filename) ASSET_DIR "/" filename
 constexpr glm::vec2 INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
 constexpr float ZOOM_SCALE_FACTOR = 0.1f;
 
@@ -42,6 +43,11 @@ class CaravanDefence : public Game {
                 std::uniform_real_distribution<float> dist(from, to);
                 return dist(gen);
             }
+
+            int uniform(const int from, const int to) {
+                std::uniform_int_distribution<int> dist(from, to);
+                return dist(gen);
+            }
         } rng;
     } m_game_state;
 
@@ -65,6 +71,8 @@ class CaravanDefence : public Game {
         push_constant_range.size = camera::Camera2D::matrix_size();
 
         graphics_pipeline::quad::QuadRendererOpts quad_opts{};
+        quad_opts.texture = graphics_pipeline::Texture::from_filepath(
+            ctx, m_command_buffer_manager.get(), ASSET_FILE("sprite_sheet.png"));
         m_quad_renderer = std::make_unique<graphics_pipeline::quad::QuadRenderer>(
             ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
             &push_constant_range, std::move(quad_opts));
@@ -126,12 +134,16 @@ class CaravanDefence : public Game {
             const math::Vector2 enemy_position =
                 math::Vector2(distance_from_group_center, 0.0f)
                     .rotate_z(angle_from_group_center);
-            spawn_enemy(group_center + enemy_position);
+
+            const uint32_t enemy_type = m_game_state.rng.uniform(0, 1);
+            spawn_enemy(group_center + enemy_position,
+                        static_cast<entity::EnemyType>(enemy_type));
         }
     }
 
-    void spawn_enemy(const math::Vector2 &position) {
+    void spawn_enemy(const math::Vector2 &position, const entity::EnemyType type) {
         m_enemies.push_back(entity::Entity::create_enemy(position));
+        entity::set_enemy_type(m_enemies.back(), type);
         m_enemies.back().set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
     }
 
@@ -318,10 +330,7 @@ class CaravanDefence : public Game {
         m_geom_renderer->sync_render_slots();
 
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
-        // TODO: num_instances differ between the renderers
-        /*const size_t num_instances = 1 + m_guards.size() + m_caravan_slots.size() +*/
-        /*                             m_enemies.size() + m_attacks.size();*/
-        const size_t num_instances = 256;
+        const size_t num_instances = 256; // Size of instance buffers
         m_quad_renderer->render(command_buffer, &push_constant, num_instances);
         m_geom_renderer->render(command_buffer, &push_constant, num_instances);
 

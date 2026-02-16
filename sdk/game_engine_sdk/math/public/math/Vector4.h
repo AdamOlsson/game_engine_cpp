@@ -1,0 +1,86 @@
+#pragma once
+
+#include "traits.h"
+#include <glm/glm.hpp>
+
+namespace math {
+
+class Vector4 {
+  private:
+    glm::vec4 m_vec;
+
+  public:
+    float x() const { return m_vec.x; }
+    float &x() { return m_vec.x; }
+    float y() const { return m_vec.y; }
+    float &y() { return m_vec.y; }
+    float z() const { return m_vec.z; }
+    float &z() { return m_vec.z; }
+    float w() const { return m_vec.w; }
+    float &w() { return m_vec.w; }
+
+    template <StaticCastableToFloat T>
+    constexpr Vector4(const T x, const T y, const T z, const T w) : m_vec(x, y, z, w) {}
+
+    constexpr Vector4() : m_vec(0.0f, 0.0f, 0.0f, 0.0f) {}
+
+    Vector4(Vector4 &&other) noexcept = default;
+    Vector4 &operator=(Vector4 &&other) noexcept = default;
+
+    Vector4(const Vector4 &other) = default;
+    Vector4 &operator=(const Vector4 &other) = default;
+
+    constexpr ~Vector4() {}
+
+    operator glm::vec4() const { return m_vec; }
+
+    Vector4 operator+(const Vector4 &other) const {
+        return Vector4(m_vec.x + other.m_vec.x, m_vec.y + other.m_vec.y,
+                       m_vec.z + other.m_vec.z, m_vec.w + other.m_vec.w);
+    }
+
+    Vector4 operator-(const Vector4 &other) const {
+        return Vector4(m_vec.x - other.m_vec.x, m_vec.y - other.m_vec.y,
+                       m_vec.z - other.m_vec.z, m_vec.w - other.m_vec.w);
+    }
+
+    Vector4 &operator+=(const Vector4 &other) {
+        m_vec.x += other.m_vec.x;
+        m_vec.y += other.m_vec.y;
+        m_vec.z += other.m_vec.z;
+        m_vec.w += other.m_vec.w;
+        return *this;
+    }
+
+    Vector4 &operator-=(const Vector4 &other) {
+        m_vec.x -= other.m_vec.x;
+        m_vec.y -= other.m_vec.y;
+        m_vec.z -= other.m_vec.z;
+        m_vec.w -= other.m_vec.w;
+        return *this;
+    }
+
+    Vector4 operator-() const { return Vector4(-m_vec.x, -m_vec.y, -m_vec.z, -m_vec.w); }
+
+    friend Vector4 operator+(const glm::vec4 &lhs, const Vector4 &rhs) {
+        return Vector4(lhs.x + rhs.x(), lhs.y + rhs.y(), lhs.z + rhs.z(),
+                       lhs.w + rhs.w());
+    }
+
+    friend Vector4 operator+(const Vector4 &lhs, const glm::vec4 &rhs) {
+        return Vector4(lhs.x() + rhs.x, lhs.y() + rhs.y, lhs.z() + rhs.z,
+                       lhs.w() + rhs.w);
+    }
+
+    friend Vector4 operator-(const glm::vec4 &lhs, const Vector4 &rhs) {
+        return Vector4(lhs.x - rhs.x(), lhs.y - rhs.y(), lhs.z - rhs.z(),
+                       lhs.w - rhs.w());
+    }
+
+    friend Vector4 operator-(const Vector4 &lhs, const glm::vec4 &rhs) {
+        return Vector4(lhs.x() - rhs.x, lhs.y() - rhs.y, lhs.z() - rhs.z,
+                       lhs.w() - rhs.w);
+    }
+};
+
+} // namespace math

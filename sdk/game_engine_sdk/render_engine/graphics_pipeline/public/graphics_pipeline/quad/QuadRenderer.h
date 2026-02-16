@@ -75,10 +75,6 @@ class QuadRenderer {
     QuadRenderer(const QuadRenderer &) = delete;
     QuadRenderer &operator=(const QuadRenderer &) = delete;
 
-    void load_texture() {
-        throw std::runtime_error("Error: load_texture() not yet implemented.");
-    }
-
     QuadSBOHandle request_render_slot();
     void return_render_slot(graphics_pipeline::quad::QuadSBOHandle &handle);
     QuadPipelineSBO &get_instance(const graphics_pipeline::quad::QuadSBOHandle &handle);

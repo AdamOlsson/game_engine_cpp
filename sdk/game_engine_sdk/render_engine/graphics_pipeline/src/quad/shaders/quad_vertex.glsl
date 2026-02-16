@@ -4,6 +4,7 @@ struct QuadSBO {
     mat4 model_matrix;
     vec4 uvwt;
     uint texture_id; // 32 bit
+    uint sampling_mode;
     vec4 color;
 };
 
@@ -23,6 +24,7 @@ layout(location = 0) in vec3 in_local_position; // -0.5 to 0.5
 layout(location = 0) out vec2 out_uv;
 layout(location = 1) out uint out_texture_id;
 layout(location = 2) out vec4 out_color;
+layout(location = 3) out uint out_sampling_mode;
 
 vec2 uv_from_uvwt(vec4 uvwt) {
     vec2 offset_local_position = in_local_position.xy + vec2(0.5, 0.5); // 0.0 to 1.0
@@ -46,4 +48,5 @@ void main() {
     out_uv = uv_from_uvwt(instance.uvwt);
     out_texture_id = instance.texture_id;
     out_color = instance.color;
+    out_sampling_mode = instance.sampling_mode;
 }
