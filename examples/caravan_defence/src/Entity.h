@@ -16,6 +16,7 @@ struct caravan_t {
     static constexpr util::colors::Color highlighted_color = util::colors::MAGENTA;
     static constexpr util::colors::Color selected_color = util::colors::MAGENTA;
     static constexpr math::Vector2 size = math::Vector2(100.0f, 200.0f);
+    static constexpr float velocity = 0.0f;
     static constexpr float max_health = 10.0f;
 
     caravan_t() {}
@@ -30,6 +31,7 @@ struct caravan_slot_t {
     static constexpr util::colors::Color selected_color =
         util::colors::rgba(0.5f, 0.5f, 0.5f, 0.2f);
     static constexpr math::Vector2 size = math::Vector2(50.0f, 50.0f);
+    static constexpr float velocity = 0.0f;
     static constexpr float max_health = 10.0f;
 
     Entity *occupying_guard = nullptr;
@@ -43,9 +45,9 @@ struct enemy_t {
     static constexpr util::colors::Color highlighted_color = util::colors::RED;
     static constexpr util::colors::Color selected_color = util::colors::RED;
     static constexpr math::Vector2 size = math::Vector2(50.0f, 50.0f);
+    static constexpr float velocity = 40.0f;
     static constexpr float max_health = 2.0f;
 
-    static constexpr float velocity = 25.0f;
     static constexpr size_t spawn_rate_ms = 3000;
 
     enemy_t() {}
@@ -57,6 +59,7 @@ struct guard_t {
     static constexpr util::colors::Color highlighted_color = util::colors::GREEN;
     static constexpr util::colors::Color selected_color = util::colors::GREEN;
     static constexpr math::Vector2 size = math::Vector2(50.0f, 50.0f);
+    static constexpr float velocity = 0.0f;
     static constexpr float max_health = 10.0f;
 
     using Clock = std::chrono::steady_clock;
@@ -77,6 +80,7 @@ struct ranged_attack_t {
     static constexpr util::colors::Color highlighted_color = util::colors::ORANGE;
     static constexpr util::colors::Color selected_color = util::colors::ORANGE;
     static constexpr math::Vector2 size = math::Vector2(0.0f, 10.0f);
+    static constexpr float velocity = 0.0f;
     static constexpr float max_health = 10.0f;
 
     float lifetime_count = 0.0f;
@@ -106,6 +110,11 @@ concept has_size_field = requires(T t) {
     { t.size } -> std::convertible_to<math::Vector2>;
 };
 
+template <typename T>
+concept has_velocity_field = requires(T t) {
+    { t.velocity } -> std::convertible_to<float>;
+};
+
 template <typename... Ts> constexpr bool all_have_color_field(std::variant<Ts...> *) {
     return (has_color_field<Ts> && ...);
 }
@@ -122,6 +131,10 @@ constexpr bool all_have_selected_color_field(std::variant<Ts...> *) {
 
 template <typename... Ts> constexpr bool all_have_size_field(std::variant<Ts...> *) {
     return (has_color_field<Ts> && ...);
+}
+
+template <typename... Ts> constexpr bool all_have_velocity_field(std::variant<Ts...> *) {
+    return (has_velocity_field<Ts> && ...);
 }
 
 class Entity {
@@ -148,6 +161,7 @@ class Entity {
         float max = 100.0f;
         float current = 100.0f;
         float width = 10.0f;
+        float damage_multiplier = 1.0f;
         math::Vector2 offset;
         std::optional<graphics_pipeline::geometry::GeometrySBOHandle> bar = std::nullopt;
 
@@ -166,6 +180,8 @@ class Entity {
                   "All entity variants must have a selected_color field.");
     static_assert(all_have_size_field(static_cast<EntityVariant *>(nullptr)),
                   "All entity variants must have a size field.");
+    static_assert(all_have_velocity_field(static_cast<EntityVariant *>(nullptr)),
+                  "All entity variants must have a velocity field.");
 
     constexpr util::colors::Color get_color() const {
         return std::visit([](const auto &entity) { return entity.color; }, m_type);
@@ -271,7 +287,8 @@ class Entity {
         std::visit(
             [&health_bar](const auto &entity) {
                 using T = std::decay_t<decltype(entity)>;
-                if constexpr (std::is_same_v<T, enemy_t>) {
+                if constexpr (std::is_same_v<T, enemy_t> ||
+                              std::is_same_v<T, caravan_t>) {
                     health_bar.color = util::colors::rgb(0.0f, 8.0f, 0.0f);
                 } else {
                     health_bar.color = util::colors::TRANSPARENT;
@@ -308,17 +325,7 @@ class Entity {
             instance.model_matrix = m_model_matrix;
         }
 
-        if (m_geometry_renderer != nullptr) {
-            if (m_health.bar.has_value()) {
-                auto &health_bar =
-                    m_geometry_renderer->get_instance(m_health.bar.value());
-
-                health_bar.model_matrix =
-                    math::Matrix()
-                        .translate(position + m_health.offset)
-                        .scale(m_health.width * (m_health.current / m_health.max), 10.0f);
-            }
-        }
+        update_health();
     }
 
     camera::WorldPoint2D get_world_position() const {
@@ -374,7 +381,7 @@ class Entity {
                     m_geometry_renderer->get_instance(m_highlight_render_data.value());
                 highlight_instance.flags |= static_cast<uint32_t>(
                     graphics_pipeline::geometry::GeometryShape::Circle);
-                highlight_instance.color = util::colors::rgba(1.0f, 1.0f, 1.0f, 0.15f);
+                highlight_instance.color = util::colors::rgba(0.8f, 0.8f, 0.8f, 0.01f);
                 highlight_instance.model_matrix =
                     math::Matrix()
                         .translate(get_world_position())
@@ -393,11 +400,25 @@ class Entity {
         }
     }
 
+    float get_current_health() { return m_health.current; }
+    float get_max_health() { return m_health.max; }
+    void update_health() {
+        if (m_geometry_renderer != nullptr && m_health.bar.has_value()) {
+            auto &health_bar = m_geometry_renderer->get_instance(m_health.bar.value());
+
+            health_bar.model_matrix =
+                math::Matrix()
+                    .translate(get_world_position() + m_health.offset)
+                    .scale(m_health.width * (m_health.current / m_health.max), 10.0f);
+        }
+    }
+
     void damage(const float dmg) { m_health.current -= dmg; }
     bool is_dead() { return m_health.current <= 0.0f; }
     bool is_alive() { return m_health.current > 0.0f; }
 
     void update(const float dt_s) {
+        update_health();
         std::visit(
             [this, dt_s](const auto &entity) {
                 using T = std::decay_t<decltype(entity)>;

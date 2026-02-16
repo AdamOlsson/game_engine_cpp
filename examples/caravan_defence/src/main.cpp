@@ -147,6 +147,7 @@ class CaravanDefence : public Game {
     }
 
     void update(const float dt) override {
+        m_caravan.update(dt);
         update_all(dt, m_attacks);
 
         for (int i = m_attacks.size() - 1; i >= 0; i--) {
@@ -176,12 +177,19 @@ class CaravanDefence : public Game {
 
             if (enemy.is_alive() &&
                 m_caravan.is_point_inside(enemy.get_world_position())) {
+                m_caravan.damage(enemy.get_current_health());
+                enemy.damage(enemy.get_max_health());
             }
 
             if (enemy.is_dead()) {
                 enemy.clear_render_data();
                 m_enemies.erase(m_enemies.begin() + i);
             }
+        }
+
+        if (m_caravan.is_dead()) {
+            logger::info("Caravan died, game over!");
+            exit(0);
         }
 
         m_game_state.time_elapsed_ms += dt * 1000;
