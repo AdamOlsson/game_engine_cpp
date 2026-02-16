@@ -85,11 +85,11 @@ class CaravanDefence : public Game {
         // Add entities
         m_caravan = entity::Entity::create_caravan(camera::WorldPoint2D(0.0f, 0.0f));
         m_caravan_slots.push_back(
-            entity::Entity::create_caravan_slot(camera::WorldPoint2D(-150.0f, -50.0f)));
+            entity::Entity::create_caravan_slot(camera::WorldPoint2D(-200.0f, -50.0f)));
         m_caravan_slots.push_back(
-            entity::Entity::create_caravan_slot(camera::WorldPoint2D(150.0f, -50.0f)));
+            entity::Entity::create_caravan_slot(camera::WorldPoint2D(200.0f, -50.0f)));
         m_caravan_slots.push_back(
-            entity::Entity::create_caravan_slot(camera::WorldPoint2D(0.0f, -200.0f)));
+            entity::Entity::create_caravan_slot(camera::WorldPoint2D(0.0f, -250.0f)));
 
         m_caravan.set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
         m_caravan_slots[0].set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
