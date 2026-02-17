@@ -102,6 +102,9 @@ class CaravanDefence : public Game {
         m_guards.push_back(
             entity::Entity::create_guard(camera::WorldPoint2D(0.0f, 0.0f)));
 
+        set_damage_type(m_guards[0], entity::DamageType::A);
+        set_damage_type(m_guards[1], entity::DamageType::B);
+
         m_enemies.reserve(64);
         m_attacks.reserve(8);
 

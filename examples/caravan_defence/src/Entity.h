@@ -13,7 +13,7 @@ namespace entity {
 class Entity;
 
 struct caravan_t {
-    static constexpr util::colors::Color color = util::colors::rgb(0.6f, 0.0f, 0.6f);
+    util::colors::Color color = util::colors::rgb(0.6f, 0.0f, 0.6f);
     static constexpr util::colors::Color highlighted_color =
         util::colors::rgb(0.6f, 0.0f, 0.6f);
     static constexpr util::colors::Color selected_color =
@@ -27,8 +27,7 @@ struct caravan_t {
 };
 
 struct caravan_slot_t {
-    static constexpr util::colors::Color color =
-        util::colors::rgba(0.5f, 0.5f, 0.5f, 0.2f);
+    util::colors::Color color = util::colors::rgba(0.5f, 0.5f, 0.5f, 0.2f);
     static constexpr util::colors::Color highlighted_color =
         util::colors::rgba(0.5f, 0.5f, 0.5f, 0.8f);
     static constexpr util::colors::Color selected_color =
@@ -46,7 +45,7 @@ struct caravan_slot_t {
 enum class EnemyType : uint32_t { A = 0, B = 1 };
 
 struct enemy_t {
-    static constexpr util::colors::Color color = util::colors::DARK_RED;
+    util::colors::Color color = util::colors::DARK_RED;
     static constexpr util::colors::Color highlighted_color = util::colors::DARK_RED;
     static constexpr util::colors::Color selected_color = util::colors::DARK_RED;
     static constexpr math::Vector2 size = math::Vector2(50.0f, 50.0f);
@@ -63,8 +62,10 @@ struct enemy_t {
     ~enemy_t() {}
 };
 
+enum class DamageType : uint32_t { A = 0, B = 1 };
+
 struct guard_t {
-    static constexpr util::colors::Color color = util::colors::rgb(0.0f, 0.55f, 0.0f);
+    util::colors::Color color = util::colors::rgb(0.0f, 0.55f, 0.0f);
     static constexpr util::colors::Color highlighted_color =
         util::colors::rgb(0.0f, 0.75f, 0.0f);
     static constexpr util::colors::Color selected_color =
@@ -82,12 +83,14 @@ struct guard_t {
     static constexpr float attack_range = 400.0f;
     static constexpr Duration attack_cooldown = std::chrono::seconds(3);
 
+    DamageType damage_type = DamageType::A;
+
     guard_t() {}
     ~guard_t() {}
 };
 
 struct ranged_attack_t {
-    static constexpr util::colors::Color color = util::colors::ORANGE;
+    util::colors::Color color = util::colors::ORANGE;
     static constexpr util::colors::Color highlighted_color = util::colors::ORANGE;
     static constexpr util::colors::Color selected_color = util::colors::ORANGE;
     static constexpr math::Vector2 size = math::Vector2(0.0f, 10.0f);
@@ -154,12 +157,12 @@ class Entity {
         std::variant<caravan_t, caravan_slot_t, enemy_t, guard_t, ranged_attack_t>;
     EntityVariant m_type;
 
-    friend struct guard_t;
-
     math::Matrix m_model_matrix;
     bool m_is_highlighted = false;
     bool m_is_selected = false;
     bool m_is_visible = true;
+
+    util::colors::Color m_color;
 
     graphics_pipeline::quad::QuadRenderer *m_quad_renderer = nullptr;
     std::optional<graphics_pipeline::quad::QuadSBOHandle> m_render_data_handle =
@@ -223,7 +226,7 @@ class Entity {
                  std::is_same_v<T, ranged_attack_t>)
     Entity(std::in_place_type_t<T>, math::Matrix &&model, Args &&...args)
         : m_type(std::in_place_type<T>, std::forward<Args>(args)...),
-          m_model_matrix(std::move(model)) {
+          m_model_matrix(std::move(model)), m_color(get_color()) {
         m_health.init<T>();
     }
 
@@ -280,7 +283,6 @@ class Entity {
         m_render_data_handle = m_quad_renderer->request_render_slot();
         auto &instance = m_quad_renderer->get_instance(m_render_data_handle.value());
         instance.model_matrix = m_model_matrix;
-        instance.color = get_color();
 
         if (holds<enemy_t>()) {
             instance.texture_id = 0;
@@ -291,13 +293,24 @@ class Entity {
             enemy_t &enemy = get<enemy_t>();
             switch (enemy.type) {
             case EnemyType::A:
-                instance.color = enemy_t::type_a_color;
+                m_color = enemy_t::type_a_color;
                 break;
             case EnemyType::B:
-                instance.color = enemy_t::type_b_color;
+                m_color = enemy_t::type_b_color;
+                break;
+            }
+        } else if (holds<guard_t>()) {
+            guard_t &guard = get<guard_t>();
+            switch (guard.damage_type) {
+            case DamageType::A:
+                m_color = enemy_t::type_a_color;
+                break;
+            case DamageType::B:
+                m_color = enemy_t::type_b_color;
                 break;
             }
         }
+        instance.color = m_color;
 
         m_geometry_renderer = geom_renderer;
 
@@ -361,7 +374,7 @@ class Entity {
         m_is_visible = is_visible;
         if (m_quad_renderer != nullptr) {
             auto &instance = m_quad_renderer->get_instance(m_render_data_handle.value());
-            instance.color = m_is_visible ? get_color() : util::colors::TRANSPARENT;
+            instance.color = m_is_visible ? m_color : util::colors::TRANSPARENT;
         }
     }
 
@@ -384,7 +397,7 @@ class Entity {
         }
 
         auto &instance = m_quad_renderer->get_instance(m_render_data_handle.value());
-        instance.color = new_value ? get_highlighted_color() : get_color();
+        instance.color = new_value ? get_highlighted_color() : m_color;
 
         if (holds<guard_t>()) {
             if (prev_value) {
@@ -419,7 +432,7 @@ class Entity {
         m_is_selected = is_selected;
         if (m_quad_renderer != nullptr) {
             auto &instance = m_quad_renderer->get_instance(m_render_data_handle.value());
-            instance.color = m_is_selected ? get_selected_color() : get_color();
+            instance.color = m_is_selected ? get_selected_color() : m_color;
         }
     }
 
@@ -439,6 +452,8 @@ class Entity {
     void damage(const float dmg) { m_health.current -= dmg; }
     bool is_dead() { return m_health.current <= 0.0f; }
     bool is_alive() { return m_health.current > 0.0f; }
+
+    void set_color(const util::colors::Color &color) { m_color = color; }
 
     void update(const float dt_s) {
         update_health();
@@ -551,13 +566,28 @@ inline bool can_attack(Entity &guard_entity) {
     return (guard_t::Clock::now() - guard.last_attack) > guard.attack_cooldown;
 }
 
+inline EnemyType get_enemy_type(Entity &enemy_entity);
 inline Entity attack(Entity &guard_entity, Entity &enemy_entity) {
     DEBUG_ASSERT(guard_entity.holds<guard_t>(), "Error: Expected guard.");
     auto &guard = guard_entity.get<guard_t>();
     guard.last_attack = guard_t::Clock::now();
-    enemy_entity.damage(1.0f);
+
+    const uint enemy_type = static_cast<uint>(get_enemy_type(enemy_entity));
+    const uint guard_type = static_cast<uint>(guard.damage_type);
+    float damage = 1.0f;
+    if (enemy_type == guard_type) {
+        damage = 2.0f;
+    }
+    enemy_entity.damage(damage);
+
     return Entity::create_ranged_attack(guard_entity.get_world_position(),
                                         enemy_entity.get_world_position());
+}
+
+inline void set_damage_type(Entity &guard_entity, const DamageType type) {
+    DEBUG_ASSERT(guard_entity.holds<guard_t>(), "Error: Expected guard.");
+    auto &guard = guard_entity.get<guard_t>();
+    guard.damage_type = type;
 }
 
 // ###################################################
@@ -582,6 +612,12 @@ inline void set_enemy_type(Entity &enemy_entity, const EnemyType type) {
     DEBUG_ASSERT(enemy_entity.holds<enemy_t>(), "Error: Expected enemy.");
     auto &enemy = enemy_entity.get<enemy_t>();
     enemy.type = type;
+}
+
+inline EnemyType get_enemy_type(Entity &enemy_entity) {
+    DEBUG_ASSERT(enemy_entity.holds<enemy_t>(), "Error: Expected enemy.");
+    auto &enemy = enemy_entity.get<enemy_t>();
+    return enemy.type;
 }
 
 } // namespace entity
