@@ -54,5 +54,7 @@ class Matrix {
     glm::vec3 position_3d() const {
         return glm::vec3(m_matrix[3].x, m_matrix[3].y, m_matrix[3].z);
     }
+
+    float rotation_z() const { return glm::atan(m_matrix[1].x, m_matrix[0].x); }
 };
 } // namespace math

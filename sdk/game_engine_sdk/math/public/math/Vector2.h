@@ -70,6 +70,10 @@ class Vector2 {
         return Vector2(lhs.x() + rhs.x, lhs.y() + rhs.y);
     }
 
+    friend Vector2 operator*(const Vector2 &lhs, const float scalar) {
+        return Vector2(lhs.x() * scalar, lhs.y() * scalar);
+    }
+
     friend Vector2 operator-(const glm::vec2 &lhs, const Vector2 &rhs) {
         return Vector2(lhs.x - rhs.x(), lhs.y - rhs.y());
     }

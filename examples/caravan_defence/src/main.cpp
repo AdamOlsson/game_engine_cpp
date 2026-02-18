@@ -18,7 +18,7 @@ class CaravanDefence : public Game {
 
     camera::Camera2D m_camera;
     struct {
-        window::ViewportPoint cursor_viewport_position;
+        window::ViewportPoint cursor_viewport_position = window::ViewportPoint(1e6, 1e6);
         bool is_right_button_pressed = false;
     } m_mouse_state;
 
@@ -146,6 +146,7 @@ class CaravanDefence : public Game {
 
     void spawn_enemy(const math::Vector2 &position, const entity::EnemyType type) {
         m_enemies.push_back(entity::Entity::create_enemy(position));
+        m_enemies.back().set_move_target(m_caravan.get_world_position());
         entity::set_enemy_type(m_enemies.back(), type);
         m_enemies.back().set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
     }
@@ -163,7 +164,10 @@ class CaravanDefence : public Game {
 
     void update(const float dt) override {
         m_caravan.update(dt);
+        update_all(dt, m_caravan_slots);
         update_all(dt, m_attacks);
+        update_all(dt, m_enemies);
+        update_all(dt, m_guards);
 
         for (int i = m_attacks.size() - 1; i >= 0; i--) {
             if (!m_attacks[i].is_visible()) {
@@ -180,7 +184,6 @@ class CaravanDefence : public Game {
 
         for (size_t i = 0; i < m_enemies.size(); i++) {
             entity::Entity &enemy = m_enemies[i];
-            entity::move_towards(enemy, m_caravan.get_world_position(), dt);
 
             for (entity::Entity &guard : m_guards) {
                 if (enemy.is_alive() && entity::can_attack(guard) &&

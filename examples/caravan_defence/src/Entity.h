@@ -71,7 +71,7 @@ struct guard_t {
     static constexpr util::colors::Color selected_color =
         util::colors::rgb(0.0f, 0.75f, 0.0f);
     static constexpr math::Vector2 size = math::Vector2(50.0f, 50.0f);
-    static constexpr float velocity = 0.0f;
+    static constexpr float velocity = 30.0f;
     static constexpr float max_health = 10.0f;
 
     using Clock = std::chrono::steady_clock;
@@ -151,6 +151,12 @@ template <typename... Ts> constexpr bool all_have_velocity_field(std::variant<Ts
     return (has_velocity_field<Ts> && ...);
 }
 
+enum EntityState {
+    Idle,
+    Moving,
+    Attacking,
+};
+
 class Entity {
   private:
     using EntityVariant =
@@ -161,8 +167,11 @@ class Entity {
     bool m_is_highlighted = false;
     bool m_is_selected = false;
     bool m_is_visible = true;
+    EntityState m_current_action = EntityState::Idle;
 
     util::colors::Color m_color;
+    math::Vector2 m_size;
+    float m_rotation_rad = 0;
 
     graphics_pipeline::quad::QuadRenderer *m_quad_renderer = nullptr;
     std::optional<graphics_pipeline::quad::QuadSBOHandle> m_render_data_handle =
@@ -184,8 +193,12 @@ class Entity {
             max = T::max_health;
             current = T::max_health;
         }
-
     } m_health;
+
+    struct {
+        float velocity = 0.0f;
+        camera::WorldPoint2D target = math::Vector2(0.0f, 0.0f);
+    } m_movement;
 
     static_assert(all_have_color_field(static_cast<EntityVariant *>(nullptr)),
                   "All entity variants must have a color field.");
@@ -226,8 +239,10 @@ class Entity {
                  std::is_same_v<T, ranged_attack_t>)
     Entity(std::in_place_type_t<T>, math::Matrix &&model, Args &&...args)
         : m_type(std::in_place_type<T>, std::forward<Args>(args)...),
-          m_model_matrix(std::move(model)), m_color(get_color()) {
+          m_model_matrix(std::move(model)), m_color(get_color()), m_size(get_size()) {
         m_health.init<T>();
+        m_movement.velocity = T::velocity;
+        m_movement.target = get_world_position();
     }
 
   public:
@@ -267,14 +282,19 @@ class Entity {
     static Entity create_ranged_attack(const camera::WorldPoint2D &start,
                                        const camera::WorldPoint2D &end) {
         const float width = math::distance(start, end);
-        const float height = ranged_attack_t::size.y();
+        const float height = ranged_attack_t{}.size.y();
         const camera::WorldPoint2D local_vec = end - start;
         const float rotation = math::angle_to_x_axis(local_vec);
         math::Matrix model = math::Matrix()
                                  .translate(start + local_vec / 2.0f)
                                  .rotate_z(rotation)
                                  .scale(width, height, 0.0f);
-        return Entity(std::in_place_type<ranged_attack_t>, std::move(model));
+        auto e = Entity(std::in_place_type<ranged_attack_t>, std::move(model));
+        e.m_size.x() = width;
+        e.m_size.y() = height;
+        e.m_rotation_rad = rotation;
+        e.set_move_target(model.position_2d());
+        return e;
     }
 
     void set_render_data(graphics_pipeline::quad::QuadRenderer *quad_renderer,
@@ -314,7 +334,7 @@ class Entity {
 
         m_geometry_renderer = geom_renderer;
 
-        const auto entity_size = get_size();
+        const auto entity_size = m_size;
         m_health.offset =
             std::move(math::Vector2(0.0f, (entity_size.y() / 2.0f) + 20.0f));
         m_health.width = entity_size.x();
@@ -350,17 +370,17 @@ class Entity {
     bool is_point_inside(const camera::WorldPoint2D &point) {
         // World position with no regard to the world grid
         const camera::WorldPoint2D position = m_model_matrix.position_2d();
-        const math::Vector2 size = get_size();
+        const math::Vector2 size = m_size;
         return math::is_point_inside_rectangle(point, position, size.x(), size.y());
     }
 
     void set_world_position(const camera::WorldPoint2D &position) {
-        m_model_matrix = math::Matrix().translate(position).scale(get_size());
+        m_model_matrix =
+            math::Matrix().translate(position).rotate_z(m_rotation_rad).scale(m_size);
         if (m_quad_renderer != nullptr) {
             auto &instance = m_quad_renderer->get_instance(m_render_data_handle.value());
             instance.model_matrix = m_model_matrix;
         }
-
         update_health();
     }
 
@@ -455,24 +475,44 @@ class Entity {
 
     void set_color(const util::colors::Color &color) { m_color = color; }
 
+    EntityState get_state() { return m_current_action; }
+    bool is_attacking() { return m_current_action == EntityState::Attacking; }
+    bool is_moving() { return m_current_action == EntityState::Moving; }
+    bool is_idle() { return m_current_action == EntityState::Idle; }
+
     void update(const float dt_s) {
-        update_health();
-        std::visit(
-            [this, dt_s](const auto &entity) {
-                using T = std::decay_t<decltype(entity)>;
-                if constexpr (std::is_same_v<T, ranged_attack_t>) {
-                    ranged_attack_t &attack = std::get<ranged_attack_t>(m_type);
 
-                    if (attack.lifetime_count > attack.lifetime_ms) {
-                        m_is_visible = false;
-                    }
+        const camera::WorldPoint2D position = get_world_position();
+        const float distance = math::distance(position, m_movement.target);
 
-                    attack.lifetime_count += dt_s * 1000.0f;
+        camera::WorldPoint2D new_position = position;
+        if (distance > 1.0f) {
+            const float movement = m_movement.velocity * dt_s;
+            const float fraction = std::min(movement / distance, 1.0f);
+            new_position = math::lerp(position, m_movement.target, fraction);
+            m_current_action = EntityState::Moving;
+        } else {
+            m_current_action = EntityState::Attacking;
+        }
 
-                } else {
-                }
-            },
-            m_type);
+        set_world_position(new_position);
+
+        if (holds<ranged_attack_t>()) {
+            ranged_attack_t &attack = get<ranged_attack_t>();
+            if (attack.lifetime_count > attack.lifetime_ms) {
+                m_is_visible = false;
+            }
+            attack.lifetime_count += dt_s * 1000.0f;
+        } else if (holds<caravan_slot_t>()) {
+            caravan_slot_t &slot = get<caravan_slot_t>();
+            if (slot.occupying_guard != nullptr) {
+                set_visibility(slot.occupying_guard->is_moving());
+            }
+        }
+    }
+
+    void set_move_target(const camera::WorldPoint2D &target) {
+        m_movement.target = target;
     }
 };
 
@@ -536,7 +576,8 @@ inline void set_caravan_slot(Entity &guard_entity, Entity *slot_entity) {
                  "clear_caraval_slot() to clear the slot.");
     auto &guard = guard_entity.get<guard_t>();
     guard.caravan_slot = slot_entity;
-    guard_entity.set_world_position(slot_entity->get_world_position());
+    /*guard_entity.set_world_position(slot_entity->get_world_position());*/
+    guard_entity.set_move_target(slot_entity->get_world_position());
 }
 
 inline void clear_caravan_slot(Entity &guard_entity) {
@@ -563,7 +604,8 @@ inline bool in_attack_range(Entity &guard_entity, const Entity &enemy_entity) {
 inline bool can_attack(Entity &guard_entity) {
     DEBUG_ASSERT(guard_entity.holds<guard_t>(), "Error: Expected guard.");
     auto &guard = guard_entity.get<guard_t>();
-    return (guard_t::Clock::now() - guard.last_attack) > guard.attack_cooldown;
+    return (guard_t::Clock::now() - guard.last_attack) > guard.attack_cooldown &&
+           guard_entity.is_attacking();
 }
 
 inline EnemyType get_enemy_type(Entity &enemy_entity);

@@ -19,7 +19,7 @@ void main() {
         return;
     }
     
-    vec4 color;
+    vec4 color = vec4(0.8, 0.8, 0.0, 1.0);
     if(in_sampling_mode == SAMPLING_MODE_DEFAULT){
         color = texture(u_texture_sampler[nonuniformEXT(in_texture_id)], in_uv);
     } else if(in_sampling_mode == SAMPLING_MODE_SDF){
