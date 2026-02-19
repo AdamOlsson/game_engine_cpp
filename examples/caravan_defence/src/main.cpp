@@ -84,12 +84,12 @@ class CaravanDefence : public Game {
 
         // Add entities
         m_caravan.push_back(
-            entity::Entity::create_caravan(camera::WorldPoint2D(0.0f, 0.0f)));
+            entity::Entity::create_caravan_cart(camera::WorldPoint2D(0.0f, 0.0f)));
         m_caravan.back().set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
         m_caravan.back().set_uvwt(0.3f, 0.0f, 0.4f, 0.2f);
 
         m_caravan.push_back(
-            entity::Entity::create_caravan(camera::WorldPoint2D(0.0f, 275.0f)));
+            entity::Entity::create_caravan_cart(camera::WorldPoint2D(0.0f, 275.0f)));
         m_caravan.back().set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
         m_caravan.back().set_uvwt(0.2f, 0.0f, 0.3f, 0.2f);
 

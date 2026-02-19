@@ -12,7 +12,7 @@ namespace entity {
 
 class Entity;
 
-struct caravan_t {
+struct caravan_cart_t {
     util::colors::Color color = util::colors::rgb(0.6f, 0.0f, 0.6f);
     static constexpr util::colors::Color highlighted_color =
         util::colors::rgb(0.6f, 0.0f, 0.6f);
@@ -22,8 +22,8 @@ struct caravan_t {
     static constexpr float velocity = 0.0f;
     static constexpr float max_health = 10.0f;
 
-    caravan_t() {}
-    ~caravan_t() {}
+    caravan_cart_t() {}
+    ~caravan_cart_t() {}
 };
 
 struct caravan_slot_t {
@@ -160,7 +160,7 @@ enum EntityState {
 class Entity {
   private:
     using EntityVariant =
-        std::variant<caravan_t, caravan_slot_t, enemy_t, guard_t, ranged_attack_t>;
+        std::variant<caravan_cart_t, caravan_slot_t, enemy_t, guard_t, ranged_attack_t>;
     EntityVariant m_type;
 
     math::Matrix m_model_matrix;
@@ -234,7 +234,7 @@ class Entity {
     }
 
     template <typename T, typename... Args>
-        requires(std::is_same_v<T, caravan_t> || std::is_same_v<T, caravan_slot_t> ||
+        requires(std::is_same_v<T, caravan_cart_t> || std::is_same_v<T, caravan_slot_t> ||
                  std::is_same_v<T, enemy_t> || std::is_same_v<T, guard_t> ||
                  std::is_same_v<T, ranged_attack_t>)
     Entity(std::in_place_type_t<T>, math::Matrix &&model, Args &&...args)
@@ -258,9 +258,10 @@ class Entity {
     template <typename T> bool holds() const { return std::holds_alternative<T>(m_type); }
     template <typename T> T &get() { return std::get<T>(m_type); }
 
-    static Entity create_caravan(const camera::WorldPoint2D &position) {
-        math::Matrix model = math::Matrix().translate(position).scale(caravan_t::size);
-        return Entity(std::in_place_type<caravan_t>, std::move(model));
+    static Entity create_caravan_cart(const camera::WorldPoint2D &position) {
+        math::Matrix model =
+            math::Matrix().translate(position).scale(caravan_cart_t::size);
+        return Entity(std::in_place_type<caravan_cart_t>, std::move(model));
     }
 
     static Entity create_caravan_slot(const camera::WorldPoint2D &position) {
@@ -346,7 +347,7 @@ class Entity {
                                       .translate(get_world_position() + m_health.offset)
                                       .scale(m_health.width, 10.0f);
 
-        if (holds<enemy_t>() || holds<caravan_t>()) {
+        if (holds<enemy_t>() || holds<caravan_cart_t>()) {
             health_bar.color = util::colors::rgb(0.0f, 8.0f, 0.0f);
         } else {
             health_bar.color = util::colors::TRANSPARENT;
