@@ -18,7 +18,7 @@ struct caravan_t {
         util::colors::rgb(0.6f, 0.0f, 0.6f);
     static constexpr util::colors::Color selected_color =
         util::colors::rgb(0.6f, 0.0f, 0.6f);
-    static constexpr math::Vector2 size = math::Vector2(100.0f, 200.0f);
+    static constexpr math::Vector2 size = math::Vector2(128.0f, 256.0f);
     static constexpr float velocity = 0.0f;
     static constexpr float max_health = 10.0f;
 
@@ -470,6 +470,7 @@ class Entity {
     }
 
     void damage(const float dmg) { m_health.current -= dmg; }
+    void kill() { m_health.current = 0.0f; }
     bool is_dead() { return m_health.current <= 0.0f; }
     bool is_alive() { return m_health.current > 0.0f; }
 

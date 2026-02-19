@@ -25,7 +25,7 @@ class CaravanDefence : public Game {
     std::unique_ptr<graphics_pipeline::quad::QuadRenderer> m_quad_renderer;
     std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer> m_geom_renderer;
 
-    entity::Entity m_caravan;
+    std::vector<entity::Entity> m_caravan;
     std::vector<entity::Entity> m_caravan_slots;
     std::vector<entity::Entity> m_guards;
     std::vector<entity::Entity> m_attacks;
@@ -83,18 +83,29 @@ class CaravanDefence : public Game {
             &push_constant_range, std::move(geom_opts));
 
         // Add entities
-        m_caravan = entity::Entity::create_caravan(camera::WorldPoint2D(0.0f, 0.0f));
+        m_caravan.push_back(
+            entity::Entity::create_caravan(camera::WorldPoint2D(0.0f, 0.0f)));
+        m_caravan.push_back(
+            entity::Entity::create_caravan(camera::WorldPoint2D(0.0f, 300.0f)));
+
         m_caravan_slots.push_back(
             entity::Entity::create_caravan_slot(camera::WorldPoint2D(-200.0f, -50.0f)));
         m_caravan_slots.push_back(
             entity::Entity::create_caravan_slot(camera::WorldPoint2D(200.0f, -50.0f)));
         m_caravan_slots.push_back(
             entity::Entity::create_caravan_slot(camera::WorldPoint2D(0.0f, -250.0f)));
+        m_caravan_slots.push_back(
+            entity::Entity::create_caravan_slot(camera::WorldPoint2D(-200.0f, 300.0f)));
+        m_caravan_slots.push_back(
+            entity::Entity::create_caravan_slot(camera::WorldPoint2D(200.0f, 300.0f)));
 
-        m_caravan.set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
+        m_caravan[0].set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
+        m_caravan[1].set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
         m_caravan_slots[0].set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
         m_caravan_slots[1].set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
         m_caravan_slots[2].set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
+        m_caravan_slots[3].set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
+        m_caravan_slots[4].set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
 
         m_guards.reserve(16); // 16 is magic
         m_guards.push_back(
@@ -146,7 +157,9 @@ class CaravanDefence : public Game {
 
     void spawn_enemy(const math::Vector2 &position, const entity::EnemyType type) {
         m_enemies.push_back(entity::Entity::create_enemy(position));
-        m_enemies.back().set_move_target(m_caravan.get_world_position());
+
+        const size_t caravan_cart_id = m_game_state.rng.uniform(0, 1);
+        m_enemies.back().set_move_target(m_caravan[caravan_cart_id].get_world_position());
         entity::set_enemy_type(m_enemies.back(), type);
         m_enemies.back().set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
     }
@@ -163,7 +176,7 @@ class CaravanDefence : public Game {
     }
 
     void update(const float dt) override {
-        m_caravan.update(dt);
+        update_all(dt, m_caravan);
         update_all(dt, m_caravan_slots);
         update_all(dt, m_attacks);
         update_all(dt, m_enemies);
@@ -193,10 +206,11 @@ class CaravanDefence : public Game {
                 }
             }
 
-            if (enemy.is_alive() &&
-                m_caravan.is_point_inside(enemy.get_world_position())) {
-                m_caravan.damage(enemy.get_current_health());
-                enemy.damage(enemy.get_max_health());
+            // Find the id of the cart the enemy is inside.
+            auto cart_id = find_caravan_cart(enemy.get_world_position());
+            if (enemy.is_alive() && cart_id.has_value()) {
+                m_caravan[cart_id.value()].damage(enemy.get_current_health());
+                enemy.kill();
             }
 
             if (enemy.is_dead()) {
@@ -205,13 +219,24 @@ class CaravanDefence : public Game {
             }
         }
 
-        if (m_caravan.is_dead()) {
-            logger::info("Caravan died, game over!");
-            exit(0);
+        for (auto &cart : m_caravan) {
+            if (cart.is_dead()) {
+                logger::info("Cart died, game over!");
+                exit(0);
+            }
         }
 
         m_game_state.time_elapsed_ms += dt * 1000;
     };
+
+    std::optional<size_t> find_caravan_cart(const camera::WorldPoint2D &point) {
+        for (size_t i = 0; i < m_caravan.size(); i++) {
+            if (m_caravan[i].is_point_inside(point)) {
+                return i;
+            }
+        }
+        return std::nullopt;
+    }
 
     std::optional<size_t>
     find_selected_caravan_slot(const camera::WorldPoint2D &click_point) {
