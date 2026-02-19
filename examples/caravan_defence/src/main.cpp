@@ -85,8 +85,13 @@ class CaravanDefence : public Game {
         // Add entities
         m_caravan.push_back(
             entity::Entity::create_caravan(camera::WorldPoint2D(0.0f, 0.0f)));
+        m_caravan.back().set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
+        m_caravan.back().set_uvwt(0.3f, 0.0f, 0.4f, 0.2f);
+
         m_caravan.push_back(
-            entity::Entity::create_caravan(camera::WorldPoint2D(0.0f, 300.0f)));
+            entity::Entity::create_caravan(camera::WorldPoint2D(0.0f, 275.0f)));
+        m_caravan.back().set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
+        m_caravan.back().set_uvwt(0.2f, 0.0f, 0.3f, 0.2f);
 
         m_caravan_slots.push_back(
             entity::Entity::create_caravan_slot(camera::WorldPoint2D(-200.0f, -50.0f)));
@@ -99,8 +104,6 @@ class CaravanDefence : public Game {
         m_caravan_slots.push_back(
             entity::Entity::create_caravan_slot(camera::WorldPoint2D(200.0f, 300.0f)));
 
-        m_caravan[0].set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
-        m_caravan[1].set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
         m_caravan_slots[0].set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
         m_caravan_slots[1].set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
         m_caravan_slots[2].set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
@@ -372,7 +375,7 @@ class CaravanDefence : public Game {
 int main() {
 
     GameEngineConfig config{
-        .window_config = window::WindowConfig{.dims = window::WindowDimension(800, 800),
+        .window_config = window::WindowConfig{.dims = window::WindowDimension(1080, 960),
                                               .title = "Caravan Defence"},
     };
 

@@ -515,6 +515,11 @@ class Entity {
     void set_move_target(const camera::WorldPoint2D &target) {
         m_movement.target = target;
     }
+
+    void set_uvwt(const float u, const float v, const float w, const float t) {
+        auto &instance = m_quad_renderer->get_instance(m_render_data_handle.value());
+        instance.uvwt = math::Vector4(u, v, w, t);
+    }
 };
 
 template <typename E>
