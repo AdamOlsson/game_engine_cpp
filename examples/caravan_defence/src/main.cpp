@@ -82,33 +82,37 @@ class CaravanDefence : public Game {
             ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
             &push_constant_range, std::move(geom_opts));
 
+        const float slot_distance_x = 250.0f;
         // Add entities
         m_caravan.push_back(
             entity::Entity::create_caravan_cart(camera::WorldPoint2D(0.0f, 0.0f)));
         m_caravan.back().set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
         m_caravan.back().set_uvwt(0.3f, 0.0f, 0.4f, 0.2f);
+        m_caravan_slots.push_back(
+            entity::Entity::create_caravan_slot(camera::WorldPoint2D(
+                slot_distance_x, m_caravan.back().get_world_position().y)));
+        m_caravan_slots.back().set_render_data(m_quad_renderer.get(),
+                                               m_geom_renderer.get());
+        m_caravan_slots.push_back(
+            entity::Entity::create_caravan_slot(camera::WorldPoint2D(
+                -slot_distance_x, m_caravan.back().get_world_position().y)));
+        m_caravan_slots.back().set_render_data(m_quad_renderer.get(),
+                                               m_geom_renderer.get());
 
         m_caravan.push_back(
             entity::Entity::create_caravan_cart(camera::WorldPoint2D(0.0f, 275.0f)));
         m_caravan.back().set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
         m_caravan.back().set_uvwt(0.2f, 0.0f, 0.3f, 0.2f);
-
         m_caravan_slots.push_back(
-            entity::Entity::create_caravan_slot(camera::WorldPoint2D(-200.0f, -50.0f)));
+            entity::Entity::create_caravan_slot(camera::WorldPoint2D(
+                slot_distance_x, m_caravan.back().get_world_position().y)));
+        m_caravan_slots.back().set_render_data(m_quad_renderer.get(),
+                                               m_geom_renderer.get());
         m_caravan_slots.push_back(
-            entity::Entity::create_caravan_slot(camera::WorldPoint2D(200.0f, -50.0f)));
-        m_caravan_slots.push_back(
-            entity::Entity::create_caravan_slot(camera::WorldPoint2D(0.0f, -250.0f)));
-        m_caravan_slots.push_back(
-            entity::Entity::create_caravan_slot(camera::WorldPoint2D(-200.0f, 300.0f)));
-        m_caravan_slots.push_back(
-            entity::Entity::create_caravan_slot(camera::WorldPoint2D(200.0f, 300.0f)));
-
-        m_caravan_slots[0].set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
-        m_caravan_slots[1].set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
-        m_caravan_slots[2].set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
-        m_caravan_slots[3].set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
-        m_caravan_slots[4].set_render_data(m_quad_renderer.get(), m_geom_renderer.get());
+            entity::Entity::create_caravan_slot(camera::WorldPoint2D(
+                -slot_distance_x, m_caravan.back().get_world_position().y)));
+        m_caravan_slots.back().set_render_data(m_quad_renderer.get(),
+                                               m_geom_renderer.get());
 
         m_guards.reserve(16); // 16 is magic
         m_guards.push_back(
@@ -135,14 +139,13 @@ class CaravanDefence : public Game {
     }
 
     void spawn_group_of_enemies() {
-
         const size_t num_enemies = m_game_state.rng.uniform(1, 3);
-        const float group_distance = m_game_state.rng.uniform(600.0f, 1000.0f);
+        const float group_distance = m_game_state.rng.uniform(800.0f, 1200.0f);
         const float group_angle = m_game_state.rng.uniform(-45.0f, 225.0f);
         const math::Vector2 group_center =
             math::Vector2(group_distance, 0.0f).rotate_z(group_angle);
 
-        const int group_radius = 150;
+        const int group_radius = 200;
         for (size_t i = 0; i < num_enemies; i++) {
             const float distance_from_group_center =
                 m_game_state.rng.uniform(-group_radius, group_radius);

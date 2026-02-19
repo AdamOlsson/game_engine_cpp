@@ -49,10 +49,10 @@ struct enemy_t {
     static constexpr util::colors::Color highlighted_color = util::colors::DARK_RED;
     static constexpr util::colors::Color selected_color = util::colors::DARK_RED;
     static constexpr math::Vector2 size = math::Vector2(50.0f, 50.0f);
-    static constexpr float velocity = 35.0f;
-    static constexpr float max_health = 2.0f;
+    static constexpr float velocity = 75.0f;
+    static constexpr float max_health = 3.0f;
 
-    static constexpr size_t spawn_rate_ms = 3000;
+    static constexpr size_t spawn_rate_ms = 5000;
 
     static constexpr util::colors::Color type_a_color = util::colors::DARK_RED;
     static constexpr util::colors::Color type_b_color = util::colors::DARK_ORANGE;
@@ -71,7 +71,7 @@ struct guard_t {
     static constexpr util::colors::Color selected_color =
         util::colors::rgb(0.0f, 0.75f, 0.0f);
     static constexpr math::Vector2 size = math::Vector2(50.0f, 50.0f);
-    static constexpr float velocity = 30.0f;
+    static constexpr float velocity = 95.0f;
     static constexpr float max_health = 10.0f;
 
     using Clock = std::chrono::steady_clock;
@@ -80,7 +80,7 @@ struct guard_t {
 
     Entity *caravan_slot = nullptr;
     TimePoint last_attack = Clock::now();
-    static constexpr float attack_range = 400.0f;
+    static constexpr float attack_range = 500.0f;
     static constexpr Duration attack_cooldown = std::chrono::seconds(3);
 
     DamageType damage_type = DamageType::A;
@@ -625,7 +625,7 @@ inline Entity attack(Entity &guard_entity, Entity &enemy_entity) {
     const uint guard_type = static_cast<uint>(guard.damage_type);
     float damage = 1.0f;
     if (enemy_type == guard_type) {
-        damage = 2.0f;
+        damage = 3.0f;
     }
     enemy_entity.damage(damage);
 
