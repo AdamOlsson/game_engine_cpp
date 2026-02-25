@@ -131,7 +131,8 @@ void graphics_pipeline::text::TextRenderer::load_font(
 }
 
 graphics_pipeline::text::TextString
-graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoint) {
+graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoint,
+                                                   const TextOpts &opts) {
 
     if (!is_font_loaded()) {
         throw std::runtime_error(
@@ -141,7 +142,10 @@ graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoin
     unsigned int text_id = m_text_count;
     unsigned int first_glyph = m_glyph_count;
 
-    m_text_instances.push_back(TextSBO{.model_matrix = glm::mat4(1.0f)});
+    m_text_instances.push_back(TextSBO{
+        .model_matrix = math::Matrix().translate(opts.position),
+        .color = opts.font_color,
+    });
 
     std::vector<uint32_t> index_count;
     std::vector<uint32_t> first_index;
@@ -166,8 +170,6 @@ graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoin
     }
     m_text_count++;
 
-    /*m_text_instances.transfer();*/
-    /*m_glyph_instances.transfer();*/
     m_text_instances.sync_all();
     m_glyph_instances.sync_all();
 

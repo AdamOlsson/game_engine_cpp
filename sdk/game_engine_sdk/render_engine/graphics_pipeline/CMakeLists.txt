@@ -63,6 +63,7 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE 
         sdk::logger
         sdk::util
+        sdk::ads
         glm::glm
         render_engine::vulkan
         render_engine::font

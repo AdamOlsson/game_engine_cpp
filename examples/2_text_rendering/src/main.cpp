@@ -8,12 +8,8 @@
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 constexpr auto INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
-constexpr auto ZOOM_SCALE_FACTOR = 0.1f;
+constexpr auto ZOOM_SCALE_FACTOR = 0.05f;
 
-// TODO: Text rendering is done when
-// - I can update created text, like position or color
-// - I apply text kerning
-// - I can specify font size
 class ExampleTextRendering : public Game {
   private:
     std::unique_ptr<vulkan::SwapChainManager> m_swap_chain_manager;
@@ -25,7 +21,7 @@ class ExampleTextRendering : public Game {
 
     std::unique_ptr<graphics_pipeline::text::TextRenderer> m_text_renderer;
 
-    graphics_pipeline::text::TextString m_some_text;
+    std::vector<graphics_pipeline::text::TextString> m_texts;
 
   public:
     ExampleTextRendering()
@@ -49,7 +45,7 @@ class ExampleTextRendering : public Game {
         m_camera = camera::Camera2D(window_size.width, window_size.height,
                                     num_pixels_at_default_zoom);
         m_camera.configure_max_zoom(5.0f);
-        m_camera.configure_min_zoom(0.01f);
+        m_camera.configure_min_zoom(0.001f);
         m_camera.set_zoom(0.05f);
         register_mouse_event_handler(ctx.get());
 
@@ -66,8 +62,25 @@ class ExampleTextRendering : public Game {
 
         m_text_renderer->load_font(m_command_buffer_manager.get(),
                                    std::move(font_loader));
-        /*m_some_text = m_text_renderer->create_text(font::Unicode("AB"));*/
-        m_some_text = m_text_renderer->get_font_showcase_text();
+
+        std::string sentence = "Pack my box with five dozen liquor jugs.";
+        m_texts.push_back(
+            m_text_renderer->create_text(sentence, graphics_pipeline::text::TextOpts{
+                                                       .position = math::Vector2(0, 0),
+                                                       .font_color = util::colors::WHITE,
+                                                   }));
+
+        m_texts.push_back(
+            m_text_renderer->create_text(sentence, graphics_pipeline::text::TextOpts{
+                                                       .position = math::Vector2(0, 2000),
+                                                       .font_color = util::colors::RED,
+                                                   }));
+
+        m_texts.push_back(
+            m_text_renderer->create_text(sentence, graphics_pipeline::text::TextOpts{
+                                                       .position = math::Vector2(0, 4000),
+                                                       .font_color = util::colors::BLUE,
+                                                   }));
     }
 
     void register_mouse_event_handler(vulkan::context::GraphicsContext *ctx) {
@@ -109,7 +122,9 @@ class ExampleTextRendering : public Game {
 
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
 
-        m_text_renderer->render(command_buffer, m_some_text, &push_constant);
+        for (const auto &text : m_texts) {
+            m_text_renderer->render(command_buffer, text, &push_constant);
+        }
 
         render_pass.end_submit_present();
     }

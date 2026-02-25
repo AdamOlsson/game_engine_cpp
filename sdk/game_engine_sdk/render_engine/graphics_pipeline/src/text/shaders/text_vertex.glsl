@@ -8,6 +8,7 @@ struct GlyphSBO {
 
 struct TextSBO {
     mat4 model_matrix;
+    vec4 color;
 };
 
 layout(binding = 0) readonly buffer TextStorageBuffer {
@@ -32,6 +33,7 @@ layout(location = 1) in vec3 in_uvw;
 layout(location = 0) out int out_is_interior;
 layout(location = 1) out vec3 out_uvw;
 layout(location = 2) out float out_winding_order;
+layout(location = 3) out vec4 out_color;
 
 int is_interior(vec3 uvw) {
     return uvw.x == 0.0 && uvw.y == 0.0 && uvw.z == 0.0 ? 1 : 0;
@@ -46,4 +48,5 @@ void main() {
     out_is_interior = is_interior(in_uvw);
     out_uvw = in_uvw;
     out_winding_order = in_world_position.z;
+    out_color = text_instance.color;
 }

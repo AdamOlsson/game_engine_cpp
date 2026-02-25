@@ -5,6 +5,8 @@
 #include "graphics_pipeline/SwapDescriptorSet.h"
 #include "graphics_pipeline/text/GlyphVertex.h"
 #include "graphics_pipeline/text/TextPipeline.h"
+#include "math/Vector2.h"
+#include "util/colors.h"
 #include "vulkan/CommandBufferManager.h"
 #include "vulkan/DescriptorPool.h"
 #include "vulkan/DescriptorSetLayout.h"
@@ -12,6 +14,9 @@
 #include "vulkan/buffers/GpuBuffer.h"
 #include "vulkan/buffers/IndexBuffer.h"
 #include "vulkan/buffers/VertexBuffer.h"
+
+// Todays goal:
+// - Render multiple texts at different size
 
 namespace graphics_pipeline::text {
 
@@ -28,10 +33,17 @@ struct GlyphSBO {
 // - text position
 struct TextSBO {
     alignas(16) glm::mat4 model_matrix = glm::mat4(1.0f);
+    alignas(16) glm::vec4 color = util::colors::WHITE;
 };
 
-// CONTINUE: Make updatable (make a class)
-struct TextString {
+struct TextOpts {
+    math::Vector2 position = math::Vector2(0, 0);
+    util::colors::Color font_color = util::colors::WHITE;
+    size_t font_size = 11;
+};
+
+class TextString {
+  public:
     uint32_t first_glyph;
     uint32_t glyph_count;
 
@@ -75,7 +87,8 @@ class TextRenderer {
     TextRenderer(TextRenderer &&) noexcept = default;
 
     TextString get_font_showcase_text();
-    TextString create_text(const font::Unicode &codepoint);
+    TextString create_text(const font::Unicode &codepoint,
+                           const TextOpts &opts = TextOpts{});
 
     bool is_font_loaded() { return m_font_loader.has_value(); }
     void load_font(vulkan::CommandBufferManager *command_buffer_manager,
@@ -100,7 +113,6 @@ class TextRenderer {
         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 m_text_pipeline.get_layout(), 0, 1, &set, 0, nullptr);
 
-        // Bind geometry
         const VkDeviceSize vertex_offset = 0;
         vkCmdBindVertexBuffers(command_buffer, 0, 1, &m_glyph_vertex_buffer->buffer,
                                &vertex_offset);
