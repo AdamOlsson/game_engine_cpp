@@ -14,9 +14,7 @@
 #include "vulkan/buffers/GpuBuffer.h"
 #include "vulkan/buffers/IndexBuffer.h"
 #include "vulkan/buffers/VertexBuffer.h"
-
-// Todays goal:
-// - Render multiple texts at different size
+#include <limits>
 
 namespace graphics_pipeline::text {
 
@@ -42,10 +40,58 @@ struct TextOpts {
     size_t font_size = 11;
 };
 
+class TextRenderer;
+
+class TextSBOHandle {
+  private:
+    friend class TextRenderer;
+    size_t id = std::numeric_limits<size_t>::max();
+
+  public:
+    TextSBOHandle() = default;
+    TextSBOHandle(size_t id) : id(id) {}
+
+    TextSBOHandle(const TextSBOHandle &) = delete;
+    TextSBOHandle(TextSBOHandle &&other) noexcept = default;
+
+    TextSBOHandle &operator=(const TextSBOHandle &&) = delete;
+    TextSBOHandle &operator=(TextSBOHandle &&other) noexcept = default;
+};
+
+class GlyphSBOHandle {
+  private:
+    friend class TextRenderer;
+    size_t id = std::numeric_limits<size_t>::max();
+
+  public:
+    GlyphSBOHandle() = default;
+    GlyphSBOHandle(size_t id) : id(id) {}
+
+    GlyphSBOHandle(const GlyphSBOHandle &) = delete;
+    GlyphSBOHandle(GlyphSBOHandle &&other) noexcept = default;
+
+    GlyphSBOHandle &operator=(const GlyphSBOHandle &&) = delete;
+    GlyphSBOHandle &operator=(GlyphSBOHandle &&other) noexcept = default;
+};
+
+class TextStringHandle {
+  private:
+    friend class TextRenderer;
+    TextSBOHandle m_text_handle;
+    GlyphSBOHandle m_glyph_handle;
+    size_t m_glyph_count = 0;
+
+  public:
+    TextSBOHandle &text_handle() { return m_text_handle; }
+    GlyphSBOHandle &glyph_handle() { return m_glyph_handle; }
+    size_t glyph_count() const { return m_glyph_count; }
+};
+
 class TextString {
   public:
-    uint32_t first_glyph;
-    uint32_t glyph_count;
+    TextSBOHandle text_handle;
+    GlyphSBOHandle glyph_handle;
+    uint32_t glyph_count = 0;
 
     std::vector<uint32_t> index_count;
     std::vector<uint32_t> first_index;
@@ -63,14 +109,37 @@ class TextRenderer {
 
     std::vector<std::pair<size_t, size_t>> m_glyph_draw_info;
 
-    vulkan::buffers::StorageBuffer<TextSBO> m_text_instances;
-    vulkan::buffers::StorageBuffer<GlyphSBO> m_glyph_instances;
+    struct TextSparseSet {
+        vulkan::buffers::StorageBuffer<TextSBO> dense;
+        size_t next_id = 0;
+        size_t dense_count = 0;
+        std::vector<size_t> sparse;
+        std::vector<size_t> reverse;
+        std::vector<size_t> available;
+    } m_text_sparse_set;
+
+    struct {
+        vulkan::buffers::StorageBuffer<GlyphSBO> dense;
+        size_t next_id = 0;
+        size_t dense_count = 0;
+        std::vector<size_t> sparse;
+        std::vector<size_t> reverse;
+        std::vector<size_t> available;
+    } m_glyph_sparse_set;
+
+    static constexpr size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
 
     vulkan::DescriptorPool m_descriptor_pool;
     SwapDescriptorSet m_descriptor_sets;
 
-    size_t m_text_count = 0;
-    size_t m_glyph_count = 0;
+    bool contains_text(size_t id) const;
+    bool contains_glyph(size_t id) const;
+
+    TextSBO &get_text_instance(const TextSBOHandle &handle);
+    GlyphSBO &get_glyph_instance(const GlyphSBOHandle &handle);
+
+    TextStringHandle request_text_slot(size_t num_glyphs);
+    void return_text_slot(TextStringHandle &handle);
 
     static vulkan::DescriptorSetLayout
     get_descriptor_set_layout(std::shared_ptr<vulkan::context::GraphicsContext> &ctx);
@@ -93,6 +162,8 @@ class TextRenderer {
     bool is_font_loaded() { return m_font_loader.has_value(); }
     void load_font(vulkan::CommandBufferManager *command_buffer_manager,
                    font::FontLoader &&font_loader);
+
+    void sync_render_slots();
 
     template <typename PushConstantType>
     void render(const vulkan::CommandBuffer &command_buffer, const TextString &text,
