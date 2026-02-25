@@ -294,7 +294,7 @@ graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoin
 
     get_text_instance(handle.text_handle()) = TextSBO{
         .model_matrix = math::Matrix().translate(opts.position),
-        .color = opts.font_color,
+        .font_color = opts.font_color,
     };
 
     std::vector<uint32_t> index_count;
@@ -304,13 +304,20 @@ graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoin
     first_index.reserve(codepoint.size());
 
     const font::FontBBox bbox = m_font_loader->get_font_bbox();
-    const float column_width = bbox.x_max - bbox.x_min + 150.0f;
+    const float current_font_size_px = bbox.x_max - bbox.x_min;
+    const float font_scale = opts.font_size / current_font_size_px;
+    const float font_size_px = current_font_size_px * font_scale;
+
     for (size_t i = 0; i < codepoint.size(); i++) {
         const auto &c = codepoint[i];
         size_t glyph_id = handle.glyph_handle().id + i;
         m_glyph_sparse_set.dense[m_glyph_sparse_set.sparse[glyph_id]] =
             GlyphSBO{.text_id = static_cast<uint16_t>(handle.text_handle().id),
-                     .offset = math::Matrix().translate(column_width * i, 0.0f, 0.0f)};
+                     .model_matrix = math::Matrix()
+                                         .scale(font_scale, font_scale, 1.0f)
+                                         .translate(current_font_size_px * i, 0.0f, 0.0f)
+
+            };
 
         std::pair<size_t, size_t> draw_info =
             m_glyph_draw_info[m_font_loader->get_glyph_index(c)];
@@ -356,12 +363,12 @@ graphics_pipeline::text::TextRenderer::get_font_showcase_text() {
     for (size_t gid = 0; gid < num_glyphs; gid++) {
 
         const float x = column_width * (gid % num_cols);
-        const float y = column_height * (gid / num_cols);
+        const float y = column_height * (static_cast<float>(gid) / num_cols);
 
         size_t glyph_id = handle.glyph_handle().id + gid;
         m_glyph_sparse_set.dense[m_glyph_sparse_set.sparse[glyph_id]] = GlyphSBO{
             .text_id = static_cast<uint16_t>(handle.text_handle().id),
-            .offset = math::Matrix().translate(x, y, 0.0f).scale(0.1),
+            .model_matrix = math::Matrix().translate(x, y, 0.0f).scale(0.1),
         };
 
         const std::pair<size_t, size_t> glyph_info = m_glyph_draw_info[gid];

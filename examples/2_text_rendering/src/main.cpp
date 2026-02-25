@@ -46,7 +46,7 @@ class ExampleTextRendering : public Game {
                                     num_pixels_at_default_zoom);
         m_camera.configure_max_zoom(5.0f);
         m_camera.configure_min_zoom(0.001f);
-        m_camera.set_zoom(0.05f);
+        m_camera.set_zoom(1.0f);
         register_mouse_event_handler(ctx.get());
 
         m_swap_chain_manager = std::make_unique<vulkan::SwapChainManager>(ctx);
@@ -68,18 +68,21 @@ class ExampleTextRendering : public Game {
             m_text_renderer->create_text(sentence, graphics_pipeline::text::TextOpts{
                                                        .position = math::Vector2(0, 0),
                                                        .font_color = util::colors::WHITE,
+                                                       .font_size = 11,
                                                    }));
 
         m_texts.push_back(
             m_text_renderer->create_text(sentence, graphics_pipeline::text::TextOpts{
-                                                       .position = math::Vector2(0, 2000),
+                                                       .position = math::Vector2(0, 15),
                                                        .font_color = util::colors::RED,
+                                                       .font_size = 17,
                                                    }));
 
         m_texts.push_back(
             m_text_renderer->create_text(sentence, graphics_pipeline::text::TextOpts{
-                                                       .position = math::Vector2(0, 4000),
+                                                       .position = math::Vector2(0, 30),
                                                        .font_color = util::colors::BLUE,
+                                                       .font_size = 24,
                                                    }));
     }
 

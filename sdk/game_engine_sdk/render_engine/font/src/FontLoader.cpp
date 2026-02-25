@@ -165,6 +165,8 @@ font::FontBBox font::FontLoader::get_font_bbox() const {
     };
 }
 
+unsigned short font::FontLoader::get_units_per_em() const { return m_face->units_per_EM; }
+
 std::ostream &operator<<(std::ostream &os, const font::FontBBox &bbox) {
     os << bbox.to_string();
     return os;

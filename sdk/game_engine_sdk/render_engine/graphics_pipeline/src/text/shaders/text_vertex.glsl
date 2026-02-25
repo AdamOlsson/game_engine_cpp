@@ -42,7 +42,7 @@ int is_interior(vec3 uvw) {
 void main() {
     GlyphSBO glyph_instance = glyph_buffer.instances[gl_InstanceIndex];
     TextSBO text_instance = text_buffer.instances[glyph_instance.text_id];
-    mat4 model_matrix = text_instance.model_matrix + glyph_instance.model_matrix;
+    mat4 model_matrix = text_instance.model_matrix * glyph_instance.model_matrix;
 
     gl_Position = pc_camera.view_projection * model_matrix * vec4(in_world_position.xy, 0.0, 1.0);
     out_is_interior = is_interior(in_uvw);

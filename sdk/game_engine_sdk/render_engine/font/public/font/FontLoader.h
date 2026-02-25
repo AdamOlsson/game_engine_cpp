@@ -33,6 +33,11 @@ struct GlyphOutlines {
 };
 
 class FontLoader {
+  private:
+    FT_Library m_library;
+    FT_Face m_face;
+    FontFormat m_format;
+
   public:
     FontLoader() = default;
     FontLoader(const std::string &filepath);
@@ -93,11 +98,9 @@ class FontLoader {
     signed long get_num_glyphs() const;
     FontFormat get_format() const;
     FontBBox get_font_bbox() const;
+    unsigned short get_units_per_em() const;
 
   private:
-    FT_Library m_library;
-    FT_Face m_face;
-    FontFormat m_format;
 };
 
 } // namespace font

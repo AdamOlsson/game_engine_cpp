@@ -22,7 +22,7 @@ namespace graphics_pipeline::text {
 // - kerning information
 struct GlyphSBO {
     alignas(4) uint32_t text_id; // Which text this glyph belongs to
-    alignas(16) glm::mat4 offset = glm::mat4(1.0f);
+    alignas(16) glm::mat4 model_matrix = glm::mat4(1.0f);
 };
 
 // Common data for the entire string, like
@@ -31,13 +31,13 @@ struct GlyphSBO {
 // - text position
 struct TextSBO {
     alignas(16) glm::mat4 model_matrix = glm::mat4(1.0f);
-    alignas(16) glm::vec4 color = util::colors::WHITE;
+    alignas(16) glm::vec4 font_color = util::colors::WHITE;
 };
 
 struct TextOpts {
     math::Vector2 position = math::Vector2(0, 0);
     util::colors::Color font_color = util::colors::WHITE;
-    size_t font_size = 11;
+    uint32_t font_size = 11;
 };
 
 class TextRenderer;
