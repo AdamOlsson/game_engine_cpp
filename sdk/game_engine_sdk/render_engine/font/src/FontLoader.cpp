@@ -1,6 +1,7 @@
 #include "font/FontLoader.h"
 #include "OutlineBuilder.h"
 #include <format>
+#include <freetype/freetype.h>
 #include FT_FONT_FORMATS_H
 
 font::FontLoader::FontLoader(const std::string &filepath) {
@@ -109,8 +110,9 @@ font::GlyphOutlines font::FontLoader::get_glyph_outline(const unsigned int gid) 
         return {};
     }
 
-    if (FT_Load_Glyph(m_face, gid, FT_LOAD_NO_BITMAP)) {
-        throw std::runtime_error(std::format("Error: Failed to load glyph."));
+    if (int err = FT_Load_Glyph(m_face, gid, FT_LOAD_NO_BITMAP)) {
+        throw std::runtime_error(std::format(
+            "Error: Failed to load glyph id {} with error number {}.", gid, err));
     }
 
     if (m_face->glyph->format != FT_GLYPH_FORMAT_OUTLINE) {
@@ -150,6 +152,97 @@ font::GlyphOutlines font::FontLoader::get_glyph_outline(const unsigned int gid) 
         .quadratic_curves = std::move(builder.quadratic_curves),
         .fill = fill,
     };
+}
+
+font::GlyphMetrics
+font::FontLoader::get_glyph_metrics(const font::Unicode &codepoint) const {
+    return get_glyph_metrics(get_glyph_index(codepoint));
+}
+
+font::GlyphMetrics font::FontLoader::get_glyph_metrics(const char32_t gid) const {
+    return get_glyph_metrics(get_glyph_index(gid));
+}
+
+font::GlyphMetrics font::FontLoader::get_glyph_metrics(const unsigned int gid) const {
+
+    if (gid == 0) {
+        return GlyphMetrics{};
+    }
+
+    if (int err = FT_Load_Glyph(m_face, gid, FT_LOAD_NO_BITMAP)) {
+        throw std::runtime_error(std::format(
+            "Error: Failed to load glyph id {} with error number {}.", gid, err));
+    }
+
+    const auto metrics = m_face->glyph->metrics;
+    return GlyphMetrics{
+        .width = metrics.width,
+        .height = metrics.height,
+        .hori_bearing_x = metrics.horiBearingX,
+        .hori_bearing_y = metrics.horiBearingY,
+        .hori_advance = metrics.horiAdvance,
+        .vert_bearing_x = metrics.vertBearingX,
+        .vert_bearing_y = metrics.vertBearingY,
+        .vert_advance = metrics.vertAdvance,
+    };
+}
+
+font::GlyphAdvance
+font::FontLoader::get_glyph_advance(const font::Unicode &codepoint) const {
+    return get_glyph_advance(get_glyph_index(codepoint));
+}
+
+font::GlyphAdvance font::FontLoader::get_glyph_advance(const char32_t gid) const {
+    return get_glyph_advance(get_glyph_index(gid));
+}
+
+font::GlyphAdvance font::FontLoader::get_glyph_advance(const unsigned int gid) const {
+
+    if (gid == 0) {
+        return GlyphAdvance{};
+    }
+
+    if (int err = FT_Load_Glyph(m_face, gid, FT_LOAD_NO_BITMAP)) {
+        throw std::runtime_error(std::format(
+            "Error: Failed to load glyph id {} with error number {}.", gid, err));
+    }
+
+    const auto advance = m_face->glyph->advance;
+    return GlyphAdvance{
+        .x = advance.x,
+        .y = advance.y,
+    };
+}
+
+font::GlyphKerning
+font::FontLoader::get_glyph_kerning(const font::Unicode &codepoint1,
+                                    const font::Unicode &codepoint2) const {
+
+    return get_glyph_kerning(get_glyph_index(codepoint1), get_glyph_index(codepoint2));
+}
+
+font::GlyphKerning font::FontLoader::get_glyph_kerning(const char32_t gid1,
+                                                       const char32_t gid2) const {
+
+    return get_glyph_kerning(get_glyph_index(gid1), get_glyph_index(gid2));
+}
+
+font::GlyphKerning font::FontLoader::get_glyph_kerning(const unsigned int gid1,
+                                                       const unsigned int gid2) const {
+
+    if (gid1 == 0 || gid2 == 0) {
+        return GlyphKerning{};
+    }
+
+    FT_Vector kerning;
+    if (int err = FT_Get_Kerning(m_face, gid1, gid2, FT_KERNING_UNSCALED, &kerning)) {
+        throw std::runtime_error(
+            std::format("Error: Failed to get kerning information for glyph id {} and "
+                        "glyph id {} with error number {}.",
+                        gid1, gid2, err));
+    }
+
+    return GlyphKerning{.x = kerning.x, .y = kerning.y};
 }
 
 signed long font::FontLoader::get_num_glyphs() const { return m_face->num_glyphs; }

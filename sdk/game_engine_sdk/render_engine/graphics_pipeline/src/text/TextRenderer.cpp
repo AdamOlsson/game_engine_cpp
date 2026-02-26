@@ -304,18 +304,23 @@ graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoin
     first_index.reserve(codepoint.size());
 
     const font::FontBBox bbox = m_font_loader->get_font_bbox();
-    const float current_font_size_px = bbox.x_max - bbox.x_min;
-    const float font_scale = opts.font_size / current_font_size_px;
-    const float font_size_px = current_font_size_px * font_scale;
+    const unsigned short units_per_em = m_font_loader->get_units_per_em();
+    const float glyph_width = bbox.x_max - bbox.x_min;
+    const float font_scale = static_cast<float>(opts.font_size) / units_per_em;
+    const float font_size_px = glyph_width * font_scale;
+
+    float pen_position_x = 0.0f;
 
     for (size_t i = 0; i < codepoint.size(); i++) {
-        const auto &c = codepoint[i];
+        const char32_t &c = codepoint[i];
+        // Glyph id in terms of the text (not font)
         size_t glyph_id = handle.glyph_handle().id + i;
+
         m_glyph_sparse_set.dense[m_glyph_sparse_set.sparse[glyph_id]] =
             GlyphSBO{.text_id = static_cast<uint16_t>(handle.text_handle().id),
                      .model_matrix = math::Matrix()
                                          .scale(font_scale, font_scale, 1.0f)
-                                         .translate(current_font_size_px * i, 0.0f, 0.0f)
+                                         .translate(pen_position_x, 0.0f, 0.0f)
 
             };
 
@@ -323,6 +328,15 @@ graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoin
             m_glyph_draw_info[m_font_loader->get_glyph_index(c)];
         index_count.push_back(draw_info.first);
         first_index.push_back(draw_info.second);
+
+        const font::GlyphAdvance &advance = m_font_loader->get_glyph_advance(c);
+        pen_position_x += advance.x;
+
+        if (i < codepoint.size() - 1) {
+            font::GlyphKerning kerning =
+                m_font_loader->get_glyph_kerning(codepoint[i], codepoint[i + 1]);
+            pen_position_x += kerning.x;
+        }
     }
 
     sync_render_slots();

@@ -73,14 +73,14 @@ class ExampleTextRendering : public Game {
 
         m_texts.push_back(
             m_text_renderer->create_text(sentence, graphics_pipeline::text::TextOpts{
-                                                       .position = math::Vector2(0, 15),
+                                                       .position = math::Vector2(0, 22),
                                                        .font_color = util::colors::RED,
                                                        .font_size = 17,
                                                    }));
 
         m_texts.push_back(
             m_text_renderer->create_text(sentence, graphics_pipeline::text::TextOpts{
-                                                       .position = math::Vector2(0, 30),
+                                                       .position = math::Vector2(0, 50),
                                                        .font_color = util::colors::BLUE,
                                                        .font_size = 24,
                                                    }));
