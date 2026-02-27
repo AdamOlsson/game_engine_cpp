@@ -14,9 +14,9 @@ layout(location = 6) flat in vec4 in_border_color;
 
 layout(location = 0) out vec4 out_color;
 
-float signed_distance_box(vec2 point, vec2 box_dimensions) {
-    const vec2 q = abs(point) - (box_dimensions * 0.5);
-    return min(max(q.x, q.y), 0.0) + length(max(q, 0.0));
+float signed_distance_rounded_box(vec2 point, vec2 box_dimensions, float radius) {
+    const vec2 q = abs(point) - (box_dimensions * 0.5 - vec2(radius));
+    return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - radius;
 }
 
 
@@ -26,8 +26,8 @@ void main() {
         const vec2 border_width_world = vec2(in_border_width_world);
         const vec2 position_world = in_local_position * box_dims_world;
 
-        const float distance_outer_edge = signed_distance_box(position_world, box_dims_world);
-        const float distance_inner_edge = signed_distance_box(position_world, box_dims_world - border_width_world);
+        const float distance_outer_edge = signed_distance_rounded_box(position_world, box_dims_world, in_border_radius_world);
+        const float distance_inner_edge = signed_distance_rounded_box(position_world, box_dims_world - border_width_world, in_border_radius_world);
 
         const bool inside_outer_edge = distance_outer_edge <= 0.0;
         const bool outside_inner_edge = distance_inner_edge > 0.0;

@@ -11,6 +11,12 @@
 constexpr glm::vec2 INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
 constexpr float ZOOM_SCALE_FACTOR = 0.1f;
 
+enum class GameState {
+    Playing,
+    Paused,
+    Event,
+};
+
 class CaravanDefence : public Game {
   private:
     std::unique_ptr<vulkan::SwapChainManager> m_swap_chain_manager;
@@ -31,7 +37,24 @@ class CaravanDefence : public Game {
     std::vector<entity::Entity> m_attacks;
     std::vector<entity::Entity> m_enemies;
 
+    struct Event {
+        graphics_pipeline::geometry::GeometryRenderer *m_geometry_renderer = nullptr;
+        graphics_pipeline::geometry::GeometrySBOHandle m_geometry_render_data;
+
+        void remove_event() {
+            if (m_geometry_renderer != nullptr) {
+                m_geometry_renderer->return_render_slot(m_geometry_render_data);
+                m_geometry_renderer = nullptr;
+            }
+        }
+    };
+
+    std::optional<Event> m_event;
+
     struct {
+        GameState last_state = GameState::Playing;
+        GameState state = GameState::Playing;
+
         size_t time_elapsed_ms;
         std::optional<size_t> selected_guard = std::nullopt;
 
@@ -136,6 +159,7 @@ class CaravanDefence : public Game {
         m_geom_renderer->sync_render_slots();
 
         register_mouse_event_handler(ctx.get());
+        register_keyboard_event_handler(ctx.get());
     }
 
     void spawn_group_of_enemies() {
@@ -182,58 +206,106 @@ class CaravanDefence : public Game {
     }
 
     void update(const float dt) override {
-        update_all(dt, m_caravan);
-        update_all(dt, m_caravan_slots);
-        update_all(dt, m_attacks);
-        update_all(dt, m_enemies);
-        update_all(dt, m_guards);
-
-        for (int i = m_attacks.size() - 1; i >= 0; i--) {
-            if (!m_attacks[i].is_visible()) {
-                m_attacks[i].clear_render_data();
-                m_attacks.erase(m_attacks.begin() + i);
+        switch (m_game_state.state) {
+        case GameState::Playing: {
+            if (m_game_state.last_state == GameState::Event && m_event.has_value()) {
+                m_event->remove_event();
+                m_event = std::nullopt;
             }
-        }
 
-        const size_t time_elapsed_ms = m_game_state.time_elapsed_ms;
-        if (time_elapsed_ms > entity::enemy_t::spawn_rate_ms) {
-            spawn_group_of_enemies();
-            m_game_state.time_elapsed_ms = 0;
-        }
+            update_all(dt, m_caravan);
+            update_all(dt, m_caravan_slots);
+            update_all(dt, m_attacks);
+            update_all(dt, m_enemies);
+            update_all(dt, m_guards);
 
-        for (size_t i = 0; i < m_enemies.size(); i++) {
-            entity::Entity &enemy = m_enemies[i];
-
-            for (entity::Entity &guard : m_guards) {
-                if (enemy.is_alive() && entity::can_attack(guard) &&
-                    entity::in_attack_range(guard, enemy)) {
-                    create_attack(guard, enemy);
-                    break;
+            for (int i = m_attacks.size() - 1; i >= 0; i--) {
+                if (!m_attacks[i].is_visible()) {
+                    m_attacks[i].clear_render_data();
+                    m_attacks.erase(m_attacks.begin() + i);
                 }
             }
 
-            // Find the id of the cart the enemy is inside.
-            auto cart_id = find_caravan_cart(enemy.get_world_position());
-            if (enemy.is_alive() && cart_id.has_value()) {
-                m_caravan[cart_id.value()].damage(enemy.get_current_health());
-                enemy.kill();
+            const size_t time_elapsed_ms = m_game_state.time_elapsed_ms;
+            if (time_elapsed_ms > entity::enemy_t::spawn_rate_ms) {
+                spawn_group_of_enemies();
+                m_game_state.time_elapsed_ms = 0;
             }
 
-            if (enemy.is_dead()) {
-                enemy.clear_render_data();
-                m_enemies.erase(m_enemies.begin() + i);
+            for (size_t i = 0; i < m_enemies.size(); i++) {
+                entity::Entity &enemy = m_enemies[i];
+
+                for (entity::Entity &guard : m_guards) {
+                    if (enemy.is_alive() && entity::can_attack(guard) &&
+                        entity::in_attack_range(guard, enemy)) {
+                        create_attack(guard, enemy);
+                        break;
+                    }
+                }
+
+                // Find the id of the cart the enemy is inside.
+                auto cart_id = find_caravan_cart(enemy.get_world_position());
+                if (enemy.is_alive() && cart_id.has_value()) {
+                    m_caravan[cart_id.value()].damage(enemy.get_current_health());
+                    enemy.kill();
+                }
+
+                if (enemy.is_dead()) {
+                    enemy.clear_render_data();
+                    m_enemies.erase(m_enemies.begin() + i);
+                }
             }
+
+            for (auto &cart : m_caravan) {
+                if (cart.is_dead()) {
+                    logger::info("Cart died, game over!");
+                    exit(0);
+                }
+            }
+
+            m_game_state.time_elapsed_ms += dt * 1000;
+            break;
         }
 
-        for (auto &cart : m_caravan) {
-            if (cart.is_dead()) {
-                logger::info("Cart died, game over!");
-                exit(0);
+        case GameState::Event: {
+            if (m_game_state.last_state == GameState::Playing && !m_event.has_value()) {
+                m_event = create_event(m_geom_renderer.get(), m_camera);
             }
+            break;
         }
 
-        m_game_state.time_elapsed_ms += dt * 1000;
+        case GameState::Paused: {
+            break;
+        }
+
+        default:
+            break;
+        };
+
+        m_game_state.last_state = m_game_state.state;
     };
+
+    Event create_event(graphics_pipeline::geometry::GeometryRenderer *geom_renderer,
+                       const camera::Camera2D &camera) {
+        Event event{};
+        event.m_geometry_renderer = geom_renderer;
+        event.m_geometry_render_data = event.m_geometry_renderer->request_render_slot();
+
+        const float zoom = camera.get_zoom();
+        const camera::WorldPoint2D position = camera.get_position();
+        auto &instance =
+            event.m_geometry_renderer->get_instance(event.m_geometry_render_data);
+        instance.model_matrix =
+            math::Matrix().translate(position).scale(200.0f / zoom, 120.0f / zoom);
+        instance.color = util::colors::rgba(0.0f, 0.0f, 0.0f, 0.95f);
+        instance.flags |=
+            static_cast<uint32_t>(graphics_pipeline::geometry::GeometryShape::Rectangle);
+        instance.border.color = util::colors::WHITE;
+        instance.border.width = 2.0f / zoom;
+        instance.border.radius = 5.0f / zoom;
+
+        return event;
+    }
 
     std::optional<size_t> find_caravan_cart(const camera::WorldPoint2D &point) {
         for (size_t i = 0; i < m_caravan.size(); i++) {
@@ -263,6 +335,49 @@ class CaravanDefence : public Game {
         return std::nullopt;
     }
 
+    void render() override {
+
+        auto command_buffer = m_command_buffer_manager->get_command_buffer();
+        vulkan::RenderPass render_pass =
+            m_swap_chain_manager->get_render_pass(command_buffer);
+        render_pass.begin();
+
+        const camera::WorldPoint2D cursor_world_point =
+            m_camera.viewport_to_world(m_mouse_state.cursor_viewport_position);
+
+        // Only highlight slots when hover if a guard is selected
+        if (m_game_state.selected_guard.has_value()) {
+            for (size_t i = 0; i < m_caravan_slots.size(); i++) {
+                if (!m_caravan_slots[i].is_visible()) {
+                    continue;
+                }
+                m_caravan_slots[i].set_highlighted(
+                    m_caravan_slots[i].is_point_inside(cursor_world_point));
+            }
+        }
+
+        const auto &selected_guard = m_game_state.selected_guard;
+        // Highlight the guard the cursor is hovering over
+        for (size_t i = 0; i < m_guards.size(); i++) {
+            entity::Entity &guard = m_guards[i];
+            // If a guard is selected, we keep it highlighted
+            if (selected_guard.has_value() && selected_guard.value() == i) {
+                continue;
+            }
+            guard.set_highlighted(guard.is_point_inside(cursor_world_point));
+        }
+
+        m_quad_renderer->sync_render_slots();
+        m_geom_renderer->sync_render_slots();
+
+        glm::mat4 push_constant = m_camera.get_view_projection_matrix();
+        const size_t num_instances = 256; // Size of instance buffers
+        m_quad_renderer->render(command_buffer, &push_constant, num_instances);
+        m_geom_renderer->render(command_buffer, &push_constant, num_instances);
+
+        render_pass.end_submit_present();
+    }
+
     void register_mouse_event_handler(vulkan::context::GraphicsContext *ctx) {
         ctx->window->register_mouse_event_callback(
             [this](window::MouseEvent mouse_event, window::ViewportPoint &point) -> void {
@@ -275,7 +390,8 @@ class CaravanDefence : public Game {
                     break;
                 }
                 case window::MouseEvent::CURSOR_MOVED:
-                    if (m_mouse_state.is_right_button_pressed) {
+                    if (m_game_state.state == GameState::Playing &&
+                        m_mouse_state.is_right_button_pressed) {
                         camera::WorldPoint2D world_delta =
                             m_camera.viewport_delta_to_world(
                                 point - m_mouse_state.cursor_viewport_position);
@@ -284,7 +400,9 @@ class CaravanDefence : public Game {
                     m_mouse_state.cursor_viewport_position = point;
                     break;
                 case window::MouseEvent::SCROLL:
-                    m_camera.set_relative_zoom(point.y * ZOOM_SCALE_FACTOR);
+                    if (m_game_state.state == GameState::Playing) {
+                        m_camera.set_relative_zoom(point.y * ZOOM_SCALE_FACTOR);
+                    }
                     break;
                 case window::MouseEvent::LEFT_BUTTON_DOWN:
                     break;
@@ -331,47 +449,28 @@ class CaravanDefence : public Game {
             });
     }
 
-    void render() override {
-
-        auto command_buffer = m_command_buffer_manager->get_command_buffer();
-        vulkan::RenderPass render_pass =
-            m_swap_chain_manager->get_render_pass(command_buffer);
-        render_pass.begin();
-
-        const camera::WorldPoint2D cursor_world_point =
-            m_camera.viewport_to_world(m_mouse_state.cursor_viewport_position);
-
-        // Only highlight slots when hover if a guard is selected
-        if (m_game_state.selected_guard.has_value()) {
-            for (size_t i = 0; i < m_caravan_slots.size(); i++) {
-                if (!m_caravan_slots[i].is_visible()) {
-                    continue;
+    void register_keyboard_event_handler(vulkan::context::GraphicsContext *ctx) {
+        ctx->window->register_keyboard_event_callback(
+            [this](window::KeyEvent &key, window::KeyState &state) -> void {
+                if (state != window::KeyState::DOWN) {
+                    return;
                 }
-                m_caravan_slots[i].set_highlighted(
-                    m_caravan_slots[i].is_point_inside(cursor_world_point));
-            }
-        }
 
-        const auto &selected_guard = m_game_state.selected_guard;
-        // Highlight the guard the cursor is hovering over
-        for (size_t i = 0; i < m_guards.size(); i++) {
-            entity::Entity &guard = m_guards[i];
-            // If a guard is selected, we keep it highlighted
-            if (selected_guard.has_value() && selected_guard.value() == i) {
-                continue;
-            }
-            guard.set_highlighted(guard.is_point_inside(cursor_world_point));
-        }
+                switch (key) {
+                case window::KeyEvent::Y: {
+                    if (m_game_state.state == GameState::Playing) {
+                        m_game_state.state = GameState::Event;
+                    } else {
+                        m_game_state.state = GameState::Playing;
+                    }
 
-        m_quad_renderer->sync_render_slots();
-        m_geom_renderer->sync_render_slots();
+                    break;
+                }
 
-        glm::mat4 push_constant = m_camera.get_view_projection_matrix();
-        const size_t num_instances = 256; // Size of instance buffers
-        m_quad_renderer->render(command_buffer, &push_constant, num_instances);
-        m_geom_renderer->render(command_buffer, &push_constant, num_instances);
-
-        render_pass.end_submit_present();
+                default:
+                    break;
+                };
+            });
     }
 };
 

@@ -51,9 +51,9 @@ class Camera2D {
     glm::mat4 get_projection_matrix();
     glm::mat4 get_view_projection_matrix();
 
-    glm::vec2 get_position();
-    float get_rotation();
-    float get_zoom();
+    glm::vec2 get_position() const;
+    float get_rotation() const;
+    float get_zoom() const;
 
     WorldPoint2D viewport_delta_to_world(const ViewportPoint &viewport_delta) const;
     WorldPoint2D viewport_delta_to_world(const ViewportPoint &&viewport_delta) const;
