@@ -20,7 +20,7 @@ namespace graphics_pipeline::text {
 
 // Glyph specific data like
 // - kerning information
-struct GlyphSBO {
+struct TextGlyphSBO {
     alignas(4) uint32_t text_id; // Which text this glyph belongs to
     alignas(16) glm::mat4 model_matrix = glm::mat4(1.0f);
 };
@@ -29,7 +29,7 @@ struct GlyphSBO {
 // - text color
 // - font size
 // - text position
-struct TextSBO {
+struct TextFormatSBO {
     alignas(16) glm::mat4 model_matrix = glm::mat4(1.0f);
     alignas(16) glm::vec4 font_color = util::colors::WHITE;
 };
@@ -42,59 +42,57 @@ struct TextOpts {
 
 class TextRenderer;
 
-class TextSBOHandle {
+class TextFormatSBOHandle {
   private:
     friend class TextRenderer;
     size_t id = std::numeric_limits<size_t>::max();
 
   public:
-    TextSBOHandle() = default;
-    TextSBOHandle(size_t id) : id(id) {}
+    TextFormatSBOHandle() = default;
+    TextFormatSBOHandle(size_t id) : id(id) {}
 
-    TextSBOHandle(const TextSBOHandle &) = delete;
-    TextSBOHandle(TextSBOHandle &&other) noexcept = default;
+    TextFormatSBOHandle(const TextFormatSBOHandle &) = delete;
+    TextFormatSBOHandle(TextFormatSBOHandle &&other) noexcept = default;
 
-    TextSBOHandle &operator=(const TextSBOHandle &&) = delete;
-    TextSBOHandle &operator=(TextSBOHandle &&other) noexcept = default;
+    TextFormatSBOHandle &operator=(const TextFormatSBOHandle &&) = delete;
+    TextFormatSBOHandle &operator=(TextFormatSBOHandle &&other) noexcept = default;
 };
 
-class GlyphSBOHandle {
+class TextGlyphSBOHandle {
   private:
     friend class TextRenderer;
     size_t id = std::numeric_limits<size_t>::max();
 
   public:
-    GlyphSBOHandle() = default;
-    GlyphSBOHandle(size_t id) : id(id) {}
+    TextGlyphSBOHandle() = default;
+    TextGlyphSBOHandle(size_t id) : id(id) {}
 
-    GlyphSBOHandle(const GlyphSBOHandle &) = delete;
-    GlyphSBOHandle(GlyphSBOHandle &&other) noexcept = default;
+    TextGlyphSBOHandle(const TextGlyphSBOHandle &) = delete;
+    TextGlyphSBOHandle(TextGlyphSBOHandle &&other) noexcept = default;
 
-    GlyphSBOHandle &operator=(const GlyphSBOHandle &&) = delete;
-    GlyphSBOHandle &operator=(GlyphSBOHandle &&other) noexcept = default;
+    TextGlyphSBOHandle &operator=(const TextGlyphSBOHandle &&) = delete;
+    TextGlyphSBOHandle &operator=(TextGlyphSBOHandle &&other) noexcept = default;
 };
 
-class TextStringHandle {
+class TextHandle {
   private:
     friend class TextRenderer;
-    TextSBOHandle m_text_handle;
-    GlyphSBOHandle m_glyph_handle;
-    size_t m_glyph_count = 0;
 
-  public:
-    TextSBOHandle &text_handle() { return m_text_handle; }
-    GlyphSBOHandle &glyph_handle() { return m_glyph_handle; }
-    size_t glyph_count() const { return m_glyph_count; }
-};
+    TextFormatSBOHandle format_handle;
+    TextGlyphSBOHandle glyph_handle;
 
-class TextString {
-  public:
-    TextSBOHandle text_handle;
-    GlyphSBOHandle glyph_handle;
     uint32_t glyph_count = 0;
-
     std::vector<uint32_t> index_count;
     std::vector<uint32_t> first_index;
+
+  public:
+    TextHandle() = default;
+
+    TextHandle(TextHandle &&other) noexcept = default;
+    TextHandle(const TextHandle &other) = delete;
+
+    TextHandle &operator=(TextHandle &&other) noexcept = default;
+    TextHandle &operator=(const TextHandle &other) = delete;
 };
 
 class TextRenderer {
@@ -109,17 +107,17 @@ class TextRenderer {
 
     std::vector<std::pair<size_t, size_t>> m_glyph_draw_info;
 
-    struct TextSparseSet {
-        vulkan::buffers::StorageBuffer<TextSBO> dense;
+    struct {
+        vulkan::buffers::StorageBuffer<TextFormatSBO> dense;
         size_t next_id = 0;
         size_t dense_count = 0;
         std::vector<size_t> sparse;
         std::vector<size_t> reverse;
         std::vector<size_t> available;
-    } m_text_sparse_set;
+    } m_format_sparse_set;
 
     struct {
-        vulkan::buffers::StorageBuffer<GlyphSBO> dense;
+        vulkan::buffers::StorageBuffer<TextGlyphSBO> dense;
         size_t next_id = 0;
         size_t dense_count = 0;
         std::vector<size_t> sparse;
@@ -132,19 +130,22 @@ class TextRenderer {
     vulkan::DescriptorPool m_descriptor_pool;
     SwapDescriptorSet m_descriptor_sets;
 
-    bool contains_text(size_t id) const;
+    bool contains_format(size_t id) const;
     bool contains_glyph(size_t id) const;
 
-    TextSBO &get_text_instance(const TextSBOHandle &handle);
-    GlyphSBO &get_glyph_instance(const GlyphSBOHandle &handle);
+    TextFormatSBO &get_text_format_instance(const TextFormatSBOHandle &handle);
+    TextGlyphSBO &get_text_glyph_instance(const TextGlyphSBOHandle &handle);
 
-    TextStringHandle request_text_slot(size_t num_glyphs);
-    void return_text_slot(TextStringHandle &handle);
+    TextFormatSBOHandle request_format_slot();
+    TextGlyphSBOHandle request_glyph_slot();
+
+    void return_format_slot(TextFormatSBOHandle &handle);
+    void return_glyph_slot(TextGlyphSBOHandle &handle);
 
     static vulkan::DescriptorSetLayout
     get_descriptor_set_layout(std::shared_ptr<vulkan::context::GraphicsContext> &ctx);
 
-    void _render(const vulkan::CommandBuffer &command_buffer, const TextString &text);
+    void _render(const vulkan::CommandBuffer &command_buffer, const TextHandle &text);
     void allocate_descriptor_set();
 
   public:
@@ -155,9 +156,10 @@ class TextRenderer {
 
     TextRenderer(TextRenderer &&) noexcept = default;
 
-    TextString get_font_showcase_text();
-    TextString create_text(const font::Unicode &codepoint,
+    TextHandle get_font_showcase_text();
+    TextHandle create_text(const font::Unicode &codepoint,
                            const TextOpts &opts = TextOpts{});
+    void remove_text(TextHandle &handle);
 
     bool is_font_loaded() { return m_font_loader.has_value(); }
     void load_font(vulkan::CommandBufferManager *command_buffer_manager,
@@ -166,7 +168,7 @@ class TextRenderer {
     void sync_render_slots();
 
     template <typename PushConstantType>
-    void render(const vulkan::CommandBuffer &command_buffer, const TextString &text,
+    void render(const vulkan::CommandBuffer &command_buffer, const TextHandle &text,
                 PushConstantType *push_constant) {
         if (!is_font_loaded()) {
             throw std::runtime_error(

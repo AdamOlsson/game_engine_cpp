@@ -3,6 +3,7 @@
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
 #include "graphics_pipeline/quad/QuadRenderer.h"
+#include "graphics_pipeline/text/TextRenderer.h"
 #include "vulkan/CommandBufferManager.h"
 #include "vulkan/SwapChainManager.h"
 #include <random>
@@ -30,6 +31,7 @@ class CaravanDefence : public Game {
 
     std::unique_ptr<graphics_pipeline::quad::QuadRenderer> m_quad_renderer;
     std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer> m_geom_renderer;
+    std::unique_ptr<graphics_pipeline::text::TextRenderer> m_text_renderer;
 
     std::vector<entity::Entity> m_caravan;
     std::vector<entity::Entity> m_caravan_slots;
@@ -41,10 +43,18 @@ class CaravanDefence : public Game {
         graphics_pipeline::geometry::GeometryRenderer *m_geometry_renderer = nullptr;
         graphics_pipeline::geometry::GeometrySBOHandle m_geometry_render_data;
 
+        graphics_pipeline::text::TextRenderer *m_text_renderer = nullptr;
+        graphics_pipeline::text::TextHandle m_description;
+
         void remove_event() {
             if (m_geometry_renderer != nullptr) {
                 m_geometry_renderer->return_render_slot(m_geometry_render_data);
                 m_geometry_renderer = nullptr;
+            }
+
+            if (m_text_renderer != nullptr) {
+                // m_text_renderer->return_render_slot(m_description); // TODO
+                m_text_renderer = nullptr;
             }
         }
     };
@@ -104,6 +114,12 @@ class CaravanDefence : public Game {
         m_geom_renderer = std::make_unique<graphics_pipeline::geometry::GeometryRenderer>(
             ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
             &push_constant_range, std::move(geom_opts));
+
+        m_text_renderer = std::make_unique<graphics_pipeline::text::TextRenderer>(
+            ctx, m_swap_chain_manager.get(), &push_constant_range);
+        m_text_renderer->load_font(
+            m_command_buffer_manager.get(),
+            font::FontLoader(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf")));
 
         const float slot_distance_x = 250.0f;
         // Add entities
@@ -269,7 +285,8 @@ class CaravanDefence : public Game {
 
         case GameState::Event: {
             if (m_game_state.last_state == GameState::Playing && !m_event.has_value()) {
-                m_event = create_event(m_geom_renderer.get(), m_camera);
+                m_event =
+                    create_event(m_geom_renderer.get(), m_text_renderer.get(), m_camera);
             }
             break;
         }
@@ -286,6 +303,7 @@ class CaravanDefence : public Game {
     };
 
     Event create_event(graphics_pipeline::geometry::GeometryRenderer *geom_renderer,
+                       graphics_pipeline::text::TextRenderer *text_renderer,
                        const camera::Camera2D &camera) {
         Event event{};
         event.m_geometry_renderer = geom_renderer;

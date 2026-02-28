@@ -21,7 +21,7 @@ class ExampleTextRendering : public Game {
 
     std::unique_ptr<graphics_pipeline::text::TextRenderer> m_text_renderer;
 
-    std::vector<graphics_pipeline::text::TextString> m_texts;
+    std::vector<graphics_pipeline::text::TextHandle> m_texts;
 
   public:
     ExampleTextRendering()

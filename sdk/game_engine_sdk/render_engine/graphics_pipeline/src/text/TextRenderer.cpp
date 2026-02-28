@@ -22,9 +22,9 @@ graphics_pipeline::text::TextRenderer::TextRenderer(
     constexpr size_t max_text_instances = 16;
     constexpr size_t max_glyph_instances = 1024;
 
-    m_text_sparse_set.dense = vulkan::buffers::StorageBuffer<TextSBO>(
+    m_format_sparse_set.dense = vulkan::buffers::StorageBuffer<TextFormatSBO>(
         ctx, max_text_instances, max_frames_in_flight);
-    m_glyph_sparse_set.dense = vulkan::buffers::StorageBuffer<GlyphSBO>(
+    m_glyph_sparse_set.dense = vulkan::buffers::StorageBuffer<TextGlyphSBO>(
         ctx, max_glyph_instances, max_frames_in_flight);
 
     m_descriptor_pool = vulkan::DescriptorPool(
@@ -34,17 +34,17 @@ graphics_pipeline::text::TextRenderer::TextRenderer(
                                         .num_combined_image_samplers = 0});
     auto builder = SwapDescriptorSetBuilder(2);
     builder.add_storage_buffer(0, vulkan::DescriptorBufferInfo::from_vector(
-                                      m_text_sparse_set.dense.get_reference()));
+                                      m_format_sparse_set.dense.get_reference()));
     builder.add_storage_buffer(1, vulkan::DescriptorBufferInfo::from_vector(
                                       m_glyph_sparse_set.dense.get_reference()));
     m_descriptor_sets = builder.build(ctx, m_descriptor_pool);
 
-    m_text_sparse_set.next_id = 0;
-    m_text_sparse_set.dense_count = 0;
-    m_text_sparse_set.sparse.resize(max_text_instances, INVALID_INDEX);
-    m_text_sparse_set.reverse.reserve(max_text_instances);
-    m_text_sparse_set.available.reserve(max_text_instances);
-    m_text_sparse_set.dense.resize(max_text_instances);
+    m_format_sparse_set.next_id = 0;
+    m_format_sparse_set.dense_count = 0;
+    m_format_sparse_set.sparse.resize(max_text_instances, INVALID_INDEX);
+    m_format_sparse_set.reverse.reserve(max_text_instances);
+    m_format_sparse_set.available.reserve(max_text_instances);
+    m_format_sparse_set.dense.resize(max_text_instances);
 
     m_glyph_sparse_set.next_id = 0;
     m_glyph_sparse_set.dense_count = 0;
@@ -63,9 +63,9 @@ graphics_pipeline::text::TextRenderer::get_descriptor_set_layout(
     return builder.build(ctx);
 }
 
-bool graphics_pipeline::text::TextRenderer::contains_text(size_t id) const {
-    return id < m_text_sparse_set.sparse.size() &&
-           m_text_sparse_set.sparse[id] != INVALID_INDEX;
+bool graphics_pipeline::text::TextRenderer::contains_format(size_t id) const {
+    return id < m_format_sparse_set.sparse.size() &&
+           m_format_sparse_set.sparse[id] != INVALID_INDEX;
 }
 
 bool graphics_pipeline::text::TextRenderer::contains_glyph(size_t id) const {
@@ -73,124 +73,105 @@ bool graphics_pipeline::text::TextRenderer::contains_glyph(size_t id) const {
            m_glyph_sparse_set.sparse[id] != INVALID_INDEX;
 }
 
-graphics_pipeline::text::TextSBO &
-graphics_pipeline::text::TextRenderer::get_text_instance(
-    const graphics_pipeline::text::TextSBOHandle &handle) {
-    return m_text_sparse_set.dense[m_text_sparse_set.sparse[handle.id]];
+graphics_pipeline::text::TextFormatSBO &
+graphics_pipeline::text::TextRenderer::get_text_format_instance(
+    const graphics_pipeline::text::TextFormatSBOHandle &handle) {
+    return m_format_sparse_set.dense[m_format_sparse_set.sparse[handle.id]];
 }
 
-graphics_pipeline::text::GlyphSBO &
-graphics_pipeline::text::TextRenderer::get_glyph_instance(
-    const graphics_pipeline::text::GlyphSBOHandle &handle) {
+graphics_pipeline::text::TextGlyphSBO &
+graphics_pipeline::text::TextRenderer::get_text_glyph_instance(
+    const graphics_pipeline::text::TextGlyphSBOHandle &handle) {
     return m_glyph_sparse_set.dense[m_glyph_sparse_set.sparse[handle.id]];
 }
 
-graphics_pipeline::text::TextStringHandle
-graphics_pipeline::text::TextRenderer::request_text_slot(size_t num_glyphs) {
-    size_t text_id = m_text_sparse_set.available.empty()
-                         ? m_text_sparse_set.next_id++
-                         : m_text_sparse_set.available.back();
+graphics_pipeline::text::TextFormatSBOHandle
+graphics_pipeline::text::TextRenderer::request_format_slot() {
 
-    DEBUG_ASSERT(text_id < m_text_sparse_set.dense.num_elements(),
+    size_t format_id = m_format_sparse_set.available.empty()
+                           ? m_format_sparse_set.next_id++
+                           : m_format_sparse_set.available.back();
+
+    DEBUG_ASSERT(format_id < m_format_sparse_set.dense.num_elements(),
                  "Error: new text slot id is larger than GpuBuffer size.");
 
-    if (!m_text_sparse_set.available.empty()) {
-        m_text_sparse_set.available.pop_back();
+    if (!m_format_sparse_set.available.empty()) {
+        m_format_sparse_set.available.pop_back();
     }
 
-    m_text_sparse_set.sparse[text_id] = m_text_sparse_set.dense_count++;
-    m_text_sparse_set.reverse.push_back(text_id);
+    m_format_sparse_set.sparse[format_id] = m_format_sparse_set.dense_count++;
+    m_format_sparse_set.reverse.push_back(format_id);
 
-    graphics_pipeline::text::TextSBOHandle text_handle(text_id);
+    return graphics_pipeline::text::TextFormatSBOHandle(format_id);
+}
 
-    size_t first_glyph_id = m_glyph_sparse_set.available.empty()
-                                ? m_glyph_sparse_set.next_id++
-                                : m_glyph_sparse_set.available.back();
+graphics_pipeline::text::TextGlyphSBOHandle
+graphics_pipeline::text::TextRenderer::request_glyph_slot() {
+    size_t glyph_id = m_glyph_sparse_set.available.empty()
+                          ? m_glyph_sparse_set.next_id++
+                          : m_glyph_sparse_set.available.back();
 
-    DEBUG_ASSERT(first_glyph_id < m_glyph_sparse_set.dense.num_elements(),
+    DEBUG_ASSERT(glyph_id < m_glyph_sparse_set.dense.num_elements(),
                  "Error: new glyph slot id is larger than GpuBuffer size.");
 
     if (!m_glyph_sparse_set.available.empty()) {
         m_glyph_sparse_set.available.pop_back();
     }
 
-    m_glyph_sparse_set.sparse[first_glyph_id] = m_glyph_sparse_set.dense_count++;
-    m_glyph_sparse_set.reverse.push_back(first_glyph_id);
+    m_glyph_sparse_set.sparse[glyph_id] = m_glyph_sparse_set.dense_count++;
+    m_glyph_sparse_set.reverse.push_back(glyph_id);
 
-    graphics_pipeline::text::GlyphSBOHandle glyph_handle(first_glyph_id);
-
-    for (size_t i = 1; i < num_glyphs; i++) {
-        size_t glyph_id = m_glyph_sparse_set.available.empty()
-                              ? m_glyph_sparse_set.next_id++
-                              : m_glyph_sparse_set.available.back();
-
-        DEBUG_ASSERT(glyph_id < m_glyph_sparse_set.dense.num_elements(),
-                     "Error: new glyph slot id is larger than GpuBuffer size.");
-
-        if (!m_glyph_sparse_set.available.empty()) {
-            m_glyph_sparse_set.available.pop_back();
-        }
-
-        m_glyph_sparse_set.sparse[glyph_id] = m_glyph_sparse_set.dense_count++;
-        m_glyph_sparse_set.reverse.push_back(glyph_id);
-    }
-
-    graphics_pipeline::text::TextStringHandle handle;
-    handle.m_text_handle = std::move(text_handle);
-    handle.m_glyph_handle = std::move(glyph_handle);
-    handle.m_glyph_count = num_glyphs;
-
-    return handle;
+    return graphics_pipeline::text::TextGlyphSBOHandle(glyph_id);
 }
 
-void graphics_pipeline::text::TextRenderer::return_text_slot(
-    graphics_pipeline::text::TextStringHandle &handle) {
-    const size_t text_id = handle.text_handle().id;
-    if (contains_text(text_id)) {
-        size_t dense_index = m_text_sparse_set.sparse[text_id];
-        size_t last_dense_index = m_text_sparse_set.dense_count - 1;
-        size_t last_id = m_text_sparse_set.reverse[last_dense_index];
+void graphics_pipeline::text::TextRenderer::return_format_slot(
+    graphics_pipeline::text::TextFormatSBOHandle &handle) {
+    const size_t format_id = handle.id;
+    if (contains_format(format_id)) {
+        size_t dense_index = m_format_sparse_set.sparse[format_id];
+        size_t last_dense_index = m_format_sparse_set.dense_count - 1;
+        size_t last_id = m_format_sparse_set.reverse[last_dense_index];
 
         if (dense_index != last_dense_index) {
-            m_text_sparse_set.dense[dense_index] =
-                std::move(m_text_sparse_set.dense[last_dense_index]);
-            m_text_sparse_set.reverse[dense_index] = last_id;
-            m_text_sparse_set.sparse[last_id] = dense_index;
+            m_format_sparse_set.dense[dense_index] =
+                std::move(m_format_sparse_set.dense[last_dense_index]);
+            m_format_sparse_set.reverse[dense_index] = last_id;
+            m_format_sparse_set.sparse[last_id] = dense_index;
         }
 
-        m_text_sparse_set.dense[last_dense_index] = TextSBO{};
-        m_text_sparse_set.reverse.pop_back();
-        m_text_sparse_set.sparse[text_id] = INVALID_INDEX;
-        m_text_sparse_set.available.push_back(text_id);
-        m_text_sparse_set.dense_count--;
+        m_format_sparse_set.dense[last_dense_index] = TextFormatSBO{};
+        m_format_sparse_set.reverse.pop_back();
+        m_format_sparse_set.sparse[format_id] = INVALID_INDEX;
+        m_format_sparse_set.available.push_back(format_id);
+        m_format_sparse_set.dense_count--;
     }
+}
 
-    const size_t first_glyph_id = handle.glyph_handle().id;
-    for (size_t i = 0; i < handle.glyph_count(); i++) {
-        size_t glyph_id = first_glyph_id + i;
-        if (contains_glyph(glyph_id)) {
-            size_t dense_index = m_glyph_sparse_set.sparse[glyph_id];
-            size_t last_dense_index = m_glyph_sparse_set.dense_count - 1;
-            size_t last_id = m_glyph_sparse_set.reverse[last_dense_index];
+void graphics_pipeline::text::TextRenderer::return_glyph_slot(
+    graphics_pipeline::text::TextGlyphSBOHandle &handle) {
+    const size_t glyph_id = handle.id;
+    if (contains_glyph(glyph_id)) {
+        size_t dense_index = m_glyph_sparse_set.sparse[glyph_id];
+        size_t last_dense_index = m_glyph_sparse_set.dense_count - 1;
+        size_t last_id = m_glyph_sparse_set.reverse[last_dense_index];
 
-            if (dense_index != last_dense_index) {
-                m_glyph_sparse_set.dense[dense_index] =
-                    std::move(m_glyph_sparse_set.dense[last_dense_index]);
-                m_glyph_sparse_set.reverse[dense_index] = last_id;
-                m_glyph_sparse_set.sparse[last_id] = dense_index;
-            }
-
-            m_glyph_sparse_set.dense[last_dense_index] = GlyphSBO{};
-            m_glyph_sparse_set.reverse.pop_back();
-            m_glyph_sparse_set.sparse[glyph_id] = INVALID_INDEX;
-            m_glyph_sparse_set.available.push_back(glyph_id);
-            m_glyph_sparse_set.dense_count--;
+        if (dense_index != last_dense_index) {
+            m_glyph_sparse_set.dense[dense_index] =
+                std::move(m_glyph_sparse_set.dense[last_dense_index]);
+            m_glyph_sparse_set.reverse[dense_index] = last_id;
+            m_glyph_sparse_set.sparse[last_id] = dense_index;
         }
+
+        m_glyph_sparse_set.dense[last_dense_index] = TextGlyphSBO{};
+        m_glyph_sparse_set.reverse.pop_back();
+        m_glyph_sparse_set.sparse[glyph_id] = INVALID_INDEX;
+        m_glyph_sparse_set.available.push_back(glyph_id);
+        m_glyph_sparse_set.dense_count--;
     }
 }
 
 void graphics_pipeline::text::TextRenderer::sync_render_slots() {
-    m_text_sparse_set.dense.sync_all();
+    m_format_sparse_set.dense.sync_all();
     m_glyph_sparse_set.dense.sync_all();
 }
 
@@ -231,14 +212,14 @@ void graphics_pipeline::text::TextRenderer::load_font(
                     }
                 }
 
-                // Secondly write the indices forming the triangles from earcut into to
-                // index buffer
+                // Secondly write the indices forming the triangles from earcut into
+                // to index buffer
                 for (const unsigned int index : triangle_indices) {
                     indices.emplace_back(first_vertex + index);
                 }
 
-                // Thirdly write all curve segments into vertex and index buffer (which by
-                // nature of bezier curves are already triangulated)
+                // Thirdly write all curve segments into vertex and index buffer
+                // (which by nature of bezier curves are already triangulated)
                 const auto quad_curves = polygon.get_quadratic_curves();
                 for (size_t outline_index = 0; outline_index < quad_curves.size();
                      outline_index++) {
@@ -281,7 +262,7 @@ void graphics_pipeline::text::TextRenderer::load_font(
     m_font_loader = std::move(font_loader);
 }
 
-graphics_pipeline::text::TextString
+graphics_pipeline::text::TextHandle
 graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoint,
                                                    const TextOpts &opts) {
 
@@ -290,12 +271,10 @@ graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoin
             "Error: can't create text because a font is not loaded.");
     }
 
-    TextStringHandle handle = request_text_slot(codepoint.size());
-
-    get_text_instance(handle.text_handle()) = TextSBO{
-        .model_matrix = math::Matrix().translate(opts.position),
-        .font_color = opts.font_color,
-    };
+    TextFormatSBOHandle format_handle = request_format_slot();
+    TextFormatSBO &format_instance = get_text_format_instance(format_handle.id);
+    format_instance.model_matrix = math::Matrix().translate(opts.position);
+    format_instance.font_color = opts.font_color;
 
     std::vector<uint32_t> index_count;
     std::vector<uint32_t> first_index;
@@ -311,16 +290,18 @@ graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoin
 
     float pen_position_x = 0.0f;
 
+    TextGlyphSBOHandle first_glyph_handle = request_glyph_slot();
     for (size_t i = 0; i < codepoint.size(); i++) {
         const char32_t &c = codepoint[i];
         // Glyph id in terms of the text (not font)
-        size_t glyph_id = handle.glyph_handle().id + i;
+        request_glyph_slot();
+        size_t glyph_id = first_glyph_handle.id + i;
 
         m_glyph_sparse_set.dense[m_glyph_sparse_set.sparse[glyph_id]] =
-            GlyphSBO{.text_id = static_cast<uint16_t>(handle.text_handle().id),
-                     .model_matrix = math::Matrix()
-                                         .scale(font_scale, font_scale, 1.0f)
-                                         .translate(pen_position_x, 0.0f, 0.0f)
+            TextGlyphSBO{.text_id = static_cast<uint16_t>(format_handle.id),
+                         .model_matrix = math::Matrix()
+                                             .scale(font_scale, font_scale, 1.0f)
+                                             .translate(pen_position_x, 0.0f, 0.0f)
 
             };
 
@@ -341,9 +322,9 @@ graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoin
 
     sync_render_slots();
 
-    TextString result;
-    result.text_handle = TextSBOHandle(handle.text_handle().id);
-    result.glyph_handle = GlyphSBOHandle(handle.glyph_handle().id);
+    TextHandle result;
+    result.format_handle = std::move(format_handle);
+    result.glyph_handle = std::move(first_glyph_handle);
     result.glyph_count = static_cast<uint32_t>(codepoint.size());
     result.index_count = std::move(index_count);
     result.first_index = std::move(first_index);
@@ -351,7 +332,16 @@ graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoin
     return result;
 }
 
-graphics_pipeline::text::TextString
+void graphics_pipeline::text::TextRenderer::remove_text(TextHandle &handle) {
+    return_format_slot(handle.format_handle);
+    uint32_t first_glyph_id = handle.glyph_handle.id;
+    for (uint32_t i = 0; i < handle.glyph_count; i++) {
+        TextGlyphSBOHandle glyph_handle = TextGlyphSBOHandle(first_glyph_id + i);
+        return_glyph_slot(glyph_handle);
+    }
+}
+
+graphics_pipeline::text::TextHandle
 graphics_pipeline::text::TextRenderer::get_font_showcase_text() {
     if (!is_font_loaded()) {
         throw std::runtime_error(
@@ -359,9 +349,10 @@ graphics_pipeline::text::TextRenderer::get_font_showcase_text() {
     }
 
     const size_t num_glyphs = m_font_loader->get_num_glyphs();
-    TextStringHandle handle = request_text_slot(num_glyphs);
 
-    get_text_instance(handle.text_handle()) = TextSBO{.model_matrix = glm::mat4(1.0f)};
+    TextFormatSBOHandle format_handle = request_format_slot();
+    TextFormatSBO &format_instance = get_text_format_instance(format_handle.id);
+    format_instance.model_matrix = math::Matrix();
 
     std::vector<uint32_t> index_count;
     std::vector<uint32_t> first_index;
@@ -374,14 +365,16 @@ graphics_pipeline::text::TextRenderer::get_font_showcase_text() {
     const float column_height = bbox.x_max - bbox.x_min;
 
     const size_t num_cols = 8;
+    TextGlyphSBOHandle first_glyph_handle = request_glyph_slot();
     for (size_t gid = 0; gid < num_glyphs; gid++) {
 
         const float x = column_width * (gid % num_cols);
         const float y = column_height * (static_cast<float>(gid) / num_cols);
 
-        size_t glyph_id = handle.glyph_handle().id + gid;
-        m_glyph_sparse_set.dense[m_glyph_sparse_set.sparse[glyph_id]] = GlyphSBO{
-            .text_id = static_cast<uint16_t>(handle.text_handle().id),
+        request_glyph_slot();
+        size_t glyph_id = first_glyph_handle.id + gid;
+        m_glyph_sparse_set.dense[m_glyph_sparse_set.sparse[glyph_id]] = TextGlyphSBO{
+            .text_id = static_cast<uint16_t>(format_handle.id),
             .model_matrix = math::Matrix().translate(x, y, 0.0f).scale(0.1),
         };
 
@@ -392,9 +385,9 @@ graphics_pipeline::text::TextRenderer::get_font_showcase_text() {
 
     sync_render_slots();
 
-    TextString result;
-    result.text_handle = TextSBOHandle(handle.text_handle().id);
-    result.glyph_handle = GlyphSBOHandle(handle.glyph_handle().id);
+    TextHandle result;
+    result.format_handle = std::move(format_handle);
+    result.glyph_handle = std::move(first_glyph_handle);
     result.glyph_count = static_cast<uint32_t>(num_glyphs);
     result.index_count = std::move(index_count);
     result.first_index = std::move(first_index);
@@ -403,7 +396,7 @@ graphics_pipeline::text::TextRenderer::get_font_showcase_text() {
 }
 
 void graphics_pipeline::text::TextRenderer::_render(
-    const vulkan::CommandBuffer &command_buffer, const TextString &text) {
+    const vulkan::CommandBuffer &command_buffer, const TextHandle &text) {
     for (size_t i = 0; i < text.glyph_count; i++) {
         vkCmdDrawIndexed(command_buffer, text.index_count[i], 1, text.first_index[i], 0,
                          text.glyph_handle.id + i);
