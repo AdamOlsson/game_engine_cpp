@@ -290,20 +290,22 @@ graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoin
 
     float pen_position_x = 0.0f;
 
-    TextGlyphSBOHandle first_glyph_handle = request_glyph_slot();
+    std::vector<TextGlyphSBOHandle> glyph_handles;
+    glyph_handles.reserve(codepoint.size());
     for (size_t i = 0; i < codepoint.size(); i++) {
         const char32_t &c = codepoint[i];
         // Glyph id in terms of the text (not font)
-        request_glyph_slot();
-        size_t glyph_id = first_glyph_handle.id + i;
+        glyph_handles.push_back(request_glyph_slot());
+        size_t glyph_id = glyph_handles.back().id;
 
-        m_glyph_sparse_set.dense[m_glyph_sparse_set.sparse[glyph_id]] =
-            TextGlyphSBO{.text_id = static_cast<uint16_t>(format_handle.id),
-                         .model_matrix = math::Matrix()
-                                             .scale(font_scale, font_scale, 1.0f)
-                                             .translate(pen_position_x, 0.0f, 0.0f)
+        m_glyph_sparse_set.dense[m_glyph_sparse_set.sparse[glyph_id]] = TextGlyphSBO{
+            .text_id =
+                static_cast<uint16_t>(m_format_sparse_set.sparse[format_handle.id]),
+            .model_matrix = math::Matrix()
+                                .scale(font_scale, font_scale, 1.0f)
+                                .translate(pen_position_x, 0.0f, 0.0f)
 
-            };
+        };
 
         std::pair<size_t, size_t> draw_info =
             m_glyph_draw_info[m_font_loader->get_glyph_index(c)];
@@ -324,19 +326,16 @@ graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoin
 
     TextHandle result;
     result.format_handle = std::move(format_handle);
-    result.glyph_handle = std::move(first_glyph_handle);
-    result.glyph_count = static_cast<uint32_t>(codepoint.size());
+    result.glyph_handles = std::move(glyph_handles);
     result.index_count = std::move(index_count);
     result.first_index = std::move(first_index);
 
     return result;
 }
 
-void graphics_pipeline::text::TextRenderer::remove_text(TextHandle &handle) {
+void graphics_pipeline::text::TextRenderer::remove_text(TextHandle &&handle) {
     return_format_slot(handle.format_handle);
-    uint32_t first_glyph_id = handle.glyph_handle.id;
-    for (uint32_t i = 0; i < handle.glyph_count; i++) {
-        TextGlyphSBOHandle glyph_handle = TextGlyphSBOHandle(first_glyph_id + i);
+    for (auto &glyph_handle : handle.glyph_handles) {
         return_glyph_slot(glyph_handle);
     }
 }
@@ -365,14 +364,15 @@ graphics_pipeline::text::TextRenderer::get_font_showcase_text() {
     const float column_height = bbox.x_max - bbox.x_min;
 
     const size_t num_cols = 8;
-    TextGlyphSBOHandle first_glyph_handle = request_glyph_slot();
+    std::vector<TextGlyphSBOHandle> glyph_handles;
+    glyph_handles.reserve(num_glyphs);
     for (size_t gid = 0; gid < num_glyphs; gid++) {
 
         const float x = column_width * (gid % num_cols);
         const float y = column_height * (static_cast<float>(gid) / num_cols);
 
-        request_glyph_slot();
-        size_t glyph_id = first_glyph_handle.id + gid;
+        glyph_handles.push_back(request_glyph_slot());
+        size_t glyph_id = glyph_handles.back().id;
         m_glyph_sparse_set.dense[m_glyph_sparse_set.sparse[glyph_id]] = TextGlyphSBO{
             .text_id = static_cast<uint16_t>(format_handle.id),
             .model_matrix = math::Matrix().translate(x, y, 0.0f).scale(0.1),
@@ -387,8 +387,7 @@ graphics_pipeline::text::TextRenderer::get_font_showcase_text() {
 
     TextHandle result;
     result.format_handle = std::move(format_handle);
-    result.glyph_handle = std::move(first_glyph_handle);
-    result.glyph_count = static_cast<uint32_t>(num_glyphs);
+    result.glyph_handles = std::move(glyph_handles);
     result.index_count = std::move(index_count);
     result.first_index = std::move(first_index);
 
@@ -397,8 +396,9 @@ graphics_pipeline::text::TextRenderer::get_font_showcase_text() {
 
 void graphics_pipeline::text::TextRenderer::_render(
     const vulkan::CommandBuffer &command_buffer, const TextHandle &text) {
-    for (size_t i = 0; i < text.glyph_count; i++) {
+    for (size_t i = 0; i < text.glyph_handles.size(); i++) {
+        size_t dense_index = m_glyph_sparse_set.sparse[text.glyph_handles[i].id];
         vkCmdDrawIndexed(command_buffer, text.index_count[i], 1, text.first_index[i], 0,
-                         text.glyph_handle.id + i);
+                         dense_index);
     }
 }

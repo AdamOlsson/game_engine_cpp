@@ -48,6 +48,7 @@ class ExampleTextRendering : public Game {
         m_camera.configure_min_zoom(0.001f);
         m_camera.set_zoom(1.0f);
         register_mouse_event_handler(ctx.get());
+        register_keyboard_event_handler(ctx.get());
 
         m_swap_chain_manager = std::make_unique<vulkan::SwapChainManager>(ctx);
         m_command_buffer_manager = std::make_unique<vulkan::CommandBufferManager>(ctx, 2);
@@ -113,6 +114,36 @@ class ExampleTextRendering : public Game {
                     break;
                 }
                 }
+            });
+    }
+
+    void register_keyboard_event_handler(vulkan::context::GraphicsContext *ctx) {
+        ctx->window->register_keyboard_event_callback(
+            [this](window::KeyEvent &key, window::KeyState &state) -> void {
+                if (state != window::KeyState::DOWN) {
+                    return;
+                }
+
+                switch (key) {
+                case window::KeyEvent::SPACE: {
+                    if (m_texts.size() < 3) {
+                        std::string sentence = "Pack my box with five dozen liquor jugs.";
+                        m_texts.push_back(m_text_renderer->create_text(
+                            sentence, graphics_pipeline::text::TextOpts{
+                                          .position = math::Vector2(0, 50),
+                                          .font_color = util::colors::BLUE,
+                                          .font_size = 24,
+                                      }));
+                    } else {
+                        m_text_renderer->remove_text(std::move(m_texts.back()));
+                        m_texts.pop_back();
+                    }
+                    break;
+                }
+
+                default:
+                    break;
+                };
             });
     }
 

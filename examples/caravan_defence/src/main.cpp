@@ -44,7 +44,21 @@ class CaravanDefence : public Game {
         graphics_pipeline::geometry::GeometrySBOHandle m_geometry_render_data;
 
         graphics_pipeline::text::TextRenderer *m_text_renderer = nullptr;
-        graphics_pipeline::text::TextHandle m_description;
+        graphics_pipeline::text::TextHandle m_event_description;
+        std::vector<graphics_pipeline::text::TextHandle> m_event_options;
+
+        template <typename PushConstantType>
+        void render(const vulkan::CommandBuffer &command_buffer,
+                    PushConstantType *push_constant) {
+            DEBUG_ASSERT(m_text_renderer != nullptr,
+                         "Error: Attempted to render event text with non-existing "
+                         "pointer to a text renderer.");
+
+            m_text_renderer->render(command_buffer, m_event_description, push_constant);
+            for (const auto &option : m_event_options) {
+                m_text_renderer->render(command_buffer, option, push_constant);
+            }
+        }
 
         void remove_event() {
             if (m_geometry_renderer != nullptr) {
@@ -53,7 +67,10 @@ class CaravanDefence : public Game {
             }
 
             if (m_text_renderer != nullptr) {
-                // m_text_renderer->return_render_slot(m_description); // TODO
+                m_text_renderer->remove_text(std::move(m_event_description));
+                for (auto &option : m_event_options) {
+                    m_text_renderer->remove_text(std::move(option));
+                }
                 m_text_renderer = nullptr;
             }
         }
@@ -309,6 +326,22 @@ class CaravanDefence : public Game {
         event.m_geometry_renderer = geom_renderer;
         event.m_geometry_render_data = event.m_geometry_renderer->request_render_slot();
 
+        event.m_text_renderer = text_renderer;
+
+        event.m_event_description = event.m_text_renderer->create_text(
+            "You are gay", graphics_pipeline::text::TextOpts{
+                               .position = math::Vector2(0, 0),
+                               .font_color = util::colors::WHITE,
+                               .font_size = 24,
+                           });
+
+        event.m_event_options.push_back(event.m_text_renderer->create_text(
+            "Yes.", graphics_pipeline::text::TextOpts{
+                        .position = math::Vector2(0, 200),
+                        .font_color = util::colors::RED,
+                        .font_size = 24,
+                    }));
+
         const float zoom = camera.get_zoom();
         const camera::WorldPoint2D position = camera.get_position();
         auto &instance =
@@ -321,6 +354,8 @@ class CaravanDefence : public Game {
         instance.border.color = util::colors::WHITE;
         instance.border.width = 2.0f / zoom;
         instance.border.radius = 5.0f / zoom;
+
+        text_renderer->sync_render_slots();
 
         return event;
     }
@@ -392,6 +427,10 @@ class CaravanDefence : public Game {
         const size_t num_instances = 256; // Size of instance buffers
         m_quad_renderer->render(command_buffer, &push_constant, num_instances);
         m_geom_renderer->render(command_buffer, &push_constant, num_instances);
+
+        if (m_game_state.state == GameState::Event && m_event.has_value()) {
+            m_event->render(command_buffer, &push_constant);
+        }
 
         render_pass.end_submit_present();
     }

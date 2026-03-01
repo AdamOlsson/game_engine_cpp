@@ -21,7 +21,7 @@ namespace graphics_pipeline::text {
 // Glyph specific data like
 // - kerning information
 struct TextGlyphSBO {
-    alignas(4) uint32_t text_id; // Which text this glyph belongs to
+    alignas(4) uint32_t text_id = 0; // Which text this glyph belongs to
     alignas(16) glm::mat4 model_matrix = glm::mat4(1.0f);
 };
 
@@ -79,9 +79,8 @@ class TextHandle {
     friend class TextRenderer;
 
     TextFormatSBOHandle format_handle;
-    TextGlyphSBOHandle glyph_handle;
+    std::vector<TextGlyphSBOHandle> glyph_handles;
 
-    uint32_t glyph_count = 0;
     std::vector<uint32_t> index_count;
     std::vector<uint32_t> first_index;
 
@@ -159,7 +158,7 @@ class TextRenderer {
     TextHandle get_font_showcase_text();
     TextHandle create_text(const font::Unicode &codepoint,
                            const TextOpts &opts = TextOpts{});
-    void remove_text(TextHandle &handle);
+    void remove_text(TextHandle &&handle);
 
     bool is_font_loaded() { return m_font_loader.has_value(); }
     void load_font(vulkan::CommandBufferManager *command_buffer_manager,
