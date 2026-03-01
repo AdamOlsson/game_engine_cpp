@@ -37,7 +37,7 @@ struct TextFormatSBO {
 struct TextOpts {
     math::Vector2 position = math::Vector2(0, 0);
     util::colors::Color font_color = util::colors::WHITE;
-    uint32_t font_size = 11;
+    float font_size = 11;
 };
 
 class TextRenderer;

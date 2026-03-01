@@ -326,34 +326,52 @@ class CaravanDefence : public Game {
         event.m_geometry_renderer = geom_renderer;
         event.m_geometry_render_data = event.m_geometry_renderer->request_render_slot();
 
-        event.m_text_renderer = text_renderer;
-
-        event.m_event_description = event.m_text_renderer->create_text(
-            "You are gay", graphics_pipeline::text::TextOpts{
-                               .position = math::Vector2(0, 0),
-                               .font_color = util::colors::WHITE,
-                               .font_size = 24,
-                           });
-
-        event.m_event_options.push_back(event.m_text_renderer->create_text(
-            "Yes.", graphics_pipeline::text::TextOpts{
-                        .position = math::Vector2(0, 200),
-                        .font_color = util::colors::RED,
-                        .font_size = 24,
-                    }));
-
-        const float zoom = camera.get_zoom();
         const camera::WorldPoint2D position = camera.get_position();
+        const float zoom = camera.get_zoom();
+
         auto &instance =
             event.m_geometry_renderer->get_instance(event.m_geometry_render_data);
+
+        const float box_width = 200.0f / zoom;
+        const float box_height = 120.0f / zoom;
+        const float font_size = 4 / zoom;
+        const math::Vector2 content_padding =
+            math::Vector2(5.0f / zoom, (5.0f / zoom) + font_size / 2.0f);
+
         instance.model_matrix =
-            math::Matrix().translate(position).scale(200.0f / zoom, 120.0f / zoom);
+            math::Matrix().translate(position).scale(box_width, box_height);
         instance.color = util::colors::rgba(0.0f, 0.0f, 0.0f, 0.95f);
         instance.flags |=
             static_cast<uint32_t>(graphics_pipeline::geometry::GeometryShape::Rectangle);
         instance.border.color = util::colors::WHITE;
         instance.border.width = 2.0f / zoom;
         instance.border.radius = 5.0f / zoom;
+
+        event.m_text_renderer = text_renderer;
+
+        const math::Vector2 text_start =
+            math::Vector2(position.x - box_width / 2.0f, position.y - box_height / 2.0f) +
+            content_padding;
+        event.m_event_description = event.m_text_renderer->create_text(
+            "You are gay", graphics_pipeline::text::TextOpts{
+                               .position = text_start,
+                               .font_color = util::colors::WHITE,
+                               .font_size = font_size,
+                           });
+
+        event.m_event_options.push_back(event.m_text_renderer->create_text(
+            "1. Yes.", graphics_pipeline::text::TextOpts{
+                           .position = text_start + (math::Vector2(0, 20) / zoom),
+                           .font_color = util::colors::RED,
+                           .font_size = font_size,
+                       }));
+
+        event.m_event_options.push_back(event.m_text_renderer->create_text(
+            "2. Yes again.", graphics_pipeline::text::TextOpts{
+                                 .position = text_start + (math::Vector2(0, 26) / zoom),
+                                 .font_color = util::colors::RED,
+                                 .font_size = font_size,
+                             }));
 
         text_renderer->sync_render_slots();
 

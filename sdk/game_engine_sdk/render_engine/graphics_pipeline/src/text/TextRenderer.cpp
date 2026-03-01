@@ -285,7 +285,7 @@ graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoin
     const font::FontBBox bbox = m_font_loader->get_font_bbox();
     const unsigned short units_per_em = m_font_loader->get_units_per_em();
     const float glyph_width = bbox.x_max - bbox.x_min;
-    const float font_scale = static_cast<float>(opts.font_size) / units_per_em;
+    const float font_scale = opts.font_size / units_per_em;
     const float font_size_px = glyph_width * font_scale;
 
     float pen_position_x = 0.0f;
