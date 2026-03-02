@@ -289,21 +289,31 @@ graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoin
     const float font_size_px = glyph_width * font_scale;
 
     float pen_position_x = 0.0f;
+    float pen_position_y = 0.0f;
 
     std::vector<TextGlyphSBOHandle> glyph_handles;
     glyph_handles.reserve(codepoint.size());
+
+    size_t last_space_idx = std::numeric_limits<size_t>::max() - 1;
     for (size_t i = 0; i < codepoint.size(); i++) {
         const char32_t &c = codepoint[i];
+
+        if (c == font::Unicode(" ").first()) {
+            last_space_idx = i;
+        }
+
         // Glyph id in terms of the text (not font)
         glyph_handles.push_back(request_glyph_slot());
         size_t glyph_id = glyph_handles.back().id;
+
+        const font::GlyphAdvance &advance = m_font_loader->get_glyph_advance(c);
 
         m_glyph_sparse_set.dense[m_glyph_sparse_set.sparse[glyph_id]] = TextGlyphSBO{
             .text_id =
                 static_cast<uint16_t>(m_format_sparse_set.sparse[format_handle.id]),
             .model_matrix = math::Matrix()
                                 .scale(font_scale, font_scale, 1.0f)
-                                .translate(pen_position_x, 0.0f, 0.0f)
+                                .translate(pen_position_x, pen_position_y, 0.0f)
 
         };
 
@@ -312,8 +322,32 @@ graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoin
         index_count.push_back(draw_info.first);
         first_index.push_back(draw_info.second);
 
-        const font::GlyphAdvance &advance = m_font_loader->get_glyph_advance(c);
         pen_position_x += advance.x;
+
+        const bool new_line = pen_position_x > (opts.line_width / font_scale);
+        if (new_line) {
+            pen_position_x = 0.0f;
+            pen_position_y += opts.line_height / font_scale;
+
+            // Go back and update the start of the word to be on the first line
+            for (size_t j = last_space_idx + 1; j <= i; j++) {
+                TextGlyphSBOHandle &glyph_handle = glyph_handles[j];
+                m_glyph_sparse_set.dense[m_glyph_sparse_set.sparse[glyph_handle.id]]
+                    .model_matrix = math::Matrix()
+                                        .scale(font_scale, font_scale, 1.0f)
+                                        .translate(pen_position_x, pen_position_y, 0.0f);
+
+                const font::GlyphAdvance &advance =
+                    m_font_loader->get_glyph_advance(codepoint[j]);
+                pen_position_x += advance.x;
+
+                if (j < codepoint.size() - 1) {
+                    font::GlyphKerning kerning =
+                        m_font_loader->get_glyph_kerning(codepoint[j], codepoint[j + 1]);
+                    pen_position_x += kerning.x;
+                }
+            }
+        }
 
         if (i < codepoint.size() - 1) {
             font::GlyphKerning kerning =

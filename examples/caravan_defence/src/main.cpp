@@ -353,25 +353,42 @@ class CaravanDefence : public Game {
             math::Vector2(position.x - box_width / 2.0f, position.y - box_height / 2.0f) +
             content_padding;
         event.m_event_description = event.m_text_renderer->create_text(
-            "You are gay", graphics_pipeline::text::TextOpts{
-                               .position = text_start,
-                               .font_color = util::colors::WHITE,
-                               .font_size = font_size,
-                           });
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+            "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim "
+            "veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea "
+            "commodo consequat. Duis aute irure dolor in reprehenderit in voluptate "
+            "velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat "
+            "cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id "
+            "est laborum.",
+            graphics_pipeline::text::TextOpts{
+                .position = text_start,
+                .font_color = util::colors::WHITE,
+                .font_size = font_size,
+                .line_width = box_width - 2.0f * content_padding.x(),
+                .line_height = font_size,
+            });
 
         event.m_event_options.push_back(event.m_text_renderer->create_text(
-            "1. Yes.", graphics_pipeline::text::TextOpts{
-                           .position = text_start + (math::Vector2(0, 20) / zoom),
-                           .font_color = util::colors::RED,
-                           .font_size = font_size,
-                       }));
+            "1. Yes.",
+            graphics_pipeline::text::TextOpts{
+                .position = text_start + math::Vector2(0.0f, box_height - 3 * font_size -
+                                                                 content_padding.y()),
+                .font_color = util::colors::WHITE,
+                .font_size = font_size,
+                .line_width = box_width - 2.0f * content_padding.x(),
+                .line_height = font_size,
+            }));
 
         event.m_event_options.push_back(event.m_text_renderer->create_text(
-            "2. Yes again.", graphics_pipeline::text::TextOpts{
-                                 .position = text_start + (math::Vector2(0, 26) / zoom),
-                                 .font_color = util::colors::RED,
-                                 .font_size = font_size,
-                             }));
+            "2. Yes again.",
+            graphics_pipeline::text::TextOpts{
+                .position = text_start + math::Vector2(0.0f, box_height - 2 * font_size -
+                                                                 content_padding.y()),
+                .font_color = util::colors::WHITE,
+                .font_size = font_size,
+                .line_width = box_width - 2.0f * content_padding.x(),
+                .line_height = font_size,
+            }));
 
         text_renderer->sync_render_slots();
 

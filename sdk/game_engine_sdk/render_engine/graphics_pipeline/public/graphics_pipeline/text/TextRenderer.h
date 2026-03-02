@@ -38,6 +38,8 @@ struct TextOpts {
     math::Vector2 position = math::Vector2(0, 0);
     util::colors::Color font_color = util::colors::WHITE;
     float font_size = 11;
+    float line_width = 100.0f;
+    float line_height = 10.0f;
 };
 
 class TextRenderer;
