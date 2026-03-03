@@ -28,14 +28,10 @@ void vulkan::SwapChain::recreate_swap_chain() {
 
     VkRenderPass old_render_pass = m_render_pass;
     VkSwapchainKHR old_swap_chain = m_swap_chain;
-    /*std::vector<VkFramebuffer> old_frame_buffers = m_frame_buffers;*/
     setup(old_swap_chain);
 
     vkDestroyRenderPass(m_ctx->logical_device, old_render_pass, nullptr);
     vkDestroySwapchainKHR(m_ctx->logical_device, old_swap_chain, nullptr);
-    /*for (size_t i = 0; i < m_frame_buffers.size(); i++) {*/
-    /*    vkDestroyFramebuffer(m_ctx->logical_device, old_frame_buffers[i], nullptr);*/
-    /*}*/
 }
 
 void vulkan::SwapChain::setup(VkSwapchainKHR &old_swap_chain) {

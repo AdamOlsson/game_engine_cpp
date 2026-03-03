@@ -27,8 +27,6 @@ class SwapChain {
 
     std::vector<vulkan::SwapChainImage> create_swap_chain_images(uint32_t image_count);
     std::vector<vulkan::ImageView> create_image_views(VkFormat &image_format);
-    std::vector<vulkan::Framebuffer> create_framebuffers();
-    VkRenderPass create_render_pass(VkFormat &image_format);
 
     void destroy();
 
@@ -49,6 +47,9 @@ class SwapChain {
     SwapChain &operator=(const SwapChain &other) = delete;
 
     void recreate_swap_chain();
+
+    std::vector<vulkan::Framebuffer> create_framebuffers();
+    VkRenderPass create_render_pass(VkFormat &image_format);
 
     VkFramebuffer get_framebuffer(uint32_t image_index);
     std::optional<uint32_t> get_next_image_index(VkSemaphore &image_available);
