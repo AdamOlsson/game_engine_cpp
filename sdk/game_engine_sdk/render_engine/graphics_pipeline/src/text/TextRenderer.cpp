@@ -75,6 +75,12 @@ bool graphics_pipeline::text::TextRenderer::contains_glyph(size_t id) const {
 
 graphics_pipeline::text::TextFormatSBO &
 graphics_pipeline::text::TextRenderer::get_text_format_instance(
+    const graphics_pipeline::text::TextHandle &handle) {
+    return m_format_sparse_set.dense[m_format_sparse_set.sparse[handle.format_handle.id]];
+}
+
+graphics_pipeline::text::TextFormatSBO &
+graphics_pipeline::text::TextRenderer::get_text_format_instance(
     const graphics_pipeline::text::TextFormatSBOHandle &handle) {
     return m_format_sparse_set.dense[m_format_sparse_set.sparse[handle.id]];
 }
@@ -291,6 +297,8 @@ graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoin
     float pen_position_x = 0.0f;
     float pen_position_y = 0.0f;
 
+    math::Vector2 bbox_top_left = opts.position + math::Vector2(0.0f, font_size_px);
+
     std::vector<TextGlyphSBOHandle> glyph_handles;
     glyph_handles.reserve(codepoint.size());
 
@@ -358,11 +366,15 @@ graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoin
 
     sync_render_slots();
 
+    math::Vector2 bbox_bot_right = math::Vector2(opts.line_width, pen_position_y);
+
     TextHandle result;
     result.format_handle = std::move(format_handle);
     result.glyph_handles = std::move(glyph_handles);
     result.index_count = std::move(index_count);
     result.first_index = std::move(first_index);
+    result.bbox = math::Vector4(bbox_top_left.x(), bbox_top_left.y(), bbox_bot_right.x(),
+                                bbox_bot_right.y());
 
     return result;
 }

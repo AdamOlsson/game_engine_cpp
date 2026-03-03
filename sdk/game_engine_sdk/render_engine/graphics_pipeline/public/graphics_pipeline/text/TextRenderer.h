@@ -6,6 +6,8 @@
 #include "graphics_pipeline/text/GlyphVertex.h"
 #include "graphics_pipeline/text/TextPipeline.h"
 #include "math/Vector2.h"
+#include "math/Vector4.h"
+#include "math/shape.h"
 #include "util/colors.h"
 #include "vulkan/CommandBufferManager.h"
 #include "vulkan/DescriptorPool.h"
@@ -86,6 +88,8 @@ class TextHandle {
     std::vector<uint32_t> index_count;
     std::vector<uint32_t> first_index;
 
+    math::Vector4 bbox = math::Vector4(0.0f);
+
   public:
     TextHandle() = default;
 
@@ -94,6 +98,15 @@ class TextHandle {
 
     TextHandle &operator=(TextHandle &&other) noexcept = default;
     TextHandle &operator=(const TextHandle &other) = delete;
+
+    bool is_point_inside(const math::Vector2 &point) {
+        const math::Vector2 center = (bbox.zw() - bbox.xy()) / 2.0f;
+        const float width = abs(bbox.z() - bbox.x());
+        const float height = abs(bbox.w() - bbox.y());
+        std::cout << "Point: " << point << " center: " << center << " width: " << width
+                  << " height: " << height << std::endl;
+        return math::is_point_inside_rectangle(point, center, width, height);
+    }
 };
 
 class TextRenderer {
@@ -134,7 +147,6 @@ class TextRenderer {
     bool contains_format(size_t id) const;
     bool contains_glyph(size_t id) const;
 
-    TextFormatSBO &get_text_format_instance(const TextFormatSBOHandle &handle);
     TextGlyphSBO &get_text_glyph_instance(const TextGlyphSBOHandle &handle);
 
     TextFormatSBOHandle request_format_slot();
@@ -160,7 +172,11 @@ class TextRenderer {
     TextHandle get_font_showcase_text();
     TextHandle create_text(const font::Unicode &codepoint,
                            const TextOpts &opts = TextOpts{});
+
     void remove_text(TextHandle &&handle);
+
+    TextFormatSBO &get_text_format_instance(const TextHandle &handle);
+    TextFormatSBO &get_text_format_instance(const TextFormatSBOHandle &handle);
 
     bool is_font_loaded() { return m_font_loader.has_value(); }
     void load_font(vulkan::CommandBufferManager *command_buffer_manager,

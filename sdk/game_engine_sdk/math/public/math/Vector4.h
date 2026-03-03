@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Vector2.h"
 #include "traits.h"
 #include <glm/glm.hpp>
 
@@ -19,10 +20,15 @@ class Vector4 {
     float w() const { return m_vec.w; }
     float &w() { return m_vec.w; }
 
+    math::Vector2 xy() const { return math::Vector2(m_vec.x, m_vec.y); }
+    math::Vector2 zw() const { return math::Vector2(m_vec.z, m_vec.w); }
+
     template <StaticCastableToFloat T>
     constexpr Vector4(const T x, const T y, const T z, const T w) : m_vec(x, y, z, w) {}
 
     constexpr Vector4() : m_vec(0.0f, 0.0f, 0.0f, 0.0f) {}
+
+    template <StaticCastableToFloat T> constexpr Vector4(const T v) : m_vec(v, v, v, v) {}
 
     Vector4(Vector4 &&other) noexcept = default;
     Vector4 &operator=(Vector4 &&other) noexcept = default;

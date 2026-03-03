@@ -18,6 +18,17 @@ enum class GameState {
     Event,
 };
 
+// The problem:
+// - The problem is that when I define UI elements in the World Coordinate systems, it
+// becomes tricky to handle effects such as on_hover() or on_click() events for the UI. I
+// want to have the ability to decide wether I should render to the World Coordinate
+// system or the Viewport Coordinate system.
+// Suggestion 1: Simply create another renderer that renders directly to the screen
+// Suggestion 2: Use the same approach as in TextRenderer an issue single draw commands in
+// a loop. Then I can pass in which handles I want to draw and with that pass in the push
+// constant to render on the viewport.
+// Suggestion 3: Make it possible for a render pipeline to have multiple descriptor sets,
+// swap descriptor set when I can to render to the viewport vs world.
 class CaravanDefence : public Game {
   private:
     std::unique_ptr<vulkan::SwapChainManager> m_swap_chain_manager;
@@ -74,6 +85,27 @@ class CaravanDefence : public Game {
                 m_text_renderer = nullptr;
             }
         }
+
+        // CONTINUE:
+        void on_click() {
+            // Given a point that if it overlaps with the location of the action of an
+            // event, perform that given action and its side effect
+        }
+
+        void on_hover(const camera::WorldPoint2D &point) {
+            // Given a point that if it overlaps with the location of the action of an
+            // event, then highlight that event.
+            for (auto &option : m_event_options) {
+                auto &instance = m_text_renderer->get_text_format_instance(option);
+                if (option.is_point_inside(point)) {
+                    instance.font_color = util::colors::YELLOW;
+                    return;
+                }
+                instance.font_color = util::colors::WHITE;
+            }
+        }
+
+        void on_exit() {}
     };
 
     std::optional<Event> m_event;
@@ -324,73 +356,86 @@ class CaravanDefence : public Game {
                        const camera::Camera2D &camera) {
         Event event{};
         event.m_geometry_renderer = geom_renderer;
-        event.m_geometry_render_data = event.m_geometry_renderer->request_render_slot();
-
-        const camera::WorldPoint2D position = camera.get_position();
-        const float zoom = camera.get_zoom();
-
-        auto &instance =
-            event.m_geometry_renderer->get_instance(event.m_geometry_render_data);
-
-        const float box_width = 200.0f / zoom;
-        const float box_height = 120.0f / zoom;
-        const float font_size = 4 / zoom;
-        const math::Vector2 content_padding =
-            math::Vector2(5.0f / zoom, (5.0f / zoom) + font_size / 2.0f);
-
-        instance.model_matrix =
-            math::Matrix().translate(position).scale(box_width, box_height);
-        instance.color = util::colors::rgba(0.0f, 0.0f, 0.0f, 0.95f);
-        instance.flags |=
-            static_cast<uint32_t>(graphics_pipeline::geometry::GeometryShape::Rectangle);
-        instance.border.color = util::colors::WHITE;
-        instance.border.width = 2.0f / zoom;
-        instance.border.radius = 5.0f / zoom;
-
         event.m_text_renderer = text_renderer;
 
-        const math::Vector2 text_start =
-            math::Vector2(position.x - box_width / 2.0f, position.y - box_height / 2.0f) +
-            content_padding;
+        event.m_geometry_render_data = event.m_geometry_renderer->request_render_slot();
+
+        const camera::WorldPoint2D event_box_center = camera.get_position();
+        const float zoom = camera.get_zoom();
+
+        auto &event_box_instance =
+            event.m_geometry_renderer->get_instance(event.m_geometry_render_data);
+
+        const float viewport_font_size = 4 / zoom;
+        const float viewport_event_box_width = 200.0f / zoom;
+        const float viewport_event_box_height = 120.0f / zoom;
+        const float viewport_event_box_border_width = 2.0f / zoom;
+        const float viewport_event_box_border_radius = 5.0f / zoom;
+        const math::Vector2 viewport_event_box_content_padding =
+            math::Vector2(5.0f / zoom, (5.0f / zoom) + viewport_font_size / 2.0f);
+
+        event_box_instance.model_matrix =
+            math::Matrix()
+                .translate(event_box_center)
+                .scale(viewport_event_box_width, viewport_event_box_height);
+        event_box_instance.color = util::colors::rgba(0.0f, 0.0f, 0.0f, 0.95f);
+        event_box_instance.flags |=
+            static_cast<uint32_t>(graphics_pipeline::geometry::GeometryShape::Rectangle);
+        event_box_instance.border.color = util::colors::WHITE;
+        event_box_instance.border.width = viewport_event_box_border_width;
+        event_box_instance.border.radius = viewport_event_box_border_radius;
+
+        const math::Vector2 viewport_text_start =
+            math::Vector2(event_box_center.x - viewport_event_box_width / 2.0f,
+                          event_box_center.y - viewport_event_box_height / 2.0f) +
+            viewport_event_box_content_padding;
         event.m_event_description = event.m_text_renderer->create_text(
             "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
             "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim "
             "veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea "
             "commodo consequat. Duis aute irure dolor in reprehenderit in voluptate "
-            "velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat "
-            "cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id "
+            "velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint "
+            "occaecat "
+            "cupidatat non proident, sunt in culpa qui officia deserunt mollit anim "
+            "id "
             "est laborum.",
             graphics_pipeline::text::TextOpts{
-                .position = text_start,
+                .position = viewport_text_start,
                 .font_color = util::colors::WHITE,
-                .font_size = font_size,
-                .line_width = box_width - 2.0f * content_padding.x(),
-                .line_height = font_size,
+                .font_size = viewport_font_size,
+                .line_width = viewport_event_box_width -
+                              2.0f * viewport_event_box_content_padding.x(),
+                .line_height = viewport_font_size,
             });
 
+        math::Vector2 offset =
+            math::Vector2(0.0f, viewport_event_box_height - 3 * viewport_font_size -
+                                    viewport_event_box_content_padding.y());
         event.m_event_options.push_back(event.m_text_renderer->create_text(
-            "1. Yes.",
-            graphics_pipeline::text::TextOpts{
-                .position = text_start + math::Vector2(0.0f, box_height - 3 * font_size -
-                                                                 content_padding.y()),
-                .font_color = util::colors::WHITE,
-                .font_size = font_size,
-                .line_width = box_width - 2.0f * content_padding.x(),
-                .line_height = font_size,
-            }));
+            "1. Yes.", graphics_pipeline::text::TextOpts{
+                           .position = viewport_text_start + offset,
+                           .font_color = util::colors::WHITE,
+                           .font_size = viewport_font_size,
+                           .line_width = viewport_event_box_width -
+                                         2.0f * viewport_event_box_content_padding.x(),
+                           .line_height = viewport_font_size,
+                       }));
 
+        offset = math::Vector2(0.0f, viewport_event_box_height - 2 * viewport_font_size -
+                                         viewport_event_box_content_padding.y());
         event.m_event_options.push_back(event.m_text_renderer->create_text(
             "2. Yes again.",
             graphics_pipeline::text::TextOpts{
-                .position = text_start + math::Vector2(0.0f, box_height - 2 * font_size -
-                                                                 content_padding.y()),
+                .position = viewport_text_start + offset,
                 .font_color = util::colors::WHITE,
-                .font_size = font_size,
-                .line_width = box_width - 2.0f * content_padding.x(),
-                .line_height = font_size,
+                .font_size = viewport_font_size,
+                .line_width = viewport_event_box_width -
+                              2.0f * viewport_event_box_content_padding.x(),
+                .line_height = viewport_font_size,
             }));
 
-        text_renderer->sync_render_slots();
+        event.m_text_renderer->sync_render_slots();
+        event.m_geometry_renderer->sync_render_slots();
 
         return event;
     }
@@ -464,6 +509,7 @@ class CaravanDefence : public Game {
         m_geom_renderer->render(command_buffer, &push_constant, num_instances);
 
         if (m_game_state.state == GameState::Event && m_event.has_value()) {
+            m_event->on_hover(cursor_world_point);
             m_event->render(command_buffer, &push_constant);
         }
 

@@ -3,6 +3,7 @@
 #include "traits.h"
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/glm.hpp>
+#include <ostream>
 
 namespace math {
 
@@ -20,6 +21,8 @@ class Vector2 {
     constexpr Vector2(const T x, const T y) : m_vec(x, y) {}
 
     constexpr Vector2() : m_vec(0.0f, 0.0f) {}
+    constexpr Vector2(glm::vec2 &&vec) : m_vec(vec) {}
+    constexpr Vector2(const glm::vec2 &vec) : m_vec(vec) {}
 
     Vector2(Vector2 &&other) noexcept = default;
     Vector2 &operator=(Vector2 &&other) noexcept = default;
@@ -84,6 +87,11 @@ class Vector2 {
 
     friend Vector2 operator/(const Vector2 &lhs, const float scalar) {
         return Vector2(lhs.x() / scalar, lhs.y() / scalar);
+    }
+
+    /*std::string to_string() {}*/
+    friend std::ostream &operator<<(std::ostream &os, const Vector2 &v) {
+        return os << "Vector2(" << v.x() << ", " << v.y() << ")";
     }
 };
 
