@@ -13,8 +13,7 @@ const std::vector<vulkan::Vertex> m_quad_vertices = {
 
 graphics_pipeline::quad::QuadRenderer::QuadRenderer(
     std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
-    vulkan::CommandBufferManager *command_buffer_manager,
-    vulkan::SwapChainManager *swap_chain_manager,
+    vulkan::CommandBufferManager *command_buffer_manager, vulkan::SwapChain *swap_chain,
     const VkPushConstantRange *push_constant_range, QuadRendererOpts &&opts)
     : m_ctx(ctx), m_quad_vertex_buffer(vulkan::buffers::VertexBuffer(
                       m_ctx, m_quad_vertices, command_buffer_manager)),
@@ -39,8 +38,8 @@ graphics_pipeline::quad::QuadRenderer::QuadRenderer(
     m_descriptor_sets = builder.build(ctx, m_descriptor_pool);
 
     const auto &layout = m_descriptor_sets.get_layout();
-    m_quad_pipeline = QuadPipeline(m_ctx, command_buffer_manager, swap_chain_manager,
-                                   &layout, push_constant_range);
+    m_quad_pipeline = QuadPipeline(m_ctx, command_buffer_manager, swap_chain, &layout,
+                                   push_constant_range);
 
     m_sparse_set.next_id = 0;
     m_sparse_set.dense_count = 0;

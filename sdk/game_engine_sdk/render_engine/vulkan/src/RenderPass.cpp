@@ -1,4 +1,5 @@
 #include "vulkan/RenderPass.h"
+#include "util/assert.h"
 #include <stdexcept>
 
 vulkan::RenderPass::RenderPass(vulkan::CommandBuffer &command_buffer,
@@ -83,7 +84,8 @@ void vulkan::RenderPass::present() {
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
         logger::error("Failed to present swap chain image");
         logger::info("Recreating swap chain");
-        m_swap_chain->recreate_swap_chain();
+        DEBUG_ASSERT(false, "Recreating swap chain temporarly disabled.");
+        /*m_swap_chain->recreate_swap_chain();*/
     } else if (result != VK_SUCCESS) {
         throw std::runtime_error("failed to present swap chain image!");
     }

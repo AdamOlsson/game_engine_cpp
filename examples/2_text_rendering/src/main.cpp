@@ -4,7 +4,6 @@
 #include "game_engine_sdk/GameEngine.h"
 #include "graphics_pipeline/text/TextRenderer.h"
 #include "vulkan/CommandBufferManager.h"
-#include "vulkan/SwapChainManager.h"
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 constexpr auto INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
@@ -12,7 +11,7 @@ constexpr auto ZOOM_SCALE_FACTOR = 0.05f;
 
 class ExampleTextRendering : public Game {
   private:
-    std::unique_ptr<vulkan::SwapChainManager> m_swap_chain_manager;
+    std::unique_ptr<vulkan::SwapChain> m_swap_chain;
     std::unique_ptr<vulkan::CommandBufferManager> m_command_buffer_manager;
 
     bool m_is_left_mouse_pressed = false;
@@ -50,7 +49,7 @@ class ExampleTextRendering : public Game {
         register_mouse_event_handler(ctx.get());
         register_keyboard_event_handler(ctx.get());
 
-        m_swap_chain_manager = std::make_unique<vulkan::SwapChainManager>(ctx);
+        m_swap_chain = std::make_unique<vulkan::SwapChain>(ctx);
         m_command_buffer_manager = std::make_unique<vulkan::CommandBufferManager>(ctx, 2);
 
         auto push_constant_range =
@@ -59,7 +58,7 @@ class ExampleTextRendering : public Game {
                                       .size = camera::Camera2D::matrix_size()};
 
         m_text_renderer = std::make_unique<graphics_pipeline::text::TextRenderer>(
-            ctx, m_swap_chain_manager.get(), &push_constant_range);
+            ctx, m_swap_chain.get(), &push_constant_range);
 
         m_text_renderer->load_font(m_command_buffer_manager.get(),
                                    std::move(font_loader));
@@ -150,8 +149,7 @@ class ExampleTextRendering : public Game {
     void render() override {
 
         auto command_buffer = m_command_buffer_manager->get_command_buffer();
-        vulkan::RenderPass render_pass =
-            m_swap_chain_manager->get_render_pass(command_buffer);
+        vulkan::RenderPass render_pass = m_swap_chain->get_render_pass(command_buffer);
         render_pass.begin();
 
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();

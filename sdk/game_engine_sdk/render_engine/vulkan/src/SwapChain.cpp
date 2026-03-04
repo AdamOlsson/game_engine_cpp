@@ -1,11 +1,19 @@
 #include "vulkan/SwapChain.h"
+/*#include "vulkan/RenderPass.h"*/
 #include "vulkan/vulkan_core.h"
+
+namespace {
+const int MAX_FRAMES_IN_FLIGHT = 2;
+}
 
 vulkan::SwapChain::SwapChain()
     : m_swap_chain(VK_NULL_HANDLE), m_render_pass(VK_NULL_HANDLE) {}
 
 vulkan::SwapChain::SwapChain(std::shared_ptr<vulkan::context::GraphicsContext> ctx)
-    : m_ctx(ctx), m_next_frame_buffer(0) {
+    : m_ctx(ctx), m_next_frame_buffer(0),
+      m_image_available(vulkan::Semaphore(m_ctx, MAX_FRAMES_IN_FLIGHT)),
+      m_submit_completed(vulkan::Semaphore(m_ctx, MAX_FRAMES_IN_FLIGHT)),
+      m_in_flight_fence(vulkan::Fence(m_ctx, MAX_FRAMES_IN_FLIGHT)) {
 
     VkSwapchainKHR old_swap_chain = VK_NULL_HANDLE;
     setup(old_swap_chain);
@@ -16,6 +24,12 @@ vulkan::SwapChain::SwapChain(std::shared_ptr<vulkan::context::GraphicsContext> c
     : m_ctx(ctx), m_next_frame_buffer(old.m_next_frame_buffer) {
     VkSwapchainKHR old_swap_chain = old.m_swap_chain;
     setup(old_swap_chain);
+}
+
+void vulkan::SwapChain::wait_for_in_flight_fence() {
+    const VkFence &in_flight_fence = m_in_flight_fence.next();
+    m_ctx->logical_device.wait_for_fence(in_flight_fence);
+    m_ctx->logical_device.reset_fence(in_flight_fence);
 }
 
 void vulkan::SwapChain::recreate_swap_chain() {
@@ -238,4 +252,48 @@ std::optional<uint32_t> vulkan::SwapChain::get_next_image_index(VkSemaphore &ima
         throw std::runtime_error("failed to acquire swap chain image!");
     }
     return image_index;
+}
+
+vulkan::RenderPass
+vulkan::SwapChain::get_render_pass(vulkan::CommandBuffer &command_buffer) {
+    wait_for_in_flight_fence();
+
+    command_buffer.begin();
+    auto render_pass = RenderPass(command_buffer, this);
+
+    set_image_index(render_pass);
+
+    render_pass.m_render_pass = m_render_pass;
+    render_pass.m_render_area_extent = m_extent;
+
+    render_pass.m_frame_buffer = get_framebuffer(render_pass.m_image_index);
+    render_pass.m_submit_completed = m_submit_completed.get();
+    render_pass.m_device_queues = m_ctx->get_device_queues();
+
+    vulkan::Viewport viewport{};
+    viewport.width = m_extent.width;
+    viewport.height = m_extent.height;
+    render_pass.set_viewport(viewport);
+    render_pass.set_scissor(m_extent);
+
+    return render_pass;
+}
+
+
+void vulkan::SwapChain::set_image_index(vulkan::RenderPass &render_pass) {
+
+    VkSemaphore image_available = m_image_available.get();
+    auto image_index = get_next_image_index(image_available);
+
+    if (!image_index.has_value()) {
+        logger::error("Failed to acquire image index");
+        logger::info("Recreating swap chain");
+        recreate_swap_chain();
+        image_index = get_next_image_index(image_available);
+    }
+
+    VkFence in_flight_fence = m_in_flight_fence.current();
+    render_pass.m_image_index = image_index.value();
+    render_pass.m_image_available = image_available;
+    render_pass.m_in_flight_fence = in_flight_fence;
 }

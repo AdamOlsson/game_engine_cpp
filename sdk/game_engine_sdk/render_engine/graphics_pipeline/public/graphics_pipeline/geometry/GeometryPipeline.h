@@ -4,7 +4,7 @@
 #include "vulkan/Pipeline.h"
 #include "vulkan/PipelineLayout.h"
 #include "vulkan/ShaderStage.h"
-#include "vulkan/SwapChainManager.h"
+#include "vulkan/SwapChain.h"
 #include "vulkan/context/GraphicsContext.h"
 #include <memory>
 
@@ -23,7 +23,7 @@ class GeometryPipeline {
     GeometryPipeline() = default;
     GeometryPipeline(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
                      vulkan::CommandBufferManager *command_buffer_manager,
-                     vulkan::SwapChainManager *swap_chain_manager,
+                     vulkan::SwapChain *swap_chain,
                      const vulkan::DescriptorSetLayout *descriptor_set_layout,
                      const vulkan::PushConstantRange *push_constant_range);
 

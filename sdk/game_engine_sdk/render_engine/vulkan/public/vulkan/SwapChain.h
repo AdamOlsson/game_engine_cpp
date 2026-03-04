@@ -4,10 +4,15 @@
 #include "ImageView.h"
 #include "SwapChainImage.h"
 #include "context/GraphicsContext.h"
+#include "vulkan/Fence.h"
+#include "vulkan/RenderPass.h"
+#include "vulkan/Semaphore.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
 
 namespace vulkan {
+
+class RenderPass;
 
 class SwapChain {
   private:
@@ -17,6 +22,10 @@ class SwapChain {
     std::vector<vulkan::SwapChainImage> m_images;
     std::vector<vulkan::ImageView> m_image_views;
     std::vector<vulkan::Framebuffer> m_framebuffers;
+
+    vulkan::Fence m_in_flight_fence;
+    vulkan::Semaphore m_image_available;
+    vulkan::Semaphore m_submit_completed;
 
     void setup(VkSwapchainKHR &old_swap_chain);
 
@@ -46,6 +55,8 @@ class SwapChain {
     SwapChain(const SwapChain &other) = delete;
     SwapChain &operator=(const SwapChain &other) = delete;
 
+    void wait_for_in_flight_fence();
+
     void recreate_swap_chain();
 
     std::vector<vulkan::Framebuffer> create_framebuffers();
@@ -53,5 +64,8 @@ class SwapChain {
 
     VkFramebuffer get_framebuffer(uint32_t image_index);
     std::optional<uint32_t> get_next_image_index(VkSemaphore &image_available);
+
+    vulkan::RenderPass get_render_pass(vulkan::CommandBuffer &command_buffer);
+    void set_image_index(vulkan::RenderPass &render_pass);
 };
 } // namespace vulkan

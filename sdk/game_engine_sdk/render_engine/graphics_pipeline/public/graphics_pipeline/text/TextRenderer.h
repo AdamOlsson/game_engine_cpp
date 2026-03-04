@@ -12,7 +12,7 @@
 #include "vulkan/CommandBufferManager.h"
 #include "vulkan/DescriptorPool.h"
 #include "vulkan/DescriptorSetLayout.h"
-#include "vulkan/SwapChainManager.h"
+#include "vulkan/SwapChain.h"
 #include "vulkan/buffers/GpuBuffer.h"
 #include "vulkan/buffers/IndexBuffer.h"
 #include "vulkan/buffers/VertexBuffer.h"
@@ -164,7 +164,7 @@ class TextRenderer {
   public:
     TextRenderer() = default;
     TextRenderer(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
-                 vulkan::SwapChainManager *swap_chain_manager,
+                 vulkan::SwapChain *swap_chain,
                  const VkPushConstantRange *push_constant_range);
 
     TextRenderer(TextRenderer &&) noexcept = default;
@@ -214,4 +214,5 @@ class TextRenderer {
         _render(command_buffer, text);
     }
 };
+
 } // namespace graphics_pipeline::text

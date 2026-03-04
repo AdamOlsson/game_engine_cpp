@@ -4,8 +4,7 @@
 
 graphics_pipeline::quad::QuadPipeline::QuadPipeline(
     std::shared_ptr<vulkan::context::GraphicsContext> ctx,
-    vulkan::CommandBufferManager *command_buffer_manager,
-    vulkan::SwapChainManager *swap_chain_manager,
+    vulkan::CommandBufferManager *command_buffer_manager, vulkan::SwapChain *swap_chain,
     const vulkan::DescriptorSetLayout *descriptor_set_layout,
     const vulkan::PushConstantRange *push_constant_range)
     : m_ctx(ctx),
@@ -23,19 +22,17 @@ graphics_pipeline::quad::QuadPipeline::QuadPipeline(
         vulkan::PipelineOpts{
             .viewport =
                 {
-                    .width = static_cast<float>(
-                        swap_chain_manager->m_swap_chain.m_extent.width),
-                    .height = static_cast<float>(
-                        swap_chain_manager->m_swap_chain.m_extent.height),
+                    .width = static_cast<float>(swap_chain->m_extent.width),
+                    .height = static_cast<float>(swap_chain->m_extent.height),
                 },
             .scissor =
                 {
-                    .extent = swap_chain_manager->m_swap_chain.m_extent,
+                    .extent = swap_chain->m_extent,
                 },
 
             .pipeline_info =
                 {
-                    .render_pass = swap_chain_manager->m_swap_chain.m_render_pass,
+                    .render_pass = swap_chain->m_render_pass,
                 },
         });
 }

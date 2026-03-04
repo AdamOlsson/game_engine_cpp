@@ -30,7 +30,7 @@ struct FrameState {
 
 class ExamplePathing : public Game {
   private:
-    std::unique_ptr<vulkan::SwapChainManager> m_swap_chain_manager;
+    std::unique_ptr<vulkan::SwapChain> m_swap_chain;
     std::unique_ptr<vulkan::CommandBufferManager> m_command_buffer_manager;
 
     vulkan::DescriptorPool m_descriptor_pool;
@@ -103,7 +103,7 @@ class ExamplePathing : public Game {
         register_mouse_event_handler(ctx.get());
         register_keyboard_event_handler(ctx.get());
 
-        m_swap_chain_manager = std::make_unique<vulkan::SwapChainManager>(ctx);
+        m_swap_chain = std::make_unique<vulkan::SwapChain>(ctx);
         m_command_buffer_manager = std::make_unique<vulkan::CommandBufferManager>(ctx, 2);
 
         m_descriptor_pool = vulkan::DescriptorPool(
@@ -124,7 +124,7 @@ class ExamplePathing : public Game {
         auto opts = graphics_pipeline::geometry::GeometryRendererOpts{};
         opts.instance_buffer_opts.size = m_num_tiles_width * m_num_tiles_height;
         m_renderer = std::make_unique<graphics_pipeline::geometry::GeometryRenderer>(
-            ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
+            ctx, m_command_buffer_manager.get(), m_swap_chain.get(),
             &quad_push_constant_range, std::move(opts));
 
         m_tile_data.reserve(m_num_tiles_width * m_num_tiles_height);
@@ -220,8 +220,7 @@ class ExamplePathing : public Game {
     void render() override {
 
         auto command_buffer = m_command_buffer_manager->get_command_buffer();
-        vulkan::RenderPass render_pass =
-            m_swap_chain_manager->get_render_pass(command_buffer);
+        vulkan::RenderPass render_pass = m_swap_chain->get_render_pass(command_buffer);
         render_pass.begin();
 
         // Reset highlight from previous frame

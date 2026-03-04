@@ -5,6 +5,9 @@
 #include "Viewport.h"
 #include "context/GraphicsContext.h"
 namespace vulkan {
+
+class SwapChain;
+
 class RenderPass {
   private:
     vulkan::CommandBuffer m_command_buffer;

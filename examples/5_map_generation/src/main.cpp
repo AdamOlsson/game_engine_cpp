@@ -26,7 +26,7 @@ constexpr size_t MAX_FRAMES_IN_FLIGHT = 2;
 
 class MapGeneration : public Game {
   private:
-    std::unique_ptr<vulkan::SwapChainManager> m_swap_chain_manager;
+    std::unique_ptr<vulkan::SwapChain> m_swap_chain;
     std::unique_ptr<vulkan::CommandBufferManager> m_command_buffer_manager;
 
     vulkan::Sampler m_sampler;
@@ -81,7 +81,7 @@ class MapGeneration : public Game {
 
         register_mouse_event_handler(ctx.get());
 
-        m_swap_chain_manager = std::make_unique<vulkan::SwapChainManager>(ctx);
+        m_swap_chain = std::make_unique<vulkan::SwapChain>(ctx);
         m_command_buffer_manager =
             std::make_unique<vulkan::CommandBufferManager>(ctx, MAX_FRAMES_IN_FLIGHT);
 
@@ -100,7 +100,7 @@ class MapGeneration : public Game {
         opts.texture = std::move(tileset);
         opts.instance_buffer_opts.size = grid.width() * grid.height();
         m_quad_renderer = std::make_unique<graphics_pipeline::quad::QuadRenderer>(
-            ctx, m_command_buffer_manager.get(), m_swap_chain_manager.get(),
+            ctx, m_command_buffer_manager.get(), m_swap_chain.get(),
             &quad_push_constant_range, std::move(opts));
 
         const auto num_tiles = grid.width() * grid.height();
@@ -165,8 +165,7 @@ class MapGeneration : public Game {
     void render() override {
 
         auto command_buffer = m_command_buffer_manager->get_command_buffer();
-        vulkan::RenderPass render_pass =
-            m_swap_chain_manager->get_render_pass(command_buffer);
+        vulkan::RenderPass render_pass = m_swap_chain->get_render_pass(command_buffer);
         render_pass.begin();
 
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();

@@ -17,7 +17,7 @@ namespace graphics_pipeline::geometry {
 
 GeometryRenderer::GeometryRenderer(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
                                    vulkan::CommandBufferManager *command_buffer_manager,
-                                   vulkan::SwapChainManager *swap_chain_manager,
+                                   vulkan::SwapChain *swap_chain,
                                    const vulkan::PushConstantRange *push_constant_range,
                                    GeometryRendererOpts &&opts)
     : m_ctx(ctx), m_quad_vertex_buffer(vulkan::buffers::VertexBuffer(
@@ -40,7 +40,7 @@ GeometryRenderer::GeometryRenderer(std::shared_ptr<vulkan::context::GraphicsCont
     const auto &layout = m_descriptor_sets.get_layout();
 
     m_geometry_pipeline = std::make_unique<GeometryPipeline>(
-        m_ctx, command_buffer_manager, swap_chain_manager, &layout, push_constant_range);
+        m_ctx, command_buffer_manager, swap_chain, &layout, push_constant_range);
 
     m_sparse_set.next_id = 0;
     m_sparse_set.dense_count = 0;

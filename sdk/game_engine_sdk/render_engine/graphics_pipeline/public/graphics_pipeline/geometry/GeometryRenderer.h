@@ -4,7 +4,7 @@
 #include "graphics_pipeline/geometry/GeometryPipeline.h"
 #include "graphics_pipeline/geometry/GeometryPipelineSBO.h"
 #include "vulkan/DescriptorPool.h"
-#include "vulkan/SwapChainManager.h"
+#include "vulkan/SwapChain.h"
 #include "vulkan/buffers/GpuBuffer.h"
 #include "vulkan/buffers/IndexBuffer.h"
 #include "vulkan/buffers/VertexBuffer.h"
@@ -56,7 +56,7 @@ class GeometryRenderer {
   public:
     GeometryRenderer(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
                      vulkan::CommandBufferManager *command_buffer_manager,
-                     vulkan::SwapChainManager *swap_chain_manager,
+                     vulkan::SwapChain *swap_chain,
                      const vulkan::PushConstantRange *push_constant_range,
                      GeometryRendererOpts &&opts);
 
