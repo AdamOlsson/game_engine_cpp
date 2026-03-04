@@ -103,8 +103,9 @@ class TextHandle {
         const math::Vector2 center = (bbox.zw() - bbox.xy()) / 2.0f;
         const float width = abs(bbox.z() - bbox.x());
         const float height = abs(bbox.w() - bbox.y());
-        std::cout << "Point: " << point << " center: " << center << " width: " << width
-                  << " height: " << height << std::endl;
+        /*std::cout << "Point: " << point << " center: " << center << " width: " <<
+         * width*/
+        /*          << " height: " << height << std::endl;*/
         return math::is_point_inside_rectangle(point, center, width, height);
     }
 };

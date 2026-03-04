@@ -2,6 +2,7 @@
 
 #include "ImageView.h"
 #include "context/GraphicsContext.h"
+#include "vulkan/RenderPass.h"
 #include <memory>
 
 namespace vulkan {
@@ -10,13 +11,13 @@ class Framebuffer {
     std::shared_ptr<context::GraphicsContext> m_ctx;
     VkFramebuffer m_frame_buffer;
 
-    VkFramebuffer create_framebuffers(ImageView &view, VkRenderPass &render_pass,
+    VkFramebuffer create_framebuffers(ImageView &view, RenderPass &render_pass,
                                       VkExtent2D &extent);
 
   public:
     Framebuffer();
     Framebuffer(std::shared_ptr<context::GraphicsContext> ctx, ImageView &view,
-                VkRenderPass &render_pass, VkExtent2D &extent);
+                RenderPass &render_pass, VkExtent2D &extent);
 
     ~Framebuffer();
 

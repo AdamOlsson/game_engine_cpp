@@ -32,7 +32,7 @@ class CaravanDefence : public Game {
   private:
     std::unique_ptr<vulkan::SwapChain> m_swap_chain;
 
-    VkRenderPass m_render_pass;
+    /*VkRenderPass m_render_pass;*/
 
     std::unique_ptr<vulkan::CommandBufferManager> m_command_buffer_manager;
 

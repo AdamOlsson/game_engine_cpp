@@ -6,6 +6,7 @@
 #include "context/GraphicsContext.h"
 #include "vulkan/Fence.h"
 #include "vulkan/Frame.h"
+#include "vulkan/RenderPass.h"
 #include "vulkan/Semaphore.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
@@ -27,7 +28,7 @@ class SwapChain {
     vulkan::Semaphore m_image_available;
     vulkan::Semaphore m_submit_completed;
 
-    VkFormat m_surface_format;
+    vulkan::Format m_surface_format;
 
     void setup(VkSwapchainKHR &old_swap_chain);
 
@@ -43,11 +44,11 @@ class SwapChain {
 
   public:
     VkExtent2D m_extent;
-    VkRenderPass m_render_pass;
+    vulkan::RenderPass m_render_pass;
 
     SwapChain();
-    SwapChain(std::shared_ptr<vulkan::context::GraphicsContext> ctx);
-    SwapChain(std::shared_ptr<vulkan::context::GraphicsContext> ctx, SwapChain &old);
+    SwapChain(std::shared_ptr<vulkan::context::GraphicsContext> &ctx);
+    SwapChain(std::shared_ptr<vulkan::context::GraphicsContext> &ctx, SwapChain &old);
     ~SwapChain();
 
     SwapChain(SwapChain &&other) noexcept = delete;
@@ -60,10 +61,8 @@ class SwapChain {
 
     void recreate_swap_chain();
 
-    std::vector<vulkan::Framebuffer> create_framebuffers(VkRenderPass &render_pass);
-    VkRenderPass create_render_pass(VkFormat &image_format); // TODO: Deprecate
-
-    VkRenderPass create_render_pass();
+    std::vector<vulkan::Framebuffer> create_framebuffers(vulkan::RenderPass &render_pass);
+    vulkan::RenderPass create_render_pass(VkFormat &image_format);
 
     VkFramebuffer get_framebuffer(uint32_t image_index);
     std::optional<uint32_t> get_next_image_index(VkSemaphore &image_available);

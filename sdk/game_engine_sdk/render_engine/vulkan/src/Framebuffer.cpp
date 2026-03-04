@@ -3,7 +3,7 @@
 vulkan::Framebuffer::Framebuffer() : m_frame_buffer(VK_NULL_HANDLE) {}
 
 vulkan::Framebuffer::Framebuffer(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
-                                 ImageView &view, VkRenderPass &render_pass,
+                                 ImageView &view, RenderPass &render_pass,
                                  VkExtent2D &extent)
     : m_ctx(ctx), m_frame_buffer(create_framebuffers(view, render_pass, extent)) {}
 
@@ -35,7 +35,7 @@ vulkan::Framebuffer &vulkan::Framebuffer::operator=(Framebuffer &&other) noexcep
 }
 
 VkFramebuffer vulkan::Framebuffer::create_framebuffers(ImageView &view,
-                                                       VkRenderPass &render_pass,
+                                                       RenderPass &render_pass,
                                                        VkExtent2D &extent) {
     VkImageView attachments[] = {view};
 
