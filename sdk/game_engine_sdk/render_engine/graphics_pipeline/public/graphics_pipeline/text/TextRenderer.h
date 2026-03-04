@@ -166,7 +166,7 @@ class TextRenderer {
     TextRenderer() = default;
     TextRenderer(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
                  vulkan::SwapChain *swap_chain,
-                 const VkPushConstantRange *push_constant_range);
+                 const vulkan::PushConstantRange push_constant_range);
 
     TextRenderer(TextRenderer &&) noexcept = default;
 

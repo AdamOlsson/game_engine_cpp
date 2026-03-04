@@ -33,9 +33,8 @@ void vulkan::SwapChain::wait_for_in_flight_fence() {
 
 void vulkan::SwapChain::recreate_swap_chain() {
     // All execution is paused when the window is minimized
-    // clang-format off
-    while (m_ctx->window->is_minimized()) {}
-    // clang-format on 
+    while (m_ctx->window->is_minimized()) {
+    }
 
     m_ctx->wait_idle();
 
@@ -43,7 +42,6 @@ void vulkan::SwapChain::recreate_swap_chain() {
     VkSwapchainKHR old_swap_chain = m_swap_chain;
     setup(old_swap_chain);
 
-    /*vkDestroyRenderPass(m_ctx->logical_device, old_render_pass, nullptr);*/
     vkDestroySwapchainKHR(m_ctx->logical_device, old_swap_chain, nullptr);
 }
 
@@ -66,8 +64,8 @@ void vulkan::SwapChain::setup(VkSwapchainKHR &old_swap_chain) {
     m_images = create_swap_chain_images(image_count);
     m_image_views = create_image_views(surface_format.format);
     m_surface_format = surface_format.format;
-    m_render_pass = create_render_pass(surface_format.format);
-    m_framebuffers = create_framebuffers(m_render_pass);
+    m_render_pass = create_render_pass();
+    create_framebuffers(m_render_pass);
 }
 
 void vulkan::SwapChain::destroy() {
@@ -82,11 +80,10 @@ vulkan::SwapChain::~SwapChain() {
     m_swap_chain = VK_NULL_HANDLE;
 }
 
-
-VkSwapchainKHR
-vulkan::SwapChain::create_swap_chain(uint32_t image_count, VkSurfaceFormatKHR &surface_format,
-                             vulkan::context::device::SwapChainSupportDetails &swap_chain_support,
-                             VkSwapchainKHR &old_swap_chain) {
+VkSwapchainKHR vulkan::SwapChain::create_swap_chain(
+    uint32_t image_count, VkSurfaceFormatKHR &surface_format,
+    vulkan::context::device::SwapChainSupportDetails &swap_chain_support,
+    VkSwapchainKHR &old_swap_chain) {
     VkPresentModeKHR present_mode =
         swap_chain_support.choose_swap_present_mode(VK_PRESENT_MODE_MAILBOX_KHR);
 
@@ -137,7 +134,8 @@ std::vector<VkImage> vulkan::SwapChain::create_swap_chain_images(uint32_t image_
     return images;
 }
 
-std::vector<vulkan::ImageView> vulkan::SwapChain::create_image_views(VkFormat &image_format) {
+std::vector<vulkan::ImageView>
+vulkan::SwapChain::create_image_views(VkFormat &image_format) {
     std::vector<vulkan::ImageView> swap_chain_image_views;
     swap_chain_image_views.reserve(m_images.size());
     for (size_t i = 0; i < m_images.size(); i++) {
@@ -146,31 +144,21 @@ std::vector<vulkan::ImageView> vulkan::SwapChain::create_image_views(VkFormat &i
     return swap_chain_image_views;
 }
 
-std::vector<vulkan::Framebuffer> vulkan::SwapChain::create_framebuffers(vulkan::RenderPass &render_pass) {
-
+void vulkan::SwapChain::create_framebuffers(vulkan::RenderPass &render_pass) {
     const size_t capacity = m_image_views.size();
-    std::vector<vulkan::Framebuffer> swap_chain_framebuffers;
-    swap_chain_framebuffers.reserve(capacity);
-
+    m_framebuffers.clear();
+    m_framebuffers.reserve(capacity);
     for (size_t i = 0; i < capacity; i++) {
-        swap_chain_framebuffers.emplace_back(m_ctx, m_image_views[i], render_pass, m_extent);
+        m_framebuffers.emplace_back(m_ctx, m_image_views[i], render_pass, m_extent);
     }
-    return swap_chain_framebuffers;
 }
 
-vulkan::RenderPass vulkan::SwapChain::create_render_pass(VkFormat &image_format) {
+vulkan::RenderPass vulkan::SwapChain::create_render_pass() {
     return vulkan::RenderPass(m_ctx, m_surface_format);
 }
 
-
-VkFramebuffer vulkan::SwapChain::get_framebuffer(uint32_t image_index) {
-    if (image_index >= m_framebuffers.size()) {
-        throw std::runtime_error("Image index out of range for framebuffers");
-    }
-    return m_framebuffers[image_index];
-}
-
-std::optional<uint32_t> vulkan::SwapChain::get_next_image_index(VkSemaphore &image_available) {
+std::optional<uint32_t>
+vulkan::SwapChain::get_next_image_index(VkSemaphore &image_available) {
     uint32_t image_index;
 
     VkResult result =
@@ -184,33 +172,35 @@ std::optional<uint32_t> vulkan::SwapChain::get_next_image_index(VkSemaphore &ima
     return image_index;
 }
 
-vulkan::Frame
-vulkan::SwapChain::begin_frame(vulkan::CommandBuffer &command_buffer) {
+vulkan::Frame vulkan::SwapChain::begin_frame(vulkan::CommandBuffer &command_buffer,
+                                             vulkan::RenderPass *render_pass) {
     wait_for_in_flight_fence();
 
     command_buffer.begin();
-    auto render_pass = vulkan::Frame(command_buffer, m_swap_chain);
+    vulkan::Frame frame = vulkan::Frame(command_buffer, m_swap_chain);
 
-    set_image_index(render_pass);
+    set_image_index(frame);
 
-    render_pass.m_render_pass = m_render_pass;
-    render_pass.m_render_area_extent = m_extent;
+    frame.m_render_pass = render_pass != nullptr ? *render_pass : m_render_pass;
+    frame.m_render_area_extent = m_extent;
 
-    render_pass.m_frame_buffer = get_framebuffer(render_pass.m_image_index);
-    render_pass.m_submit_completed = m_submit_completed.get();
-    render_pass.m_device_queues = m_ctx->get_device_queues();
+    DEBUG_ASSERT(frame.m_image_index < m_framebuffers.size(),
+                 "Error: Image index out of range for framebuffers");
+    frame.m_frame_buffer = m_framebuffers[frame.m_image_index];
+
+    frame.m_submit_completed = m_submit_completed.get();
+    frame.m_device_queues = m_ctx->get_device_queues();
 
     vulkan::Viewport viewport{};
     viewport.width = m_extent.width;
     viewport.height = m_extent.height;
-    render_pass.set_viewport(viewport);
-    render_pass.set_scissor(m_extent);
+    frame.set_viewport(viewport);
+    frame.set_scissor(m_extent);
 
-    render_pass.begin();
+    frame.begin();
 
-    return render_pass;
+    return frame;
 }
-
 
 void vulkan::SwapChain::set_image_index(vulkan::Frame &render_pass) {
 
@@ -220,7 +210,7 @@ void vulkan::SwapChain::set_image_index(vulkan::Frame &render_pass) {
     if (!image_index.has_value()) {
         logger::error("Failed to acquire image index");
         logger::info("Recreating swap chain");
-        DEBUG_ASSERT(false,"Error: Recreating swap chain is temporarily disabled.");
+        DEBUG_ASSERT(false, "Error: Recreating swap chain is temporarily disabled.");
         /*recreate_swap_chain();*/
         image_index = get_next_image_index(image_available);
     }

@@ -4,6 +4,7 @@
 #include "ImageView.h"
 #include "SwapChainImage.h"
 #include "context/GraphicsContext.h"
+#include "vulkan/Extent2D.h"
 #include "vulkan/Fence.h"
 #include "vulkan/Frame.h"
 #include "vulkan/RenderPass.h"
@@ -43,7 +44,7 @@ class SwapChain {
     void destroy();
 
   public:
-    VkExtent2D m_extent;
+    vulkan::Extent2D m_extent;
     vulkan::RenderPass m_render_pass;
 
     SwapChain();
@@ -61,13 +62,13 @@ class SwapChain {
 
     void recreate_swap_chain();
 
-    std::vector<vulkan::Framebuffer> create_framebuffers(vulkan::RenderPass &render_pass);
-    vulkan::RenderPass create_render_pass(VkFormat &image_format);
+    void create_framebuffers(vulkan::RenderPass &render_pass);
+    vulkan::RenderPass create_render_pass();
 
-    VkFramebuffer get_framebuffer(uint32_t image_index);
     std::optional<uint32_t> get_next_image_index(VkSemaphore &image_available);
 
-    vulkan::Frame begin_frame(vulkan::CommandBuffer &command_buffer);
+    vulkan::Frame begin_frame(vulkan::CommandBuffer &command_buffer,
+                              vulkan::RenderPass *render_pass = nullptr);
     void set_image_index(vulkan::Frame &render_pass);
 };
 } // namespace vulkan

@@ -11,11 +11,15 @@
 
 graphics_pipeline::text::TextRenderer::TextRenderer(
     std::shared_ptr<vulkan::context::GraphicsContext> &ctx, vulkan::SwapChain *swap_chain,
-    const VkPushConstantRange *push_constant_range)
+    const vulkan::PushConstantRange push_constant_range)
     : m_ctx(ctx) {
 
-    const auto layout = TextRenderer::get_descriptor_set_layout(ctx);
-    m_text_pipeline = TextPipeline(ctx, swap_chain, &layout, push_constant_range);
+    graphics_pipeline::PipelineOpts opts{};
+    opts.swap_chain.extent = swap_chain->m_extent;
+    opts.swap_chain.render_pass = &swap_chain->m_render_pass;
+    opts.descriptor.layout = TextRenderer::get_descriptor_set_layout(ctx);
+    opts.push_constant_range = push_constant_range;
+    m_text_pipeline = TextPipeline(ctx, opts);
 
     const size_t max_frames_in_flight = 2;
     constexpr size_t max_text_instances = 16;

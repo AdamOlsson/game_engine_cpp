@@ -28,11 +28,19 @@ enum class GameState {
 // constant to render on the viewport.
 // Suggestion 3: Make it possible for a render pipeline to have multiple descriptor sets,
 // swap descriptor set when I can to render to the viewport vs world.
+// ######################################################################################
+// TODO: A single Pipeline is bound to a specific render pass format. Let the user create
+// the renderpass format, then pass these as a dependency to the Renderers and in turn
+// pipelines
+// - I have started to refactor the relationship between TextRenderer and TextPipeline
+// using the options strategy so that I eventually would be able to pass a options struct
+// to the TextRenderer with the RenderPass format. I still need to finish this and to the
+// same for QuadPipeline and GeometryPipeline.
 class CaravanDefence : public Game {
   private:
     std::unique_ptr<vulkan::SwapChain> m_swap_chain;
 
-    /*VkRenderPass m_render_pass;*/
+    /*vulkan::RenderPass m_render_pass;*/
 
     std::unique_ptr<vulkan::CommandBufferManager> m_command_buffer_manager;
 
@@ -146,8 +154,7 @@ class CaravanDefence : public Game {
         m_swap_chain = std::make_unique<vulkan::SwapChain>(ctx);
 
         /*m_render_pass = m_swap_chain->create_render_pass();*/
-        /*m_swap_chain->create_framebuffers(*/
-        /*    m_render_pass); // TODO: Store the framebuffers on the swap chain*/
+        /*m_swap_chain->create_framebuffers(m_render_pass);*/
 
         m_command_buffer_manager = std::make_unique<vulkan::CommandBufferManager>(ctx, 2);
 
@@ -172,7 +179,7 @@ class CaravanDefence : public Game {
             std::move(geom_opts));
 
         m_text_renderer = std::make_unique<graphics_pipeline::text::TextRenderer>(
-            ctx, m_swap_chain.get(), &push_constant_range);
+            ctx, m_swap_chain.get(), push_constant_range);
         m_text_renderer->load_font(
             m_command_buffer_manager.get(),
             font::FontLoader(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf")));

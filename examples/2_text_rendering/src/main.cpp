@@ -58,7 +58,7 @@ class ExampleTextRendering : public Game {
                                       .size = camera::Camera2D::matrix_size()};
 
         m_text_renderer = std::make_unique<graphics_pipeline::text::TextRenderer>(
-            ctx, m_swap_chain.get(), &push_constant_range);
+            ctx, m_swap_chain.get(), push_constant_range);
 
         m_text_renderer->load_font(m_command_buffer_manager.get(),
                                    std::move(font_loader));
@@ -69,6 +69,7 @@ class ExampleTextRendering : public Game {
                                                        .position = math::Vector2(0, 0),
                                                        .font_color = util::colors::WHITE,
                                                        .font_size = 11,
+                                                       .line_width = 100000.0f,
                                                    }));
 
         m_texts.push_back(
@@ -76,6 +77,7 @@ class ExampleTextRendering : public Game {
                                                        .position = math::Vector2(0, 22),
                                                        .font_color = util::colors::RED,
                                                        .font_size = 17,
+                                                       .line_width = 100000.0f,
                                                    }));
 
         m_texts.push_back(
@@ -83,6 +85,7 @@ class ExampleTextRendering : public Game {
                                                        .position = math::Vector2(0, 50),
                                                        .font_color = util::colors::BLUE,
                                                        .font_size = 24,
+                                                       .line_width = 100000.0f,
                                                    }));
     }
 
@@ -132,6 +135,7 @@ class ExampleTextRendering : public Game {
                                           .position = math::Vector2(0, 50),
                                           .font_color = util::colors::BLUE,
                                           .font_size = 24,
+                                          .line_width = 100000.0f,
                                       }));
                     } else {
                         m_text_renderer->remove_text(std::move(m_texts.back()));
