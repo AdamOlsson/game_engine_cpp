@@ -165,13 +165,12 @@ class MapGeneration : public Game {
     void render() override {
 
         auto command_buffer = m_command_buffer_manager->get_command_buffer();
-        vulkan::RenderPass render_pass = m_swap_chain->get_render_pass(command_buffer);
-        render_pass.begin();
+        vulkan::Frame frame = m_swap_chain->begin_frame(command_buffer);
 
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
         m_quad_renderer->render(command_buffer, &push_constant, m_num_instances);
 
-        render_pass.end_submit_present();
+        frame.end_submit_present();
     }
 };
 

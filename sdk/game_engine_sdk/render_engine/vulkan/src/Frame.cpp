@@ -1,12 +1,11 @@
-#include "vulkan/RenderPass.h"
 #include "util/assert.h"
+#include "vulkan/Frame.h"
 #include <stdexcept>
 
-vulkan::RenderPass::RenderPass(vulkan::CommandBuffer &command_buffer,
-                               SwapChain *swap_chain)
+vulkan::Frame::Frame(vulkan::CommandBuffer &command_buffer, VkSwapchainKHR swap_chain)
     : m_command_buffer(command_buffer), m_swap_chain(swap_chain) {}
 
-void vulkan::RenderPass::begin() {
+void vulkan::Frame::begin() {
     VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
     VkRenderPassBeginInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -20,7 +19,7 @@ void vulkan::RenderPass::begin() {
     vkCmdBeginRenderPass(m_command_buffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
-void vulkan::RenderPass::set_viewport(const vulkan::Viewport &vp) {
+void vulkan::Frame::set_viewport(const vulkan::Viewport &vp) {
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
@@ -31,19 +30,19 @@ void vulkan::RenderPass::set_viewport(const vulkan::Viewport &vp) {
     vkCmdSetViewport(m_command_buffer, 0, 1, &viewport);
 }
 
-void vulkan::RenderPass::set_scissor(const VkExtent2D &extent) {
+void vulkan::Frame::set_scissor(const VkExtent2D &extent) {
     VkRect2D scissor{};
     scissor.offset = {0, 0};
     scissor.extent = extent;
     vkCmdSetScissor(m_command_buffer, 0, 1, &scissor);
 }
 
-void vulkan::RenderPass::end() {
+void vulkan::Frame::end() {
     vkCmdEndRenderPass(m_command_buffer);
     m_command_buffer.end();
 }
 
-void vulkan::RenderPass::submit() {
+void vulkan::Frame::submit() {
     VkSubmitInfo submit_info{};
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     VkCommandBuffer command_buffer = m_command_buffer;
@@ -66,14 +65,14 @@ void vulkan::RenderPass::submit() {
     }
 }
 
-void vulkan::RenderPass::present() {
+void vulkan::Frame::present() {
     VkPresentInfoKHR present_info{};
     present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
     present_info.waitSemaphoreCount = 1;
     present_info.pWaitSemaphores = &m_submit_completed;
 
-    VkSwapchainKHR swapChains[] = {m_swap_chain->m_swap_chain};
+    VkSwapchainKHR swapChains[] = {m_swap_chain};
     present_info.swapchainCount = 1;
     present_info.pSwapchains = swapChains;
     present_info.pImageIndices = &m_image_index;
@@ -91,7 +90,7 @@ void vulkan::RenderPass::present() {
     }
 }
 
-void vulkan::RenderPass::end_submit_present() {
+void vulkan::Frame::end_submit_present() {
     end();
     submit();
     present();

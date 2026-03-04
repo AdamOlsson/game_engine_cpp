@@ -1,5 +1,4 @@
 #include "vulkan/SwapChain.h"
-/*#include "vulkan/RenderPass.h"*/
 #include "vulkan/vulkan_core.h"
 
 namespace {
@@ -10,8 +9,7 @@ vulkan::SwapChain::SwapChain()
     : m_swap_chain(VK_NULL_HANDLE), m_render_pass(VK_NULL_HANDLE) {}
 
 vulkan::SwapChain::SwapChain(std::shared_ptr<vulkan::context::GraphicsContext> ctx)
-    : m_ctx(ctx), m_next_frame_buffer(0),
-      m_image_available(vulkan::Semaphore(m_ctx, MAX_FRAMES_IN_FLIGHT)),
+    : m_ctx(ctx), m_image_available(vulkan::Semaphore(m_ctx, MAX_FRAMES_IN_FLIGHT)),
       m_submit_completed(vulkan::Semaphore(m_ctx, MAX_FRAMES_IN_FLIGHT)),
       m_in_flight_fence(vulkan::Fence(m_ctx, MAX_FRAMES_IN_FLIGHT)) {
 
@@ -21,7 +19,7 @@ vulkan::SwapChain::SwapChain(std::shared_ptr<vulkan::context::GraphicsContext> c
 
 vulkan::SwapChain::SwapChain(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
                              SwapChain &old)
-    : m_ctx(ctx), m_next_frame_buffer(old.m_next_frame_buffer) {
+    : m_ctx(ctx) {
     VkSwapchainKHR old_swap_chain = old.m_swap_chain;
     setup(old_swap_chain);
 }
@@ -66,8 +64,9 @@ void vulkan::SwapChain::setup(VkSwapchainKHR &old_swap_chain) {
 
     m_images = create_swap_chain_images(image_count);
     m_image_views = create_image_views(surface_format.format);
+    m_surface_format = surface_format.format;
     m_render_pass = create_render_pass(surface_format.format);
-    m_framebuffers = create_framebuffers();
+    m_framebuffers = create_framebuffers(m_render_pass);
 }
 
 void vulkan::SwapChain::destroy() {
@@ -83,35 +82,35 @@ vulkan::SwapChain::~SwapChain() {
     m_swap_chain = VK_NULL_HANDLE;
 }
 
-vulkan::SwapChain::SwapChain(SwapChain &&other) noexcept
-    : m_ctx(std::move(other.m_ctx)), m_next_frame_buffer(other.m_next_frame_buffer),
-      m_images(std::move(other.m_images)), m_image_views(std::move(other.m_image_views)),
-      m_framebuffers(std::move(other.m_framebuffers)), m_swap_chain(other.m_swap_chain),
-      m_extent(other.m_extent), m_render_pass(other.m_render_pass) {
-    other.m_swap_chain = VK_NULL_HANDLE;
-    other.m_render_pass = VK_NULL_HANDLE;
-}
-
-vulkan::SwapChain &vulkan::SwapChain::operator=(SwapChain &&other) noexcept {
-    if (this != &other) {
-        if (m_swap_chain != VK_NULL_HANDLE) {
-            destroy();
-        }
-
-        m_ctx = std::move(other.m_ctx);
-        m_next_frame_buffer = other.m_next_frame_buffer;
-        m_images = std::move(other.m_images);
-        m_image_views = std::move(other.m_image_views);
-        m_framebuffers = std::move(other.m_framebuffers);
-        m_swap_chain = other.m_swap_chain;
-        m_extent = other.m_extent;
-        m_render_pass = other.m_render_pass;
-
-        other.m_swap_chain = VK_NULL_HANDLE;
-        other.m_render_pass = VK_NULL_HANDLE;
-    }
-    return *this;
-}
+/*vulkan::SwapChain::SwapChain(SwapChain &&other) noexcept*/
+/*    : m_ctx(std::move(other.m_ctx)), m_next_frame_buffer(other.m_next_frame_buffer),*/
+/*      m_images(std::move(other.m_images)), m_image_views(std::move(other.m_image_views)),*/
+/*      m_framebuffers(std::move(other.m_framebuffers)), m_swap_chain(other.m_swap_chain),*/
+/*      m_extent(other.m_extent), m_render_pass(other.m_render_pass) {*/
+/*    other.m_swap_chain = VK_NULL_HANDLE;*/
+/*    other.m_render_pass = VK_NULL_HANDLE;*/
+/*}*/
+/**/
+/*vulkan::SwapChain &vulkan::SwapChain::operator=(SwapChain &&other) noexcept {*/
+/*    if (this != &other) {*/
+/*        if (m_swap_chain != VK_NULL_HANDLE) {*/
+/*            destroy();*/
+/*        }*/
+/**/
+/*        m_ctx = std::move(other.m_ctx);*/
+/*        m_next_frame_buffer = other.m_next_frame_buffer;*/
+/*        m_images = std::move(other.m_images);*/
+/*        m_image_views = std::move(other.m_image_views);*/
+/*        m_framebuffers = std::move(other.m_framebuffers);*/
+/*        m_swap_chain = other.m_swap_chain;*/
+/*        m_extent = other.m_extent;*/
+/*        m_render_pass = other.m_render_pass;*/
+/**/
+/*        other.m_swap_chain = VK_NULL_HANDLE;*/
+/*        other.m_render_pass = VK_NULL_HANDLE;*/
+/*    }*/
+/*    return *this;*/
+/*}*/
 
 VkSwapchainKHR
 vulkan::SwapChain::create_swap_chain(uint32_t image_count, VkSurfaceFormatKHR &surface_format,
@@ -176,14 +175,14 @@ std::vector<vulkan::ImageView> vulkan::SwapChain::create_image_views(VkFormat &i
     return swap_chain_image_views;
 }
 
-std::vector<vulkan::Framebuffer> vulkan::SwapChain::create_framebuffers() {
+std::vector<vulkan::Framebuffer> vulkan::SwapChain::create_framebuffers(VkRenderPass &render_pass) {
 
     const size_t capacity = m_image_views.size();
     std::vector<vulkan::Framebuffer> swap_chain_framebuffers;
     swap_chain_framebuffers.reserve(capacity);
 
     for (size_t i = 0; i < capacity; i++) {
-        swap_chain_framebuffers.emplace_back(m_ctx, m_image_views[i], m_render_pass, m_extent);
+        swap_chain_framebuffers.emplace_back(m_ctx, m_image_views[i], render_pass, m_extent);
     }
     return swap_chain_framebuffers;
 }
@@ -191,6 +190,51 @@ std::vector<vulkan::Framebuffer> vulkan::SwapChain::create_framebuffers() {
 VkRenderPass vulkan::SwapChain::create_render_pass(VkFormat &image_format) {
     VkAttachmentDescription color_attachment{};
     color_attachment.format = image_format;
+    color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+    VkAttachmentReference color_attachment_ref{};
+    color_attachment_ref.attachment = 0;
+    color_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+    VkSubpassDescription subpass{};
+    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    subpass.colorAttachmentCount = 1;
+    subpass.pColorAttachments = &color_attachment_ref;
+
+    VkSubpassDependency dependency{};
+    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+    dependency.dstSubpass = 0;
+    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.srcAccessMask = 0;
+    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+    VkRenderPassCreateInfo render_pass_info{};
+    render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+    render_pass_info.attachmentCount = 1;
+    render_pass_info.pAttachments = &color_attachment;
+    render_pass_info.subpassCount = 1;
+    render_pass_info.pSubpasses = &subpass;
+    render_pass_info.dependencyCount = 1;
+    render_pass_info.pDependencies = &dependency;
+
+    VkRenderPass render_pass;
+    if (vkCreateRenderPass(m_ctx->logical_device, &render_pass_info, nullptr,
+                           &render_pass) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create render pass!");
+    }
+    return render_pass;
+}
+
+VkRenderPass vulkan::SwapChain::create_render_pass() {
+    VkAttachmentDescription color_attachment{};
+    color_attachment.format = m_surface_format;
     color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
     color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -254,12 +298,12 @@ std::optional<uint32_t> vulkan::SwapChain::get_next_image_index(VkSemaphore &ima
     return image_index;
 }
 
-vulkan::RenderPass
-vulkan::SwapChain::get_render_pass(vulkan::CommandBuffer &command_buffer) {
+vulkan::Frame
+vulkan::SwapChain::begin_frame(vulkan::CommandBuffer &command_buffer) {
     wait_for_in_flight_fence();
 
     command_buffer.begin();
-    auto render_pass = RenderPass(command_buffer, this);
+    auto render_pass = vulkan::Frame(command_buffer, m_swap_chain);
 
     set_image_index(render_pass);
 
@@ -276,11 +320,13 @@ vulkan::SwapChain::get_render_pass(vulkan::CommandBuffer &command_buffer) {
     render_pass.set_viewport(viewport);
     render_pass.set_scissor(m_extent);
 
+    render_pass.begin();
+
     return render_pass;
 }
 
 
-void vulkan::SwapChain::set_image_index(vulkan::RenderPass &render_pass) {
+void vulkan::SwapChain::set_image_index(vulkan::Frame &render_pass) {
 
     VkSemaphore image_available = m_image_available.get();
     auto image_index = get_next_image_index(image_available);

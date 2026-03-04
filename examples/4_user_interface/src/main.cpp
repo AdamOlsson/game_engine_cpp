@@ -8,7 +8,7 @@
 #include "game_engine_sdk/render_engine/ui/ElementProperties.h"
 #include "game_engine_sdk/render_engine/ui/UI.h"
 #include "util/colors.h"
-#include "vulkan/RenderPass.h"
+/*#include "vulkan/RenderPass.h"*/
 #include "vulkan/context/GraphicsContext.h"
 #include "window/WindowConfig.h"
 #include <memory>

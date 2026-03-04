@@ -149,8 +149,7 @@ class ExampleTextRendering : public Game {
     void render() override {
 
         auto command_buffer = m_command_buffer_manager->get_command_buffer();
-        vulkan::RenderPass render_pass = m_swap_chain->get_render_pass(command_buffer);
-        render_pass.begin();
+        vulkan::Frame frame = m_swap_chain->begin_frame(command_buffer);
 
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
 
@@ -158,7 +157,7 @@ class ExampleTextRendering : public Game {
             m_text_renderer->render(command_buffer, text, &push_constant);
         }
 
-        render_pass.end_submit_present();
+        frame.end_submit_present();
     }
 };
 

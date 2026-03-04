@@ -5,19 +5,19 @@
 #include "SwapChainImage.h"
 #include "context/GraphicsContext.h"
 #include "vulkan/Fence.h"
-#include "vulkan/RenderPass.h"
+#include "vulkan/Frame.h"
 #include "vulkan/Semaphore.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
 
 namespace vulkan {
 
-class RenderPass;
+class Frame;
 
 class SwapChain {
   private:
     std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
-    size_t m_next_frame_buffer;
+    VkSwapchainKHR m_swap_chain;
 
     std::vector<vulkan::SwapChainImage> m_images;
     std::vector<vulkan::ImageView> m_image_views;
@@ -26,6 +26,8 @@ class SwapChain {
     vulkan::Fence m_in_flight_fence;
     vulkan::Semaphore m_image_available;
     vulkan::Semaphore m_submit_completed;
+
+    VkFormat m_surface_format;
 
     void setup(VkSwapchainKHR &old_swap_chain);
 
@@ -40,7 +42,6 @@ class SwapChain {
     void destroy();
 
   public:
-    VkSwapchainKHR m_swap_chain;
     VkExtent2D m_extent;
     VkRenderPass m_render_pass;
 
@@ -49,8 +50,8 @@ class SwapChain {
     SwapChain(std::shared_ptr<vulkan::context::GraphicsContext> ctx, SwapChain &old);
     ~SwapChain();
 
-    SwapChain(SwapChain &&other) noexcept;
-    SwapChain &operator=(SwapChain &&other) noexcept;
+    SwapChain(SwapChain &&other) noexcept = delete;
+    SwapChain &operator=(SwapChain &&other) noexcept = delete;
 
     SwapChain(const SwapChain &other) = delete;
     SwapChain &operator=(const SwapChain &other) = delete;
@@ -59,13 +60,15 @@ class SwapChain {
 
     void recreate_swap_chain();
 
-    std::vector<vulkan::Framebuffer> create_framebuffers();
-    VkRenderPass create_render_pass(VkFormat &image_format);
+    std::vector<vulkan::Framebuffer> create_framebuffers(VkRenderPass &render_pass);
+    VkRenderPass create_render_pass(VkFormat &image_format); // TODO: Deprecate
+
+    VkRenderPass create_render_pass();
 
     VkFramebuffer get_framebuffer(uint32_t image_index);
     std::optional<uint32_t> get_next_image_index(VkSemaphore &image_available);
 
-    vulkan::RenderPass get_render_pass(vulkan::CommandBuffer &command_buffer);
-    void set_image_index(vulkan::RenderPass &render_pass);
+    vulkan::Frame begin_frame(vulkan::CommandBuffer &command_buffer);
+    void set_image_index(vulkan::Frame &render_pass);
 };
 } // namespace vulkan

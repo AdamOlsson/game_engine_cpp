@@ -31,6 +31,9 @@ enum class GameState {
 class CaravanDefence : public Game {
   private:
     std::unique_ptr<vulkan::SwapChain> m_swap_chain;
+
+    VkRenderPass m_render_pass;
+
     std::unique_ptr<vulkan::CommandBufferManager> m_command_buffer_manager;
 
     camera::Camera2D m_camera;
@@ -141,6 +144,10 @@ class CaravanDefence : public Game {
 
         auto window_size = ctx->window->get_framebuffer_size<float>();
         m_swap_chain = std::make_unique<vulkan::SwapChain>(ctx);
+
+        /*m_render_pass = m_swap_chain->create_render_pass();*/
+        /*m_swap_chain->create_framebuffers(*/
+        /*    m_render_pass); // TODO: Store the framebuffers on the swap chain*/
 
         m_command_buffer_manager = std::make_unique<vulkan::CommandBufferManager>(ctx, 2);
 
@@ -471,8 +478,7 @@ class CaravanDefence : public Game {
     void render() override {
 
         auto command_buffer = m_command_buffer_manager->get_command_buffer();
-        vulkan::RenderPass render_pass = m_swap_chain->get_render_pass(command_buffer);
-        render_pass.begin();
+        vulkan::Frame frame = m_swap_chain->begin_frame(command_buffer);
 
         const camera::WorldPoint2D cursor_world_point =
             m_camera.viewport_to_world(m_mouse_state.cursor_viewport_position);
@@ -512,7 +518,7 @@ class CaravanDefence : public Game {
             m_event->render(command_buffer, &push_constant);
         }
 
-        render_pass.end_submit_present();
+        frame.end_submit_present();
     }
 
     void register_mouse_event_handler(vulkan::context::GraphicsContext *ctx) {

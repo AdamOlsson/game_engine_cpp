@@ -1,17 +1,16 @@
 #pragma once
 
 #include "CommandBuffer.h"
-#include "SwapChain.h"
 #include "Viewport.h"
 #include "context/GraphicsContext.h"
 namespace vulkan {
 
 class SwapChain;
 
-class RenderPass {
+class Frame {
   private:
     vulkan::CommandBuffer m_command_buffer;
-    SwapChain *m_swap_chain;
+    VkSwapchainKHR m_swap_chain;
 
   public:
     VkRenderPass m_render_pass;
@@ -23,14 +22,14 @@ class RenderPass {
     uint32_t m_image_index;
     vulkan::context::DeviceQueues m_device_queues;
 
-    RenderPass(vulkan::CommandBuffer &command_buffer, SwapChain *swap_chain);
-    ~RenderPass() = default;
+    Frame(vulkan::CommandBuffer &command_buffer, VkSwapchainKHR swap_chain);
+    ~Frame() = default;
 
-    RenderPass(RenderPass &&other) noexcept = default;
-    RenderPass &operator=(RenderPass &&other) noexcept = default;
+    Frame(Frame &&other) noexcept = default;
+    Frame &operator=(Frame &&other) noexcept = default;
 
-    RenderPass(const RenderPass &other) = delete;
-    RenderPass &operator=(const RenderPass &other) = delete;
+    Frame(const Frame &other) = delete;
+    Frame &operator=(const Frame &other) = delete;
 
     void begin();
     void set_viewport(const vulkan::Viewport &dim);
