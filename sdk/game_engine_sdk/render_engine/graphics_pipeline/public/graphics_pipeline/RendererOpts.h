@@ -1,5 +1,8 @@
 #pragma once
 
+#include "graphics_pipeline/geometry/GeometryRendererOpts.h"
+#include "graphics_pipeline/quad/QuadRendererOpts.h"
+#include "graphics_pipeline/text/TextRendererOpts.h"
 #include "vulkan/Extent2D.h"
 #include "vulkan/PushConstantRange.h"
 #include "vulkan/RenderPass.h"
@@ -17,6 +20,10 @@ struct RendererOpts {
         .offset = 0,
         .size = 0,
     };
+
+    quad::QuadRendererOpts quad;
+    geometry::GeometryRendererOpts geometry;
+    text::TextRendererOpts text;
 };
 
 }; // namespace graphics_pipeline

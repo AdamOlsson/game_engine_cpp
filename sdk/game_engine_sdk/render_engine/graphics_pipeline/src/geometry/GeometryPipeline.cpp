@@ -3,14 +3,10 @@
 #include "shaders/geometry_vertex_shader.h"
 
 graphics_pipeline::geometry::GeometryPipeline::GeometryPipeline(
-    std::shared_ptr<vulkan::context::GraphicsContext> ctx,
-    vulkan::CommandBufferManager *command_buffer_manager, vulkan::SwapChain *swap_chain,
-    const vulkan::DescriptorSetLayout *descriptor_set_layout,
-    const vulkan::PushConstantRange *push_constant_range)
-    : m_ctx(ctx),
-      m_push_constant_stage(push_constant_range ? push_constant_range->stageFlags : 0),
+    std::shared_ptr<vulkan::context::GraphicsContext> ctx, const PipelineOpts &opts)
+    : m_ctx(ctx), m_push_constant(opts.push_constant_range),
       m_pipeline_layout(
-          vulkan::PipelineLayout(ctx, descriptor_set_layout, push_constant_range)) {
+          vulkan::PipelineLayout(ctx, &opts.descriptor.layout, &m_push_constant)) {
 
     auto vert = GeometryVertexShader::create_resource();
     auto frag = GeometryFragmentShader::create_resource();
@@ -21,16 +17,17 @@ graphics_pipeline::geometry::GeometryPipeline::GeometryPipeline(
         vulkan::PipelineOpts{
             .viewport =
                 {
-                    .width = static_cast<float>(swap_chain->m_extent.width),
-                    .height = static_cast<float>(swap_chain->m_extent.height),
+                    .width = static_cast<float>(opts.swap_chain.extent.width),
+                    .height = static_cast<float>(opts.swap_chain.extent.height),
                 },
             .scissor =
                 {
-                    .extent = swap_chain->m_extent,
+                    .extent = opts.swap_chain.extent,
                 },
+
             .pipeline_info =
                 {
-                    .render_pass = swap_chain->m_render_pass,
+                    .render_pass = *opts.swap_chain.render_pass,
                 },
         });
 }

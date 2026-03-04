@@ -1,11 +1,10 @@
 #pragma once
+#include "graphics_pipeline/PipelineOpts.h"
 #include "vulkan/CommandBuffer.h"
-#include "vulkan/CommandBufferManager.h"
 #include "vulkan/Pipeline.h"
 #include "vulkan/PipelineLayout.h"
 #include "vulkan/PushConstantRange.h"
 #include "vulkan/ShaderStage.h"
-#include "vulkan/SwapChain.h"
 #include "vulkan/context/GraphicsContext.h"
 #include <memory>
 
@@ -15,7 +14,7 @@ class QuadPipeline {
   private:
     std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
 
-    vulkan::ShaderStageFlags m_push_constant_stage;
+    vulkan::PushConstantRange m_push_constant;
 
     vulkan::PipelineLayout m_pipeline_layout;
     vulkan::Pipeline m_pipeline;
@@ -23,15 +22,12 @@ class QuadPipeline {
   public:
     QuadPipeline() = default;
     QuadPipeline(std::shared_ptr<vulkan::context::GraphicsContext> ctx,
-                 vulkan::CommandBufferManager *command_buffer_manager,
-                 vulkan::SwapChain *swap_chain,
-                 const vulkan::DescriptorSetLayout *descriptor_set_layout,
-                 const vulkan::PushConstantRange *push_constant_range);
+                 graphics_pipeline::PipelineOpts &opts);
 
     VkPipeline get_pipeline() const { return m_pipeline; }
     VkPipelineLayout get_layout() const { return m_pipeline_layout; }
     vulkan::ShaderStageFlags get_push_constant_stage() const {
-        return m_push_constant_stage;
+        return m_push_constant.stageFlags;
     }
 
     // Convenience method to bind pipeline

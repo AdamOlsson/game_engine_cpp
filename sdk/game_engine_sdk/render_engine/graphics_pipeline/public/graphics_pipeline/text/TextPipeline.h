@@ -13,7 +13,9 @@ namespace graphics_pipeline::text {
 class TextPipeline {
   private:
     std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
+
     vulkan::PushConstantRange m_push_constant;
+
     vulkan::PipelineLayout m_pipeline_layout;
     vulkan::Pipeline m_pipeline;
 

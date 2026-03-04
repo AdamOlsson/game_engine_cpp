@@ -32,10 +32,9 @@ enum class GameState {
 // TODO: A single Pipeline is bound to a specific render pass format. Let the user create
 // the renderpass format, then pass these as a dependency to the Renderers and in turn
 // pipelines
-// - I have started to refactor the relationship between TextRenderer and TextPipeline
-// using the options strategy so that I eventually would be able to pass a options struct
-// to the TextRenderer with the RenderPass format. I still need to finish this and to the
-// same for QuadPipeline and GeometryPipeline.
+// - Have Quad and Geometry renderers make use of the RendererOpts, just as the
+// TextRenderer do. Start to make way for the user to pass the renderpass as renderer arg
+// (in the RendererOpts)
 class CaravanDefence : public Game {
   private:
     std::unique_ptr<vulkan::SwapChain> m_swap_chain;

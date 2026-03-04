@@ -37,10 +37,12 @@ GeometryRenderer::GeometryRenderer(std::shared_ptr<vulkan::context::GraphicsCont
         0, vulkan::DescriptorBufferInfo::from_vector(m_sparse_set.dense.get_reference()));
     m_descriptor_sets = builder.build(ctx, m_descriptor_pool);
 
-    const auto &layout = m_descriptor_sets.get_layout();
-
-    m_geometry_pipeline = std::make_unique<GeometryPipeline>(
-        m_ctx, command_buffer_manager, swap_chain, &layout, push_constant_range);
+    graphics_pipeline::PipelineOpts pipeline_opts{};
+    pipeline_opts.swap_chain.extent = swap_chain->get_extent();
+    pipeline_opts.swap_chain.render_pass = &swap_chain->m_render_pass;
+    pipeline_opts.push_constant_range = *push_constant_range;
+    pipeline_opts.descriptor.layout = GeometryRenderer::get_descriptor_set_layout(ctx);
+    m_geometry_pipeline = std::make_unique<GeometryPipeline>(m_ctx, pipeline_opts);
 
     m_sparse_set.next_id = 0;
     m_sparse_set.dense_count = 0;
@@ -49,6 +51,14 @@ GeometryRenderer::GeometryRenderer(std::shared_ptr<vulkan::context::GraphicsCont
     m_sparse_set.available.reserve(opts.instance_buffer_opts.size);
     m_sparse_set.available.reserve(opts.instance_buffer_opts.size);
     m_sparse_set.dense.resize(opts.instance_buffer_opts.size);
+}
+
+vulkan::DescriptorSetLayout
+graphics_pipeline::geometry::GeometryRenderer::get_descriptor_set_layout(
+    std::shared_ptr<vulkan::context::GraphicsContext> &ctx) {
+    graphics_pipeline::DescriptorSetLayoutBuilder builder;
+    builder.add_storage_buffer_binding(0, VK_SHADER_STAGE_VERTEX_BIT);
+    return builder.build(ctx);
 }
 
 GeometryPipelineSBO &GeometryRenderer::get_instance(const GeometrySBOHandle &handle) {

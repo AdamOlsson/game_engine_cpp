@@ -4,8 +4,10 @@
 #include "graphics_pipeline/Texture.h"
 #include "graphics_pipeline/quad/QuadPipeline.h"
 #include "graphics_pipeline/quad/QuadPipelineSBO.h"
+#include "graphics_pipeline/quad/QuadRendererOpts.h"
 #include "vulkan/DescriptorPool.h"
 #include "vulkan/Sampler.h"
+#include "vulkan/SwapChain.h"
 #include "vulkan/buffers/GpuBuffer.h"
 #include "vulkan/buffers/IndexBuffer.h"
 #include "vulkan/buffers/VertexBuffer.h"
@@ -13,26 +15,6 @@ namespace graphics_pipeline::quad {
 
 struct QuadPipelineSBO;
 class QuadSBOHandle;
-
-struct QuadRendererOpts {
-    vulkan::DescriptorPoolOpts pool_opts = vulkan::DescriptorPoolOpts{
-        .max_num_descriptor_sets = 2,
-        .num_storage_buffers = 1,
-        .num_uniform_buffers = 0,
-        .num_combined_image_samplers = 1,
-    };
-
-    vulkan::SamplerOpts sampler_opts = vulkan::SamplerOpts{
-        .filter = vulkan::Filter::NEAREST,
-        .address_mode = vulkan::SamplerAddressMode::CLAMP_TO_BORDER,
-    };
-
-    struct {
-        size_t size = 256;
-    } instance_buffer_opts;
-
-    std::optional<graphics_pipeline::Texture> texture = std::nullopt;
-};
 
 class QuadRenderer {
   private:
@@ -60,6 +42,9 @@ class QuadRenderer {
 
     static constexpr size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
     bool contains(size_t id) const;
+
+    static vulkan::DescriptorSetLayout
+    get_descriptor_set_layout(std::shared_ptr<vulkan::context::GraphicsContext> &ctx);
 
   public:
     QuadRenderer(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,

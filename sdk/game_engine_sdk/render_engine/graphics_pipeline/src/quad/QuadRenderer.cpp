@@ -1,5 +1,6 @@
 #include "graphics_pipeline/quad/QuadRenderer.h"
 #include "graphics_pipeline/SwapDescriptorSetBuilder.h"
+#include "vulkan/SwapChain.h"
 
 namespace {
 const std::vector<uint16_t> m_quad_indices = {0, 1, 2, 0, 2, 3};
@@ -37,9 +38,12 @@ graphics_pipeline::quad::QuadRenderer::QuadRenderer(
         2, {vulkan::DescriptorImageInfo(m_texture.view(), &m_sampler)});
     m_descriptor_sets = builder.build(ctx, m_descriptor_pool);
 
-    const auto &layout = m_descriptor_sets.get_layout();
-    m_quad_pipeline = QuadPipeline(m_ctx, command_buffer_manager, swap_chain, &layout,
-                                   push_constant_range);
+    graphics_pipeline::PipelineOpts pipeline_opts{};
+    pipeline_opts.swap_chain.extent = swap_chain->get_extent();
+    pipeline_opts.swap_chain.render_pass = &swap_chain->m_render_pass;
+    pipeline_opts.push_constant_range = *push_constant_range;
+    pipeline_opts.descriptor.layout = QuadRenderer::get_descriptor_set_layout(ctx);
+    m_quad_pipeline = QuadPipeline(m_ctx, pipeline_opts);
 
     m_sparse_set.next_id = 0;
     m_sparse_set.dense_count = 0;
@@ -47,6 +51,15 @@ graphics_pipeline::quad::QuadRenderer::QuadRenderer(
     m_sparse_set.reverse.reserve(opts.instance_buffer_opts.size);
     m_sparse_set.available.reserve(opts.instance_buffer_opts.size);
     m_sparse_set.dense.resize(opts.instance_buffer_opts.size);
+}
+
+vulkan::DescriptorSetLayout
+graphics_pipeline::quad::QuadRenderer::get_descriptor_set_layout(
+    std::shared_ptr<vulkan::context::GraphicsContext> &ctx) {
+    graphics_pipeline::DescriptorSetLayoutBuilder builder;
+    builder.add_storage_buffer_binding(0, VK_SHADER_STAGE_VERTEX_BIT);
+    builder.add_combined_image_sampler_binding(2, 1);
+    return builder.build(ctx);
 }
 
 graphics_pipeline::quad::QuadPipelineSBO &

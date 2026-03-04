@@ -1,8 +1,10 @@
 #pragma once
 
+#include "graphics_pipeline/PipelineOpts.h"
 #include "graphics_pipeline/SwapDescriptorSet.h"
 #include "graphics_pipeline/geometry/GeometryPipeline.h"
 #include "graphics_pipeline/geometry/GeometryPipelineSBO.h"
+#include "graphics_pipeline/geometry/GeometryRendererOpts.h"
 #include "vulkan/DescriptorPool.h"
 #include "vulkan/SwapChain.h"
 #include "vulkan/buffers/GpuBuffer.h"
@@ -14,19 +16,6 @@
 namespace graphics_pipeline::geometry {
 
 class GeometrySBOHandle;
-
-struct GeometryRendererOpts {
-    vulkan::DescriptorPoolOpts pool_opts = vulkan::DescriptorPoolOpts{
-        .max_num_descriptor_sets = 2,
-        .num_storage_buffers = 1,
-        .num_uniform_buffers = 0,
-        .num_combined_image_samplers = 0,
-    };
-
-    struct {
-        size_t size = 256;
-    } instance_buffer_opts;
-};
 
 class GeometryRenderer {
   private:
@@ -52,6 +41,9 @@ class GeometryRenderer {
 
     static constexpr size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
     bool contains(size_t id) const;
+
+    static vulkan::DescriptorSetLayout
+    get_descriptor_set_layout(std::shared_ptr<vulkan::context::GraphicsContext> &ctx);
 
   public:
     GeometryRenderer(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
