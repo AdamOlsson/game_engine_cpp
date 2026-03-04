@@ -178,8 +178,12 @@ class CaravanDefence : public Game {
             ctx, m_command_buffer_manager.get(), m_swap_chain.get(), &push_constant_range,
             std::move(geom_opts));
 
-        m_text_renderer = std::make_unique<graphics_pipeline::text::TextRenderer>(
-            ctx, m_swap_chain.get(), push_constant_range);
+        graphics_pipeline::RendererOpts renderer_opts{};
+        renderer_opts.push_constant_range = push_constant_range;
+        renderer_opts.swap_chain.extent = m_swap_chain->get_extent();
+        renderer_opts.swap_chain.render_pass = &m_swap_chain->m_render_pass;
+        m_text_renderer =
+            std::make_unique<graphics_pipeline::text::TextRenderer>(ctx, renderer_opts);
         m_text_renderer->load_font(
             m_command_buffer_manager.get(),
             font::FontLoader(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf")));

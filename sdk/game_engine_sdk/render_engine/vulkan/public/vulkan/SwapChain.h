@@ -44,8 +44,8 @@ class SwapChain {
     void destroy();
 
   public:
-    vulkan::Extent2D m_extent;
     vulkan::RenderPass m_render_pass;
+    vulkan::Extent2D m_extent;
 
     SwapChain();
     SwapChain(std::shared_ptr<vulkan::context::GraphicsContext> &ctx);
@@ -57,6 +57,8 @@ class SwapChain {
 
     SwapChain(const SwapChain &other) = delete;
     SwapChain &operator=(const SwapChain &other) = delete;
+
+    vulkan::Extent2D get_extent() const { return m_extent; }
 
     void wait_for_in_flight_fence();
 

@@ -1,13 +1,12 @@
 #pragma once
 
-#include "vulkan/DescriptorSetLayout.h"
 #include "vulkan/Extent2D.h"
 #include "vulkan/PushConstantRange.h"
 #include "vulkan/RenderPass.h"
 
 namespace graphics_pipeline {
 
-struct PipelineOpts {
+struct RendererOpts {
     struct {
         vulkan::Extent2D extent;
         vulkan::RenderPass *render_pass;
@@ -18,10 +17,6 @@ struct PipelineOpts {
         .offset = 0,
         .size = 0,
     };
-
-    struct {
-        vulkan::DescriptorSetLayout layout;
-    } descriptor;
 };
 
 }; // namespace graphics_pipeline

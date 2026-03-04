@@ -2,6 +2,7 @@
 
 #include "font/FontLoader.h"
 #include "font/Unicode.h"
+#include "graphics_pipeline/RendererOpts.h"
 #include "graphics_pipeline/SwapDescriptorSet.h"
 #include "graphics_pipeline/text/GlyphVertex.h"
 #include "graphics_pipeline/text/TextPipeline.h"
@@ -12,7 +13,6 @@
 #include "vulkan/CommandBufferManager.h"
 #include "vulkan/DescriptorPool.h"
 #include "vulkan/DescriptorSetLayout.h"
-#include "vulkan/SwapChain.h"
 #include "vulkan/buffers/GpuBuffer.h"
 #include "vulkan/buffers/IndexBuffer.h"
 #include "vulkan/buffers/VertexBuffer.h"
@@ -165,8 +165,7 @@ class TextRenderer {
   public:
     TextRenderer() = default;
     TextRenderer(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
-                 vulkan::SwapChain *swap_chain,
-                 const vulkan::PushConstantRange push_constant_range);
+                 const RendererOpts &opts);
 
     TextRenderer(TextRenderer &&) noexcept = default;
 

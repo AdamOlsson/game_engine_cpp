@@ -2,8 +2,10 @@
 #include "font/FontLoader.h"
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
+#include "graphics_pipeline/RendererOpts.h"
 #include "graphics_pipeline/text/TextRenderer.h"
 #include "vulkan/CommandBufferManager.h"
+#include "vulkan/SwapChain.h"
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 constexpr auto INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
@@ -57,8 +59,12 @@ class ExampleTextRendering : public Game {
                                       .offset = 0,
                                       .size = camera::Camera2D::matrix_size()};
 
-        m_text_renderer = std::make_unique<graphics_pipeline::text::TextRenderer>(
-            ctx, m_swap_chain.get(), push_constant_range);
+        graphics_pipeline::RendererOpts renderer_opts{};
+        renderer_opts.push_constant_range = push_constant_range;
+        renderer_opts.swap_chain.extent = m_swap_chain->get_extent();
+        renderer_opts.swap_chain.render_pass = &m_swap_chain->m_render_pass;
+        m_text_renderer =
+            std::make_unique<graphics_pipeline::text::TextRenderer>(ctx, renderer_opts);
 
         m_text_renderer->load_font(m_command_buffer_manager.get(),
                                    std::move(font_loader));
