@@ -32,14 +32,12 @@ enum class GameState {
 // TODO: A single Pipeline is bound to a specific render pass format. Let the user create
 // the renderpass format, then pass these as a dependency to the Renderers and in turn
 // pipelines
-// - Have Quad and Geometry renderers make use of the RendererOpts, just as the
-// TextRenderer do. Start to make way for the user to pass the renderpass as renderer arg
-// (in the RendererOpts)
+// - Pass in renderpass opts to creation of render_pass
 class CaravanDefence : public Game {
   private:
     std::unique_ptr<vulkan::SwapChain> m_swap_chain;
 
-    /*vulkan::RenderPass m_render_pass;*/
+    vulkan::RenderPass m_render_pass;
 
     std::unique_ptr<vulkan::CommandBufferManager> m_command_buffer_manager;
 
@@ -152,7 +150,7 @@ class CaravanDefence : public Game {
         auto window_size = ctx->window->get_framebuffer_size<float>();
         m_swap_chain = std::make_unique<vulkan::SwapChain>(ctx);
 
-        /*m_render_pass = m_swap_chain->create_render_pass();*/
+        m_render_pass = m_swap_chain->create_render_pass();
         /*m_swap_chain->create_framebuffers(m_render_pass);*/
 
         m_command_buffer_manager = std::make_unique<vulkan::CommandBufferManager>(ctx, 2);
@@ -168,7 +166,7 @@ class CaravanDefence : public Game {
         graphics_pipeline::RendererOpts renderer_opts{};
         renderer_opts.push_constant_range = push_constant_range;
         renderer_opts.swap_chain.extent = m_swap_chain->get_extent();
-        renderer_opts.swap_chain.render_pass = &m_swap_chain->m_render_pass;
+        renderer_opts.swap_chain.render_pass = &m_render_pass;
         renderer_opts.quad.texture = graphics_pipeline::Texture::from_filepath(
             ctx, m_command_buffer_manager.get(), ASSET_FILE("sprite_sheet.png"));
         m_quad_renderer = std::make_unique<graphics_pipeline::quad::QuadRenderer>(
@@ -485,7 +483,7 @@ class CaravanDefence : public Game {
     void render() override {
 
         auto command_buffer = m_command_buffer_manager->get_command_buffer();
-        vulkan::Frame frame = m_swap_chain->begin_frame(command_buffer);
+        vulkan::Frame frame = m_swap_chain->begin_frame(command_buffer, &m_render_pass);
 
         const camera::WorldPoint2D cursor_world_point =
             m_camera.viewport_to_world(m_mouse_state.cursor_viewport_position);

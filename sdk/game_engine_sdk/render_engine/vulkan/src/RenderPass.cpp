@@ -3,18 +3,18 @@
 namespace vulkan {
 
 RenderPass::RenderPass(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
-                       vulkan::Format format)
+                       vulkan::Format format, const RenderPassOpts &opts)
     : m_ctx(ctx) {
 
     VkAttachmentDescription color_attachment{};
     color_attachment.format = format;
     color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-    color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    color_attachment.loadOp = opts.color.load_op;
+    color_attachment.storeOp = opts.color.store_op;
     color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    color_attachment.initialLayout = opts.color.initial_layout;
+    color_attachment.finalLayout = opts.color.final_layout;
 
     VkAttachmentReference color_attachment_ref{};
     color_attachment_ref.attachment = 0;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vulkan/Format.h"
+#include "vulkan/RenderPassOpts.h"
 #include "vulkan/context/GraphicsContext.h"
 #include <memory>
 namespace vulkan {
@@ -13,7 +14,7 @@ class RenderPass {
   public:
     RenderPass() = default;
     RenderPass(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
-               vulkan::Format format);
+               vulkan::Format format, const RenderPassOpts &opts = RenderPassOpts{});
 
     RenderPass(RenderPass &&other) noexcept;
     RenderPass &operator=(RenderPass &&other) noexcept;

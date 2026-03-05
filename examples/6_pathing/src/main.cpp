@@ -125,7 +125,7 @@ class ExamplePathing : public Game {
         graphics_pipeline::RendererOpts renderer_opts{};
         renderer_opts.push_constant_range = quad_push_constant_range;
         renderer_opts.swap_chain.extent = m_swap_chain->get_extent();
-        renderer_opts.swap_chain.render_pass = &m_swap_chain->m_render_pass;
+        renderer_opts.swap_chain.render_pass = m_swap_chain->get_render_pass_handle();
         renderer_opts.geometry.instance_buffer_opts.size =
             m_num_tiles_width * m_num_tiles_height;
         m_renderer = std::make_unique<graphics_pipeline::geometry::GeometryRenderer>(

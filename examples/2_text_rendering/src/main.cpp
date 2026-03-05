@@ -62,7 +62,7 @@ class ExampleTextRendering : public Game {
         graphics_pipeline::RendererOpts renderer_opts{};
         renderer_opts.push_constant_range = push_constant_range;
         renderer_opts.swap_chain.extent = m_swap_chain->get_extent();
-        renderer_opts.swap_chain.render_pass = &m_swap_chain->m_render_pass;
+        renderer_opts.swap_chain.render_pass = m_swap_chain->get_render_pass_handle();
         m_text_renderer =
             std::make_unique<graphics_pipeline::text::TextRenderer>(ctx, renderer_opts);
 

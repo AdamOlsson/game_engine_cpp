@@ -99,7 +99,7 @@ class MapGeneration : public Game {
         graphics_pipeline::RendererOpts renderer_opts{};
         renderer_opts.push_constant_range = quad_push_constant_range;
         renderer_opts.swap_chain.extent = m_swap_chain->get_extent();
-        renderer_opts.swap_chain.render_pass = &m_swap_chain->m_render_pass;
+        renderer_opts.swap_chain.render_pass = m_swap_chain->get_render_pass_handle();
         renderer_opts.quad.texture = std::move(tileset);
         renderer_opts.quad.instance_buffer_opts.size = grid.width() * grid.height();
         m_quad_renderer = std::make_unique<graphics_pipeline::quad::QuadRenderer>(

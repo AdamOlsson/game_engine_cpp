@@ -25,26 +25,6 @@ vulkan::SwapChain::SwapChain(std::shared_ptr<vulkan::context::GraphicsContext> &
     setup(old_swap_chain);
 }
 
-void vulkan::SwapChain::wait_for_in_flight_fence() {
-    const VkFence &in_flight_fence = m_in_flight_fence.next();
-    m_ctx->logical_device.wait_for_fence(in_flight_fence);
-    m_ctx->logical_device.reset_fence(in_flight_fence);
-}
-
-void vulkan::SwapChain::recreate_swap_chain() {
-    // All execution is paused when the window is minimized
-    while (m_ctx->window->is_minimized()) {
-    }
-
-    m_ctx->wait_idle();
-
-    VkRenderPass old_render_pass = m_render_pass;
-    VkSwapchainKHR old_swap_chain = m_swap_chain;
-    setup(old_swap_chain);
-
-    vkDestroySwapchainKHR(m_ctx->logical_device, old_swap_chain, nullptr);
-}
-
 void vulkan::SwapChain::setup(VkSwapchainKHR &old_swap_chain) {
     vulkan::context::device::SwapChainSupportDetails swap_chain_support =
         m_ctx->physical_device.query_swap_chain_support(m_ctx->surface);
@@ -65,7 +45,26 @@ void vulkan::SwapChain::setup(VkSwapchainKHR &old_swap_chain) {
     m_image_views = create_image_views(surface_format.format);
     m_surface_format = surface_format.format;
     m_render_pass = create_render_pass();
-    create_framebuffers(m_render_pass);
+}
+
+void vulkan::SwapChain::wait_for_in_flight_fence() {
+    const VkFence &in_flight_fence = m_in_flight_fence.next();
+    m_ctx->logical_device.wait_for_fence(in_flight_fence);
+    m_ctx->logical_device.reset_fence(in_flight_fence);
+}
+
+void vulkan::SwapChain::recreate_swap_chain() {
+    // All execution is paused when the window is minimized
+    while (m_ctx->window->is_minimized()) {
+    }
+
+    m_ctx->wait_idle();
+
+    /*VkRenderPass old_render_pass = m_render_pass;*/
+    VkSwapchainKHR old_swap_chain = m_swap_chain;
+    setup(old_swap_chain);
+
+    vkDestroySwapchainKHR(m_ctx->logical_device, old_swap_chain, nullptr);
 }
 
 void vulkan::SwapChain::destroy() {
@@ -146,6 +145,7 @@ vulkan::SwapChain::create_image_views(VkFormat &image_format) {
 
 void vulkan::SwapChain::create_framebuffers(vulkan::RenderPass &render_pass) {
     const size_t capacity = m_image_views.size();
+    // TODO: Can't clear whenever I want to have multiple render passes
     m_framebuffers.clear();
     m_framebuffers.reserve(capacity);
     for (size_t i = 0; i < capacity; i++) {
@@ -153,8 +153,13 @@ void vulkan::SwapChain::create_framebuffers(vulkan::RenderPass &render_pass) {
     }
 }
 
-vulkan::RenderPass vulkan::SwapChain::create_render_pass() {
-    return vulkan::RenderPass(m_ctx, m_surface_format);
+vulkan::RenderPass
+vulkan::SwapChain::create_render_pass(const std::optional<RenderPassOpts> opts) {
+    m_render_pass = std::nullopt;
+    auto render_pass = vulkan::RenderPass(
+        m_ctx, m_surface_format, opts.has_value() ? opts.value() : RenderPassOpts{});
+    create_framebuffers(render_pass);
+    return render_pass;
 }
 
 std::optional<uint32_t>
@@ -181,7 +186,7 @@ vulkan::Frame vulkan::SwapChain::begin_frame(vulkan::CommandBuffer &command_buff
 
     set_image_index(frame);
 
-    frame.m_render_pass = render_pass != nullptr ? *render_pass : m_render_pass;
+    frame.m_render_pass = render_pass != nullptr ? *render_pass : m_render_pass.value();
     frame.m_render_area_extent = m_extent;
 
     DEBUG_ASSERT(frame.m_image_index < m_framebuffers.size(),

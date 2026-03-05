@@ -30,6 +30,8 @@ class SwapChain {
     vulkan::Semaphore m_submit_completed;
 
     vulkan::Format m_surface_format;
+    vulkan::Extent2D m_extent;
+    std::optional<vulkan::RenderPass> m_render_pass;
 
     void setup(VkSwapchainKHR &old_swap_chain);
 
@@ -44,9 +46,6 @@ class SwapChain {
     void destroy();
 
   public:
-    vulkan::RenderPass m_render_pass;
-    vulkan::Extent2D m_extent;
-
     SwapChain();
     SwapChain(std::shared_ptr<vulkan::context::GraphicsContext> &ctx);
     SwapChain(std::shared_ptr<vulkan::context::GraphicsContext> &ctx, SwapChain &old);
@@ -59,13 +58,17 @@ class SwapChain {
     SwapChain &operator=(const SwapChain &other) = delete;
 
     vulkan::Extent2D get_extent() const { return m_extent; }
+    vulkan::RenderPass *get_render_pass_handle() {
+        return m_render_pass.has_value() ? &m_render_pass.value() : nullptr;
+    }
 
     void wait_for_in_flight_fence();
 
     void recreate_swap_chain();
 
     void create_framebuffers(vulkan::RenderPass &render_pass);
-    vulkan::RenderPass create_render_pass();
+    vulkan::RenderPass
+    create_render_pass(const std::optional<RenderPassOpts> opts = std::nullopt);
 
     std::optional<uint32_t> get_next_image_index(VkSemaphore &image_available);
 
