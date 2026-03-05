@@ -1,15 +1,15 @@
-#include "util/assert.h"
 #include "vulkan/Frame.h"
+#include "util/assert.h"
 #include <stdexcept>
 
 vulkan::Frame::Frame(vulkan::CommandBuffer &command_buffer, VkSwapchainKHR swap_chain)
     : m_command_buffer(command_buffer), m_swap_chain(swap_chain) {}
 
-void vulkan::Frame::begin() {
+void vulkan::Frame::begin_render_pass(RenderPass *render_pass) {
     VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
     VkRenderPassBeginInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = m_render_pass;
+    renderPassInfo.renderPass = render_pass != nullptr ? *render_pass : m_render_pass;
     renderPassInfo.framebuffer = m_frame_buffer;
     renderPassInfo.renderArea.offset = {0, 0};
     renderPassInfo.renderArea.extent = m_render_area_extent;
@@ -37,12 +37,11 @@ void vulkan::Frame::set_scissor(const VkExtent2D &extent) {
     vkCmdSetScissor(m_command_buffer, 0, 1, &scissor);
 }
 
-void vulkan::Frame::end() {
-    vkCmdEndRenderPass(m_command_buffer);
-    m_command_buffer.end();
-}
+void vulkan::Frame::end_render_pass() { vkCmdEndRenderPass(m_command_buffer); }
 
 void vulkan::Frame::submit() {
+    m_command_buffer.end();
+
     VkSubmitInfo submit_info{};
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     VkCommandBuffer command_buffer = m_command_buffer;
@@ -90,8 +89,7 @@ void vulkan::Frame::present() {
     }
 }
 
-void vulkan::Frame::end_submit_present() {
-    end();
+void vulkan::Frame::submit_present() {
     submit();
     present();
 }

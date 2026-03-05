@@ -170,9 +170,12 @@ class MapGeneration : public Game {
         vulkan::Frame frame = m_swap_chain->begin_frame(command_buffer);
 
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
-        m_quad_renderer->render(command_buffer, &push_constant, m_num_instances);
 
-        frame.end_submit_present();
+        frame.begin_render_pass();
+        m_quad_renderer->render(command_buffer, &push_constant, m_num_instances);
+        frame.end_render_pass();
+
+        frame.submit_present();
     }
 };
 

@@ -72,8 +72,7 @@ class SwapChain {
 
     std::optional<uint32_t> get_next_image_index(VkSemaphore &image_available);
 
-    vulkan::Frame begin_frame(vulkan::CommandBuffer &command_buffer,
-                              vulkan::RenderPass *render_pass = nullptr);
+    vulkan::Frame begin_frame(vulkan::CommandBuffer &command_buffer);
     void set_image_index(vulkan::Frame &render_pass);
 };
 } // namespace vulkan

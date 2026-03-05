@@ -163,11 +163,13 @@ class ExampleTextRendering : public Game {
 
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
 
+        frame.begin_render_pass();
         for (const auto &text : m_texts) {
             m_text_renderer->render(command_buffer, text, &push_constant);
         }
+        frame.end_render_pass();
 
-        frame.end_submit_present();
+        frame.submit_present();
     }
 };
 

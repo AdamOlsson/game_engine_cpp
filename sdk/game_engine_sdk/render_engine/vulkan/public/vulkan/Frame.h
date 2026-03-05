@@ -3,6 +3,7 @@
 #include "CommandBuffer.h"
 #include "Viewport.h"
 #include "context/GraphicsContext.h"
+#include "vulkan/RenderPass.h"
 namespace vulkan {
 
 class SwapChain;
@@ -31,13 +32,13 @@ class Frame {
     Frame(const Frame &other) = delete;
     Frame &operator=(const Frame &other) = delete;
 
-    void begin();
+    void begin_render_pass(RenderPass *render_pass = nullptr);
     void set_viewport(const vulkan::Viewport &dim);
     void set_scissor(const VkExtent2D &extent);
-    void end();
+    void end_render_pass();
     void submit();
     void present();
 
-    void end_submit_present();
+    void submit_present();
 };
 } // namespace vulkan

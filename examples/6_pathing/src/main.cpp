@@ -223,9 +223,6 @@ class ExamplePathing : public Game {
 
     void render() override {
 
-        auto command_buffer = m_command_buffer_manager->get_command_buffer();
-        vulkan::Frame frame = m_swap_chain->begin_frame(command_buffer);
-
         // Reset highlight from previous frame
         const auto modified_instances = m_frame_states[m_swap_index].modified_instances;
         for (const auto &idx : modified_instances) {
@@ -315,9 +312,15 @@ class ExamplePathing : public Game {
         m_renderer->sync_render_slots();
 
         glm::mat4 push_constant = m_camera.get_view_projection_matrix();
-        m_renderer->render(command_buffer, &push_constant, m_num_instances);
 
-        frame.end_submit_present();
+        auto command_buffer = m_command_buffer_manager->get_command_buffer();
+        vulkan::Frame frame = m_swap_chain->begin_frame(command_buffer);
+
+        frame.begin_render_pass();
+        m_renderer->render(command_buffer, &push_constant, m_num_instances);
+        frame.end_render_pass();
+
+        frame.submit_present();
 
         m_swap_index = 0;
         /*++m_swap_index % 2;*/

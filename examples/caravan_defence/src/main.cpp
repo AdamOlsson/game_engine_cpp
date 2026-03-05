@@ -29,15 +29,28 @@ enum class GameState {
 // Suggestion 3: Make it possible for a render pipeline to have multiple descriptor sets,
 // swap descriptor set when I can to render to the viewport vs world.
 // ######################################################################################
-// TODO: A single Pipeline is bound to a specific render pass format. Let the user create
-// the renderpass format, then pass these as a dependency to the Renderers and in turn
-// pipelines
-// - Pass in renderpass opts to creation of render_pass
+// TODO: Currently the swap chain clears the existing framebuffer when creating a new
+// render pass. THis can't happen if I want multple render_passes.
+
+constexpr vulkan::RenderPassOpts world_pass =
+    vulkan::RenderPassOpts{.color = {
+                               .load_op = VK_ATTACHMENT_LOAD_OP_CLEAR,
+                               .store_op = VK_ATTACHMENT_STORE_OP_STORE,
+                               .initial_layout = VK_IMAGE_LAYOUT_UNDEFINED,
+                               .final_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                           }};
+
+constexpr vulkan::RenderPassOpts ui_pass =
+    vulkan::RenderPassOpts{.color = {
+                               .load_op = VK_ATTACHMENT_LOAD_OP_LOAD,
+                               .store_op = VK_ATTACHMENT_STORE_OP_STORE,
+                               .initial_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                               .final_layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+                           }};
+
 class CaravanDefence : public Game {
   private:
     std::unique_ptr<vulkan::SwapChain> m_swap_chain;
-
-    vulkan::RenderPass m_render_pass;
 
     std::unique_ptr<vulkan::CommandBufferManager> m_command_buffer_manager;
 
@@ -47,9 +60,15 @@ class CaravanDefence : public Game {
         bool is_right_button_pressed = false;
     } m_mouse_state;
 
+    // World renderers
+    vulkan::RenderPass m_render_pass;
     std::unique_ptr<graphics_pipeline::quad::QuadRenderer> m_quad_renderer;
     std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer> m_geom_renderer;
     std::unique_ptr<graphics_pipeline::text::TextRenderer> m_text_renderer;
+
+    // UI renderers
+    vulkan::RenderPass m_ui_render_pass;
+    std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer> m_ui_geom_renderer;
 
     std::vector<entity::Entity> m_caravan;
     std::vector<entity::Entity> m_caravan_slots;
@@ -150,14 +169,15 @@ class CaravanDefence : public Game {
         auto window_size = ctx->window->get_framebuffer_size<float>();
         m_swap_chain = std::make_unique<vulkan::SwapChain>(ctx);
 
-        m_render_pass = m_swap_chain->create_render_pass();
-        /*m_swap_chain->create_framebuffers(m_render_pass);*/
+        m_render_pass = m_swap_chain->create_render_pass(world_pass);
+        m_ui_render_pass = m_swap_chain->create_render_pass(ui_pass);
 
         m_command_buffer_manager = std::make_unique<vulkan::CommandBufferManager>(ctx, 2);
 
         m_camera = camera::Camera2D(window_size.width, window_size.height);
         m_camera.set_zoom(0.1f);
 
+        // World renderers
         vulkan::PushConstantRange push_constant_range;
         push_constant_range.offset = 0;
         push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
@@ -172,7 +192,6 @@ class CaravanDefence : public Game {
         m_quad_renderer = std::make_unique<graphics_pipeline::quad::QuadRenderer>(
             ctx, m_command_buffer_manager.get(), renderer_opts);
 
-        graphics_pipeline::geometry::GeometryRendererOpts geom_opts{};
         m_geom_renderer = std::make_unique<graphics_pipeline::geometry::GeometryRenderer>(
             ctx, m_command_buffer_manager.get(), renderer_opts);
 
@@ -181,6 +200,15 @@ class CaravanDefence : public Game {
         m_text_renderer->load_font(
             m_command_buffer_manager.get(),
             font::FontLoader(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf")));
+
+        // UI renderers
+        graphics_pipeline::RendererOpts ui_renderer_opts{};
+        ui_renderer_opts.push_constant_range = push_constant_range;
+        ui_renderer_opts.swap_chain.extent = m_swap_chain->get_extent();
+        ui_renderer_opts.swap_chain.render_pass = &m_ui_render_pass;
+        m_ui_geom_renderer =
+            std::make_unique<graphics_pipeline::geometry::GeometryRenderer>(
+                ctx, m_command_buffer_manager.get(), ui_renderer_opts);
 
         const float slot_distance_x = 250.0f;
         // Add entities
@@ -482,9 +510,6 @@ class CaravanDefence : public Game {
 
     void render() override {
 
-        auto command_buffer = m_command_buffer_manager->get_command_buffer();
-        vulkan::Frame frame = m_swap_chain->begin_frame(command_buffer, &m_render_pass);
-
         const camera::WorldPoint2D cursor_world_point =
             m_camera.viewport_to_world(m_mouse_state.cursor_viewport_position);
 
@@ -513,17 +538,28 @@ class CaravanDefence : public Game {
         m_quad_renderer->sync_render_slots();
         m_geom_renderer->sync_render_slots();
 
-        glm::mat4 push_constant = m_camera.get_view_projection_matrix();
+        math::Matrix push_constant = m_camera.get_view_projection_matrix();
         const size_t num_instances = 256; // Size of instance buffers
+
+        auto command_buffer = m_command_buffer_manager->get_command_buffer();
+
+        vulkan::Frame frame = m_swap_chain->begin_frame(command_buffer);
+
+        frame.begin_render_pass(&m_render_pass);
         m_quad_renderer->render(command_buffer, &push_constant, num_instances);
         m_geom_renderer->render(command_buffer, &push_constant, num_instances);
-
         if (m_game_state.state == GameState::Event && m_event.has_value()) {
             m_event->on_hover(cursor_world_point);
             m_event->render(command_buffer, &push_constant);
         }
+        frame.end_render_pass();
 
-        frame.end_submit_present();
+        const math::Matrix ui_push_constant = math::Matrix();
+        frame.begin_render_pass(&m_ui_render_pass);
+        m_ui_geom_renderer->render(command_buffer, &ui_push_constant, 0);
+        frame.end_render_pass();
+
+        frame.submit_present();
     }
 
     void register_mouse_event_handler(vulkan::context::GraphicsContext *ctx) {

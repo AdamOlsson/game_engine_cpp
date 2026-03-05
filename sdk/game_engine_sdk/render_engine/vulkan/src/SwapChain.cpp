@@ -45,6 +45,7 @@ void vulkan::SwapChain::setup(VkSwapchainKHR &old_swap_chain) {
     m_image_views = create_image_views(surface_format.format);
     m_surface_format = surface_format.format;
     m_render_pass = create_render_pass();
+    create_framebuffers(m_render_pass.value());
 }
 
 void vulkan::SwapChain::wait_for_in_flight_fence() {
@@ -145,8 +146,6 @@ vulkan::SwapChain::create_image_views(VkFormat &image_format) {
 
 void vulkan::SwapChain::create_framebuffers(vulkan::RenderPass &render_pass) {
     const size_t capacity = m_image_views.size();
-    // TODO: Can't clear whenever I want to have multiple render passes
-    m_framebuffers.clear();
     m_framebuffers.reserve(capacity);
     for (size_t i = 0; i < capacity; i++) {
         m_framebuffers.emplace_back(m_ctx, m_image_views[i], render_pass, m_extent);
@@ -158,7 +157,6 @@ vulkan::SwapChain::create_render_pass(const std::optional<RenderPassOpts> opts) 
     m_render_pass = std::nullopt;
     auto render_pass = vulkan::RenderPass(
         m_ctx, m_surface_format, opts.has_value() ? opts.value() : RenderPassOpts{});
-    create_framebuffers(render_pass);
     return render_pass;
 }
 
@@ -177,16 +175,18 @@ vulkan::SwapChain::get_next_image_index(VkSemaphore &image_available) {
     return image_index;
 }
 
-vulkan::Frame vulkan::SwapChain::begin_frame(vulkan::CommandBuffer &command_buffer,
-                                             vulkan::RenderPass *render_pass) {
+vulkan::Frame vulkan::SwapChain::begin_frame(vulkan::CommandBuffer &command_buffer) {
     wait_for_in_flight_fence();
 
     command_buffer.begin();
+
     vulkan::Frame frame = vulkan::Frame(command_buffer, m_swap_chain);
 
     set_image_index(frame);
 
-    frame.m_render_pass = render_pass != nullptr ? *render_pass : m_render_pass.value();
+    frame.m_in_flight_fence = m_in_flight_fence.current();
+
+    frame.m_render_pass = m_render_pass.has_value() ? m_render_pass.value() : nullptr;
     frame.m_render_area_extent = m_extent;
 
     DEBUG_ASSERT(frame.m_image_index < m_framebuffers.size(),
@@ -202,26 +202,22 @@ vulkan::Frame vulkan::SwapChain::begin_frame(vulkan::CommandBuffer &command_buff
     frame.set_viewport(viewport);
     frame.set_scissor(m_extent);
 
-    frame.begin();
-
     return frame;
 }
 
-void vulkan::SwapChain::set_image_index(vulkan::Frame &render_pass) {
+void vulkan::SwapChain::set_image_index(vulkan::Frame &frame) {
 
     VkSemaphore image_available = m_image_available.get();
     auto image_index = get_next_image_index(image_available);
 
     if (!image_index.has_value()) {
-        logger::error("Failed to acquire image index");
-        logger::info("Recreating swap chain");
+        logger::error("Failed to acquire image index.");
+        logger::info("Recreating swap chain.");
         DEBUG_ASSERT(false, "Error: Recreating swap chain is temporarily disabled.");
         /*recreate_swap_chain();*/
         image_index = get_next_image_index(image_available);
     }
 
-    VkFence in_flight_fence = m_in_flight_fence.current();
-    render_pass.m_image_index = image_index.value();
-    render_pass.m_image_available = image_available;
-    render_pass.m_in_flight_fence = in_flight_fence;
+    frame.m_image_index = image_index.value();
+    frame.m_image_available = image_available;
 }
