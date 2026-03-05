@@ -165,22 +165,19 @@ class CaravanDefence : public Game {
         push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         push_constant_range.size = camera::Camera2D::matrix_size();
 
-        graphics_pipeline::quad::QuadRendererOpts quad_opts{};
-        quad_opts.texture = graphics_pipeline::Texture::from_filepath(
-            ctx, m_command_buffer_manager.get(), ASSET_FILE("sprite_sheet.png"));
-        m_quad_renderer = std::make_unique<graphics_pipeline::quad::QuadRenderer>(
-            ctx, m_command_buffer_manager.get(), m_swap_chain.get(), &push_constant_range,
-            std::move(quad_opts));
-
-        graphics_pipeline::geometry::GeometryRendererOpts geom_opts{};
-        m_geom_renderer = std::make_unique<graphics_pipeline::geometry::GeometryRenderer>(
-            ctx, m_command_buffer_manager.get(), m_swap_chain.get(), &push_constant_range,
-            std::move(geom_opts));
-
         graphics_pipeline::RendererOpts renderer_opts{};
         renderer_opts.push_constant_range = push_constant_range;
         renderer_opts.swap_chain.extent = m_swap_chain->get_extent();
         renderer_opts.swap_chain.render_pass = &m_swap_chain->m_render_pass;
+        renderer_opts.quad.texture = graphics_pipeline::Texture::from_filepath(
+            ctx, m_command_buffer_manager.get(), ASSET_FILE("sprite_sheet.png"));
+        m_quad_renderer = std::make_unique<graphics_pipeline::quad::QuadRenderer>(
+            ctx, m_command_buffer_manager.get(), renderer_opts);
+
+        graphics_pipeline::geometry::GeometryRendererOpts geom_opts{};
+        m_geom_renderer = std::make_unique<graphics_pipeline::geometry::GeometryRenderer>(
+            ctx, m_command_buffer_manager.get(), renderer_opts);
+
         m_text_renderer =
             std::make_unique<graphics_pipeline::text::TextRenderer>(ctx, renderer_opts);
         m_text_renderer->load_font(

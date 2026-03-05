@@ -1,12 +1,10 @@
 #pragma once
 
-#include "graphics_pipeline/PipelineOpts.h"
+#include "graphics_pipeline/RendererOpts.h"
 #include "graphics_pipeline/SwapDescriptorSet.h"
 #include "graphics_pipeline/geometry/GeometryPipeline.h"
 #include "graphics_pipeline/geometry/GeometryPipelineSBO.h"
-#include "graphics_pipeline/geometry/GeometryRendererOpts.h"
 #include "vulkan/DescriptorPool.h"
-#include "vulkan/SwapChain.h"
 #include "vulkan/buffers/GpuBuffer.h"
 #include "vulkan/buffers/IndexBuffer.h"
 #include "vulkan/buffers/VertexBuffer.h"
@@ -48,9 +46,7 @@ class GeometryRenderer {
   public:
     GeometryRenderer(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
                      vulkan::CommandBufferManager *command_buffer_manager,
-                     vulkan::SwapChain *swap_chain,
-                     const vulkan::PushConstantRange *push_constant_range,
-                     GeometryRendererOpts &&opts);
+                     RendererOpts &opts);
 
     GeometryRenderer(GeometryRenderer &&) noexcept = delete;
     GeometryRenderer &operator=(GeometryRenderer &&) noexcept = delete;

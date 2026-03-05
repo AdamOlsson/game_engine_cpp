@@ -17,20 +17,18 @@ namespace graphics_pipeline::geometry {
 
 GeometryRenderer::GeometryRenderer(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
                                    vulkan::CommandBufferManager *command_buffer_manager,
-                                   vulkan::SwapChain *swap_chain,
-                                   const vulkan::PushConstantRange *push_constant_range,
-                                   GeometryRendererOpts &&opts)
+                                   RendererOpts &opts)
     : m_ctx(ctx), m_quad_vertex_buffer(vulkan::buffers::VertexBuffer(
                       m_ctx, m_quad_vertices, command_buffer_manager)),
       m_quad_index_buffer(
           vulkan::buffers::IndexBuffer(m_ctx, m_quad_indices, command_buffer_manager)) {
 
-    m_descriptor_pool = vulkan::DescriptorPool(m_ctx, opts.pool_opts);
+    m_descriptor_pool = vulkan::DescriptorPool(m_ctx, opts.geometry.pool_opts);
 
     const size_t max_frames_in_flight = 2;
     m_sparse_set.dense =
         vulkan::buffers::StorageBuffer<graphics_pipeline::geometry::GeometryPipelineSBO>(
-            m_ctx, opts.instance_buffer_opts.size, max_frames_in_flight);
+            m_ctx, opts.geometry.instance_buffer_opts.size, max_frames_in_flight);
 
     auto builder = SwapDescriptorSetBuilder(max_frames_in_flight);
     builder.add_storage_buffer(
@@ -38,19 +36,19 @@ GeometryRenderer::GeometryRenderer(std::shared_ptr<vulkan::context::GraphicsCont
     m_descriptor_sets = builder.build(ctx, m_descriptor_pool);
 
     graphics_pipeline::PipelineOpts pipeline_opts{};
-    pipeline_opts.swap_chain.extent = swap_chain->get_extent();
-    pipeline_opts.swap_chain.render_pass = &swap_chain->m_render_pass;
-    pipeline_opts.push_constant_range = *push_constant_range;
+    pipeline_opts.swap_chain.extent = opts.swap_chain.extent;
+    pipeline_opts.swap_chain.render_pass = opts.swap_chain.render_pass;
+    pipeline_opts.push_constant_range = opts.push_constant_range;
     pipeline_opts.descriptor.layout = GeometryRenderer::get_descriptor_set_layout(ctx);
     m_geometry_pipeline = std::make_unique<GeometryPipeline>(m_ctx, pipeline_opts);
 
     m_sparse_set.next_id = 0;
     m_sparse_set.dense_count = 0;
-    m_sparse_set.sparse.resize(opts.instance_buffer_opts.size, INVALID_INDEX);
-    m_sparse_set.reverse.reserve(opts.instance_buffer_opts.size);
-    m_sparse_set.available.reserve(opts.instance_buffer_opts.size);
-    m_sparse_set.available.reserve(opts.instance_buffer_opts.size);
-    m_sparse_set.dense.resize(opts.instance_buffer_opts.size);
+    m_sparse_set.sparse.resize(opts.geometry.instance_buffer_opts.size, INVALID_INDEX);
+    m_sparse_set.reverse.reserve(opts.geometry.instance_buffer_opts.size);
+    m_sparse_set.available.reserve(opts.geometry.instance_buffer_opts.size);
+    m_sparse_set.available.reserve(opts.geometry.instance_buffer_opts.size);
+    m_sparse_set.dense.resize(opts.geometry.instance_buffer_opts.size);
 }
 
 vulkan::DescriptorSetLayout

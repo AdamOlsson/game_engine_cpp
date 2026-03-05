@@ -96,12 +96,14 @@ class MapGeneration : public Game {
                                       .offset = 0,
                                       .size = camera::Camera2D::matrix_size()};
 
-        graphics_pipeline::quad::QuadRendererOpts opts{};
-        opts.texture = std::move(tileset);
-        opts.instance_buffer_opts.size = grid.width() * grid.height();
+        graphics_pipeline::RendererOpts renderer_opts{};
+        renderer_opts.push_constant_range = quad_push_constant_range;
+        renderer_opts.swap_chain.extent = m_swap_chain->get_extent();
+        renderer_opts.swap_chain.render_pass = &m_swap_chain->m_render_pass;
+        renderer_opts.quad.texture = std::move(tileset);
+        renderer_opts.quad.instance_buffer_opts.size = grid.width() * grid.height();
         m_quad_renderer = std::make_unique<graphics_pipeline::quad::QuadRenderer>(
-            ctx, m_command_buffer_manager.get(), m_swap_chain.get(),
-            &quad_push_constant_range, std::move(opts));
+            ctx, m_command_buffer_manager.get(), renderer_opts);
 
         const auto num_tiles = grid.width() * grid.height();
         m_num_instances = 0;

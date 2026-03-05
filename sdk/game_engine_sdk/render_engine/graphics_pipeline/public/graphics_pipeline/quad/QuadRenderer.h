@@ -1,10 +1,10 @@
 #pragma once
 
+#include "graphics_pipeline/RendererOpts.h"
 #include "graphics_pipeline/SwapDescriptorSet.h"
 #include "graphics_pipeline/Texture.h"
 #include "graphics_pipeline/quad/QuadPipeline.h"
 #include "graphics_pipeline/quad/QuadPipelineSBO.h"
-#include "graphics_pipeline/quad/QuadRendererOpts.h"
 #include "vulkan/DescriptorPool.h"
 #include "vulkan/Sampler.h"
 #include "vulkan/SwapChain.h"
@@ -49,9 +49,7 @@ class QuadRenderer {
   public:
     QuadRenderer(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
                  vulkan::CommandBufferManager *command_buffer_manager,
-                 vulkan::SwapChain *swap_chain,
-                 const vulkan::PushConstantRange *push_constant_range,
-                 QuadRendererOpts &&opts);
+                 RendererOpts &opts);
 
     QuadRenderer(QuadRenderer &&) noexcept = delete;
     QuadRenderer &operator=(QuadRenderer &&) noexcept = delete;
