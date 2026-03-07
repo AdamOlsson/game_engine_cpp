@@ -79,6 +79,7 @@ target_link_libraries(${PROJECT_NAME}
         glm
         glfw
         sdk::logger
+        sdk::interface
         sdk::util
         render_engine::font
         render_engine::image

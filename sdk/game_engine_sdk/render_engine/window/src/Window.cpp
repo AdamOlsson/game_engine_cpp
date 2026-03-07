@@ -55,16 +55,17 @@ void Window::register_keyboard_event_callback(KeyboardEventCallbackFn cb) {
 void Window::mouse_scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     auto w = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
     if (w->mouse_event_cb.has_value()) {
-        auto scroll_offset = ViewportPoint(xoffset, yoffset);
+        auto scroll_offset = interface::ViewportPoint(xoffset, yoffset);
         w->mouse_event_cb.value()(MouseEvent::SCROLL, scroll_offset);
     }
 }
 
-ViewportPoint Window::to_viewport(const Window *w, const double xpos, const double ypos) {
+interface::ViewportPoint Window::to_viewport(const Window *w, const double xpos,
+                                             const double ypos) {
     const double half_width = w->m_window_size.width / 2.0;
     const double half_height = w->m_window_size.height / 2.0;
-    return ViewportPoint((xpos - half_width) * w->m_px_per_coord.x,
-                         (ypos - half_height) * w->m_px_per_coord.y);
+    return interface::ViewportPoint((xpos - half_width) * w->m_px_per_coord.x,
+                                    (ypos - half_height) * w->m_px_per_coord.y);
 }
 
 void Window::cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {

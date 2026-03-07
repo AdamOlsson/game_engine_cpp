@@ -66,7 +66,7 @@ TEST(Camera2DTest, Test_SetRelativeCameraZoomAtOrigo) {
     const auto base_orthogonal_height = 100.0f;
     auto camera = camera::Camera2D(window_width, window_height, base_orthogonal_height);
 
-    const auto zoom_center = camera::ViewportPoint(0, 0);
+    const auto zoom_center = interface::ViewportPoint(0, 0);
     camera.set_position(camera::WorldPoint2D(0, 0));
     camera.set_relative_zoom(3.0f);
     camera.set_rotation(0.0f);
@@ -225,7 +225,7 @@ TEST(Camera2DTest, Test_SetRelativeCameraPositionOffOrigoAndWorldPointOnOrigo) {
     const auto base_orthogonal_height = 100.0f;
     auto camera = camera::Camera2D(window_width, window_height, base_orthogonal_height);
 
-    const auto zoom_center = camera::ViewportPoint(0, 0);
+    const auto zoom_center = interface::ViewportPoint(0, 0);
     camera.set_relative_position(camera::WorldPoint2D(25, 25));
     camera.set_zoom(1.0f);
     camera.set_rotation(0.0f);

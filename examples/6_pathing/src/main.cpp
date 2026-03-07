@@ -3,6 +3,7 @@
 #include "game_engine_sdk/GameEngine.h"
 #include "graphics_pipeline/geometry/GeometryPipelineSBO.h"
 #include "graphics_pipeline/geometry/GeometryRenderer.h"
+#include "interface/ViewportPoint.h"
 #include "math/Matrix.h"
 #include "tiling/Position.h"
 #include "tiling/TileGrid.h"
@@ -39,7 +40,7 @@ class ExamplePathing : public Game {
     bool m_is_right_mouse_pressed = false;
     bool m_is_left_mouse_pressed = false;
     bool m_is_left_shift_pressed = false;
-    window::ViewportPoint m_mouse_last_position = window::ViewportPoint();
+    interface::ViewportPoint m_mouse_last_position;
     camera::Camera2D m_camera;
 
     size_t m_num_instances;
@@ -62,7 +63,7 @@ class ExamplePathing : public Game {
 
   public:
     ExamplePathing()
-        : m_swap_index(0), m_mouse_last_position(window::ViewportPoint(-10000, -1000)),
+        : m_swap_index(0), m_mouse_last_position(interface::ViewportPoint(-10000, -1000)),
           m_grid(tiling::TileGrid<CellType>(0, 0)) {}
 
     ~ExamplePathing() {};
@@ -160,7 +161,8 @@ class ExamplePathing : public Game {
 
     void register_mouse_event_handler(vulkan::context::GraphicsContext *ctx) {
         ctx->window->register_mouse_event_callback(
-            [this](window::MouseEvent mouse_event, window::ViewportPoint &point) -> void {
+            [this](window::MouseEvent mouse_event,
+                   interface::ViewportPoint &point) -> void {
                 switch (mouse_event) {
                 case window::MouseEvent::RIGHT_BUTTON_DOWN:
                     m_is_right_mouse_pressed = true;
@@ -183,7 +185,7 @@ class ExamplePathing : public Game {
                     m_mouse_last_position = point;
                     break;
                 case window::MouseEvent::SCROLL:
-                    m_camera.set_relative_zoom(point.y * ZOOM_SCALE_FACTOR);
+                    m_camera.set_relative_zoom(point.y() * ZOOM_SCALE_FACTOR);
                     break;
                 case window::MouseEvent::LEFT_BUTTON_DOWN:
                     m_is_left_mouse_pressed = true;

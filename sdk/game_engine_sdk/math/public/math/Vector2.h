@@ -47,14 +47,24 @@ class Vector2 {
         return Vector2(m_vec.x + other.m_vec.x, m_vec.y + other.m_vec.y);
     }
 
-    Vector2 operator-(const Vector2 &other) const {
-        return Vector2(m_vec.x - other.m_vec.x, m_vec.y - other.m_vec.y);
-    }
-
     Vector2 &operator+=(const Vector2 &other) {
         m_vec.x += other.m_vec.x;
         m_vec.y += other.m_vec.y;
         return *this;
+    }
+
+    template <typename Derived> Derived add(const Derived &other) const {
+        return static_cast<Derived>(static_cast<const glm::vec2 &>(*this) +
+                                    static_cast<const glm::vec2 &>(other));
+    }
+
+    Vector2 operator-(const Vector2 &other) const {
+        return Vector2(m_vec.x - other.m_vec.x, m_vec.y - other.m_vec.y);
+    }
+
+    template <typename Derived> Derived subtract(const Derived &other) const {
+        return static_cast<Derived>(static_cast<const glm::vec2 &>(*this) -
+                                    static_cast<const glm::vec2 &>(other));
     }
 
     Vector2 &operator-=(const Vector2 &other) {
@@ -75,6 +85,11 @@ class Vector2 {
 
     friend Vector2 operator*(const Vector2 &lhs, const float scalar) {
         return Vector2(lhs.x() * scalar, lhs.y() * scalar);
+    }
+
+    template <typename Derived> Derived multiply(const Derived &other) const {
+        return static_cast<Derived>(static_cast<const glm::vec2 &>(*this) *
+                                    static_cast<const glm::vec2 &>(other));
     }
 
     friend Vector2 operator-(const glm::vec2 &lhs, const Vector2 &rhs) {

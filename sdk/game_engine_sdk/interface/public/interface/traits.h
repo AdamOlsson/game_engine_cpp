@@ -1,7 +1,9 @@
 #pragma once
 
 #include <iostream>
-namespace window {
+
+namespace interface {
+
 template <typename T>
 concept Printable = requires(T t, std::ostream &os) { os << t; };
 
@@ -10,4 +12,4 @@ concept StaticCastableToFloat = requires(T t) {
     { static_cast<float>(t) } -> std::same_as<float>;
 };
 
-}; // namespace window
+}; // namespace interface

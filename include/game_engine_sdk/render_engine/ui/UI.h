@@ -3,8 +3,8 @@
 #include "game_engine_sdk/render_engine/ui/Menu.h"
 #include "game_engine_sdk/render_engine/ui/State.h"
 #include "game_engine_sdk/render_engine/ui/TextBox.h"
+#include "interface/ViewportPoint.h"
 #include "window/MouseEvent.h"
-#include "window/ViewportPoint.h"
 #include <unordered_map>
 namespace ui {
 
@@ -18,16 +18,16 @@ class UI {
     std::vector<ui::Menu *> m_menu_trace;
     Menu *m_last_menu_in_trace;
 
-    bool is_inside(const window::ViewportPoint &cursor_pos,
+    bool is_inside(const interface::ViewportPoint &cursor_pos,
                    const ElementProperties &element);
 
     Menu *get_last_menu();
 
     // TODO: These can probably be merged to a single function and use event based args
-    ui::State &update_state_using_cursor(const window::ViewportPoint &cursor_pos);
+    ui::State &update_state_using_cursor(const interface::ViewportPoint &cursor_pos);
     ui::State &update_state_using_keypress();
     ui::State &update_state_using_click_event(const window::MouseEvent mouse_event,
-                                              const window::ViewportPoint &cursor_pos);
+                                              const interface::ViewportPoint &cursor_pos);
 
   public:
     UI() = default;
@@ -46,7 +46,7 @@ class UI {
 
     ui::State &get_state();
     ui::State &update_state_from_mouse_event(const window::MouseEvent mouse_event,
-                                             const window::ViewportPoint &cursor_pos);
+                                             const interface::ViewportPoint &cursor_pos);
 
     void push_new_menu(Menu *new_menu);
     void pop_menu();

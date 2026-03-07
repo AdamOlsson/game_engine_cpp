@@ -4,6 +4,7 @@
 #include "MouseEvent.h"
 #include "WindowConfig.h"
 #include "WindowDimension.h"
+#include "interface/ViewportPoint.h"
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <optional>
@@ -78,8 +79,8 @@ class Window {
                                       int mods);
     static void keyboard_callback(GLFWwindow *window, int key, int scancode, int action,
                                   int mods);
-    static ViewportPoint to_viewport(const Window *w, const double xpos,
-                                     const double ypos);
+    static interface::ViewportPoint to_viewport(const Window *w, const double xpos,
+                                                const double ypos);
 };
 
 } // namespace window

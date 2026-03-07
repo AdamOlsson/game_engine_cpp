@@ -1,12 +1,12 @@
 #include "game_engine_sdk/render_engine/ui/Button.h"
 #include "game_engine_sdk/render_engine/ui/UI.h"
+#include "interface/ViewportPoint.h"
 #include "util/colors.h"
-#include "window/ViewportPoint.h"
 #include <gtest/gtest.h>
 
 TEST(UITest, TestOnEnterAndOnLeaveWithSingleButton) {
-    const auto cursor_pos_on_button = window::ViewportPoint(0.0f, 0.0f);
-    const auto cursor_pos_off_button = window::ViewportPoint(200.1f, 0.0f);
+    const auto cursor_pos_on_button = interface::ViewportPoint(0.0f, 0.0f);
+    const auto cursor_pos_off_button = interface::ViewportPoint(200.1f, 0.0f);
     auto m_ui = ui::UI(ui::Menu().add_button(
         ui::Button("",
                    ui::ElementProperties{
@@ -47,8 +47,8 @@ TEST(UITest, TestOnEnterAndOnLeaveWithSingleButton) {
 }
 
 TEST(UITest, TestOnEnterAndOnLeaveWithThreeeButtons) {
-    const auto cursor_pos_on_button = window::ViewportPoint(0.0f, 0.0f);
-    const auto cursor_pos_off_button = window::ViewportPoint(200.1f, 0.0f);
+    const auto cursor_pos_on_button = interface::ViewportPoint(0.0f, 0.0f);
+    const auto cursor_pos_off_button = interface::ViewportPoint(200.1f, 0.0f);
     auto m_ui = ui::UI(
         ui::Menu()
             .add_button(

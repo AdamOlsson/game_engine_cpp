@@ -19,9 +19,10 @@ message(STATUS "")
 message(STATUS "Configuring game_engine_sdk modules:")
 
 add_subdirectory(logger)
+add_subdirectory(math)
+add_subdirectory(interface)
 add_subdirectory(util)
 add_subdirectory(ads)
-add_subdirectory(math)
 
 if(GAME_ENGINE_SDK_BUILD_RENDER_ENGINE)
     message(STATUS "  - Adding render_engine")

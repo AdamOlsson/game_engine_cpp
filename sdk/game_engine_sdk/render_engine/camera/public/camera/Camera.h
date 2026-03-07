@@ -1,9 +1,10 @@
 #pragma once
 
+#include "interface/NDCPosition.h"
+#include "interface/ViewportPoint.h"
 #include <glm/glm.hpp>
 
 namespace camera {
-using ViewportPoint = glm::vec2;
 using WorldPoint2D = glm::vec2;
 
 class Camera2D {
@@ -55,12 +56,17 @@ class Camera2D {
     float get_rotation() const;
     float get_zoom() const;
 
-    WorldPoint2D viewport_delta_to_world(const ViewportPoint &viewport_delta) const;
-    WorldPoint2D viewport_delta_to_world(const ViewportPoint &&viewport_delta) const;
-    WorldPoint2D viewport_to_world(const ViewportPoint &viewport_pos) const;
+    WorldPoint2D
+    viewport_delta_to_world(const interface::ViewportPoint &viewport_delta) const;
+    WorldPoint2D
+    viewport_delta_to_world(const interface::ViewportPoint &&viewport_delta) const;
+    WorldPoint2D viewport_to_world(const interface::ViewportPoint &viewport_pos) const;
+
+    float to_ndc_width(const float value) const;
+    float to_ndc_height(const float value) const;
+    interface::NDCPoint to_ndc_point(const interface::ViewportPoint &point) const;
 
     static uint32_t matrix_size();
-
     static glm::mat4 get_default_view_matrix();
 };
 } // namespace camera

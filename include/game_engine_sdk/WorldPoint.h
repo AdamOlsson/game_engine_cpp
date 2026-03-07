@@ -1,7 +1,13 @@
 #pragma once
-#include "game_engine_sdk/traits.h"
-#include <glm/glm.hpp>
+#include "glm/glm.hpp"
 #include <ostream>
+
+namespace {
+template <typename T>
+concept StaticCastableToFloat = requires(T t) {
+    { static_cast<float>(t) } -> std::same_as<float>;
+};
+} // namespace
 
 struct WorldPoint2D : public glm::vec2 {
     using glm::vec2::vec2;

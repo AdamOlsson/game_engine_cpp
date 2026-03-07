@@ -39,7 +39,7 @@ class MapGeneration : public Game {
     TilesetUVWT m_tileset_uvwt;
 
     bool m_is_right_mouse_pressed = false;
-    window::ViewportPoint m_mouse_last_position = window::ViewportPoint();
+    interface::ViewportPoint m_mouse_last_position;
     camera::Camera2D m_camera;
 
   public:
@@ -136,7 +136,8 @@ class MapGeneration : public Game {
 
     void register_mouse_event_handler(vulkan::context::GraphicsContext *ctx) {
         ctx->window->register_mouse_event_callback(
-            [this](window::MouseEvent mouse_event, window::ViewportPoint &point) -> void {
+            [this](window::MouseEvent mouse_event,
+                   interface::ViewportPoint &point) -> void {
                 switch (mouse_event) {
                 case window::MouseEvent::RIGHT_BUTTON_DOWN:
                     m_is_right_mouse_pressed = true;
@@ -153,7 +154,7 @@ class MapGeneration : public Game {
                     m_mouse_last_position = point;
                     break;
                 case window::MouseEvent::SCROLL:
-                    m_camera.set_relative_zoom(point.y * ZOOM_SCALE_FACTOR);
+                    m_camera.set_relative_zoom(point.y() * ZOOM_SCALE_FACTOR);
 
                     break;
                 case window::MouseEvent::LEFT_BUTTON_DOWN:

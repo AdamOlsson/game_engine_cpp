@@ -75,7 +75,7 @@ Menu *UI::get_last_menu() {
 }
 
 ui::State &UI::update_state_from_mouse_event(const window::MouseEvent mouse_event,
-                                             const window::ViewportPoint &cursor_pos) {
+                                             const interface::ViewportPoint &cursor_pos) {
 
     switch (mouse_event) {
     case window::MouseEvent::CURSOR_MOVED:
@@ -92,8 +92,9 @@ ui::State &UI::update_state_from_mouse_event(const window::MouseEvent mouse_even
     return m_current_menu_state;
 }
 
-ui::State &UI::update_state_using_click_event(const window::MouseEvent mouse_event,
-                                              const window::ViewportPoint &cursor_pos) {
+ui::State &
+UI::update_state_using_click_event(const window::MouseEvent mouse_event,
+                                   const interface::ViewportPoint &cursor_pos) {
     // Find the item the cursor is over
     Button *target_button = nullptr;
     Menu *current_menu = m_last_menu_in_trace;
@@ -131,7 +132,7 @@ ui::State &UI::update_state_using_click_event(const window::MouseEvent mouse_eve
     return m_current_menu_state;
 }
 
-State &UI::update_state_using_cursor(const window::ViewportPoint &cursor_pos) {
+State &UI::update_state_using_cursor(const interface::ViewportPoint &cursor_pos) {
     Menu *current_menu = m_last_menu_in_trace;
     for (auto &button : current_menu->button_vector) {
         bool cursor_is_inside = is_inside(cursor_pos, button->properties);
@@ -173,13 +174,13 @@ State &UI::update_state_using_cursor(const window::ViewportPoint &cursor_pos) {
 
 /*State UI::update_state_using_keypress() {}*/
 
-bool UI::is_inside(const window::ViewportPoint &cursor_pos,
+bool UI::is_inside(const interface::ViewportPoint &cursor_pos,
                    const ElementProperties &element) {
     float half_width = element.container.dimension.x / 2.0f;
     float half_height = element.container.dimension.y / 2.0f;
 
-    return (cursor_pos.x >= element.container.center.x - half_width) &&
-           (cursor_pos.x <= element.container.center.x + half_width) &&
-           (cursor_pos.y >= element.container.center.y - half_height) &&
-           (cursor_pos.y <= element.container.center.y + half_height);
+    return (cursor_pos.x() >= element.container.center.x - half_width) &&
+           (cursor_pos.x() <= element.container.center.x + half_width) &&
+           (cursor_pos.y() >= element.container.center.y - half_height) &&
+           (cursor_pos.y() <= element.container.center.y + half_height);
 }

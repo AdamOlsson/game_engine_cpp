@@ -17,7 +17,7 @@ class ExampleTextRendering : public Game {
     std::unique_ptr<vulkan::CommandBufferManager> m_command_buffer_manager;
 
     bool m_is_left_mouse_pressed = false;
-    window::ViewportPoint m_mouse_last_position = window::ViewportPoint();
+    interface::ViewportPoint m_mouse_last_position = interface::ViewportPoint();
     camera::Camera2D m_camera;
 
     std::unique_ptr<graphics_pipeline::text::TextRenderer> m_text_renderer;
@@ -26,7 +26,7 @@ class ExampleTextRendering : public Game {
 
   public:
     ExampleTextRendering()
-        : m_mouse_last_position(window::ViewportPoint(-10000, -1000)) {}
+        : m_mouse_last_position(interface::ViewportPoint(-10000, -1000)) {}
 
     ~ExampleTextRendering() {};
 
@@ -97,7 +97,8 @@ class ExampleTextRendering : public Game {
 
     void register_mouse_event_handler(vulkan::context::GraphicsContext *ctx) {
         ctx->window->register_mouse_event_callback(
-            [this](window::MouseEvent mouse_event, window::ViewportPoint &point) -> void {
+            [this](window::MouseEvent mouse_event,
+                   interface::ViewportPoint &point) -> void {
                 switch (mouse_event) {
                 case window::MouseEvent::RIGHT_BUTTON_DOWN:
                     break;
@@ -112,7 +113,7 @@ class ExampleTextRendering : public Game {
                     m_mouse_last_position = point;
                     break;
                 case window::MouseEvent::SCROLL:
-                    m_camera.set_relative_zoom(point.y * ZOOM_SCALE_FACTOR);
+                    m_camera.set_relative_zoom(point.y() * ZOOM_SCALE_FACTOR);
                     break;
                 case window::MouseEvent::LEFT_BUTTON_DOWN:
                     m_is_left_mouse_pressed = true;

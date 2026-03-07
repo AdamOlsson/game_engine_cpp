@@ -4,6 +4,7 @@
 #include "game_engine_sdk/GameEngine.h"
 #include "graphics_pipeline/quad/QuadRenderer.h"
 #include "graphics_pipeline/text/TextRenderer.h"
+#include "interface/NDCPosition.h"
 #include "vulkan/CommandBufferManager.h"
 #include <random>
 
@@ -29,8 +30,7 @@ enum class GameState {
 // Suggestion 3: Make it possible for a render pipeline to have multiple descriptor sets,
 // swap descriptor set when I can to render to the viewport vs world.
 // ######################################################################################
-// TODO: Currently the swap chain clears the existing framebuffer when creating a new
-// render pass. THis can't happen if I want multple render_passes.
+// TODO: Render events to the viewport instead of world using the ui render pass
 
 constexpr vulkan::RenderPassOpts world_pass =
     vulkan::RenderPassOpts{.color = {
@@ -56,7 +56,8 @@ class CaravanDefence : public Game {
 
     camera::Camera2D m_camera;
     struct {
-        window::ViewportPoint cursor_viewport_position = window::ViewportPoint(1e6, 1e6);
+        interface::ViewportPoint cursor_viewport_position =
+            interface::ViewportPoint(1e6, 1e6);
         bool is_right_button_pressed = false;
     } m_mouse_state;
 
@@ -64,10 +65,10 @@ class CaravanDefence : public Game {
     vulkan::RenderPass m_render_pass;
     std::unique_ptr<graphics_pipeline::quad::QuadRenderer> m_quad_renderer;
     std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer> m_geom_renderer;
-    std::unique_ptr<graphics_pipeline::text::TextRenderer> m_text_renderer;
 
     // UI renderers
     vulkan::RenderPass m_ui_render_pass;
+    std::unique_ptr<graphics_pipeline::text::TextRenderer> m_ui_text_renderer;
     std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer> m_ui_geom_renderer;
 
     std::vector<entity::Entity> m_caravan;
@@ -85,8 +86,8 @@ class CaravanDefence : public Game {
         std::vector<graphics_pipeline::text::TextHandle> m_event_options;
 
         template <typename PushConstantType>
-        void render(const vulkan::CommandBuffer &command_buffer,
-                    PushConstantType *push_constant) {
+        void render_text(const vulkan::CommandBuffer &command_buffer,
+                         PushConstantType *push_constant) {
             DEBUG_ASSERT(m_text_renderer != nullptr,
                          "Error: Attempted to render event text with non-existing "
                          "pointer to a text renderer.");
@@ -195,17 +196,18 @@ class CaravanDefence : public Game {
         m_geom_renderer = std::make_unique<graphics_pipeline::geometry::GeometryRenderer>(
             ctx, m_command_buffer_manager.get(), renderer_opts);
 
-        m_text_renderer =
-            std::make_unique<graphics_pipeline::text::TextRenderer>(ctx, renderer_opts);
-        m_text_renderer->load_font(
-            m_command_buffer_manager.get(),
-            font::FontLoader(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf")));
-
         // UI renderers
         graphics_pipeline::RendererOpts ui_renderer_opts{};
         ui_renderer_opts.push_constant_range = push_constant_range;
         ui_renderer_opts.swap_chain.extent = m_swap_chain->get_extent();
         ui_renderer_opts.swap_chain.render_pass = &m_ui_render_pass;
+
+        m_ui_text_renderer = std::make_unique<graphics_pipeline::text::TextRenderer>(
+            ctx, ui_renderer_opts);
+        m_ui_text_renderer->load_font(
+            m_command_buffer_manager.get(),
+            font::FontLoader(ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf")));
+
         m_ui_geom_renderer =
             std::make_unique<graphics_pipeline::geometry::GeometryRenderer>(
                 ctx, m_command_buffer_manager.get(), ui_renderer_opts);
@@ -262,6 +264,7 @@ class CaravanDefence : public Game {
 
         m_quad_renderer->sync_render_slots();
         m_geom_renderer->sync_render_slots();
+        m_ui_geom_renderer->sync_render_slots();
 
         register_mouse_event_handler(ctx.get());
         register_keyboard_event_handler(ctx.get());
@@ -316,6 +319,7 @@ class CaravanDefence : public Game {
             if (m_game_state.last_state == GameState::Event && m_event.has_value()) {
                 m_event->remove_event();
                 m_event = std::nullopt;
+                m_ui_geom_renderer->sync_render_slots();
             }
 
             update_all(dt, m_caravan);
@@ -374,8 +378,10 @@ class CaravanDefence : public Game {
 
         case GameState::Event: {
             if (m_game_state.last_state == GameState::Playing && !m_event.has_value()) {
-                m_event =
-                    create_event(m_geom_renderer.get(), m_text_renderer.get(), m_camera);
+                m_event = create_event(m_ui_geom_renderer.get(), m_ui_text_renderer.get(),
+                                       m_camera);
+
+                m_ui_geom_renderer->sync_render_slots();
             }
             break;
         }
@@ -400,78 +406,70 @@ class CaravanDefence : public Game {
 
         event.m_geometry_render_data = event.m_geometry_renderer->request_render_slot();
 
-        const camera::WorldPoint2D event_box_center = camera.get_position();
-        const float zoom = camera.get_zoom();
+        const interface::NDCPoint box_center = interface::NDCPoint(0, 0);
+        const float content_padding_x_ndc = 0.03f;
+        const float content_padding_y_ndc = 0.03f;
+
+        const float box_width_ndc = 1.80f;
+        const float box_height_ndc = 1.20f;
+        const float font_size_ndc = camera.to_ndc_width(22);
+        const float line_width_ndc = box_width_ndc - content_padding_x_ndc * 2;
+        const float line_height_ndc = font_size_ndc;
+
+        const float text_start_x_ndc =
+            box_center.x() - box_width_ndc / 2.0f + content_padding_x_ndc;
+        const float text_start_y_ndc = box_center.y() - box_height_ndc / 2.0f +
+                                       content_padding_y_ndc + font_size_ndc;
 
         auto &event_box_instance =
             event.m_geometry_renderer->get_instance(event.m_geometry_render_data);
-
-        const float viewport_font_size = 4 / zoom;
-        const float viewport_event_box_width = 200.0f / zoom;
-        const float viewport_event_box_height = 120.0f / zoom;
-        const float viewport_event_box_border_width = 2.0f / zoom;
-        const float viewport_event_box_border_radius = 5.0f / zoom;
-        const math::Vector2 viewport_event_box_content_padding =
-            math::Vector2(5.0f / zoom, (5.0f / zoom) + viewport_font_size / 2.0f);
-
         event_box_instance.model_matrix =
-            math::Matrix()
-                .translate(event_box_center)
-                .scale(viewport_event_box_width, viewport_event_box_height);
+            math::Matrix().translate(box_center).scale(box_width_ndc, box_height_ndc);
         event_box_instance.color = util::colors::rgba(0.0f, 0.0f, 0.0f, 0.95f);
         event_box_instance.flags |=
             static_cast<uint32_t>(graphics_pipeline::geometry::GeometryShape::Rectangle);
+        event_box_instance.border.width = camera.to_ndc_width(6.0f);
+        event_box_instance.border.radius = camera.to_ndc_width(15.0f);
         event_box_instance.border.color = util::colors::WHITE;
-        event_box_instance.border.width = viewport_event_box_border_width;
-        event_box_instance.border.radius = viewport_event_box_border_radius;
 
-        const math::Vector2 viewport_text_start =
-            math::Vector2(event_box_center.x - viewport_event_box_width / 2.0f,
-                          event_box_center.y - viewport_event_box_height / 2.0f) +
-            viewport_event_box_content_padding;
         event.m_event_description = event.m_text_renderer->create_text(
             "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
             "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim "
             "veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea "
             "commodo consequat. Duis aute irure dolor in reprehenderit in voluptate "
             "velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint "
-            "occaecat "
-            "cupidatat non proident, sunt in culpa qui officia deserunt mollit anim "
-            "id "
-            "est laborum.",
+            "occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit "
+            "anim id est laborum.",
             graphics_pipeline::text::TextOpts{
-                .position = viewport_text_start,
+                .position = interface::NDCPoint(text_start_x_ndc, text_start_y_ndc),
                 .font_color = util::colors::WHITE,
-                .font_size = viewport_font_size,
-                .line_width = viewport_event_box_width -
-                              2.0f * viewport_event_box_content_padding.x(),
-                .line_height = viewport_font_size,
+                .font_size = font_size_ndc,
+                .line_width = line_width_ndc,
+                .line_height = line_height_ndc,
             });
 
-        math::Vector2 offset =
-            math::Vector2(0.0f, viewport_event_box_height - 3 * viewport_font_size -
-                                    viewport_event_box_content_padding.y());
-        event.m_event_options.push_back(event.m_text_renderer->create_text(
-            "1. Yes.", graphics_pipeline::text::TextOpts{
-                           .position = viewport_text_start + offset,
-                           .font_color = util::colors::WHITE,
-                           .font_size = viewport_font_size,
-                           .line_width = viewport_event_box_width -
-                                         2.0f * viewport_event_box_content_padding.x(),
-                           .line_height = viewport_font_size,
-                       }));
-
-        offset = math::Vector2(0.0f, viewport_event_box_height - 2 * viewport_font_size -
-                                         viewport_event_box_content_padding.y());
+        float event_option_y_ndc =
+            box_center.y() + box_height_ndc / 2.0f - content_padding_y_ndc;
         event.m_event_options.push_back(event.m_text_renderer->create_text(
             "2. Yes again.",
             graphics_pipeline::text::TextOpts{
-                .position = viewport_text_start + offset,
+                .position = interface::NDCPoint(text_start_x_ndc, event_option_y_ndc),
                 .font_color = util::colors::WHITE,
-                .font_size = viewport_font_size,
-                .line_width = viewport_event_box_width -
-                              2.0f * viewport_event_box_content_padding.x(),
-                .line_height = viewport_font_size,
+                .font_size = font_size_ndc,
+                .line_width = line_width_ndc,
+                .line_height = line_height_ndc,
+            }));
+
+        event_option_y_ndc = box_center.y() + box_height_ndc / 2.0f -
+                             content_padding_y_ndc - line_height_ndc - 0.01f;
+        event.m_event_options.push_back(event.m_text_renderer->create_text(
+            "1. Yes.",
+            graphics_pipeline::text::TextOpts{
+                .position = interface::NDCPoint(text_start_x_ndc, event_option_y_ndc),
+                .font_color = util::colors::WHITE,
+                .font_size = font_size_ndc,
+                .line_width = line_width_ndc,
+                .line_height = line_height_ndc,
             }));
 
         event.m_text_renderer->sync_render_slots();
@@ -548,89 +546,88 @@ class CaravanDefence : public Game {
         frame.begin_render_pass(&m_render_pass);
         m_quad_renderer->render(command_buffer, &push_constant, num_instances);
         m_geom_renderer->render(command_buffer, &push_constant, num_instances);
-        if (m_game_state.state == GameState::Event && m_event.has_value()) {
-            m_event->on_hover(cursor_world_point);
-            m_event->render(command_buffer, &push_constant);
-        }
         frame.end_render_pass();
 
         const math::Matrix ui_push_constant = math::Matrix();
         frame.begin_render_pass(&m_ui_render_pass);
-        m_ui_geom_renderer->render(command_buffer, &ui_push_constant, 0);
+        m_ui_geom_renderer->render(command_buffer, &ui_push_constant, 256);
+
+        if (m_game_state.state == GameState::Event && m_event.has_value()) {
+            /*m_event->on_hover(cursor_world_point);*/
+            m_event->render_text(command_buffer, &ui_push_constant);
+        }
         frame.end_render_pass();
 
         frame.submit_present();
     }
 
     void register_mouse_event_handler(vulkan::context::GraphicsContext *ctx) {
-        ctx->window->register_mouse_event_callback(
-            [this](window::MouseEvent mouse_event, window::ViewportPoint &point) -> void {
-                switch (mouse_event) {
-                case window::MouseEvent::RIGHT_BUTTON_DOWN:
-                    m_mouse_state.is_right_button_pressed = true;
-                    break;
-                case window::MouseEvent::RIGHT_BUTTON_UP: {
-                    m_mouse_state.is_right_button_pressed = false;
-                    break;
+        ctx->window->register_mouse_event_callback([this](window::MouseEvent mouse_event,
+                                                          interface::ViewportPoint &point)
+                                                       -> void {
+            switch (mouse_event) {
+            case window::MouseEvent::RIGHT_BUTTON_DOWN:
+                m_mouse_state.is_right_button_pressed = true;
+                break;
+            case window::MouseEvent::RIGHT_BUTTON_UP: {
+                m_mouse_state.is_right_button_pressed = false;
+                break;
+            }
+            case window::MouseEvent::CURSOR_MOVED:
+                if (m_game_state.state == GameState::Playing &&
+                    m_mouse_state.is_right_button_pressed) {
+                    camera::WorldPoint2D world_delta = m_camera.viewport_delta_to_world(
+                        point - m_mouse_state.cursor_viewport_position);
+                    m_camera.set_relative_position(world_delta * INVERT_AXISES);
                 }
-                case window::MouseEvent::CURSOR_MOVED:
-                    if (m_game_state.state == GameState::Playing &&
-                        m_mouse_state.is_right_button_pressed) {
-                        camera::WorldPoint2D world_delta =
-                            m_camera.viewport_delta_to_world(
-                                point - m_mouse_state.cursor_viewport_position);
-                        m_camera.set_relative_position(world_delta * INVERT_AXISES);
-                    }
-                    m_mouse_state.cursor_viewport_position = point;
-                    break;
-                case window::MouseEvent::SCROLL:
-                    if (m_game_state.state == GameState::Playing) {
-                        m_camera.set_relative_zoom(point.y * ZOOM_SCALE_FACTOR);
-                    }
-                    break;
-                case window::MouseEvent::LEFT_BUTTON_DOWN:
-                    break;
-                case window::MouseEvent::LEFT_BUTTON_UP: {
-                    const camera::WorldPoint2D world_point =
-                        m_camera.viewport_to_world(point);
-                    const auto &current_selected_guard = m_game_state.selected_guard;
-
-                    // Clear currently selected guard
-                    if (current_selected_guard.has_value()) {
-                        m_guards[current_selected_guard.value()].set_selected(false);
-                        m_guards[current_selected_guard.value()].set_highlighted(false);
-                    }
-
-                    const auto new_selected_guard = find_selected_guard(world_point);
-                    const auto clicked_caravan_slot =
-                        find_selected_caravan_slot(world_point);
-
-                    if (current_selected_guard.has_value() &&
-                        clicked_caravan_slot.has_value()) {
-                        entity::Entity &slot =
-                            m_caravan_slots[clicked_caravan_slot.value()];
-                        entity::Entity &guard = m_guards[current_selected_guard.value()];
-
-                        if (entity::is_free(slot)) {
-                            entity::Entity *old_slot = entity::get_caravan_slot(guard);
-                            entity::set_caravan_slot(guard, &slot);
-                            entity::set_occupying_guard(slot, &guard);
-
-                            entity::clear_occupying_guard(*old_slot);
-                            old_slot->set_highlighted(false);
-                        }
-                    }
-
-                    if (new_selected_guard.has_value()) {
-                        m_guards[new_selected_guard.value()].set_selected(true);
-                        m_guards[new_selected_guard.value()].set_highlighted(true);
-                    }
-
-                    m_game_state.selected_guard = new_selected_guard;
-                    break;
+                m_mouse_state.cursor_viewport_position = point;
+                break;
+            case window::MouseEvent::SCROLL:
+                if (m_game_state.state == GameState::Playing) {
+                    m_camera.set_relative_zoom(point.y() * ZOOM_SCALE_FACTOR);
                 }
+                break;
+            case window::MouseEvent::LEFT_BUTTON_DOWN:
+                break;
+            case window::MouseEvent::LEFT_BUTTON_UP: {
+                const camera::WorldPoint2D world_point =
+                    m_camera.viewport_to_world(point);
+                const auto &current_selected_guard = m_game_state.selected_guard;
+
+                // Clear currently selected guard
+                if (current_selected_guard.has_value()) {
+                    m_guards[current_selected_guard.value()].set_selected(false);
+                    m_guards[current_selected_guard.value()].set_highlighted(false);
                 }
-            });
+
+                const auto new_selected_guard = find_selected_guard(world_point);
+                const auto clicked_caravan_slot = find_selected_caravan_slot(world_point);
+
+                if (current_selected_guard.has_value() &&
+                    clicked_caravan_slot.has_value()) {
+                    entity::Entity &slot = m_caravan_slots[clicked_caravan_slot.value()];
+                    entity::Entity &guard = m_guards[current_selected_guard.value()];
+
+                    if (entity::is_free(slot)) {
+                        entity::Entity *old_slot = entity::get_caravan_slot(guard);
+                        entity::set_caravan_slot(guard, &slot);
+                        entity::set_occupying_guard(slot, &guard);
+
+                        entity::clear_occupying_guard(*old_slot);
+                        old_slot->set_highlighted(false);
+                    }
+                }
+
+                if (new_selected_guard.has_value()) {
+                    m_guards[new_selected_guard.value()].set_selected(true);
+                    m_guards[new_selected_guard.value()].set_highlighted(true);
+                }
+
+                m_game_state.selected_guard = new_selected_guard;
+                break;
+            }
+            }
+        });
     }
 
     void register_keyboard_event_handler(vulkan::context::GraphicsContext *ctx) {

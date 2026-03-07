@@ -1,5 +1,5 @@
 #pragma once
-#include "ViewportPoint.h"
+#include "interface/ViewportPoint.h"
 #include <functional>
 
 namespace window {
@@ -28,5 +28,5 @@ inline std::ostream &operator<<(std::ostream &os, MouseEvent type) {
         return os << "MouseEvent::SCROLL";
     }
 }
-using MouseEventCallbackFn = std::function<void(MouseEvent, ViewportPoint &)>;
+using MouseEventCallbackFn = std::function<void(MouseEvent, interface::ViewportPoint &)>;
 } // namespace window
