@@ -182,6 +182,7 @@ class TextRenderer {
                    font::FontLoader &&font_loader);
 
     void sync_render_slots();
+    void rotate_descriptors();
 
     template <typename PushConstantType>
     void render(const vulkan::CommandBuffer &command_buffer, const TextHandle &text,

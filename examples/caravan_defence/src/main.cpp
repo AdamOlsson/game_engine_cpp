@@ -84,6 +84,9 @@ class CaravanDefence : public Game {
         graphics_pipeline::text::TextRenderer *m_text_renderer = nullptr;
         graphics_pipeline::text::TextHandle m_event_description;
         std::vector<graphics_pipeline::text::TextHandle> m_event_options;
+        std::vector<std::function<void(Event &)>> m_event_option_side_effects;
+
+        size_t m_clicked_action = std::numeric_limits<size_t>::max();
 
         template <typename PushConstantType>
         void render_text(const vulkan::CommandBuffer &command_buffer,
@@ -113,15 +116,17 @@ class CaravanDefence : public Game {
             }
         }
 
-        // CONTINUE:
-        void on_click() {
-            // Given a point that if it overlaps with the location of the action of an
-            // event, perform that given action and its side effect
+        void on_click(const interface::NDCPoint &point) {
+            for (size_t i = 0; i < m_event_options.size(); i++) {
+                auto &option = m_event_options[i];
+                if (option.is_point_inside(point)) {
+                    m_clicked_action = i;
+                    return;
+                }
+            }
         }
 
         void on_hover(const interface::NDCPoint &point) {
-            // Given a point that if it overlaps with the location of the action of an
-            // event, then highlight that event.
             for (auto &option : m_event_options) {
                 auto &instance = m_text_renderer->get_text_format_instance(option);
                 if (option.is_point_inside(point)) {
@@ -132,7 +137,11 @@ class CaravanDefence : public Game {
             }
         }
 
-        void on_exit() {}
+        void update() {
+            if (m_clicked_action != std::numeric_limits<size_t>::max()) {
+                m_event_option_side_effects[m_clicked_action](*this);
+            }
+        }
     };
 
     std::optional<Event> m_event;
@@ -262,9 +271,9 @@ class CaravanDefence : public Game {
             entity::set_occupying_guard(m_caravan_slots[i], &m_guards[i]);
         }
 
-        m_quad_renderer->sync_render_slots();
-        m_geom_renderer->sync_render_slots();
-        m_ui_geom_renderer->sync_render_slots();
+        /*m_quad_renderer->sync_render_slots();*/
+        /*m_geom_renderer->sync_render_slots();*/
+        /*m_ui_geom_renderer->sync_render_slots();*/
 
         register_mouse_event_handler(ctx.get());
         register_keyboard_event_handler(ctx.get());
@@ -316,12 +325,6 @@ class CaravanDefence : public Game {
     void update(const float dt) override {
         switch (m_game_state.state) {
         case GameState::Playing: {
-            if (m_game_state.last_state == GameState::Event && m_event.has_value()) {
-                m_event->remove_event();
-                m_event = std::nullopt;
-                m_ui_geom_renderer->sync_render_slots();
-            }
-
             update_all(dt, m_caravan);
             update_all(dt, m_caravan_slots);
             update_all(dt, m_attacks);
@@ -378,10 +381,14 @@ class CaravanDefence : public Game {
 
         case GameState::Event: {
             if (m_game_state.last_state == GameState::Playing && !m_event.has_value()) {
-                m_event = create_event(m_ui_geom_renderer.get(), m_ui_text_renderer.get(),
-                                       m_camera);
-
-                m_ui_geom_renderer->sync_render_slots();
+                /*m_event = create_event(m_ui_geom_renderer.get(),
+                 * m_ui_text_renderer.get(),*/
+                /*                       m_camera);*/
+            } else {
+                const interface::NDCPoint cursor_ndc_point =
+                    m_camera.to_ndc_point(m_mouse_state.cursor_viewport_position);
+                m_event->on_hover(cursor_ndc_point);
+                m_event->update();
             }
             break;
         }
@@ -433,13 +440,8 @@ class CaravanDefence : public Game {
         event_box_instance.border.color = util::colors::WHITE;
 
         event.m_event_description = event.m_text_renderer->create_text(
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
-            "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim "
-            "veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea "
-            "commodo consequat. Duis aute irure dolor in reprehenderit in voluptate "
-            "velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint "
-            "occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit "
-            "anim id est laborum.",
+            "This is a really really really long event description that spans multiple "
+            "lines about an interesting event.",
             graphics_pipeline::text::TextOpts{
                 .position = interface::NDCPoint(text_start_x_ndc, text_start_y_ndc),
                 .font_color = util::colors::WHITE,
@@ -452,7 +454,7 @@ class CaravanDefence : public Game {
         float event_option_y_ndc =
             box_center.y() + box_height_ndc / 2.0f - content_padding_y_ndc;
         event.m_event_options.push_back(event.m_text_renderer->create_text(
-            "2. Yes again.",
+            "Exit the event.",
             graphics_pipeline::text::TextOpts{
                 .position = interface::NDCPoint(text_start_x_ndc, event_option_y_ndc),
                 .font_color = util::colors::WHITE,
@@ -460,12 +462,17 @@ class CaravanDefence : public Game {
                 .line_width = line_width_ndc,
                 .line_height = line_height_ndc,
             }));
+        event.m_event_option_side_effects.push_back([this](Event &event) {
+            m_game_state.state = GameState::Playing;
+            m_event->remove_event();
+            m_event = std::nullopt;
+        });
 
         event_option_y_ndc = box_center.y() + box_height_ndc / 2.0f -
                              content_padding_y_ndc - line_height_ndc -
                              event_option_spacing_ndc;
         event.m_event_options.push_back(event.m_text_renderer->create_text(
-            "1. Yes.",
+            "Continue to the next description.",
             graphics_pipeline::text::TextOpts{
                 .position = interface::NDCPoint(text_start_x_ndc, event_option_y_ndc),
                 .font_color = util::colors::WHITE,
@@ -473,9 +480,10 @@ class CaravanDefence : public Game {
                 .line_width = line_width_ndc,
                 .line_height = line_height_ndc,
             }));
+        event.m_event_option_side_effects.push_back([](Event &event) {});
 
-        event.m_text_renderer->sync_render_slots();
-        event.m_geometry_renderer->sync_render_slots();
+        /*event.m_text_renderer->sync_render_slots();*/
+        /*event.m_geometry_renderer->sync_render_slots();*/
 
         return event;
     }
@@ -537,6 +545,8 @@ class CaravanDefence : public Game {
 
         m_quad_renderer->sync_render_slots();
         m_geom_renderer->sync_render_slots();
+        m_ui_geom_renderer->sync_render_slots();
+        m_ui_text_renderer->sync_render_slots();
 
         math::Matrix push_constant = m_camera.get_view_projection_matrix();
         const size_t num_instances = 256; // Size of instance buffers
@@ -552,18 +562,16 @@ class CaravanDefence : public Game {
 
         const math::Matrix ui_push_constant = math::Matrix();
         frame.begin_render_pass(&m_ui_render_pass);
-        m_ui_geom_renderer->render(command_buffer, &ui_push_constant, 256);
 
         if (m_game_state.state == GameState::Event && m_event.has_value()) {
-            const interface::NDCPoint cursor_ndc_point =
-                m_camera.to_ndc_point(m_mouse_state.cursor_viewport_position);
-            m_event->on_hover(cursor_ndc_point);
-            m_ui_text_renderer->sync_render_slots();
+            m_ui_geom_renderer->render(command_buffer, &ui_push_constant, 256);
             m_event->render_text(command_buffer, &ui_push_constant);
         }
         frame.end_render_pass();
 
         frame.submit_present();
+
+        m_ui_text_renderer->rotate_descriptors();
     }
 
     void register_mouse_event_handler(vulkan::context::GraphicsContext *ctx) {
@@ -595,40 +603,50 @@ class CaravanDefence : public Game {
             case window::MouseEvent::LEFT_BUTTON_DOWN:
                 break;
             case window::MouseEvent::LEFT_BUTTON_UP: {
-                const camera::WorldPoint2D world_point =
-                    m_camera.viewport_to_world(point);
-                const auto &current_selected_guard = m_game_state.selected_guard;
+                if (m_game_state.state == GameState::Playing) {
+                    const camera::WorldPoint2D world_point =
+                        m_camera.viewport_to_world(point);
+                    const auto &current_selected_guard = m_game_state.selected_guard;
 
-                // Clear currently selected guard
-                if (current_selected_guard.has_value()) {
-                    m_guards[current_selected_guard.value()].set_selected(false);
-                    m_guards[current_selected_guard.value()].set_highlighted(false);
-                }
-
-                const auto new_selected_guard = find_selected_guard(world_point);
-                const auto clicked_caravan_slot = find_selected_caravan_slot(world_point);
-
-                if (current_selected_guard.has_value() &&
-                    clicked_caravan_slot.has_value()) {
-                    entity::Entity &slot = m_caravan_slots[clicked_caravan_slot.value()];
-                    entity::Entity &guard = m_guards[current_selected_guard.value()];
-
-                    if (entity::is_free(slot)) {
-                        entity::Entity *old_slot = entity::get_caravan_slot(guard);
-                        entity::set_caravan_slot(guard, &slot);
-                        entity::set_occupying_guard(slot, &guard);
-
-                        entity::clear_occupying_guard(*old_slot);
-                        old_slot->set_highlighted(false);
+                    // Clear currently selected guard
+                    if (current_selected_guard.has_value()) {
+                        m_guards[current_selected_guard.value()].set_selected(false);
+                        m_guards[current_selected_guard.value()].set_highlighted(false);
                     }
-                }
 
-                if (new_selected_guard.has_value()) {
-                    m_guards[new_selected_guard.value()].set_selected(true);
-                    m_guards[new_selected_guard.value()].set_highlighted(true);
-                }
+                    const auto new_selected_guard = find_selected_guard(world_point);
+                    const auto clicked_caravan_slot =
+                        find_selected_caravan_slot(world_point);
 
-                m_game_state.selected_guard = new_selected_guard;
+                    if (current_selected_guard.has_value() &&
+                        clicked_caravan_slot.has_value()) {
+                        entity::Entity &slot =
+                            m_caravan_slots[clicked_caravan_slot.value()];
+                        entity::Entity &guard = m_guards[current_selected_guard.value()];
+
+                        if (entity::is_free(slot)) {
+                            entity::Entity *old_slot = entity::get_caravan_slot(guard);
+                            entity::set_caravan_slot(guard, &slot);
+                            entity::set_occupying_guard(slot, &guard);
+
+                            entity::clear_occupying_guard(*old_slot);
+                            old_slot->set_highlighted(false);
+                        }
+                    }
+
+                    if (new_selected_guard.has_value()) {
+                        m_guards[new_selected_guard.value()].set_selected(true);
+                        m_guards[new_selected_guard.value()].set_highlighted(true);
+                    }
+
+                    m_game_state.selected_guard = new_selected_guard;
+
+                } else if (m_game_state.state == GameState::Event &&
+                           m_event.has_value()) {
+                    const interface::NDCPoint cursor_ndc_point =
+                        m_camera.to_ndc_point(m_mouse_state.cursor_viewport_position);
+                    m_event->on_click(cursor_ndc_point);
+                }
                 break;
             }
             }
@@ -645,11 +663,10 @@ class CaravanDefence : public Game {
                 switch (key) {
                 case window::KeyEvent::Y: {
                     if (m_game_state.state == GameState::Playing) {
+                        m_event = create_event(m_ui_geom_renderer.get(),
+                                               m_ui_text_renderer.get(), m_camera);
                         m_game_state.state = GameState::Event;
-                    } else {
-                        m_game_state.state = GameState::Playing;
                     }
-
                     break;
                 }
 

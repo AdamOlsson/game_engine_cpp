@@ -178,9 +178,15 @@ void graphics_pipeline::text::TextRenderer::return_glyph_slot(
     }
 }
 
+void graphics_pipeline::text::TextRenderer::rotate_descriptors() {
+    m_format_sparse_set.dense.rotate();
+    m_glyph_sparse_set.dense.rotate();
+    m_descriptor_sets.rotate();
+}
+
 void graphics_pipeline::text::TextRenderer::sync_render_slots() {
-    m_format_sparse_set.dense.sync_all();
-    m_glyph_sparse_set.dense.sync_all();
+    m_format_sparse_set.dense.sync();
+    m_glyph_sparse_set.dense.sync();
 }
 
 void graphics_pipeline::text::TextRenderer::load_font(

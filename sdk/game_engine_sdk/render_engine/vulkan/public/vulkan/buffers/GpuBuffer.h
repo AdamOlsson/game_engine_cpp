@@ -144,8 +144,8 @@ template <typename T, GpuBufferType BufferType> class GpuBuffer {
     void sync() {
         // Transfer the current state of the staging buffer to the next device buffer not
         // currently displayed
-        const size_t next_buffer = m_swap_state.next();
-        memcpy(m_buffers[next_buffer].buffer_mapped, m_staging_buffer.data(), m_size);
+        const size_t current_buffer = m_swap_state.current();
+        memcpy(m_buffers[current_buffer].buffer_mapped, m_staging_buffer.data(), m_size);
         m_delta_ids.clear();
     }
 
