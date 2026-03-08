@@ -1,5 +1,4 @@
 #include "camera/Camera.h"
-#include "logger/logger.h"
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <utility>
@@ -134,8 +133,6 @@ float Camera2D::to_ndc_height(const float value) const {
 }
 
 interface::NDCPoint Camera2D::to_ndc_point(const interface::ViewportPoint &point) const {
-    logger::warning(
-        "Error: This function is not tested. Consider this if you get weird behaviors.");
     return interface::NDCPoint(point.x() / (m_viewport_width / 2.0f),
                                point.y() / (m_viewport_height / 2.0f));
 }

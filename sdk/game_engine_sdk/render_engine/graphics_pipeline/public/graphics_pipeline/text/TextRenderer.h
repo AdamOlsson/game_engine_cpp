@@ -100,14 +100,13 @@ class TextHandle {
     TextHandle &operator=(const TextHandle &other) = delete;
 
     bool is_point_inside(const math::Vector2 &point) {
-        const math::Vector2 center = (bbox.zw() - bbox.xy()) / 2.0f;
+        const math::Vector2 center = (bbox.zw() + bbox.xy()) / 2.0f;
         const float width = abs(bbox.z() - bbox.x());
         const float height = abs(bbox.w() - bbox.y());
-        /*std::cout << "Point: " << point << " center: " << center << " width: " <<
-         * width*/
-        /*          << " height: " << height << std::endl;*/
         return math::is_point_inside_rectangle(point, center, width, height);
     }
+
+    const math::Vector4 &get_bbox() const { return bbox; }
 };
 
 class TextRenderer {

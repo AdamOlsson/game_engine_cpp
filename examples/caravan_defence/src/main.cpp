@@ -30,7 +30,7 @@ enum class GameState {
 // Suggestion 3: Make it possible for a render pipeline to have multiple descriptor sets,
 // swap descriptor set when I can to render to the viewport vs world.
 // ######################################################################################
-// TODO: Render events to the viewport instead of world using the ui render pass
+// TODO: add hover effects to event options, then add on_click to event options.
 
 constexpr vulkan::RenderPassOpts world_pass =
     vulkan::RenderPassOpts{.color = {
@@ -119,16 +119,16 @@ class CaravanDefence : public Game {
             // event, perform that given action and its side effect
         }
 
-        void on_hover(const camera::WorldPoint2D &point) {
+        void on_hover(const interface::NDCPoint &point) {
             // Given a point that if it overlaps with the location of the action of an
             // event, then highlight that event.
             for (auto &option : m_event_options) {
                 auto &instance = m_text_renderer->get_text_format_instance(option);
                 if (option.is_point_inside(point)) {
                     instance.font_color = util::colors::YELLOW;
-                    return;
+                } else {
+                    instance.font_color = util::colors::WHITE;
                 }
-                instance.font_color = util::colors::WHITE;
             }
         }
 
@@ -408,7 +408,7 @@ class CaravanDefence : public Game {
 
         const interface::NDCPoint box_center = interface::NDCPoint(0, 0);
         const float content_padding_x_ndc = 0.03f;
-        const float content_padding_y_ndc = 0.03f;
+        const float content_padding_y_ndc = 0.04f;
 
         const float box_width_ndc = 1.80f;
         const float box_height_ndc = 1.20f;
@@ -448,6 +448,7 @@ class CaravanDefence : public Game {
                 .line_height = line_height_ndc,
             });
 
+        const float event_option_spacing_ndc = 0.02f;
         float event_option_y_ndc =
             box_center.y() + box_height_ndc / 2.0f - content_padding_y_ndc;
         event.m_event_options.push_back(event.m_text_renderer->create_text(
@@ -461,7 +462,8 @@ class CaravanDefence : public Game {
             }));
 
         event_option_y_ndc = box_center.y() + box_height_ndc / 2.0f -
-                             content_padding_y_ndc - line_height_ndc - 0.01f;
+                             content_padding_y_ndc - line_height_ndc -
+                             event_option_spacing_ndc;
         event.m_event_options.push_back(event.m_text_renderer->create_text(
             "1. Yes.",
             graphics_pipeline::text::TextOpts{
@@ -553,7 +555,10 @@ class CaravanDefence : public Game {
         m_ui_geom_renderer->render(command_buffer, &ui_push_constant, 256);
 
         if (m_game_state.state == GameState::Event && m_event.has_value()) {
-            /*m_event->on_hover(cursor_world_point);*/
+            const interface::NDCPoint cursor_ndc_point =
+                m_camera.to_ndc_point(m_mouse_state.cursor_viewport_position);
+            m_event->on_hover(cursor_ndc_point);
+            m_ui_text_renderer->sync_render_slots();
             m_event->render_text(command_buffer, &ui_push_constant);
         }
         frame.end_render_pass();

@@ -290,20 +290,22 @@ graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoin
     index_count.reserve(codepoint.size());
     first_index.reserve(codepoint.size());
 
-    const font::FontBBox bbox = m_font_loader->get_font_bbox();
+    const font::FontBBox font_bbox = m_font_loader->get_font_bbox();
     const unsigned short units_per_em = m_font_loader->get_units_per_em();
-    const float glyph_width = bbox.x_max - bbox.x_min;
+    const float glyph_width = font_bbox.x_max - font_bbox.x_min;
     const float font_scale = opts.font_size / units_per_em;
     const float font_size_px = glyph_width * font_scale;
 
     float pen_position_x = 0.0f;
     float pen_position_y = 0.0f;
 
-    math::Vector2 bbox_top_left = opts.position + math::Vector2(0.0f, font_size_px);
+    math::Vector2 bbox_top_left =
+        opts.position - math::Vector2(opts.line_width / 2.0f, opts.line_height);
 
     std::vector<TextGlyphSBOHandle> glyph_handles;
     glyph_handles.reserve(codepoint.size());
 
+    size_t line_count = 1;
     size_t last_space_idx = std::numeric_limits<size_t>::max() - 1;
     for (size_t i = 0; i < codepoint.size(); i++) {
         const char32_t &c = codepoint[i];
@@ -338,6 +340,7 @@ graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoin
         if (new_line) {
             pen_position_x = 0.0f;
             pen_position_y += opts.line_height / font_scale;
+            line_count++;
 
             // Go back and update the start of the word to be on the first line
             for (size_t j = last_space_idx + 1; j <= i; j++) {
@@ -368,7 +371,9 @@ graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoin
 
     sync_render_slots();
 
-    math::Vector2 bbox_bot_right = math::Vector2(opts.line_width, pen_position_y);
+    math::Vector2 bbox_bot_right =
+        opts.position +
+        math::Vector2(opts.line_width / 2.0f, opts.line_height * (line_count - 1));
 
     TextHandle result;
     result.format_handle = std::move(format_handle);
