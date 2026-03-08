@@ -18,20 +18,6 @@ enum class GameState {
     Event,
 };
 
-// The problem:
-// - The problem is that when I define UI elements in the World Coordinate systems, it
-// becomes tricky to handle effects such as on_hover() or on_click() events for the UI. I
-// want to have the ability to decide wether I should render to the World Coordinate
-// system or the Viewport Coordinate system.
-// Suggestion 1: Simply create another renderer that renders directly to the screen
-// Suggestion 2: Use the same approach as in TextRenderer an issue single draw commands in
-// a loop. Then I can pass in which handles I want to draw and with that pass in the push
-// constant to render on the viewport.
-// Suggestion 3: Make it possible for a render pipeline to have multiple descriptor sets,
-// swap descriptor set when I can to render to the viewport vs world.
-// ######################################################################################
-// TODO: add hover effects to event options, then add on_click to event options.
-
 constexpr vulkan::RenderPassOpts world_pass =
     vulkan::RenderPassOpts{.color = {
                                .load_op = VK_ATTACHMENT_LOAD_OP_CLEAR,
@@ -79,14 +65,67 @@ class CaravanDefence : public Game {
 
     struct Event {
         graphics_pipeline::geometry::GeometryRenderer *m_geometry_renderer = nullptr;
+        graphics_pipeline::text::TextRenderer *m_text_renderer = nullptr;
         graphics_pipeline::geometry::GeometrySBOHandle m_geometry_render_data;
 
-        graphics_pipeline::text::TextRenderer *m_text_renderer = nullptr;
         graphics_pipeline::text::TextHandle m_event_description;
+        graphics_pipeline::text::TextOpts m_event_description_opts;
+
         std::vector<graphics_pipeline::text::TextHandle> m_event_options;
+        graphics_pipeline::text::TextOpts m_event_option_text_opts;
         std::vector<std::function<void(Event &)>> m_event_option_side_effects;
 
         size_t m_clicked_action = std::numeric_limits<size_t>::max();
+
+        void clear_content() {
+            m_clicked_action = std::numeric_limits<size_t>::max();
+            m_text_renderer->remove_text(std::move(m_event_description));
+            for (auto &option : m_event_options) {
+                m_text_renderer->remove_text(std::move(option));
+            }
+            m_event_options.clear();
+            m_event_option_side_effects.clear();
+        }
+
+        void create_dialog_bbox(const camera::Camera2D &camera) {
+            const interface::NDCPoint box_center = interface::NDCPoint(0, 0);
+            const float box_width_ndc = 1.80f;
+            const float box_height_ndc = 1.20f;
+
+            m_geometry_render_data = m_geometry_renderer->request_render_slot();
+            auto &event_box_instance =
+                m_geometry_renderer->get_instance(m_geometry_render_data);
+            event_box_instance.model_matrix =
+                math::Matrix().translate(box_center).scale(box_width_ndc, box_height_ndc);
+            event_box_instance.color = util::colors::rgba(0.0f, 0.0f, 0.0f, 0.95f);
+            event_box_instance.flags |= static_cast<uint32_t>(
+                graphics_pipeline::geometry::GeometryShape::Rectangle);
+            event_box_instance.border.width = camera.to_ndc_width(6.0f);
+            event_box_instance.border.radius = camera.to_ndc_width(15.0f);
+            event_box_instance.border.color = util::colors::WHITE;
+        }
+
+        void create_event_description(
+            const std::string &text,
+            const std::optional<graphics_pipeline::text::TextOpts> opts = std::nullopt) {
+            if (opts.has_value()) {
+                m_event_description_opts = opts.value();
+            }
+            m_event_description =
+                m_text_renderer->create_text(text, m_event_description_opts);
+        }
+
+        void add_event_dialog_option(
+            const std::string &text, const std::function<void(Event &)> action,
+            const std::optional<graphics_pipeline::text::TextOpts> opts = std::nullopt) {
+            if (opts.has_value()) {
+                m_event_option_text_opts =
+                    opts.value(); // Note: overwrite is fine for now
+            }
+            m_event_options.push_back(
+                m_text_renderer->create_text(text, m_event_option_text_opts));
+            m_event_option_side_effects.push_back(action);
+        }
 
         template <typename PushConstantType>
         void render_text(const vulkan::CommandBuffer &command_buffer,
@@ -108,10 +147,7 @@ class CaravanDefence : public Game {
             }
 
             if (m_text_renderer != nullptr) {
-                m_text_renderer->remove_text(std::move(m_event_description));
-                for (auto &option : m_event_options) {
-                    m_text_renderer->remove_text(std::move(option));
-                }
+                clear_content();
                 m_text_renderer = nullptr;
             }
         }
@@ -380,16 +416,10 @@ class CaravanDefence : public Game {
         }
 
         case GameState::Event: {
-            if (m_game_state.last_state == GameState::Playing && !m_event.has_value()) {
-                /*m_event = create_event(m_ui_geom_renderer.get(),
-                 * m_ui_text_renderer.get(),*/
-                /*                       m_camera);*/
-            } else {
-                const interface::NDCPoint cursor_ndc_point =
-                    m_camera.to_ndc_point(m_mouse_state.cursor_viewport_position);
-                m_event->on_hover(cursor_ndc_point);
-                m_event->update();
-            }
+            const interface::NDCPoint cursor_ndc_point =
+                m_camera.to_ndc_point(m_mouse_state.cursor_viewport_position);
+            m_event->on_hover(cursor_ndc_point);
+            m_event->update();
             break;
         }
 
@@ -411,79 +441,77 @@ class CaravanDefence : public Game {
         event.m_geometry_renderer = geom_renderer;
         event.m_text_renderer = text_renderer;
 
-        event.m_geometry_render_data = event.m_geometry_renderer->request_render_slot();
+        event.create_dialog_bbox(camera);
 
         const interface::NDCPoint box_center = interface::NDCPoint(0, 0);
-        const float content_padding_x_ndc = 0.03f;
-        const float content_padding_y_ndc = 0.04f;
+        const math::Vector2 event_dialog_bbox_content_padding(0.03f, 0.04f);
+        const math::Vector2 event_dialog_bbox_size(1.80f, 1.20f);
+        const float font_size = camera.to_ndc_width(22);
+        const math::Vector2 line_size(event_dialog_bbox_size.x() -
+                                          event_dialog_bbox_content_padding.x() * 2,
+                                      font_size);
 
-        const float box_width_ndc = 1.80f;
-        const float box_height_ndc = 1.20f;
-        const float font_size_ndc = camera.to_ndc_width(22);
-        const float line_width_ndc = box_width_ndc - content_padding_x_ndc * 2;
-        const float line_height_ndc = font_size_ndc;
+        const float text_start_x_ndc = box_center.x() -
+                                       event_dialog_bbox_size.x() / 2.0f +
+                                       event_dialog_bbox_content_padding.x();
+        const float text_start_y_ndc = box_center.y() -
+                                       event_dialog_bbox_size.y() / 2.0f +
+                                       event_dialog_bbox_content_padding.x() + font_size;
 
-        const float text_start_x_ndc =
-            box_center.x() - box_width_ndc / 2.0f + content_padding_x_ndc;
-        const float text_start_y_ndc = box_center.y() - box_height_ndc / 2.0f +
-                                       content_padding_y_ndc + font_size_ndc;
-
-        auto &event_box_instance =
-            event.m_geometry_renderer->get_instance(event.m_geometry_render_data);
-        event_box_instance.model_matrix =
-            math::Matrix().translate(box_center).scale(box_width_ndc, box_height_ndc);
-        event_box_instance.color = util::colors::rgba(0.0f, 0.0f, 0.0f, 0.95f);
-        event_box_instance.flags |=
-            static_cast<uint32_t>(graphics_pipeline::geometry::GeometryShape::Rectangle);
-        event_box_instance.border.width = camera.to_ndc_width(6.0f);
-        event_box_instance.border.radius = camera.to_ndc_width(15.0f);
-        event_box_instance.border.color = util::colors::WHITE;
-
-        event.m_event_description = event.m_text_renderer->create_text(
+        auto event_desc_opts = graphics_pipeline::text::TextOpts{};
+        event_desc_opts.position =
+            interface::NDCPoint(text_start_x_ndc, text_start_y_ndc);
+        event_desc_opts.font_color = util::colors::WHITE;
+        event_desc_opts.font_size = font_size;
+        event_desc_opts.line_width = line_size.x();
+        event_desc_opts.line_height = line_size.y();
+        event.create_event_description(
             "This is a really really really long event description that spans multiple "
             "lines about an interesting event.",
-            graphics_pipeline::text::TextOpts{
-                .position = interface::NDCPoint(text_start_x_ndc, text_start_y_ndc),
-                .font_color = util::colors::WHITE,
-                .font_size = font_size_ndc,
-                .line_width = line_width_ndc,
-                .line_height = line_height_ndc,
-            });
+            event_desc_opts);
 
-        const float event_option_spacing_ndc = 0.02f;
-        float event_option_y_ndc =
-            box_center.y() + box_height_ndc / 2.0f - content_padding_y_ndc;
-        event.m_event_options.push_back(event.m_text_renderer->create_text(
-            "Exit the event.",
-            graphics_pipeline::text::TextOpts{
-                .position = interface::NDCPoint(text_start_x_ndc, event_option_y_ndc),
-                .font_color = util::colors::WHITE,
-                .font_size = font_size_ndc,
-                .line_width = line_width_ndc,
-                .line_height = line_height_ndc,
-            }));
-        event.m_event_option_side_effects.push_back([this](Event &event) {
+        const auto quit_event = [this](Event &event) {
             m_game_state.state = GameState::Playing;
             m_event->remove_event();
             m_event = std::nullopt;
-        });
+        };
 
-        event_option_y_ndc = box_center.y() + box_height_ndc / 2.0f -
-                             content_padding_y_ndc - line_height_ndc -
+        const float event_option_spacing_ndc = 0.02f;
+        float event_option_y_ndc = box_center.y() + event_dialog_bbox_size.y() / 2.0f -
+                                   event_dialog_bbox_content_padding.y();
+
+        graphics_pipeline::text::TextOpts event_dialog_option_opts{};
+        event_dialog_option_opts.position =
+            interface::NDCPoint(text_start_x_ndc, event_option_y_ndc);
+        event_dialog_option_opts.font_color = util::colors::WHITE;
+        event_dialog_option_opts.font_size = font_size;
+        event_dialog_option_opts.line_width = line_size.x();
+        event_dialog_option_opts.line_height = line_size.y();
+        event.add_event_dialog_option("Exit the event.", quit_event,
+                                      event_dialog_option_opts);
+
+        event_option_y_ndc = box_center.y() + event_dialog_bbox_size.y() / 2.0f -
+                             event_dialog_bbox_content_padding.y() - line_size.y() -
                              event_option_spacing_ndc;
-        event.m_event_options.push_back(event.m_text_renderer->create_text(
-            "Continue to the next description.",
-            graphics_pipeline::text::TextOpts{
-                .position = interface::NDCPoint(text_start_x_ndc, event_option_y_ndc),
-                .font_color = util::colors::WHITE,
-                .font_size = font_size_ndc,
-                .line_width = line_width_ndc,
-                .line_height = line_height_ndc,
-            }));
-        event.m_event_option_side_effects.push_back([](Event &event) {});
+        event_dialog_option_opts.position =
+            interface::NDCPoint(text_start_x_ndc, event_option_y_ndc);
 
-        /*event.m_text_renderer->sync_render_slots();*/
-        /*event.m_geometry_renderer->sync_render_slots();*/
+        event.add_event_dialog_option(
+            "Continue to the next description.",
+            [quit_event](Event &event) {
+                event.clear_content();
+
+                event.create_event_description(
+                    "This is followed by a new dialog option for the event.");
+
+                graphics_pipeline::text::TextOpts event_dialog_option_opts =
+                    event.m_event_option_text_opts;
+
+                event_dialog_option_opts.position.y() -= 0.02f;
+                event.add_event_dialog_option("Exit event", quit_event,
+                                              event_dialog_option_opts);
+            },
+            event_dialog_option_opts);
 
         return event;
     }
