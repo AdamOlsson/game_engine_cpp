@@ -1,11 +1,13 @@
 #include "EventFactory.h"
+#include "GameState.h"
 #include "events/DialogFactory.h"
 #include "events/Event.h"
+#include "states/EventState.h"
 
 Event EventFactory::my_first_event(
     graphics_pipeline::geometry::GeometryRenderer *geom_renderer,
     graphics_pipeline::text::TextRenderer *text_renderer, const camera::Camera2D &camera,
-    GameState &game_state) {
+    GameState &game_state, EventState &event_state) {
 
     const float dialog_font_size = camera.to_ndc_width(22);
     const math::Vector2 dialog_box_center = interface::NDCPoint(0, 0);
@@ -44,9 +46,8 @@ Event EventFactory::my_first_event(
     event_dialog_option_opts.line_width = dialog_line_size.x();
     event_dialog_option_opts.line_height = dialog_line_size.y();
 
-    const auto quit_event = [&game_state]() {
-        game_state.mode = GameMode::Playing;
-        game_state.event = std::nullopt;
+    const auto quit_event = [&event_state]() {
+        event_state.set_pending_transition(util::StateTransition::to<DefendState>());
     };
 
     Event event = Event(geom_renderer, text_renderer);

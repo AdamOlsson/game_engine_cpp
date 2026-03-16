@@ -4,6 +4,7 @@
 #include "events/Event.h"
 #include <optional>
 #include <random>
+
 enum class GameMode {
     Playing,
     Paused,
@@ -25,6 +26,13 @@ struct GameState {
 
     size_t time_elapsed_ms;
     std::optional<size_t> selected_guard = std::nullopt;
+
+    camera::Camera2D camera;
+    struct {
+        interface::ViewportPoint cursor_viewport_position =
+            interface::ViewportPoint(1e6, 1e6);
+        bool is_right_button_pressed = false;
+    } mouse;
 
     struct {
         std::random_device device;

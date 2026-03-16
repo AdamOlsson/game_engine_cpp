@@ -1,0 +1,124 @@
+#include "DefendState.h"
+
+#include "../GameState.h"
+#include <vector>
+
+constexpr void DefendState::spawn_group_of_enemies(GameState &game_state) {
+    const size_t num_enemies = game_state.rng.uniform(1, 3);
+    const float group_distance = game_state.rng.uniform(800.0f, 1200.0f);
+    const float group_angle = game_state.rng.uniform(-45.0f, 225.0f);
+    const math::Vector2 group_center =
+        math::Vector2(group_distance, 0.0f).rotate_z(group_angle);
+
+    const int group_radius = 200;
+    for (size_t i = 0; i < num_enemies; i++) {
+        const float distance_from_group_center =
+            game_state.rng.uniform(-group_radius, group_radius);
+        const float angle_from_group_center = game_state.rng.uniform(0, 360);
+
+        const math::Vector2 enemy_position =
+            math::Vector2(distance_from_group_center, 0.0f)
+                .rotate_z(angle_from_group_center);
+
+        const uint32_t enemy_type = game_state.rng.uniform(0, 1);
+
+        game_state.enemies.push_back(entity::Entity::create_enemy(enemy_position));
+
+        const size_t caravan_cart_id = game_state.rng.uniform(0, 1);
+        game_state.enemies.back().set_move_target(
+            game_state.caravan[caravan_cart_id].get_world_position());
+        entity::set_enemy_type(game_state.enemies.back(),
+                               static_cast<entity::EnemyType>(enemy_type));
+        game_state.enemies.back().set_render_data(m_quad_renderer, m_geometry_renderer);
+    }
+}
+
+std::optional<size_t> DefendState::find_caravan_cart(GameState &game_state,
+                                                     const camera::WorldPoint2D &point) {
+    for (size_t i = 0; i < game_state.caravan.size(); i++) {
+        if (game_state.caravan[i].is_point_inside(point)) {
+            return i;
+        }
+    }
+    return std::nullopt;
+}
+
+void DefendState::on_enter(GameState &game_state) {
+    DEBUG_ASSERT(m_quad_renderer != nullptr,
+                 "Error: Quad renderer is not set in DefendState.");
+    DEBUG_ASSERT(m_geometry_renderer != nullptr,
+                 "Error: Geometry renderer is not set in DefendState.");
+};
+
+void DefendState::on_exit(GameState &game_state) {
+    DEBUG_ASSERT(m_quad_renderer != nullptr,
+                 "Error: Quad renderer is not set in DefendState.");
+    DEBUG_ASSERT(m_geometry_renderer != nullptr,
+                 "Error: Geometry renderer is not set in DefendState.");
+};
+
+util::StateTransition DefendState::update(const float dt, GameState &game_state) {
+    DEBUG_ASSERT(m_quad_renderer != nullptr,
+                 "Error: Quad renderer is not set in DefendState.");
+    DEBUG_ASSERT(m_geometry_renderer != nullptr,
+                 "Error: Geometry renderer is not set in DefendState.");
+
+    update_all(dt, game_state.caravan);
+    update_all(dt, game_state.caravan_slots);
+    update_all(dt, game_state.attacks);
+    update_all(dt, game_state.enemies);
+    update_all(dt, game_state.guards);
+
+    for (int i = game_state.attacks.size() - 1; i >= 0; i--) {
+        if (!game_state.attacks[i].is_visible()) {
+            game_state.attacks[i].clear_render_data();
+            game_state.attacks.erase(game_state.attacks.begin() + i);
+        }
+    }
+
+    const size_t time_elapsed_ms = game_state.time_elapsed_ms;
+    if (time_elapsed_ms > entity::enemy_t::spawn_rate_ms) {
+        spawn_group_of_enemies(game_state);
+        game_state.time_elapsed_ms = 0;
+    }
+
+    for (size_t i = 0; i < game_state.enemies.size(); i++) {
+        entity::Entity &enemy = game_state.enemies[i];
+
+        for (entity::Entity &guard : game_state.guards) {
+            if (enemy.is_alive() && entity::can_attack(guard) &&
+                entity::in_attack_range(guard, enemy)) {
+
+                // Create attack
+                game_state.attacks.push_back(entity::attack(guard, enemy));
+                game_state.attacks.back().set_render_data(m_quad_renderer,
+                                                          m_geometry_renderer);
+                break;
+            }
+        }
+
+        // Find the id of the cart the enemy is inside.
+        auto cart_id = find_caravan_cart(game_state, enemy.get_world_position());
+        if (enemy.is_alive() && cart_id.has_value()) {
+            game_state.caravan[cart_id.value()].damage(enemy.get_current_health());
+            enemy.kill();
+        }
+
+        if (enemy.is_dead()) {
+            enemy.clear_render_data();
+            game_state.enemies.erase(game_state.enemies.begin() + i);
+        }
+    }
+
+    for (auto &cart : game_state.caravan) {
+        if (cart.is_dead()) {
+            logger::info("Cart died, game over!");
+            exit(0);
+        }
+    }
+
+    game_state.time_elapsed_ms += dt * 1000;
+
+    // Return nullopt to indicate no state transition (stay in current state)
+    return util::StateTransition::none();
+}

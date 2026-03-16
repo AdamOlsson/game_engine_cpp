@@ -78,32 +78,34 @@ void Configuration::setup_mouse_event_handler(
                                                    -> void {
         switch (mouse_event) {
         case window::MouseEvent::RIGHT_BUTTON_DOWN:
-            game.m_mouse_state.is_right_button_pressed = true;
+            game.m_game_state.mouse.is_right_button_pressed = true;
             break;
         case window::MouseEvent::RIGHT_BUTTON_UP: {
-            game.m_mouse_state.is_right_button_pressed = false;
+            game.m_game_state.mouse.is_right_button_pressed = false;
             break;
         }
         case window::MouseEvent::CURSOR_MOVED:
             if (game.m_game_state.mode == GameMode::Playing &&
-                game.m_mouse_state.is_right_button_pressed) {
-                camera::WorldPoint2D world_delta = game.m_camera.viewport_delta_to_world(
-                    point - game.m_mouse_state.cursor_viewport_position);
-                game.m_camera.set_relative_position(world_delta * INVERT_AXISES);
+                game.m_game_state.mouse.is_right_button_pressed) {
+                camera::WorldPoint2D world_delta =
+                    game.m_game_state.camera.viewport_delta_to_world(
+                        point - game.m_game_state.mouse.cursor_viewport_position);
+                game.m_game_state.camera.set_relative_position(world_delta *
+                                                               INVERT_AXISES);
             }
-            game.m_mouse_state.cursor_viewport_position = point;
+            game.m_game_state.mouse.cursor_viewport_position = point;
             break;
         case window::MouseEvent::SCROLL:
             if (game.m_game_state.mode == GameMode::Playing) {
-                game.m_camera.set_relative_zoom(point.y() * ZOOM_SCALE_FACTOR);
+                game.m_game_state.camera.set_relative_zoom(point.y() * ZOOM_SCALE_FACTOR);
             }
             break;
         case window::MouseEvent::LEFT_BUTTON_DOWN:
             break;
         case window::MouseEvent::LEFT_BUTTON_UP: {
-            if (game.m_game_state.mode == GameMode::Playing) {
+            if (!game.m_game_state.event.has_value()) {
                 const camera::WorldPoint2D world_point =
-                    game.m_camera.viewport_to_world(point);
+                    game.m_game_state.camera.viewport_to_world(point);
                 const auto &current_selected_guard = game.m_game_state.selected_guard;
 
                 // Clear currently selected guard
@@ -144,10 +146,10 @@ void Configuration::setup_mouse_event_handler(
 
                 game.m_game_state.selected_guard = new_selected_guard;
 
-            } else if (game.m_game_state.mode == GameMode::Event &&
-                       game.m_game_state.event.has_value()) {
-                const interface::NDCPoint cursor_ndc_point = game.m_camera.to_ndc_point(
-                    game.m_mouse_state.cursor_viewport_position);
+            } else if (game.m_game_state.event.has_value()) {
+                const interface::NDCPoint cursor_ndc_point =
+                    game.m_game_state.camera.to_ndc_point(
+                        game.m_game_state.mouse.cursor_viewport_position);
                 game.m_game_state.event->on_click(cursor_ndc_point);
             }
             break;
@@ -167,10 +169,7 @@ void Configuration::setup_keyboard_event_handler(
 
             switch (key) {
             case window::KeyEvent::Y: {
-                if (game.m_game_state.mode == GameMode::Playing) {
-                    game.m_game_state.event = game.create_event();
-                    game.m_game_state.mode = GameMode::Event;
-                }
+                game.m_state_machine.transition<EventState>(game.m_game_state);
                 break;
             }
 
