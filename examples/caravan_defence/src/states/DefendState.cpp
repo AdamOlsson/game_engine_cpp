@@ -22,7 +22,8 @@ constexpr void DefendState::spawn_group_of_enemies(GameState &game_state) {
 
         const uint32_t enemy_type = game_state.rng.uniform(0, 1);
 
-        game_state.enemies.push_back(entity::Entity::create_enemy(enemy_position));
+        game_state.enemies.push_back(
+            entity::Entity::create_enemy(group_center + enemy_position));
 
         const size_t caravan_cart_id = game_state.rng.uniform(0, 1);
         game_state.enemies.back().set_move_target(
