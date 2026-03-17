@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../events/Event.h"
 #include "DefendState.h"
 #include "graphics_pipeline/geometry/GeometryRenderer.h"
 #include "graphics_pipeline/text/TextRenderer.h"
@@ -12,6 +13,10 @@ class EventState {
     std::optional<util::StateTransition> m_pending_transition = std::nullopt;
 
   public:
+    // Not happy with this being public, but works for now. Will probably have to be
+    // solved by having state specific rendering but how that would work is not clear yet.
+    std::optional<Event> event = std::nullopt;
+
     EventState() = default;
 
     graphics_pipeline::text::TextRenderer *m_text_renderer = nullptr;

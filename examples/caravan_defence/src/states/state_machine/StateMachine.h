@@ -2,7 +2,6 @@
 
 #include "StateTransition.h"
 #include <tuple>
-#include <unordered_map>
 
 template <typename Context, typename Tuple> struct states_valid;
 
@@ -28,11 +27,13 @@ template <is_tuple States, typename StateContext> class StateMachine {
     static_assert(states_valid<StateContext, States>::value, "Not all states are valid.");
 
     States m_states; // Tuple with all possible states
+    std::type_index m_current_state{typeid(void)};
     void (*m_on_enter)(States &, StateContext &) = nullptr;
     void (*m_on_exit)(States &, StateContext &) = nullptr;
     StateTransition (*m_update)(States &, StateContext &, float) = nullptr;
 
     template <typename S> void bind() {
+        m_current_state = std::type_index(typeid(S));
         m_on_enter = [](States &s, StateContext &c) { std::get<S>(s).on_enter(c); };
         m_on_exit = [](States &s, StateContext &c) { std::get<S>(s).on_exit(c); };
         m_update = [](States &s, StateContext &c, float dt) {
@@ -79,15 +80,23 @@ template <is_tuple States, typename StateContext> class StateMachine {
     template <typename S> S &get_state() { return std::get<S>(m_states); }
 
     template <typename NextState> void transition(StateContext &context) {
+        if (is_in_state<NextState>()) {
+            return;
+        }
+
         m_on_exit(m_states, context);
         bind<NextState>();
         m_on_enter(m_states, context);
     }
 
+    template <typename S> bool is_in_state() const {
+        return m_current_state == std::type_index(typeid(S));
+    }
+
     void update(float dt, StateContext &context) {
         auto result = m_update(m_states, context, dt);
 
-        if (result.next.has_value()) {
+        if (result.next.has_value() && result.next.value() != m_current_state) {
             m_on_exit(m_states, context);
             transition_to(result.next.value());
             m_on_enter(m_states, context);

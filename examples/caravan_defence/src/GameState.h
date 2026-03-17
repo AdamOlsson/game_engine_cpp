@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Entity.h"
-#include "events/Event.h"
 #include <optional>
 #include <random>
 
@@ -15,8 +14,6 @@ struct GameState {
 
     GameMode last_mode = GameMode::Playing;
     GameMode mode = GameMode::Playing;
-
-    std::optional<Event> event;
 
     std::vector<entity::Entity> caravan;
     std::vector<entity::Entity> caravan_slots;
