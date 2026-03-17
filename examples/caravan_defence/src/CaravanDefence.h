@@ -34,6 +34,8 @@ constexpr vulkan::RenderPassOpts ui_pass =
                                .final_layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
                            }};
 
+// CONTINUE: Make states more independent
+// - move out event member from game state and into EventState
 class CaravanDefence : public Game {
   private:
     friend class Configuration;
@@ -93,39 +95,10 @@ class CaravanDefence : public Game {
 
     void update(const float dt) override { m_state_machine.update(dt, m_game_state); };
 
-    std::optional<size_t> find_caravan_cart(const camera::WorldPoint2D &point) {
-        for (size_t i = 0; i < m_game_state.caravan.size(); i++) {
-            if (m_game_state.caravan[i].is_point_inside(point)) {
-                return i;
-            }
-        }
-        return std::nullopt;
-    }
-
-    std::optional<size_t>
-    find_selected_caravan_slot(const camera::WorldPoint2D &click_point) {
-        for (size_t i = 0; i < m_game_state.caravan_slots.size(); i++) {
-            if (m_game_state.caravan_slots[i].is_point_inside(click_point)) {
-                return i;
-            }
-        }
-        return std::nullopt;
-    }
-
-    std::optional<size_t> find_selected_guard(const camera::WorldPoint2D &click_point) {
-        for (size_t i = 0; i < m_game_state.guards.size(); i++) {
-            if (m_game_state.guards[i].is_point_inside(click_point)) {
-                return i;
-            }
-        }
-        return std::nullopt;
-    }
-
     void render() override {
 
         const camera::WorldPoint2D cursor_world_point =
-            m_game_state.camera.viewport_to_world(
-                m_game_state.mouse.cursor_viewport_position);
+            m_game_state.camera.viewport_to_world(m_game_state.cursor.viewport_position);
 
         // Only highlight slots when hover if a guard is selected
         if (m_game_state.selected_guard.has_value()) {

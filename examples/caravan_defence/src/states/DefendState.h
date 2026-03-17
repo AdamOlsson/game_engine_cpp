@@ -17,12 +17,19 @@ class DefendState {
 
     std::optional<size_t> find_caravan_cart(GameState &game_state,
                                             const camera::WorldPoint2D &point);
+    std::optional<size_t>
+    find_selected_caravan_slot(GameState &game_state,
+                               const camera::WorldPoint2D &click_point);
+    std::optional<size_t> find_selected_guard(GameState &game_state,
+                                              const camera::WorldPoint2D &click_point);
 
     template <typename T> void update_all(const float dt, std::vector<T> &vec) {
         for (T &t : vec) {
             t.update(dt);
         }
     }
+
+    void handle_cursor(GameState &game_state, interface::ViewportPoint &click_point);
 
   public:
     DefendState() = default;

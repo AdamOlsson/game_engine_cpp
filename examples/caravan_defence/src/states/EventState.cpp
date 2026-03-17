@@ -23,8 +23,16 @@ void EventState::on_exit(GameState &game_state) {
 };
 
 util::StateTransition EventState::update(const float dt, GameState &game_state) {
+
+    if (game_state.cursor.click_point.has_value()) {
+        const interface::NDCPoint cursor_ndc_point =
+            game_state.camera.to_ndc_point(game_state.cursor.click_point.value());
+        game_state.event->on_click(cursor_ndc_point);
+        game_state.cursor.click_point = std::nullopt;
+    }
+
     const interface::NDCPoint cursor_ndc_point =
-        game_state.camera.to_ndc_point(game_state.mouse.cursor_viewport_position);
+        game_state.camera.to_ndc_point(game_state.cursor.viewport_position);
     game_state.event->on_hover(cursor_ndc_point);
 
     if (m_pending_transition.has_value()) {
