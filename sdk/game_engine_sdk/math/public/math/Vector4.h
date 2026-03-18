@@ -26,6 +26,9 @@ class Vector4 {
     template <StaticCastableToFloat T>
     constexpr Vector4(const T x, const T y, const T z, const T w) : m_vec(x, y, z, w) {}
 
+    constexpr Vector4(const Vector2 &a, const Vector2 &b)
+        : m_vec(a.x(), a.y(), b.x(), b.y()) {}
+
     constexpr Vector4() : m_vec(0.0f, 0.0f, 0.0f, 0.0f) {}
 
     template <StaticCastableToFloat T> constexpr Vector4(const T v) : m_vec(v, v, v, v) {}

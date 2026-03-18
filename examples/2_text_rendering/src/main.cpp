@@ -71,28 +71,29 @@ class ExampleTextRendering : public Game {
 
         std::string sentence = "Pack my box with five dozen liquor jugs.";
         m_texts.push_back(
-            m_text_renderer->create_text(sentence, graphics_pipeline::text::TextOpts{
-                                                       .position = math::Vector2(0, 0),
-                                                       .font_color = util::colors::WHITE,
-                                                       .font_size = 11,
-                                                       .line_width = 100000.0f,
-                                                   }));
+            m_text_renderer->create_text2(sentence, graphics_pipeline::text::TextOpts{
+                                                        .position = math::Vector2(0, 0),
+                                                        .font_color = util::colors::WHITE,
+                                                        .font_size = 11,
+                                                        .line_width = 100000.0f,
+                                                    }));
 
         m_texts.push_back(
-            m_text_renderer->create_text(sentence, graphics_pipeline::text::TextOpts{
-                                                       .position = math::Vector2(0, 22),
-                                                       .font_color = util::colors::RED,
-                                                       .font_size = 17,
-                                                       .line_width = 100000.0f,
-                                                   }));
+            m_text_renderer->create_text2(sentence, graphics_pipeline::text::TextOpts{
+                                                        .position = math::Vector2(0, 22),
+                                                        .font_color = util::colors::RED,
+                                                        .font_size = 17,
+                                                        .line_width = 100000.0f,
+                                                    }));
 
         m_texts.push_back(
-            m_text_renderer->create_text(sentence, graphics_pipeline::text::TextOpts{
-                                                       .position = math::Vector2(0, 50),
-                                                       .font_color = util::colors::BLUE,
-                                                       .font_size = 24,
-                                                       .line_width = 100000.0f,
-                                                   }));
+            m_text_renderer->create_text2(sentence, graphics_pipeline::text::TextOpts{
+                                                        .position = math::Vector2(0, 50),
+                                                        .font_color = util::colors::BLUE,
+                                                        .font_size = 24,
+                                                        .line_width = 100000.0f,
+                                                    }));
+        m_text_renderer->sync_render_slots();
     }
 
     void register_mouse_event_handler(vulkan::context::GraphicsContext *ctx) {
@@ -137,7 +138,7 @@ class ExampleTextRendering : public Game {
                 case window::KeyEvent::SPACE: {
                     if (m_texts.size() < 3) {
                         std::string sentence = "Pack my box with five dozen liquor jugs.";
-                        m_texts.push_back(m_text_renderer->create_text(
+                        m_texts.push_back(m_text_renderer->create_text2(
                             sentence, graphics_pipeline::text::TextOpts{
                                           .position = math::Vector2(0, 50),
                                           .font_color = util::colors::BLUE,

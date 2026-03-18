@@ -9,8 +9,28 @@
 #include "triangulation/mapbox/earcut.h"
 #include "vulkan/CommandBufferManager.h"
 
-graphics_pipeline::text::TextRenderer::TextRenderer(
-    std::shared_ptr<vulkan::context::GraphicsContext> &ctx, const RendererOpts &opts)
+constexpr char SPACE = U' ';
+constexpr char LF = U'\n';
+
+namespace graphics_pipeline::text {
+
+struct Word {
+    bool is_control_char = false;
+    const size_t start_idx = 0;
+    const size_t end_idx = std::numeric_limits<size_t>::max();
+    math::Vector2 offset;
+    math::Vector2 advance;
+    std::vector<math::Vector2> glyph_positions;
+};
+
+struct Text {
+    size_t char_count = 0;
+    math::Vector4 bbox;
+    std::vector<Word> words;
+};
+
+TextRenderer::TextRenderer(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
+                           const RendererOpts &opts)
     : m_ctx(ctx) {
 
     graphics_pipeline::PipelineOpts pipeline_opts{};
@@ -56,8 +76,7 @@ graphics_pipeline::text::TextRenderer::TextRenderer(
     m_glyph_sparse_set.dense.resize(max_glyph_instances);
 }
 
-vulkan::DescriptorSetLayout
-graphics_pipeline::text::TextRenderer::get_descriptor_set_layout(
+vulkan::DescriptorSetLayout TextRenderer::get_descriptor_set_layout(
     std::shared_ptr<vulkan::context::GraphicsContext> &ctx) {
     graphics_pipeline::DescriptorSetLayoutBuilder builder;
     builder.add_storage_buffer_binding(0, VK_SHADER_STAGE_VERTEX_BIT);
@@ -65,36 +84,29 @@ graphics_pipeline::text::TextRenderer::get_descriptor_set_layout(
     return builder.build(ctx);
 }
 
-bool graphics_pipeline::text::TextRenderer::contains_format(size_t id) const {
+bool TextRenderer::contains_format(size_t id) const {
     return id < m_format_sparse_set.sparse.size() &&
            m_format_sparse_set.sparse[id] != INVALID_INDEX;
 }
 
-bool graphics_pipeline::text::TextRenderer::contains_glyph(size_t id) const {
+bool TextRenderer::contains_glyph(size_t id) const {
     return id < m_glyph_sparse_set.sparse.size() &&
            m_glyph_sparse_set.sparse[id] != INVALID_INDEX;
 }
 
-graphics_pipeline::text::TextFormatSBO &
-graphics_pipeline::text::TextRenderer::get_text_format_instance(
-    const graphics_pipeline::text::TextHandle &handle) {
+TextFormatSBO &TextRenderer::get_text_format_instance(const TextHandle &handle) {
     return m_format_sparse_set.dense[m_format_sparse_set.sparse[handle.format_handle.id]];
 }
 
-graphics_pipeline::text::TextFormatSBO &
-graphics_pipeline::text::TextRenderer::get_text_format_instance(
-    const graphics_pipeline::text::TextFormatSBOHandle &handle) {
+TextFormatSBO &TextRenderer::get_text_format_instance(const TextFormatSBOHandle &handle) {
     return m_format_sparse_set.dense[m_format_sparse_set.sparse[handle.id]];
 }
 
-graphics_pipeline::text::TextGlyphSBO &
-graphics_pipeline::text::TextRenderer::get_text_glyph_instance(
-    const graphics_pipeline::text::TextGlyphSBOHandle &handle) {
+TextGlyphSBO &TextRenderer::get_text_glyph_instance(const TextGlyphSBOHandle &handle) {
     return m_glyph_sparse_set.dense[m_glyph_sparse_set.sparse[handle.id]];
 }
 
-graphics_pipeline::text::TextFormatSBOHandle
-graphics_pipeline::text::TextRenderer::request_format_slot() {
+TextFormatSBOHandle TextRenderer::request_format_slot() {
 
     size_t format_id = m_format_sparse_set.available.empty()
                            ? m_format_sparse_set.next_id++
@@ -110,11 +122,10 @@ graphics_pipeline::text::TextRenderer::request_format_slot() {
     m_format_sparse_set.sparse[format_id] = m_format_sparse_set.dense_count++;
     m_format_sparse_set.reverse.push_back(format_id);
 
-    return graphics_pipeline::text::TextFormatSBOHandle(format_id);
+    return TextFormatSBOHandle(format_id);
 }
 
-graphics_pipeline::text::TextGlyphSBOHandle
-graphics_pipeline::text::TextRenderer::request_glyph_slot() {
+TextGlyphSBOHandle TextRenderer::request_glyph_slot() {
     size_t glyph_id = m_glyph_sparse_set.available.empty()
                           ? m_glyph_sparse_set.next_id++
                           : m_glyph_sparse_set.available.back();
@@ -129,11 +140,10 @@ graphics_pipeline::text::TextRenderer::request_glyph_slot() {
     m_glyph_sparse_set.sparse[glyph_id] = m_glyph_sparse_set.dense_count++;
     m_glyph_sparse_set.reverse.push_back(glyph_id);
 
-    return graphics_pipeline::text::TextGlyphSBOHandle(glyph_id);
+    return TextGlyphSBOHandle(glyph_id);
 }
 
-void graphics_pipeline::text::TextRenderer::return_format_slot(
-    graphics_pipeline::text::TextFormatSBOHandle &handle) {
+void TextRenderer::return_format_slot(TextFormatSBOHandle &handle) {
     const size_t format_id = handle.id;
     if (contains_format(format_id)) {
         size_t dense_index = m_format_sparse_set.sparse[format_id];
@@ -155,8 +165,7 @@ void graphics_pipeline::text::TextRenderer::return_format_slot(
     }
 }
 
-void graphics_pipeline::text::TextRenderer::return_glyph_slot(
-    graphics_pipeline::text::TextGlyphSBOHandle &handle) {
+void TextRenderer::return_glyph_slot(TextGlyphSBOHandle &handle) {
     const size_t glyph_id = handle.id;
     if (contains_glyph(glyph_id)) {
         size_t dense_index = m_glyph_sparse_set.sparse[glyph_id];
@@ -178,20 +187,19 @@ void graphics_pipeline::text::TextRenderer::return_glyph_slot(
     }
 }
 
-void graphics_pipeline::text::TextRenderer::rotate_descriptors() {
+void TextRenderer::rotate_descriptors() {
     m_format_sparse_set.dense.rotate();
     m_glyph_sparse_set.dense.rotate();
     m_descriptor_sets.rotate();
 }
 
-void graphics_pipeline::text::TextRenderer::sync_render_slots() {
+void TextRenderer::sync_render_slots() {
     m_format_sparse_set.dense.sync();
     m_glyph_sparse_set.dense.sync();
 }
 
-void graphics_pipeline::text::TextRenderer::load_font(
-    vulkan::CommandBufferManager *command_buffer_manager,
-    font::FontLoader &&font_loader) {
+void TextRenderer::load_font(vulkan::CommandBufferManager *command_buffer_manager,
+                             font::FontLoader &&font_loader) {
 
     if (is_font_loaded()) {
         throw std::runtime_error("Error: Font is already loaded.");
@@ -276,131 +284,14 @@ void graphics_pipeline::text::TextRenderer::load_font(
     m_font_loader = std::move(font_loader);
 }
 
-graphics_pipeline::text::TextHandle
-graphics_pipeline::text::TextRenderer::create_text(const font::Unicode &codepoint,
-                                                   const TextOpts &opts) {
-
-    if (!is_font_loaded()) {
-        throw std::runtime_error(
-            "Error: can't create text because a font is not loaded.");
-    }
-
-    TextFormatSBOHandle format_handle = request_format_slot();
-    TextFormatSBO &format_instance = get_text_format_instance(format_handle.id);
-    format_instance.model_matrix = math::Matrix().translate(opts.position);
-    format_instance.font_color = opts.font_color;
-
-    std::vector<uint32_t> index_count;
-    std::vector<uint32_t> first_index;
-
-    index_count.reserve(codepoint.size());
-    first_index.reserve(codepoint.size());
-
-    const font::FontBBox font_bbox = m_font_loader->get_font_bbox();
-    const unsigned short units_per_em = m_font_loader->get_units_per_em();
-    const float glyph_width = font_bbox.x_max - font_bbox.x_min;
-    const float font_scale = opts.font_size / units_per_em;
-    const float font_size_px = glyph_width * font_scale;
-
-    float pen_position_x = 0.0f;
-    float pen_position_y = 0.0f;
-
-    math::Vector2 bbox_top_left =
-        opts.position - math::Vector2(opts.line_width / 2.0f, opts.line_height);
-
-    std::vector<TextGlyphSBOHandle> glyph_handles;
-    glyph_handles.reserve(codepoint.size());
-
-    size_t line_count = 1;
-    size_t last_space_idx = std::numeric_limits<size_t>::max() - 1;
-    for (size_t i = 0; i < codepoint.size(); i++) {
-        const char32_t &c = codepoint[i];
-
-        if (c == font::Unicode(" ").first()) {
-            last_space_idx = i;
-        }
-
-        // Glyph id in terms of the text (not font)
-        glyph_handles.push_back(request_glyph_slot());
-        size_t glyph_id = glyph_handles.back().id;
-
-        const font::GlyphAdvance &advance = m_font_loader->get_glyph_advance(c);
-
-        m_glyph_sparse_set.dense[m_glyph_sparse_set.sparse[glyph_id]] = TextGlyphSBO{
-            .text_id =
-                static_cast<uint16_t>(m_format_sparse_set.sparse[format_handle.id]),
-            .model_matrix = math::Matrix()
-                                .scale(font_scale, font_scale, 1.0f)
-                                .translate(pen_position_x, pen_position_y, 0.0f)
-
-        };
-
-        std::pair<size_t, size_t> draw_info =
-            m_glyph_draw_info[m_font_loader->get_glyph_index(c)];
-        index_count.push_back(draw_info.first);
-        first_index.push_back(draw_info.second);
-
-        pen_position_x += advance.x;
-
-        const bool new_line = pen_position_x > (opts.line_width / font_scale);
-        if (new_line) {
-            pen_position_x = 0.0f;
-            pen_position_y += opts.line_height / font_scale;
-            line_count++;
-
-            // Go back and update the start of the word to be on the first line
-            for (size_t j = last_space_idx + 1; j <= i; j++) {
-                TextGlyphSBOHandle &glyph_handle = glyph_handles[j];
-                m_glyph_sparse_set.dense[m_glyph_sparse_set.sparse[glyph_handle.id]]
-                    .model_matrix = math::Matrix()
-                                        .scale(font_scale, font_scale, 1.0f)
-                                        .translate(pen_position_x, pen_position_y, 0.0f);
-
-                const font::GlyphAdvance &advance =
-                    m_font_loader->get_glyph_advance(codepoint[j]);
-                pen_position_x += advance.x;
-
-                if (j < codepoint.size() - 1) {
-                    font::GlyphKerning kerning =
-                        m_font_loader->get_glyph_kerning(codepoint[j], codepoint[j + 1]);
-                    pen_position_x += kerning.x;
-                }
-            }
-        }
-
-        if (i < codepoint.size() - 1) {
-            font::GlyphKerning kerning =
-                m_font_loader->get_glyph_kerning(codepoint[i], codepoint[i + 1]);
-            pen_position_x += kerning.x;
-        }
-    }
-
-    sync_render_slots();
-
-    math::Vector2 bbox_bot_right =
-        opts.position +
-        math::Vector2(opts.line_width / 2.0f, opts.line_height * (line_count - 1));
-
-    TextHandle result;
-    result.format_handle = std::move(format_handle);
-    result.glyph_handles = std::move(glyph_handles);
-    result.index_count = std::move(index_count);
-    result.first_index = std::move(first_index);
-    result.bbox = math::Vector4(bbox_top_left.x(), bbox_top_left.y(), bbox_bot_right.x(),
-                                bbox_bot_right.y());
-
-    return result;
-}
-
-void graphics_pipeline::text::TextRenderer::remove_text(TextHandle &&handle) {
+void TextRenderer::remove_text(TextHandle &&handle) {
     return_format_slot(handle.format_handle);
     for (auto &glyph_handle : handle.glyph_handles) {
         return_glyph_slot(glyph_handle);
     }
 }
 
-graphics_pipeline::text::TextHandle
-graphics_pipeline::text::TextRenderer::get_font_showcase_text() {
+TextHandle TextRenderer::get_font_showcase_text() {
     if (!is_font_loaded()) {
         throw std::runtime_error(
             "Error: Can't render font showcase because font is not loaded.");
@@ -453,11 +344,183 @@ graphics_pipeline::text::TextRenderer::get_font_showcase_text() {
     return result;
 }
 
-void graphics_pipeline::text::TextRenderer::_render(
-    const vulkan::CommandBuffer &command_buffer, const TextHandle &text) {
+void TextRenderer::_render(const vulkan::CommandBuffer &command_buffer,
+                           const TextHandle &text) {
     for (size_t i = 0; i < text.glyph_handles.size(); i++) {
         size_t dense_index = m_glyph_sparse_set.sparse[text.glyph_handles[i].id];
         vkCmdDrawIndexed(command_buffer, text.index_count[i], 1, text.first_index[i], 0,
                          dense_index);
     }
 }
+
+Word TextRenderer::layout_word(const font::Unicode &codepoint, const size_t start,
+                               const size_t end, const math::Vector2 &offset) {
+    std::vector<math::Vector2> glyph_positions;
+    glyph_positions.reserve(end - start);
+    math::Vector2 pen_position = math::Vector2(0, 0);
+    bool is_control_char = false;
+    std::vector<std::pair<char32_t, size_t>> control_characters;
+    for (size_t i = start; i < end; i++) {
+        const char32_t &c = codepoint[i];
+
+        if (c == LF) {
+            is_control_char = true;
+        }
+
+        glyph_positions.emplace_back(pen_position);
+
+        const font::GlyphAdvance &advance = m_font_loader->get_glyph_advance(c);
+        pen_position += math::Vector2(advance.x, advance.y);
+
+        if (i < end - 1) {
+            font::GlyphKerning kerning =
+                m_font_loader->get_glyph_kerning(codepoint[i], codepoint[i + 1]);
+            pen_position.x() += kerning.x;
+        }
+    }
+
+    return Word{
+        .is_control_char = is_control_char,
+        .start_idx = start,
+        .end_idx = end,
+        .offset = offset,
+        .advance = pen_position,
+        .glyph_positions = std::move(glyph_positions),
+    };
+}
+
+bool TextRenderer::ends_with(const font::Unicode &codepoint, const Word &word,
+                             const char character) {
+    return codepoint[word.end_idx - 1] == character;
+}
+
+Text TextRenderer::layout_text(const font::Unicode &codepoint, const float line_width,
+                               const float line_height) {
+
+    // Identify start and stop for all words
+    std::vector<std::pair<size_t, size_t>> words;
+    size_t word_start = 0;
+    size_t word_end = std::numeric_limits<size_t>::max();
+    for (size_t i = 0; i < codepoint.size(); i++) {
+        const char32_t &c = codepoint[i];
+        const bool is_last = i == codepoint.size() - 1;
+        if (c == SPACE) {
+            word_end = i;
+            words.push_back({word_start, word_end});
+            word_start = i + 1;
+            word_end = std::numeric_limits<size_t>::max();
+        } else if (c == LF) {
+            // end the word before the \n
+            word_end = i;
+            words.push_back({word_start, word_end});
+
+            // append \n as its own word
+            word_start = i;
+            word_end = i + 1;
+            words.push_back({word_start, word_end});
+
+            word_start = i + 1;
+            word_end = std::numeric_limits<size_t>::max();
+        } else if (is_last) {
+            word_end = i + 1;
+            words.push_back({word_start, word_end});
+        }
+    }
+
+    const font::GlyphAdvance &_space_advance =
+        m_font_loader->get_glyph_advance(font::Unicode(SPACE));
+    const math::Vector2 space_advance = math::Vector2(_space_advance.x, (signed long)0);
+
+    Text text{};
+    text.words.reserve(words.size());
+
+    math::Vector2 pen_position = math::Vector2(0, 0);
+    float line_count = 0.0f;
+    for (size_t word_id = 0; word_id < words.size(); word_id++) {
+        const size_t word_start = words[word_id].first;
+        const size_t word_end = words[word_id].second;
+        Word word = layout_word(codepoint, word_start, word_end, pen_position);
+
+        if (word.is_control_char && codepoint[word.start_idx] == LF) {
+            line_count++;
+            pen_position = math::Vector2(0.0f, line_height * line_count);
+            word.offset = pen_position;
+            continue;
+        }
+
+        // newline text
+        const bool exceeds_line_width = pen_position.x() + word.advance.x() > line_width;
+        if (exceeds_line_width) {
+            line_count++;
+            pen_position = math::Vector2(0.0f, line_height * line_count);
+            word.offset = pen_position;
+        }
+        pen_position += word.advance;
+        pen_position += space_advance;
+
+        text.char_count += word.glyph_positions.size();
+        text.words.push_back(std::move(word));
+    }
+
+    text.bbox = math::Vector4(0.0f, -line_height, line_width, line_height * line_count);
+
+    return text;
+}
+
+TextFormatSBOHandle TextRenderer::create_text_format_handle(const TextOpts &opts) {
+    TextFormatSBOHandle format_handle = request_format_slot();
+    TextFormatSBO &format_instance = get_text_format_instance(format_handle.id);
+    format_instance.model_matrix = math::Matrix().translate(opts.position);
+    format_instance.font_color = opts.font_color;
+    return format_handle;
+}
+
+TextHandle TextRenderer::create_text2(const font::Unicode &codepoint,
+                                      const TextOpts &opts) {
+
+    if (!is_font_loaded()) {
+        throw std::runtime_error(
+            "Error: can't create text because a font is not loaded.");
+    }
+
+    const unsigned short units_per_em = m_font_loader->get_units_per_em();
+    const float font_scale = opts.font_size / units_per_em;
+
+    const float line_width = opts.line_width / font_scale;
+    const float line_height = opts.line_height / font_scale;
+    Text text = layout_text(codepoint, line_width, line_height);
+
+    TextHandle result;
+    result.glyph_handles.reserve(text.char_count);
+    result.index_count.reserve(text.char_count);
+    result.first_index.reserve(text.char_count);
+    // TODO: Proper bbox calculation
+    result.bbox = text.bbox + math::Vector4(opts.position, opts.position);
+
+    TextFormatSBOHandle format_handle = create_text_format_handle(opts);
+    result.format_handle = std::move(format_handle);
+
+    for (const Word &word : text.words) {
+        const size_t num_chars = word.end_idx - word.start_idx;
+        for (size_t char_idx = 0; char_idx < num_chars; char_idx++) {
+            const char32_t &c = codepoint[word.start_idx + char_idx];
+            std::pair<size_t, size_t> draw_info =
+                m_glyph_draw_info[m_font_loader->get_glyph_index(c)];
+            result.index_count.push_back(draw_info.first);
+            result.first_index.push_back(draw_info.second);
+
+            const math::Vector2 &char_offset = word.glyph_positions[char_idx];
+            TextGlyphSBOHandle glyph_handle = request_glyph_slot();
+            TextGlyphSBO &glyph_instance = get_text_glyph_instance(glyph_handle);
+            glyph_instance.text_id =
+                static_cast<uint16_t>(m_format_sparse_set.sparse[format_handle.id]);
+            glyph_instance.model_matrix = math::Matrix()
+                                              .scale(font_scale, font_scale, 1.0f)
+                                              .translate(word.offset + char_offset);
+            result.glyph_handles.push_back(std::move(glyph_handle));
+        }
+    }
+
+    return result;
+}
+} // namespace graphics_pipeline::text

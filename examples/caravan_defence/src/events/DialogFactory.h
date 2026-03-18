@@ -71,8 +71,8 @@ class DialogFactory {
 
         DialogNode dialog{};
         dialog.id = m_id;
-        dialog.text_handle = m_text_renderer->create_text(std::move(m_dialog_text),
-                                                          m_dialog_text_opts.value());
+        dialog.text_handle = m_text_renderer->create_text2(std::move(m_dialog_text),
+                                                           m_dialog_text_opts.value());
 
         dialog.options.reserve(m_dialog_option_texts.size());
         for (size_t i = 0; i < m_dialog_option_texts.size(); i++) {
@@ -84,7 +84,7 @@ class DialogFactory {
             DialogOption option{};
             option.label = m_dialog_option_labels[i];
             option.text_handle =
-                m_text_renderer->create_text(std::move(m_dialog_option_texts[i]), opts);
+                m_text_renderer->create_text2(std::move(m_dialog_option_texts[i]), opts);
             option.next_dialog_node = m_dialog_option_next_node[i];
             option.on_click = m_dialog_option_cbs[i];
             dialog.options.push_back(std::move(option));

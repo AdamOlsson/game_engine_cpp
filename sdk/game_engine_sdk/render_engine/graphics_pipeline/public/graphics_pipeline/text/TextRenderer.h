@@ -20,6 +20,9 @@
 
 namespace graphics_pipeline::text {
 
+struct Word;
+struct Text;
+
 // Glyph specific data like
 // - kerning information
 struct TextGlyphSBO {
@@ -155,6 +158,15 @@ class TextRenderer {
     void return_format_slot(TextFormatSBOHandle &handle);
     void return_glyph_slot(TextGlyphSBOHandle &handle);
 
+    bool ends_with(const font::Unicode &codepoint, const Word &word,
+                   const char character);
+    Word layout_word(const font::Unicode &codepoint, const size_t start, const size_t end,
+                     const math::Vector2 &offset);
+    Text layout_text(const font::Unicode &codepoint, const float line_width,
+                     const float line_height);
+
+    TextFormatSBOHandle create_text_format_handle(const TextOpts &opts);
+
     static vulkan::DescriptorSetLayout
     get_descriptor_set_layout(std::shared_ptr<vulkan::context::GraphicsContext> &ctx);
 
@@ -169,8 +181,9 @@ class TextRenderer {
     TextRenderer(TextRenderer &&) noexcept = default;
 
     TextHandle get_font_showcase_text();
-    TextHandle create_text(const font::Unicode &codepoint,
-                           const TextOpts &opts = TextOpts{});
+
+    TextHandle create_text2(const font::Unicode &codepoint,
+                            const TextOpts &opts = TextOpts{});
 
     void remove_text(TextHandle &&handle);
 

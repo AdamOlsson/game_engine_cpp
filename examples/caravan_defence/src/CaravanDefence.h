@@ -9,7 +9,7 @@
 #include "game_engine_sdk/Game.h"
 #include "graphics_pipeline/quad/QuadRenderer.h"
 #include "graphics_pipeline/text/TextRenderer.h"
-
+#include "states/IntroState.h"
 #include "states/state_machine/StateMachine.h"
 #include "states/types.h"
 #include "vulkan/CommandBufferManager.h"
@@ -85,12 +85,14 @@ class CaravanDefence : public Game {
         Configuration::setup_initial_game_state(m_geom_renderer.get(),
                                                 m_quad_renderer.get(), m_game_state);
 
+        m_state_machine.get_state<IntroState>() =
+            IntroState(m_ui_text_renderer.get(), m_ui_geom_renderer.get());
         m_state_machine.get_state<DefendState>() =
             DefendState(m_quad_renderer.get(), m_geom_renderer.get());
         m_state_machine.get_state<EventState>() =
             EventState(m_ui_text_renderer.get(), m_ui_geom_renderer.get());
 
-        m_state_machine.init<DefendState>();
+        m_state_machine.init<IntroState>();
     }
 
     void update(const float dt) override { m_state_machine.update(dt, m_game_state); };
@@ -146,7 +148,12 @@ class CaravanDefence : public Game {
             auto &state = m_state_machine.get_state<EventState>();
             m_ui_geom_renderer->render(command_buffer, &ui_push_constant, 256);
             state.event->render_text(command_buffer, &ui_push_constant);
+        } else if (m_state_machine.is_in_state<IntroState>()) {
+            auto &state = m_state_machine.get_state<IntroState>();
+            m_ui_geom_renderer->render(command_buffer, &ui_push_constant, 256);
+            state.event->render_text(command_buffer, &ui_push_constant);
         }
+
         frame.end_render_pass();
 
         frame.submit_present();

@@ -4,7 +4,7 @@
 
 void EventState::on_enter(GameState &game_state) {
     DEBUG_ASSERT(m_text_renderer != nullptr,
-                 "Error: Quad renderer is not set in EventState.");
+                 "Error: Text renderer is not set in EventState.");
     DEBUG_ASSERT(m_geometry_renderer != nullptr,
                  "Error: Geometry renderer is not set in EventState.");
 
@@ -15,7 +15,7 @@ void EventState::on_enter(GameState &game_state) {
 
 void EventState::on_exit(GameState &game_state) {
     DEBUG_ASSERT(m_text_renderer != nullptr,
-                 "Error: Quad renderer is not set in EventState.");
+                 "Error: Text renderer is not set in EventState.");
     DEBUG_ASSERT(m_geometry_renderer != nullptr,
                  "Error: Geometry renderer is not set in EventState.");
     event->remove_event();

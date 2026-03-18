@@ -40,13 +40,13 @@ class Unicode {
     }
 
   public:
-    Unicode(const char *str) : codepoints(decode_utf8(str)) {}
+    constexpr Unicode(const char *str) : codepoints(decode_utf8(str)) {}
 
-    Unicode(const std::string &str) : codepoints(decode_utf8(str.c_str())) {}
+    constexpr Unicode(const std::string &str) : codepoints(decode_utf8(str.c_str())) {}
 
-    Unicode(char32_t cp) : codepoints{cp} {}
+    constexpr Unicode(char32_t cp) : codepoints{cp} {}
 
-    Unicode(const char32_t *str) {
+    constexpr Unicode(const char32_t *str) {
         while (*str) {
             codepoints.push_back(*str++);
         }
