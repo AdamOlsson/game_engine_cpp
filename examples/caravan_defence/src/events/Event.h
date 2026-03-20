@@ -55,17 +55,18 @@ class Event {
     void remove_event() {
         if (m_geometry_renderer != nullptr) {
             m_geometry_renderer->return_render_slot(m_bbox_render_data);
-            m_geometry_renderer = nullptr;
         }
 
         if (m_text_renderer != nullptr) {
             for (auto &node : m_nodes) {
                 m_text_renderer->remove_text(std::move(node.second.text_handle));
                 for (auto &option : node.second.options) {
+                    m_geometry_renderer->return_render_slot(option.bbox_handle);
                     m_text_renderer->remove_text(std::move(option.text_handle));
                 }
             }
-            m_text_renderer = nullptr;
         }
+        m_geometry_renderer = nullptr;
+        m_text_renderer = nullptr;
     }
 };

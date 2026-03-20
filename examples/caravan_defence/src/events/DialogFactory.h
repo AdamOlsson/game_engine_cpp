@@ -100,7 +100,15 @@ class DialogFactory {
             auto &bbox_instance = m_geometry_renderer->get_instance(option.bbox_handle);
             bbox_instance.model_matrix =
                 math::Matrix().translate(text_bbox.center()).scale(text_bbox.size());
-            bbox_instance.color = util::colors::rgba(0.3f, 0.3f, 0.3f, 0.1f);
+
+            // TODO: When switching between DialogNodes I need a way to hide the bbox (or
+            // geometry instance) so that they its not visible. This happens because of
+            // the difference between how the TextRenderer and GeometryRenderer renders.
+            // TextRenderer specifically renderers the handles it is given and
+            // GeometryRenderer renderers its entire buffer. The technical reason for this
+            // is that the TextRenderer contains multiple outlines for each glyph where
+            // the geometry renderer contains only one outline of a quad.
+            bbox_instance.color = util::colors::TRANSPARENT;
         }
 
         m_id.clear();

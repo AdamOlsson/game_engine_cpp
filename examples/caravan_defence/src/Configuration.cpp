@@ -120,6 +120,9 @@ void Configuration::setup_keyboard_event_handler(
 
             switch (key) {
             case window::KeyEvent::Y: {
+                if (game.m_state_machine.is_in_state<IntroState>()) {
+                    break;
+                }
                 game.m_state_machine.transition<EventState>(game.m_game_state);
                 break;
             }
