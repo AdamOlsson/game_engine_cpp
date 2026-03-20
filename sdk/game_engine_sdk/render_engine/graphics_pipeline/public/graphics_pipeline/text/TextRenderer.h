@@ -6,6 +6,7 @@
 #include "graphics_pipeline/SwapDescriptorSet.h"
 #include "graphics_pipeline/text/GlyphVertex.h"
 #include "graphics_pipeline/text/TextPipeline.h"
+#include "math/Bbox.h"
 #include "math/Vector2.h"
 #include "math/Vector4.h"
 #include "math/shape.h"
@@ -91,7 +92,7 @@ class TextHandle {
     std::vector<uint32_t> index_count;
     std::vector<uint32_t> first_index;
 
-    math::Vector4 bbox = math::Vector4(0.0f);
+    math::Bbox bbox;
 
   public:
     TextHandle() = default;
@@ -103,13 +104,13 @@ class TextHandle {
     TextHandle &operator=(const TextHandle &other) = delete;
 
     bool is_point_inside(const math::Vector2 &point) {
-        const math::Vector2 center = (bbox.zw() + bbox.xy()) / 2.0f;
-        const float width = abs(bbox.z() - bbox.x());
-        const float height = abs(bbox.w() - bbox.y());
-        return math::is_point_inside_rectangle(point, center, width, height);
+        const math::Vector2 center = bbox.center();
+        const math::Vector2 size = bbox.size();
+        /*std::cout << std::format("point: {}, bbox: {}", point, bbox) << std::endl;*/
+        return math::is_point_inside_rectangle(point, center, size.x(), size.y());
     }
 
-    const math::Vector4 &get_bbox() const { return bbox; }
+    const math::Bbox &get_bbox() const { return bbox; }
 };
 
 class TextRenderer {
@@ -162,8 +163,7 @@ class TextRenderer {
                    const char character);
     Word layout_word(const font::Unicode &codepoint, const size_t start, const size_t end,
                      const math::Vector2 &offset);
-    Text layout_text(const font::Unicode &codepoint, const float line_width,
-                     const float line_height);
+    Text layout_text(const font::Unicode &codepoint, const TextOpts &opts);
 
     TextFormatSBOHandle create_text_format_handle(const TextOpts &opts);
 

@@ -1,11 +1,15 @@
 #pragma once
 
 #include "Dialog.h"
+#include "graphics_pipeline/geometry/GeometryRenderer.h"
 #include "graphics_pipeline/text/TextRenderer.h"
+#include "math/Matrix.h"
 #include <optional>
+
 class DialogFactory {
   private:
     graphics_pipeline::text::TextRenderer *m_text_renderer = nullptr;
+    graphics_pipeline::geometry::GeometryRenderer *m_geometry_renderer = nullptr;
 
     std::optional<graphics_pipeline::text::TextOpts> m_dialog_text_opts = std::nullopt;
     std::optional<graphics_pipeline::text::TextOpts> m_dialog_option_text_opts =
@@ -20,8 +24,9 @@ class DialogFactory {
 
   public:
     DialogFactory() = delete;
-    DialogFactory(graphics_pipeline::text::TextRenderer *text_renderer)
-        : m_text_renderer(text_renderer) {}
+    DialogFactory(graphics_pipeline::text::TextRenderer *text_renderer,
+                  graphics_pipeline::geometry::GeometryRenderer *geometry_renderer)
+        : m_text_renderer(text_renderer), m_geometry_renderer(geometry_renderer) {}
 
     void set_event_dialog_text_opts(const graphics_pipeline::text::TextOpts &opts) {
         m_dialog_text_opts = opts;
@@ -88,6 +93,14 @@ class DialogFactory {
             option.next_dialog_node = m_dialog_option_next_node[i];
             option.on_click = m_dialog_option_cbs[i];
             dialog.options.push_back(std::move(option));
+
+            const math::Bbox &text_bbox = option.text_handle.get_bbox();
+
+            option.bbox_handle = m_geometry_renderer->request_render_slot();
+            auto &bbox_instance = m_geometry_renderer->get_instance(option.bbox_handle);
+            bbox_instance.model_matrix =
+                math::Matrix().translate(text_bbox.center()).scale(text_bbox.size());
+            bbox_instance.color = util::colors::rgba(0.3f, 0.3f, 0.3f, 0.1f);
         }
 
         m_id.clear();

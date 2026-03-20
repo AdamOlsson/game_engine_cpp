@@ -74,12 +74,15 @@ void Event::on_hover(const interface::NDCPoint &point) {
     DialogNode &node = m_nodes[m_current_node];
     size_t hover_option_id = node.get_option(point);
     for (size_t i = 0; i < node.options.size(); i++) {
-        auto &instance =
+        auto &text_instance =
             m_text_renderer->get_text_format_instance(node.options[i].text_handle);
+        /*auto &bbox_instance =*/
+        /*    m_geometry_renderer->get_instance(node.options[i].bbox_handle);*/
+
         if (i == hover_option_id) {
-            instance.font_color = util::colors::YELLOW;
+            text_instance.font_color = util::colors::YELLOW;
         } else {
-            instance.font_color = util::colors::WHITE;
+            text_instance.font_color = util::colors::WHITE;
         }
     }
 }

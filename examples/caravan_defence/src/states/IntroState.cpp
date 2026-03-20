@@ -61,7 +61,8 @@ Event IntroState::create_intro_contract(
     const math::Vector2 dialog_box_content_size =
         dialog_box_size - dialog_box_content_padding * 2.0f;
 
-    const math::Vector2 dialog_line_size(dialog_box_content_size.x(), dialog_font_size);
+    const math::Vector2 dialog_line_size(dialog_box_content_size.x(),
+                                         dialog_font_size * 1.0f);
 
     const float content_top_y_ndc = dialog_box_center.y() - dialog_box_size.y() / 2.0f +
                                     dialog_box_content_padding.y() * 2.0f;
@@ -105,7 +106,7 @@ Event IntroState::create_intro_contract(
     event.create_dialog_bbox(game_state.camera);
 
     // Consistent, same every time for all events
-    DialogFactory dialog_factory = DialogFactory(text_renderer);
+    DialogFactory dialog_factory = DialogFactory(text_renderer, geom_renderer);
     dialog_factory.set_event_dialog_text_opts(event_desc_opts);
     dialog_factory.set_event_dialog_option_text_opts(event_dialog_option_opts);
 

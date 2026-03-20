@@ -9,8 +9,8 @@ void EventState::on_enter(GameState &game_state) {
                  "Error: Geometry renderer is not set in EventState.");
 
     m_pending_transition = std::nullopt;
-    event = EventFactory::my_first_event(m_geometry_renderer, m_text_renderer,
-                                         game_state.camera, game_state, *this);
+    event = EventFactory::my_first_event(m_geometry_renderer, m_text_renderer, game_state,
+                                         *this);
 }
 
 void EventState::on_exit(GameState &game_state) {

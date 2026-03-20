@@ -1,6 +1,7 @@
 #pragma once
 
 #include "traits.h"
+#include <format>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/glm.hpp>
 #include <ostream>
@@ -104,10 +105,22 @@ class Vector2 {
         return Vector2(lhs.x() / scalar, lhs.y() / scalar);
     }
 
-    /*std::string to_string() {}*/
+    std::string to_string() const {
+        return "Vector4(" + std::to_string(m_vec.x) + ", " + std::to_string(m_vec.y) +
+               ", " + ")";
+    }
+
     friend std::ostream &operator<<(std::ostream &os, const Vector2 &v) {
-        return os << "Vector2(" << v.x() << ", " << v.y() << ")";
+        os << v.to_string();
+        return os;
     }
 };
 
 } // namespace math
+
+template <> struct std::formatter<math::Vector2> {
+    constexpr auto parse(std::format_parse_context &ctx) { return ctx.begin(); }
+    auto format(const math::Vector2 &v, std::format_context &ctx) const {
+        return std::format_to(ctx.out(), "Vector2({}, {})", v.x(), v.y());
+    }
+};

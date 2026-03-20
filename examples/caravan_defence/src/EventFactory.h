@@ -1,7 +1,6 @@
 #pragma once
 
 // forward declarations
-#include "camera/Camera.h"
 #include "graphics_pipeline/geometry/GeometryRenderer.h"
 #include "graphics_pipeline/text/TextRenderer.h"
 
@@ -14,6 +13,15 @@ class EventFactory {
     static Event
     my_first_event(graphics_pipeline::geometry::GeometryRenderer *geom_renderer,
                    graphics_pipeline::text::TextRenderer *text_renderer,
-                   const camera::Camera2D &camera, GameState &game_state,
-                   EventState &event_state);
+                   GameState &game_state, EventState &event_state);
+
+    static Event
+    the_scavenger_ambush(graphics_pipeline::geometry::GeometryRenderer *geom_renderer,
+                         graphics_pipeline::text::TextRenderer *text_renderer,
+                         GameState &game_state, EventState &event_state);
+
+    static Event
+    defectors_den(graphics_pipeline::geometry::GeometryRenderer *geom_renderer,
+                  graphics_pipeline::text::TextRenderer *text_renderer,
+                  GameState &game_state, EventState &event_state);
 };

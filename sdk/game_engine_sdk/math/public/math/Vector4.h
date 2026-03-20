@@ -90,6 +90,24 @@ class Vector4 {
         return Vector4(lhs.x() - rhs.x, lhs.y() - rhs.y, lhs.z() - rhs.z,
                        lhs.w() - rhs.w);
     }
+
+    std::string to_string() const {
+        return "Vector4(" + std::to_string(m_vec.x) + ", " + std::to_string(m_vec.y) +
+               ", " + std::to_string(m_vec.z) + ", " + std::to_string(m_vec.w) + ")";
+    }
+
+    friend std::ostream &operator<<(std::ostream &os, const Vector4 &v) {
+        os << v.to_string();
+        return os;
+    }
 };
 
 } // namespace math
+
+template <> struct std::formatter<math::Vector4> {
+    constexpr auto parse(std::format_parse_context &ctx) { return ctx.begin(); }
+    auto format(const math::Vector4 &v, std::format_context &ctx) const {
+        return std::format_to(ctx.out(), "Vector4({}, {}, {}, {})", v.x(), v.y(), v.z(),
+                              v.w());
+    }
+};

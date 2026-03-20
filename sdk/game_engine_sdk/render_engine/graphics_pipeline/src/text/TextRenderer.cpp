@@ -4,6 +4,7 @@
 #include "graphics_pipeline/SwapDescriptorSetBuilder.h"
 #include "graphics_pipeline/text/GlyphVertex.h"
 #include "graphics_pipeline/text/TextPipeline.h"
+#include "math/Bbox.h"
 #include "math/Matrix.h"
 #include "math/winding.h"
 #include "triangulation/mapbox/earcut.h"
@@ -20,12 +21,13 @@ struct Word {
     const size_t end_idx = std::numeric_limits<size_t>::max();
     math::Vector2 offset;
     math::Vector2 advance;
+    math::Vector4 bbox;
     std::vector<math::Vector2> glyph_positions;
 };
 
 struct Text {
     size_t char_count = 0;
-    math::Vector4 bbox;
+    math::Bbox bbox;
     std::vector<Word> words;
 };
 
@@ -355,11 +357,16 @@ void TextRenderer::_render(const vulkan::CommandBuffer &command_buffer,
 
 Word TextRenderer::layout_word(const font::Unicode &codepoint, const size_t start,
                                const size_t end, const math::Vector2 &offset) {
+
     std::vector<math::Vector2> glyph_positions;
     glyph_positions.reserve(end - start);
     math::Vector2 pen_position = math::Vector2(0, 0);
     bool is_control_char = false;
     std::vector<std::pair<char32_t, size_t>> control_characters;
+
+    math::Vector2 bbox_top_left = math::Vector2(0.0f, 0.0f);
+    math::Vector2 bbox_bot_right = math::Vector2(0.0f, 0.0f);
+
     for (size_t i = start; i < end; i++) {
         const char32_t &c = codepoint[i];
 
@@ -370,7 +377,11 @@ Word TextRenderer::layout_word(const font::Unicode &codepoint, const size_t star
         glyph_positions.emplace_back(pen_position);
 
         const font::GlyphAdvance &advance = m_font_loader->get_glyph_advance(c);
-        pen_position += math::Vector2(advance.x, advance.y);
+        pen_position += math::Vector2(advance.x, (signed long)0);
+
+        const auto metrics = m_font_loader->get_glyph_metrics(c);
+        bbox_bot_right.x() += metrics.hori_advance;
+        bbox_top_left.y() = fmax(bbox_top_left.y(), metrics.vert_advance);
 
         if (i < end - 1) {
             font::GlyphKerning kerning =
@@ -385,6 +396,7 @@ Word TextRenderer::layout_word(const font::Unicode &codepoint, const size_t star
         .end_idx = end,
         .offset = offset,
         .advance = pen_position,
+        .bbox = math::Vector4(bbox_top_left, bbox_bot_right),
         .glyph_positions = std::move(glyph_positions),
     };
 }
@@ -394,8 +406,24 @@ bool TextRenderer::ends_with(const font::Unicode &codepoint, const Word &word,
     return codepoint[word.end_idx - 1] == character;
 }
 
-Text TextRenderer::layout_text(const font::Unicode &codepoint, const float line_width,
-                               const float line_height) {
+Text TextRenderer::layout_text(const font::Unicode &codepoint, const TextOpts &opts) {
+
+    /* line_height_top ---------------- < bbox top >
+     * font_padding        <padding>
+     * font_bbox_top   ---------------- < word bbox >
+     *                     <glyph>
+     * font_bbox_bot   ---------------- < word bbox >
+     * font_padding        <padding>
+     * line_height_top ---------------- < bbox bot >
+     * */
+    const unsigned short units_per_em = m_font_loader->get_units_per_em();
+    const font::FontBBox font_bbox = m_font_loader->get_font_bbox();
+    const math::Vector2 font_bbox_size = math::Vector2(font_bbox.x_max - font_bbox.x_min,
+                                                       font_bbox.y_max - font_bbox.y_min);
+    const float font_scale = opts.font_size / units_per_em;
+    const float line_width = opts.line_width / font_scale;
+    const float line_height = opts.line_height / font_scale;
+    const float line_padding = fmax(0.0f, (line_height - font_bbox_size.y()) / 2.0f);
 
     // Identify start and stop for all words
     std::vector<std::pair<size_t, size_t>> words;
@@ -435,7 +463,11 @@ Text TextRenderer::layout_text(const font::Unicode &codepoint, const float line_
     text.words.reserve(words.size());
 
     math::Vector2 pen_position = math::Vector2(0, 0);
+
     float line_count = 0.0f;
+    math::Vector2 bbox_top_left = math::Vector2(0.0f, 0.0f);
+    math::Vector2 bbox_bot_right = math::Vector2(0.0f, 0.0f);
+
     for (size_t word_id = 0; word_id < words.size(); word_id++) {
         const size_t word_start = words[word_id].first;
         const size_t word_end = words[word_id].second;
@@ -455,6 +487,15 @@ Text TextRenderer::layout_text(const font::Unicode &codepoint, const float line_
             pen_position = math::Vector2(0.0f, line_height * line_count);
             word.offset = pen_position;
         }
+
+        // offset word to be in the middle of the line height
+        /*word.offset.y() -= line_padding;*/
+
+        // Find the bbox of the text
+        bbox_top_left.y() = -fmax(bbox_top_left.y(), word.bbox.y());
+        bbox_bot_right.x() = fmax(bbox_top_left.x(), word.bbox.z() + word.offset.x());
+        bbox_bot_right.y() = fmax(bbox_top_left.y(), word.bbox.w() + word.offset.y());
+
         pen_position += word.advance;
         pen_position += space_advance;
 
@@ -462,7 +503,7 @@ Text TextRenderer::layout_text(const font::Unicode &codepoint, const float line_
         text.words.push_back(std::move(word));
     }
 
-    text.bbox = math::Vector4(0.0f, -line_height, line_width, line_height * line_count);
+    text.bbox = math::Bbox(bbox_top_left * font_scale, bbox_bot_right * font_scale);
 
     return text;
 }
@@ -483,19 +524,18 @@ TextHandle TextRenderer::create_text2(const font::Unicode &codepoint,
             "Error: can't create text because a font is not loaded.");
     }
 
+    Text text = layout_text(codepoint, opts);
+
     const unsigned short units_per_em = m_font_loader->get_units_per_em();
     const float font_scale = opts.font_size / units_per_em;
-
-    const float line_width = opts.line_width / font_scale;
-    const float line_height = opts.line_height / font_scale;
-    Text text = layout_text(codepoint, line_width, line_height);
 
     TextHandle result;
     result.glyph_handles.reserve(text.char_count);
     result.index_count.reserve(text.char_count);
     result.first_index.reserve(text.char_count);
-    // TODO: Proper bbox calculation
-    result.bbox = text.bbox + math::Vector4(opts.position, opts.position);
+
+    result.bbox = text.bbox;
+    result.bbox.offset(opts.position);
 
     TextFormatSBOHandle format_handle = create_text_format_handle(opts);
     result.format_handle = std::move(format_handle);

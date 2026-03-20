@@ -1,5 +1,6 @@
 #pragma once
 
+#include "graphics_pipeline/geometry/GeometryPipelineSBO.h"
 #include "graphics_pipeline/text/TextRenderer.h"
 #include "interface/NDCPosition.h"
 #include <vector>
@@ -9,6 +10,8 @@ using DialogOptionCb = std::function<void()>;
 struct DialogOption {
     std::string label;
     graphics_pipeline::text::TextHandle text_handle;
+    graphics_pipeline::geometry::GeometrySBOHandle bbox_handle;
+
     std::optional<std::string> next_dialog_node;
     std::function<void()> on_click = []() {};
 
@@ -20,6 +23,7 @@ struct DialogOption {
 struct DialogNode {
     std::string id;
     graphics_pipeline::text::TextHandle text_handle;
+
     std::vector<DialogOption> options;
 
     size_t get_option(const interface::NDCPoint &point) {
