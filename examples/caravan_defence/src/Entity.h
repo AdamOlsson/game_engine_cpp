@@ -1,4 +1,5 @@
 #pragma once
+#include "Health.h"
 #include "camera/Camera.h"
 #include "graphics_pipeline/geometry/GeometryRenderer.h"
 #include "graphics_pipeline/quad/QuadPipelineSBO.h"
@@ -181,19 +182,7 @@ class Entity {
     std::optional<graphics_pipeline::geometry::GeometrySBOHandle>
         m_highlight_render_data = std::nullopt;
 
-    struct {
-        float max = 100.0f;
-        float current = 100.0f;
-        float width = 10.0f;
-        float damage_multiplier = 1.0f;
-        math::Vector2 offset;
-        std::optional<graphics_pipeline::geometry::GeometrySBOHandle> bar = std::nullopt;
-
-        template <typename T> void init() {
-            max = T::max_health;
-            current = T::max_health;
-        }
-    } m_health;
+    std::optional<Health> m_health = std::nullopt;
 
     struct {
         float velocity = 0.0f;
@@ -240,7 +229,6 @@ class Entity {
     Entity(std::in_place_type_t<T>, math::Matrix &&model, Args &&...args)
         : m_type(std::in_place_type<T>, std::forward<Args>(args)...),
           m_model_matrix(std::move(model)), m_color(get_color()), m_size(get_size()) {
-        m_health.init<T>();
         m_movement.velocity = T::velocity;
         m_movement.target = get_world_position();
     }
@@ -335,22 +323,20 @@ class Entity {
 
         m_geometry_renderer = geom_renderer;
 
-        const auto entity_size = m_size;
-        m_health.offset =
-            std::move(math::Vector2(0.0f, (entity_size.y() / 2.0f) + 20.0f));
-        m_health.width = entity_size.x();
-        m_health.bar = m_geometry_renderer->request_render_slot();
-        auto &health_bar = m_geometry_renderer->get_instance(m_health.bar.value());
-        health_bar.flags |=
-            static_cast<uint32_t>(graphics_pipeline::geometry::GeometryShape::Rectangle);
-        health_bar.model_matrix = math::Matrix()
-                                      .translate(get_world_position() + m_health.offset)
-                                      .scale(m_health.width, 10.0f);
-
         if (holds<enemy_t>() || holds<caravan_cart_t>()) {
-            health_bar.color = util::colors::rgb(0.0f, 8.0f, 0.0f);
-        } else {
-            health_bar.color = util::colors::TRANSPARENT;
+            math::Vector2 health_bar_position_offset =
+                math::Vector2(0.0f, (m_size.y() / 2.0f) + 20.0f);
+            math::Vector2 health_bar_position =
+                get_world_position() + health_bar_position_offset;
+            math::Vector2 health_bar_size = math::Vector2(m_size.x(), 10.0f);
+
+            HealthBarOpts health_bar_opts{};
+            health_bar_opts.type = HealthBarType::Normal;
+            health_bar_opts.max_health = get_max_health();
+
+            m_health = Health(m_geometry_renderer, health_bar_position, health_bar_size,
+                              health_bar_opts);
+            m_health->set_health_bar_offset(health_bar_position_offset);
         }
     }
 
@@ -361,9 +347,7 @@ class Entity {
         }
 
         if (m_geometry_renderer != nullptr) {
-            if (m_health.bar.has_value()) {
-                m_geometry_renderer->return_render_slot(m_health.bar.value());
-            }
+            m_health = std::nullopt;
             m_geometry_renderer = nullptr;
         }
     }
@@ -457,23 +441,33 @@ class Entity {
         }
     }
 
-    float get_current_health() { return m_health.current; }
-    float get_max_health() { return m_health.max; }
-    void update_health() {
-        if (m_geometry_renderer != nullptr && m_health.bar.has_value()) {
-            auto &health_bar = m_geometry_renderer->get_instance(m_health.bar.value());
+    float get_current_health() {
+        DEBUG_ASSERT(m_health.has_value(), "Error: Trying to call get_current_health() "
+                                           "on an entity that has no health.");
+        return m_health->current_health();
+    }
 
-            health_bar.model_matrix =
-                math::Matrix()
-                    .translate(get_world_position() + m_health.offset)
-                    .scale(m_health.width * (m_health.current / m_health.max), 10.0f);
+    void update_health() {
+        if (m_health.has_value()) {
+            m_health->set_health_bar_position(get_world_position());
+            m_health->update_health_bar();
         }
     }
 
-    void damage(const float dmg) { m_health.current -= dmg; }
-    void kill() { m_health.current = 0.0f; }
-    bool is_dead() { return m_health.current <= 0.0f; }
-    bool is_alive() { return m_health.current > 0.0f; }
+    void damage(const float dmg) {
+        DEBUG_ASSERT(m_health.has_value(), "Error: Trying to call damage() "
+                                           "on an entity that has no health.");
+        m_health->handle_incomming_damage(dmg);
+    }
+
+    void kill() {
+        DEBUG_ASSERT(m_health.has_value(), "Error: Trying to call kill() "
+                                           "on an entity that has no health.");
+        m_health->handle_incomming_damage(m_health->max_health());
+    }
+
+    bool is_dead() { return m_health->is_dead(); }
+    bool is_alive() { return !m_health->is_dead(); }
 
     void set_color(const util::colors::Color &color) { m_color = color; }
 
@@ -498,6 +492,7 @@ class Entity {
         }
 
         set_world_position(new_position);
+        update_health();
 
         if (holds<ranged_attack_t>()) {
             ranged_attack_t &attack = get<ranged_attack_t>();

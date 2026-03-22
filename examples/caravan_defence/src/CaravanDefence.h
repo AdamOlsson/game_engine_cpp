@@ -34,8 +34,6 @@ constexpr vulkan::RenderPassOpts ui_pass =
                                .final_layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
                            }};
 
-// CONTINUE: Make states more independent
-// - move out event member from game state and into EventState
 class CaravanDefence : public Game {
   private:
     friend class Configuration;
