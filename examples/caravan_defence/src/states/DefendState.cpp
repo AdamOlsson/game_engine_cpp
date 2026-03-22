@@ -31,6 +31,15 @@ constexpr void DefendState::spawn_group_of_enemies(GameState &game_state) {
         entity::set_enemy_type(game_state.enemies.back(),
                                static_cast<entity::EnemyType>(enemy_type));
         game_state.enemies.back().set_render_data(m_quad_renderer, m_geometry_renderer);
+
+        if (game_state.rng.uniform(0.0f, 1.0f) < 0.3f) {
+            const size_t health_bar_type_id = game_state.rng.uniform(0, 1);
+            HealthBarOpts health_bar_opts{};
+            health_bar_opts.max_health = 3.0f;
+            health_bar_opts.type = health_bar_type_id == 0 ? HealthBarType::EnergyShield
+                                                           : HealthBarType::Armor;
+            game_state.enemies.back().add_health_bar(health_bar_opts);
+        }
     }
 }
 

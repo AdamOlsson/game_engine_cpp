@@ -13,6 +13,9 @@ namespace entity {
 
 class Entity;
 
+// CONTINUE: Create a weapon class and do weapon specific damage against the different
+// health bars
+
 struct caravan_cart_t {
     util::colors::Color color = util::colors::rgb(0.6f, 0.0f, 0.6f);
     static constexpr util::colors::Color highlighted_color =
@@ -334,9 +337,10 @@ class Entity {
             health_bar_opts.type = HealthBarType::Normal;
             health_bar_opts.max_health = get_max_health();
 
-            m_health = Health(m_geometry_renderer, health_bar_position, health_bar_size,
-                              health_bar_opts);
+            m_health = Health(m_geometry_renderer, health_bar_size, health_bar_opts);
             m_health->set_health_bar_offset(health_bar_position_offset);
+            m_health->set_health_bar_position(health_bar_position);
+            m_health->update_health_bar();
         }
     }
 
@@ -515,6 +519,12 @@ class Entity {
     void set_uvwt(const float u, const float v, const float w, const float t) {
         auto &instance = m_quad_renderer->get_instance(m_render_data_handle.value());
         instance.uvwt = math::Vector4(u, v, w, t);
+    }
+
+    void add_health_bar(const HealthBarOpts &opts) {
+        if (m_health.has_value()) {
+            m_health->add_health_bar(opts);
+        }
     }
 };
 
