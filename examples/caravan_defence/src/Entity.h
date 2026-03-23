@@ -1,5 +1,6 @@
 #pragma once
 #include "Health.h"
+#include "Weapon.h"
 #include "camera/Camera.h"
 #include "graphics_pipeline/geometry/GeometryRenderer.h"
 #include "graphics_pipeline/quad/QuadPipelineSBO.h"
@@ -11,10 +12,13 @@
 #include <variant>
 namespace entity {
 
+// CONTINUE: Make is possible to:
+// - change guard weapon
+// - change guard preferred target
+
 class Entity;
 
-// CONTINUE: Create a weapon class and do weapon specific damage against the different
-// health bars
+using Clock = std::chrono::steady_clock;
 
 struct caravan_cart_t {
     util::colors::Color color = util::colors::rgb(0.6f, 0.0f, 0.6f);
@@ -25,6 +29,7 @@ struct caravan_cart_t {
     static constexpr math::Vector2 size = math::Vector2(128.0f, 256.0f);
     static constexpr float velocity = 0.0f;
     static constexpr float max_health = 10.0f;
+    static constexpr std::optional<Weapon> weapon = std::nullopt;
 
     caravan_cart_t() {}
     ~caravan_cart_t() {}
@@ -41,15 +46,14 @@ struct caravan_slot_t {
     static constexpr float max_health = 10.0f;
 
     Entity *occupying_guard = nullptr;
+    static constexpr std::optional<Weapon> weapon = std::nullopt;
 
     caravan_slot_t() {}
     ~caravan_slot_t() {}
 };
 
-enum class EnemyType : uint32_t { A = 0, B = 1 };
-
 struct enemy_t {
-    util::colors::Color color = util::colors::DARK_RED;
+    static constexpr util::colors::Color color = util::colors::DARK_RED;
     static constexpr util::colors::Color highlighted_color = util::colors::DARK_RED;
     static constexpr util::colors::Color selected_color = util::colors::DARK_RED;
     static constexpr math::Vector2 size = math::Vector2(50.0f, 50.0f);
@@ -58,18 +62,14 @@ struct enemy_t {
 
     static constexpr size_t spawn_rate_ms = 5000;
 
-    static constexpr util::colors::Color type_a_color = util::colors::DARK_RED;
-    static constexpr util::colors::Color type_b_color = util::colors::DARK_ORANGE;
-    EnemyType type = EnemyType::A;
+    static constexpr std::optional<Weapon> weapon = Weapon::create_weapon<Sword>();
 
     enemy_t() {}
     ~enemy_t() {}
 };
 
-enum class DamageType : uint32_t { A = 0, B = 1 };
-
 struct guard_t {
-    util::colors::Color color = util::colors::rgb(0.0f, 0.55f, 0.0f);
+    util::colors::Color color = util::colors::hex(0xFFEA00);
     static constexpr util::colors::Color highlighted_color =
         util::colors::rgb(0.0f, 0.75f, 0.0f);
     static constexpr util::colors::Color selected_color =
@@ -78,16 +78,9 @@ struct guard_t {
     static constexpr float velocity = 95.0f;
     static constexpr float max_health = 10.0f;
 
-    using Clock = std::chrono::steady_clock;
-    using TimePoint = std::chrono::time_point<Clock>;
-    using Duration = std::chrono::duration<double>;
-
     Entity *caravan_slot = nullptr;
-    TimePoint last_attack = Clock::now();
-    static constexpr float attack_range = 500.0f;
-    static constexpr Duration attack_cooldown = std::chrono::seconds(3);
 
-    DamageType damage_type = DamageType::A;
+    static constexpr std::optional<Weapon> weapon = Weapon::create_weapon<Bow>();
 
     guard_t() {}
     ~guard_t() {}
@@ -104,55 +97,24 @@ struct ranged_attack_t {
     float lifetime_count = 0.0f;
     static constexpr float lifetime_ms = 800.0f;
 
+    static constexpr std::optional<Weapon> weapon = std::nullopt;
+
     ranged_attack_t() {}
     ~ranged_attack_t() {}
 };
 
 template <typename T>
-concept has_color_field = requires(T t) {
-    { t.color } -> std::convertible_to<util::colors::Color>;
-};
-
-template <typename T>
-concept has_highlighted_color_field = requires(T t) {
-    { t.highlighted_color } -> std::convertible_to<util::colors::Color>;
-};
-
-template <typename T>
-concept has_selected_color_field = requires(T t) {
-    { t.selected_color } -> std::convertible_to<util::colors::Color>;
-};
-
-template <typename T>
-concept has_size_field = requires(T t) {
-    { t.size } -> std::convertible_to<math::Vector2>;
-};
-
-template <typename T>
-concept has_velocity_field = requires(T t) {
+concept is_valid_entity = requires(T t) {
     { t.velocity } -> std::convertible_to<float>;
+    { t.size } -> std::convertible_to<math::Vector2>;
+    { t.selected_color } -> std::convertible_to<util::colors::Color>;
+    { t.highlighted_color } -> std::convertible_to<util::colors::Color>;
+    { t.color } -> std::convertible_to<util::colors::Color>;
+    { t.weapon } -> std::convertible_to<std::optional<Weapon>>;
 };
 
-template <typename... Ts> constexpr bool all_have_color_field(std::variant<Ts...> *) {
-    return (has_color_field<Ts> && ...);
-}
-
-template <typename... Ts>
-constexpr bool all_have_highlighted_color_field(std::variant<Ts...> *) {
-    return (has_highlighted_color_field<Ts> && ...);
-}
-
-template <typename... Ts>
-constexpr bool all_have_selected_color_field(std::variant<Ts...> *) {
-    return (has_selected_color_field<Ts> && ...);
-}
-
-template <typename... Ts> constexpr bool all_have_size_field(std::variant<Ts...> *) {
-    return (has_color_field<Ts> && ...);
-}
-
-template <typename... Ts> constexpr bool all_have_velocity_field(std::variant<Ts...> *) {
-    return (has_velocity_field<Ts> && ...);
+template <typename... Ts> constexpr bool validate_entities(std::variant<Ts...> *) {
+    return (is_valid_entity<Ts> && ...);
 }
 
 enum EntityState {
@@ -166,6 +128,9 @@ class Entity {
     using EntityVariant =
         std::variant<caravan_cart_t, caravan_slot_t, enemy_t, guard_t, ranged_attack_t>;
     EntityVariant m_type;
+
+    static_assert(validate_entities(static_cast<EntityVariant *>(nullptr)),
+                  "All entity variantes are not valid.");
 
     math::Matrix m_model_matrix;
     bool m_is_highlighted = false;
@@ -186,22 +151,12 @@ class Entity {
         m_highlight_render_data = std::nullopt;
 
     std::optional<Health> m_health = std::nullopt;
+    std::optional<Weapon> m_weapon = std::nullopt;
 
     struct {
         float velocity = 0.0f;
         camera::WorldPoint2D target = math::Vector2(0.0f, 0.0f);
     } m_movement;
-
-    static_assert(all_have_color_field(static_cast<EntityVariant *>(nullptr)),
-                  "All entity variants must have a color field.");
-    static_assert(all_have_highlighted_color_field(static_cast<EntityVariant *>(nullptr)),
-                  "All entity variants must have a highlighted_color field.");
-    static_assert(all_have_selected_color_field(static_cast<EntityVariant *>(nullptr)),
-                  "All entity variants must have a selected_color field.");
-    static_assert(all_have_size_field(static_cast<EntityVariant *>(nullptr)),
-                  "All entity variants must have a size field.");
-    static_assert(all_have_velocity_field(static_cast<EntityVariant *>(nullptr)),
-                  "All entity variants must have a velocity field.");
 
     constexpr util::colors::Color get_color() const {
         return std::visit([](const auto &entity) { return entity.color; }, m_type);
@@ -231,7 +186,8 @@ class Entity {
                  std::is_same_v<T, ranged_attack_t>)
     Entity(std::in_place_type_t<T>, math::Matrix &&model, Args &&...args)
         : m_type(std::in_place_type<T>, std::forward<Args>(args)...),
-          m_model_matrix(std::move(model)), m_color(get_color()), m_size(get_size()) {
+          m_model_matrix(std::move(model)), m_color(get_color()), m_size(get_size()),
+          m_weapon(T::weapon) {
         m_movement.velocity = T::velocity;
         m_movement.target = get_world_position();
     }
@@ -301,27 +257,9 @@ class Entity {
             instance.sampling_mode =
                 static_cast<uint32_t>(graphics_pipeline::quad::TextureSamplerMode::SDF);
             instance.uvwt = math::Vector4(0.0f, 0.0f, 0.2f, 0.2f);
-
-            enemy_t &enemy = get<enemy_t>();
-            switch (enemy.type) {
-            case EnemyType::A:
-                m_color = enemy_t::type_a_color;
-                break;
-            case EnemyType::B:
-                m_color = enemy_t::type_b_color;
-                break;
-            }
-        } else if (holds<guard_t>()) {
-            guard_t &guard = get<guard_t>();
-            switch (guard.damage_type) {
-            case DamageType::A:
-                m_color = enemy_t::type_a_color;
-                break;
-            case DamageType::B:
-                m_color = enemy_t::type_b_color;
-                break;
-            }
+            m_color = enemy_t::color;
         }
+
         instance.color = m_color;
 
         m_geometry_renderer = geom_renderer;
@@ -340,7 +278,6 @@ class Entity {
             m_health = Health(m_geometry_renderer, health_bar_size, health_bar_opts);
             m_health->set_health_bar_offset(health_bar_position_offset);
             m_health->set_health_bar_position(health_bar_position);
-            m_health->update_health_bar();
         }
     }
 
@@ -420,7 +357,7 @@ class Entity {
                     !m_highlight_render_data.has_value(),
                     "Error: Did not expect highlight render data if guard is not "
                     "highlighted.");
-                const guard_t &guard = get<guard_t>();
+                const float attack_range = m_weapon.has_value() ? m_weapon->range : 0.0f;
                 m_highlight_render_data = m_geometry_renderer->request_render_slot();
                 auto &highlight_instance =
                     m_geometry_renderer->get_instance(m_highlight_render_data.value());
@@ -430,7 +367,7 @@ class Entity {
                 highlight_instance.model_matrix =
                     math::Matrix()
                         .translate(get_world_position())
-                        .scale(guard.attack_range * 2, guard.attack_range * 2);
+                        .scale(attack_range * 2, attack_range * 2);
             }
         }
     }
@@ -458,10 +395,25 @@ class Entity {
         }
     }
 
-    void damage(const float dmg) {
+    void damage(const Weapon &weapon) {
         DEBUG_ASSERT(m_health.has_value(), "Error: Trying to call damage() "
                                            "on an entity that has no health.");
-        m_health->handle_incomming_damage(dmg);
+        const HealthBarType current_hp_type = m_health->get_active_health_bar_type();
+
+        float damage = weapon.damage;
+
+        if (current_hp_type == HealthBarType::Normal &&
+            weapon.damage_type != DamageType::Physical) {
+            damage = weapon.damage / 2.0f;
+        } else if (current_hp_type == HealthBarType::EnergyShield &&
+                   weapon.damage_type != DamageType::Energy) {
+            damage = weapon.damage / 2.0f;
+        } else if (current_hp_type == HealthBarType::Armor &&
+                   weapon.damage_type != DamageType::Physical) {
+            damage = weapon.damage / 2.0f;
+        }
+
+        m_health->handle_incomming_damage(damage);
     }
 
     void kill() {
@@ -525,6 +477,44 @@ class Entity {
         if (m_health.has_value()) {
             m_health->add_health_bar(opts);
         }
+    }
+
+    void set_weapon(Weapon &&weapon) { m_weapon = std::move(weapon); }
+
+    bool in_attack_range(const Entity &target) {
+        DEBUG_ASSERT(
+            m_weapon.has_value(),
+            "Error: Checking in_attack_range() but entity does not have a weapon.");
+        const camera::WorldPoint2D &position = get_world_position();
+        const float attack_range = m_weapon->range;
+        return math::distance2(position, target.get_world_position()) <
+               (attack_range * attack_range);
+    }
+
+    bool can_attack() {
+        DEBUG_ASSERT(m_weapon.has_value(),
+                     "Error: Checking can_attack() but entity does not have a weapon.");
+        return m_weapon->can_fire() && is_attacking();
+    }
+
+    Entity attack(Entity &target_entity) {
+        DEBUG_ASSERT(m_weapon.has_value(),
+                     "Error: Calling attack() but entity does not have a weapon.");
+        /*auto &guard = guard_entity.get<guard_t>();*/
+        /*guard.last_attack = guard_t::Clock::now();*/
+
+        /*const uint enemy_type = static_cast<uint>(get_enemy_type(enemy_entity));*/
+        /*const uint guard_type = static_cast<uint>(guard.damage_type);*/
+        /*float damage = 1.0f;*/
+        /*if (enemy_type == guard_type) {*/
+        /*    damage = 3.0f;*/
+        /*}*/
+        /*enemy_entity.damage(damage);*/
+        m_weapon->fire();
+        target_entity.damage(m_weapon.value());
+
+        return Entity::create_ranged_attack(get_world_position(),
+                                            target_entity.get_world_position());
     }
 };
 
@@ -604,46 +594,6 @@ inline Entity *get_caravan_slot(Entity &guard_entity) {
     return guard.caravan_slot;
 }
 
-inline bool in_attack_range(Entity &guard_entity, const Entity &enemy_entity) {
-    DEBUG_ASSERT(guard_entity.holds<guard_t>(), "Error: Expected guard.");
-    auto &guard = guard_entity.get<guard_t>();
-    const camera::WorldPoint2D &guard_position = guard_entity.get_world_position();
-    const float attack_range = guard.attack_range;
-    return math::distance2(guard_position, enemy_entity.get_world_position()) <
-           (attack_range * attack_range);
-}
-
-inline bool can_attack(Entity &guard_entity) {
-    DEBUG_ASSERT(guard_entity.holds<guard_t>(), "Error: Expected guard.");
-    auto &guard = guard_entity.get<guard_t>();
-    return (guard_t::Clock::now() - guard.last_attack) > guard.attack_cooldown &&
-           guard_entity.is_attacking();
-}
-
-inline EnemyType get_enemy_type(Entity &enemy_entity);
-inline Entity attack(Entity &guard_entity, Entity &enemy_entity) {
-    DEBUG_ASSERT(guard_entity.holds<guard_t>(), "Error: Expected guard.");
-    auto &guard = guard_entity.get<guard_t>();
-    guard.last_attack = guard_t::Clock::now();
-
-    const uint enemy_type = static_cast<uint>(get_enemy_type(enemy_entity));
-    const uint guard_type = static_cast<uint>(guard.damage_type);
-    float damage = 1.0f;
-    if (enemy_type == guard_type) {
-        damage = 3.0f;
-    }
-    enemy_entity.damage(damage);
-
-    return Entity::create_ranged_attack(guard_entity.get_world_position(),
-                                        enemy_entity.get_world_position());
-}
-
-inline void set_damage_type(Entity &guard_entity, const DamageType type) {
-    DEBUG_ASSERT(guard_entity.holds<guard_t>(), "Error: Expected guard.");
-    auto &guard = guard_entity.get<guard_t>();
-    guard.damage_type = type;
-}
-
 // ###################################################
 // ###################### Enemy ######################
 // ###################################################
@@ -660,18 +610,6 @@ inline void move_towards(Entity &enemy_entity, const camera::WorldPoint2D &targe
     camera::WorldPoint2D new_position = math::lerp(position, target, fraction);
 
     enemy_entity.set_world_position(new_position);
-}
-
-inline void set_enemy_type(Entity &enemy_entity, const EnemyType type) {
-    DEBUG_ASSERT(enemy_entity.holds<enemy_t>(), "Error: Expected enemy.");
-    auto &enemy = enemy_entity.get<enemy_t>();
-    enemy.type = type;
-}
-
-inline EnemyType get_enemy_type(Entity &enemy_entity) {
-    DEBUG_ASSERT(enemy_entity.holds<enemy_t>(), "Error: Expected enemy.");
-    auto &enemy = enemy_entity.get<enemy_t>();
-    return enemy.type;
 }
 
 } // namespace entity

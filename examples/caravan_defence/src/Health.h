@@ -28,6 +28,7 @@ class Health {
     math::Vector2 m_health_bar_size = math::Vector2(25.0f, 10.0f);
 
     struct HealthBar {
+        HealthBarType type;
         graphics_pipeline::geometry::GeometrySBOHandle render_data_handle;
         float max = 100.0f;
         float current = 100.0f;
@@ -39,6 +40,7 @@ class Health {
 
     HealthBar create_health_bar(const HealthBarOpts &opts) {
         HealthBar health_bar{};
+        health_bar.type = opts.type;
         health_bar.render_data_handle = m_geometry_renderer->request_render_slot();
         health_bar.max = opts.max_health;
         health_bar.current = opts.max_health;
@@ -127,5 +129,9 @@ class Health {
     void add_health_bar(const HealthBarOpts &opts) {
         m_health_pool.push_back(std::move(create_health_bar(opts)));
         m_active_health_bar = m_health_pool.size() - 1;
+    }
+
+    HealthBarType get_active_health_bar_type() const {
+        return m_health_pool[m_active_health_bar].type;
     }
 };

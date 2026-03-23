@@ -178,9 +178,7 @@ void Configuration::setup_initial_game_state(
         entity::Entity::create_guard(camera::WorldPoint2D(0.0f, 0.0f)));
     game_state.guards.push_back(
         entity::Entity::create_guard(camera::WorldPoint2D(0.0f, 0.0f)));
-
-    set_damage_type(game_state.guards[0], entity::DamageType::A);
-    set_damage_type(game_state.guards[1], entity::DamageType::B);
+    game_state.guards.back().set_weapon(Weapon::create_weapon<Sniper>());
 
     game_state.enemies.reserve(64);
     game_state.attacks.reserve(8);

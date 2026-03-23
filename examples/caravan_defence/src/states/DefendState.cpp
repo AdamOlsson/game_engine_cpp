@@ -28,8 +28,6 @@ constexpr void DefendState::spawn_group_of_enemies(GameState &game_state) {
         const size_t caravan_cart_id = game_state.rng.uniform(0, 1);
         game_state.enemies.back().set_move_target(
             game_state.caravan[caravan_cart_id].get_world_position());
-        entity::set_enemy_type(game_state.enemies.back(),
-                               static_cast<entity::EnemyType>(enemy_type));
         game_state.enemies.back().set_render_data(m_quad_renderer, m_geometry_renderer);
 
         if (game_state.rng.uniform(0.0f, 1.0f) < 0.3f) {
@@ -101,11 +99,10 @@ util::StateTransition DefendState::update(const float dt, GameState &game_state)
         entity::Entity &enemy = game_state.enemies[i];
 
         for (entity::Entity &guard : game_state.guards) {
-            if (enemy.is_alive() && entity::can_attack(guard) &&
-                entity::in_attack_range(guard, enemy)) {
+            if (enemy.is_alive() && guard.can_attack() && guard.in_attack_range(enemy)) {
 
                 // Create attack
-                game_state.attacks.push_back(entity::attack(guard, enemy));
+                game_state.attacks.push_back(guard.attack(enemy));
                 game_state.attacks.back().set_render_data(m_quad_renderer,
                                                           m_geometry_renderer);
                 break;
@@ -115,7 +112,7 @@ util::StateTransition DefendState::update(const float dt, GameState &game_state)
         // Find the id of the cart the enemy is inside.
         auto cart_id = find_caravan_cart(game_state, enemy.get_world_position());
         if (enemy.is_alive() && cart_id.has_value()) {
-            game_state.caravan[cart_id.value()].damage(enemy.get_current_health());
+            enemy.attack(game_state.caravan[cart_id.value()]);
             enemy.kill();
         }
 
