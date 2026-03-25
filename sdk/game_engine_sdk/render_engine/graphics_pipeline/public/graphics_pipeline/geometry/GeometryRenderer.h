@@ -35,7 +35,7 @@ class GeometryRenderer {
         std::vector<size_t> sparse;
         std::vector<size_t> reverse;
         std::vector<size_t> available;
-        vulkan::buffers::StorageBuffer<GeometryPipelineSBO> dense;
+        vulkan::buffers::StagedStorageBuffer<GeometryPipelineSBO> dense;
     } m_sparse_set;
     vulkan::buffers::IndirectBuffer<vulkan::DrawIndexedIndirectCommand> m_draw_commands;
 

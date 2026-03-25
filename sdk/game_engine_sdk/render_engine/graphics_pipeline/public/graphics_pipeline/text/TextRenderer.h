@@ -8,14 +8,13 @@
 #include "graphics_pipeline/text/TextPipeline.h"
 #include "math/Bbox.h"
 #include "math/Vector2.h"
-#include "math/Vector4.h"
 #include "math/shape.h"
 #include "util/colors.h"
 #include "vulkan/CommandBufferManager.h"
 #include "vulkan/DescriptorPool.h"
 #include "vulkan/DescriptorSetLayout.h"
-#include "vulkan/buffers/GpuBuffer.h"
 #include "vulkan/buffers/IndexBuffer.h"
+#include "vulkan/buffers/StagedGpuBuffer.h"
 #include "vulkan/buffers/VertexBuffer.h"
 #include <limits>
 
@@ -126,7 +125,7 @@ class TextRenderer {
     std::vector<std::pair<size_t, size_t>> m_glyph_draw_info;
 
     struct {
-        vulkan::buffers::StorageBuffer<TextFormatSBO> dense;
+        vulkan::buffers::StagedStorageBuffer<TextFormatSBO> dense;
         size_t next_id = 0;
         size_t dense_count = 0;
         std::vector<size_t> sparse;
@@ -135,7 +134,7 @@ class TextRenderer {
     } m_format_sparse_set;
 
     struct {
-        vulkan::buffers::StorageBuffer<TextGlyphSBO> dense;
+        vulkan::buffers::StagedStorageBuffer<TextGlyphSBO> dense;
         size_t next_id = 0;
         size_t dense_count = 0;
         std::vector<size_t> sparse;

@@ -28,9 +28,9 @@ GeometryRenderer::GeometryRenderer(std::shared_ptr<vulkan::context::GraphicsCont
     m_descriptor_pool = vulkan::DescriptorPool(m_ctx, opts.geometry.pool_opts);
 
     const size_t max_frames_in_flight = 2;
-    m_sparse_set.dense =
-        vulkan::buffers::StorageBuffer<graphics_pipeline::geometry::GeometryPipelineSBO>(
-            m_ctx, opts.geometry.instance_buffer_opts.size, max_frames_in_flight);
+    m_sparse_set.dense = vulkan::buffers::StagedStorageBuffer<
+        graphics_pipeline::geometry::GeometryPipelineSBO>(
+        m_ctx, opts.geometry.instance_buffer_opts.size, max_frames_in_flight);
 
     auto builder = SwapDescriptorSetBuilder(max_frames_in_flight);
     builder.add_storage_buffer(

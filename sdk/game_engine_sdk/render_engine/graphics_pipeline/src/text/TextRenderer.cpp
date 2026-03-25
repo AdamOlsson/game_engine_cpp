@@ -6,6 +6,8 @@
 #include "graphics_pipeline/text/TextPipeline.h"
 #include "math/Bbox.h"
 #include "math/Matrix.h"
+#include "math/Vector2.h"
+#include "math/Vector4.h"
 #include "math/winding.h"
 #include "triangulation/mapbox/earcut.h"
 #include "vulkan/CommandBufferManager.h"
@@ -46,9 +48,9 @@ TextRenderer::TextRenderer(std::shared_ptr<vulkan::context::GraphicsContext> &ct
     constexpr size_t max_text_instances = 16;
     constexpr size_t max_glyph_instances = 1024;
 
-    m_format_sparse_set.dense = vulkan::buffers::StorageBuffer<TextFormatSBO>(
+    m_format_sparse_set.dense = vulkan::buffers::StagedStorageBuffer<TextFormatSBO>(
         ctx, max_text_instances, max_frames_in_flight);
-    m_glyph_sparse_set.dense = vulkan::buffers::StorageBuffer<TextGlyphSBO>(
+    m_glyph_sparse_set.dense = vulkan::buffers::StagedStorageBuffer<TextGlyphSBO>(
         ctx, max_glyph_instances, max_frames_in_flight);
 
     m_descriptor_pool = vulkan::DescriptorPool(

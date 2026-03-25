@@ -109,6 +109,7 @@ class DefendState {
             }
         }
 
+        // CONTINUE: With Entity health bars
         vulkan::DrawIndexedIndirectCommand draw_command =
             m_world_geometry_renderer->write_instance_buffer(data, indices);
 

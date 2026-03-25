@@ -13,6 +13,7 @@
 #include "states/state_machine/StateMachine.h"
 #include "states/types.h"
 #include "vulkan/CommandBufferManager.h"
+#include "vulkan/SwapChain.h"
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 constexpr glm::vec2 INVERT_AXISES = glm::vec2(-1.0f, -1.0f);

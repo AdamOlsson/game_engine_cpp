@@ -27,7 +27,7 @@ graphics_pipeline::quad::QuadRenderer::QuadRenderer(
 
     const size_t max_frames_in_flight = 2;
     m_sparse_set.dense =
-        vulkan::buffers::StorageBuffer<graphics_pipeline::quad::QuadPipelineSBO>(
+        vulkan::buffers::StagedStorageBuffer<graphics_pipeline::quad::QuadPipelineSBO>(
             m_ctx, opts.quad.instance_buffer_opts.size, max_frames_in_flight);
 
     auto builder = SwapDescriptorSetBuilder(max_frames_in_flight);

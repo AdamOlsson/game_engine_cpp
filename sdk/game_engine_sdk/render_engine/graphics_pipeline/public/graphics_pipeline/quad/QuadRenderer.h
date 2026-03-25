@@ -7,9 +7,8 @@
 #include "graphics_pipeline/quad/QuadPipelineSBO.h"
 #include "vulkan/DescriptorPool.h"
 #include "vulkan/Sampler.h"
-#include "vulkan/SwapChain.h"
-#include "vulkan/buffers/GpuBuffer.h"
 #include "vulkan/buffers/IndexBuffer.h"
+#include "vulkan/buffers/StagedGpuBuffer.h"
 #include "vulkan/buffers/VertexBuffer.h"
 namespace graphics_pipeline::quad {
 
@@ -37,7 +36,7 @@ class QuadRenderer {
         std::vector<size_t> sparse;
         std::vector<size_t> reverse;
         std::vector<size_t> available;
-        vulkan::buffers::StorageBuffer<QuadPipelineSBO> dense;
+        vulkan::buffers::StagedStorageBuffer<QuadPipelineSBO> dense;
     } m_sparse_set;
 
     static constexpr size_t INVALID_INDEX = std::numeric_limits<size_t>::max();

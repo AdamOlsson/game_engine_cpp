@@ -2,7 +2,7 @@
 
 #include "game_engine_sdk/render_engine/RenderPass.h"
 #include "game_engine_sdk/render_engine/SwapChain.h"
-#include "game_engine_sdk/render_engine/buffers/GpuBuffer.h"
+#include "game_engine_sdk/render_engine/buffers/StagedGpuBuffer.h"
 #include "game_engine_sdk/render_engine/graphics_context/GraphicsContext.h"
 #include "game_engine_sdk/render_engine/vulkan/CommandBuffer.h"
 #include "game_engine_sdk/render_engine/vulkan/Fence.h"

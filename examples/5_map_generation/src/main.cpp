@@ -9,6 +9,7 @@
 #include "tiling/NoiseMap.h"
 #include "tiling/TileGrid.h"
 #include "tiling/wang/WangTiles.h"
+#include "vulkan/SwapChain.h"
 #include "vulkan/vulkan_core.h"
 #include "window/WindowConfig.h"
 #include <memory>
