@@ -28,7 +28,6 @@ constexpr void DefendState::spawn_group_of_enemies(GameState &game_state) {
         const size_t caravan_cart_id = game_state.rng.uniform(0, 1);
         game_state.enemies.back().set_move_target(
             game_state.caravan[caravan_cart_id].get_world_position());
-        game_state.enemies.back().set_render_data();
 
         if (game_state.rng.uniform(0.0f, 1.0f) < 0.3f) {
             const size_t health_bar_type_id = game_state.rng.uniform(0, 1);
@@ -102,7 +101,6 @@ util::StateTransition DefendState::update(const float dt, GameState &game_state)
 
                 // Create attack
                 game_state.attacks.push_back(guard.attack(enemy));
-                game_state.attacks.back().set_render_data();
                 break;
             }
         }

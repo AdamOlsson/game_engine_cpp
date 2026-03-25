@@ -123,7 +123,9 @@ class DefendState {
         }
 
         for (auto &entity : game_state.attacks) {
-            entity.get_quad_render_data(quad_data);
+            if (entity.is_visible()) {
+                entity.get_quad_render_data(quad_data);
+            }
         }
 
         vulkan::DrawIndexedIndirectCommand quad_draw_command =

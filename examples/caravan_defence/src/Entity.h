@@ -215,7 +215,6 @@ class Entity {
     Entity(Entity &&other) noexcept = default;
     Entity &operator=(Entity &&other) noexcept = default;
 
-    // Delete copy constructor and operator
     Entity(const Entity &other) = delete;
     Entity &operator=(const Entity &other) = delete;
 
@@ -225,23 +224,68 @@ class Entity {
     static Entity create_caravan_cart(const camera::WorldPoint2D &position) {
         math::Matrix model =
             math::Matrix().translate(position).scale(caravan_cart_t::size);
-        return Entity(std::in_place_type<caravan_cart_t>, std::move(model));
+        auto e = Entity(std::in_place_type<caravan_cart_t>, std::move(model));
+        math::Vector2 health_bar_position_offset =
+            math::Vector2(0.0f, (e.m_size.y() / 2.0f) + 20.0f);
+        math::Vector2 health_bar_position =
+            e.get_world_position() + health_bar_position_offset;
+        math::Vector2 health_bar_size = math::Vector2(e.m_size.x(), 10.0f);
+
+        HealthBarOpts health_bar_opts{};
+        health_bar_opts.type = HealthBarType::Normal;
+        health_bar_opts.max_health = e.get_max_health();
+
+        e.m_health = Health(health_bar_size, health_bar_opts);
+        e.m_health->set_health_bar_offset(health_bar_position_offset);
+        e.m_health->set_health_bar_position(health_bar_position);
+        e.m_render_data.color = e.m_color;
+        return e;
     }
 
     static Entity create_caravan_slot(const camera::WorldPoint2D &position) {
         math::Matrix model =
             math::Matrix().translate(position).scale(caravan_slot_t::size);
-        return Entity(std::in_place_type<caravan_slot_t>, std::move(model));
+        auto e = Entity(std::in_place_type<caravan_slot_t>, std::move(model));
+        e.m_render_data.color = e.m_color;
+        return e;
     }
 
     static Entity create_guard(const camera::WorldPoint2D &position) {
         math::Matrix model = math::Matrix().translate(position).scale(guard_t::size);
-        return Entity(std::in_place_type<guard_t>, std::move(model));
+        auto e = Entity(std::in_place_type<guard_t>, std::move(model));
+        const float attack_range = e.m_weapon.has_value() ? e.m_weapon->range : 0.0f;
+        e.m_attack_range_render_data =
+            AttackRangeRenderData(e.get_world_position(), attack_range);
+        e.m_render_data.color = e.m_color;
+        return e;
     }
 
     static Entity create_enemy(const camera::WorldPoint2D &position) {
         math::Matrix model = math::Matrix().translate(position).scale(enemy_t::size);
-        return Entity(std::in_place_type<enemy_t>, std::move(model));
+        auto e = Entity(std::in_place_type<enemy_t>, std::move(model));
+
+        e.m_render_data.texture_id = 0;
+        e.m_render_data.sampling_mode =
+            static_cast<uint32_t>(graphics_pipeline::quad::TextureSamplerMode::SDF);
+        e.m_render_data.uvwt = math::Vector4(0.0f, 0.0f, 0.2f, 0.2f);
+        e.m_render_data.color = enemy_t::color;
+        e.m_color = enemy_t::color;
+
+        math::Vector2 health_bar_position_offset =
+            math::Vector2(0.0f, (e.m_size.y() / 2.0f) + 20.0f);
+        math::Vector2 health_bar_position =
+            e.get_world_position() + health_bar_position_offset;
+        math::Vector2 health_bar_size = math::Vector2(e.m_size.x(), 10.0f);
+
+        HealthBarOpts health_bar_opts{};
+        health_bar_opts.type = HealthBarType::Normal;
+        health_bar_opts.max_health = e.get_max_health();
+
+        e.m_health = Health(health_bar_size, health_bar_opts);
+        e.m_health->set_health_bar_offset(health_bar_position_offset);
+        e.m_health->set_health_bar_position(health_bar_position);
+
+        return e;
     }
 
     static Entity create_ranged_attack(const camera::WorldPoint2D &start,
@@ -259,42 +303,10 @@ class Entity {
         e.m_size.y() = height;
         e.m_rotation_rad = rotation;
         e.set_move_target(model.position_2d());
+
+        e.m_render_data.color = e.m_color;
+
         return e;
-    }
-
-    void set_render_data() {
-
-        if (holds<enemy_t>()) {
-            m_render_data.texture_id = 0;
-            m_render_data.sampling_mode =
-                static_cast<uint32_t>(graphics_pipeline::quad::TextureSamplerMode::SDF);
-            m_render_data.uvwt = math::Vector4(0.0f, 0.0f, 0.2f, 0.2f);
-            m_color = enemy_t::color;
-        }
-
-        m_render_data.color = m_color;
-
-        if (holds<enemy_t>() || holds<caravan_cart_t>()) {
-            math::Vector2 health_bar_position_offset =
-                math::Vector2(0.0f, (m_size.y() / 2.0f) + 20.0f);
-            math::Vector2 health_bar_position =
-                get_world_position() + health_bar_position_offset;
-            math::Vector2 health_bar_size = math::Vector2(m_size.x(), 10.0f);
-
-            HealthBarOpts health_bar_opts{};
-            health_bar_opts.type = HealthBarType::Normal;
-            health_bar_opts.max_health = get_max_health();
-
-            m_health = Health(health_bar_size, health_bar_opts);
-            m_health->set_health_bar_offset(health_bar_position_offset);
-            m_health->set_health_bar_position(health_bar_position);
-        }
-
-        if (holds<guard_t>()) {
-            const float attack_range = m_weapon.has_value() ? m_weapon->range : 0.0f;
-            m_attack_range_render_data =
-                AttackRangeRenderData(get_world_position(), attack_range);
-        }
     }
 
     void get_geometry_render_data(
@@ -338,10 +350,7 @@ class Entity {
 
     bool is_visible() const { return m_is_visible; }
     void toggle_visibility() { set_visibility(!m_is_visible); }
-    void set_visibility(const bool is_visible) {
-        m_is_visible = is_visible;
-        m_render_data.color = m_is_visible ? m_color : util::colors::TRANSPARENT;
-    }
+    void set_visibility(const bool is_visible) { m_is_visible = is_visible; }
 
     bool is_highlighted() const { return m_is_highlighted; }
     void toggle_highlighted() { set_highlighted(!m_is_highlighted); }
@@ -459,7 +468,11 @@ class Entity {
         }
     }
 
-    void set_weapon(Weapon &&weapon) { m_weapon = std::move(weapon); }
+    void set_weapon(Weapon &&weapon) {
+        m_weapon = std::move(weapon);
+        m_attack_range_render_data =
+            AttackRangeRenderData(get_world_position(), m_weapon->range);
+    }
 
     bool in_attack_range(const Entity &target) {
         DEBUG_ASSERT(
