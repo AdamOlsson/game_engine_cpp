@@ -5,7 +5,7 @@
 namespace vulkan {
 class CommandBuffer {
   private:
-    VkCommandBuffer m_command_buffer;
+    VkCommandBuffer m_command_buffer = VK_NULL_HANDLE;
 
   public:
     CommandBuffer() = default;

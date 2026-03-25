@@ -64,6 +64,11 @@ graphics_pipeline::quad::QuadRenderer::get_descriptor_set_layout(
 graphics_pipeline::quad::QuadPipelineSBO &
 graphics_pipeline::quad::QuadRenderer::get_instance(
     const graphics_pipeline::quad::QuadSBOHandle &handle) {
+    DEBUG_ASSERT(handle.id < m_sparse_set.sparse.size(),
+                 "Error: Handle id out of sparse range.");
+
+    DEBUG_ASSERT(m_sparse_set.sparse[handle.id] < m_sparse_set.dense.size(),
+                 "Error: Handle id out of dense range.");
     return m_sparse_set.dense[m_sparse_set.sparse[handle.id]];
 }
 

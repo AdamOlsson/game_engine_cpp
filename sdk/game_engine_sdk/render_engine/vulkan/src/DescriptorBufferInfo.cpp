@@ -1,7 +1,6 @@
 #include "vulkan/DescriptorBufferInfo.h"
 
-vulkan::DescriptorBufferInfo::DescriptorBufferInfo(
-    buffers::StagedGpuBufferRef &buffer_ref)
+vulkan::DescriptorBufferInfo::DescriptorBufferInfo(buffers::GpuBufferRef &buffer_ref)
     : m_descriptor_buffer_info(VkDescriptorBufferInfo{
           .buffer = buffer_ref.buffer,
           .offset = 0,
@@ -9,7 +8,7 @@ vulkan::DescriptorBufferInfo::DescriptorBufferInfo(
       }) {}
 
 std::vector<vulkan::DescriptorBufferInfo> vulkan::DescriptorBufferInfo::from_vector(
-    std::vector<buffers::StagedGpuBufferRef> &&buffer_refs) {
+    std::vector<buffers::GpuBufferRef> &&buffer_refs) {
     std::vector<vulkan::DescriptorBufferInfo> buffer_infos;
     buffer_infos.reserve(buffer_refs.size());
     for (auto &ref : buffer_refs) {

@@ -1,7 +1,15 @@
 #pragma once
 
 #include "vulkan/vulkan_core.h"
+
+namespace vulkan::buffers {
 enum class GpuBufferType { Uniform, Storage, Indirect };
+
+struct GpuBufferRef {
+    VkDeviceSize size;
+    VkBuffer buffer;
+    GpuBufferType type;
+};
 
 template <GpuBufferType BufferType> class BufferDescriptor2 {
   public:
@@ -20,3 +28,5 @@ template <GpuBufferType BufferType> class BufferDescriptor2 {
         return layout_binding;
     }
 };
+
+} // namespace vulkan::buffers

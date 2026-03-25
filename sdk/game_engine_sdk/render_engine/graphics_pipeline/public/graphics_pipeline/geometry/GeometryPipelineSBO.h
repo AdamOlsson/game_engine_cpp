@@ -47,6 +47,7 @@ struct GeometryPipelineSBO {
 class GeometrySBOHandle {
   private:
     friend class GeometryRenderer;
+    friend class GeometryRenderer2;
     size_t id = std::numeric_limits<size_t>::max();
 
   public:

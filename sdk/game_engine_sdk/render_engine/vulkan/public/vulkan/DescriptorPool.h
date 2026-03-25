@@ -13,7 +13,7 @@ struct DescriptorPoolOpts {
 class DescriptorPool {
   private:
     std::shared_ptr<context::GraphicsContext> m_ctx;
-    VkDescriptorPool m_descriptor_pool;
+    VkDescriptorPool m_descriptor_pool = VK_NULL_HANDLE;
 
     VkDescriptorPool create_descriptor_pool(const uint32_t capacity,
                                             const uint32_t num_storage_bufs,

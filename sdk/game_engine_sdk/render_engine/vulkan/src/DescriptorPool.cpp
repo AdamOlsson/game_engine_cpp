@@ -22,10 +22,9 @@ vulkan::DescriptorPool::DescriptorPool(
                       opts.num_uniform_buffers, opts.num_combined_image_samplers)) {}
 
 vulkan::DescriptorPool::~DescriptorPool() {
-    if (m_descriptor_pool == VK_NULL_HANDLE) {
-        return;
+    if (m_descriptor_pool != VK_NULL_HANDLE) {
+        vkDestroyDescriptorPool(m_ctx->logical_device, m_descriptor_pool, nullptr);
     }
-    vkDestroyDescriptorPool(m_ctx->logical_device, m_descriptor_pool, nullptr);
 }
 
 VkDescriptorPool vulkan::DescriptorPool::create_descriptor_pool(

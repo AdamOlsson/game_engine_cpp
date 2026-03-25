@@ -7,6 +7,7 @@
 #include "camera/Camera.h"
 #include "events/Event.h"
 #include "game_engine_sdk/Game.h"
+#include "graphics_pipeline/geometry/GeometryRenderer2.h"
 #include "graphics_pipeline/quad/QuadRenderer.h"
 #include "graphics_pipeline/text/TextRenderer.h"
 #include "states/IntroState.h"
@@ -47,7 +48,7 @@ class CaravanDefence : public Game {
     vulkan::RenderPass m_world_render_pass;
     std::unique_ptr<graphics_pipeline::quad::QuadRenderer> m_quad_renderer;
     std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer> m_geom_renderer;
-    std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer> m_geom_renderer2;
+    std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer2> m_geom_renderer2;
 
     // UI renderers
     vulkan::RenderPass m_ui_render_pass;
@@ -84,9 +85,7 @@ class CaravanDefence : public Game {
         Configuration::setup_mouse_event_handler(ctx, *this);
         Configuration::setup_keyboard_event_handler(ctx, *this);
 
-        Configuration::setup_initial_game_state(m_geom_renderer.get(),
-                                                m_geom_renderer2.get(),
-                                                m_quad_renderer.get(), m_game_state);
+        Configuration::setup_initial_game_state(m_quad_renderer.get(), m_game_state);
 
         m_state_machine.get_state<IntroState>() =
             IntroState(m_ui_text_renderer.get(), m_ui_geom_renderer.get());
@@ -162,7 +161,7 @@ class CaravanDefence : public Game {
             state.event->render_text(command_buffer, &ui_push_constant);
         } else if (m_state_machine.is_in_state<DefendState>()) {
             auto &state = m_state_machine.get_state<DefendState>();
-            state.render_text(command_buffer, &ui_push_constant);
+            state.render_ui(command_buffer, &ui_push_constant);
         }
 
         frame.end_render_pass();

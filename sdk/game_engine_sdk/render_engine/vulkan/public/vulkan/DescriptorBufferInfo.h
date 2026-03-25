@@ -1,8 +1,9 @@
 
 #pragma once
 
-#include "buffers/StagedGpuBuffer.h"
+#include "buffers/BufferTypes.h"
 #include "vulkan/vulkan_core.h"
+#include <vector>
 
 namespace vulkan {
 class DescriptorBufferInfo {
@@ -11,7 +12,7 @@ class DescriptorBufferInfo {
 
   public:
     DescriptorBufferInfo() = default;
-    DescriptorBufferInfo(buffers::StagedGpuBufferRef &buffer_ref);
+    DescriptorBufferInfo(buffers::GpuBufferRef &buffer_ref);
     ~DescriptorBufferInfo() = default;
     DescriptorBufferInfo(DescriptorBufferInfo &&other) noexcept = default;
     DescriptorBufferInfo &operator=(DescriptorBufferInfo &&other) noexcept = default;
@@ -22,7 +23,7 @@ class DescriptorBufferInfo {
     const VkDescriptorBufferInfo *get() const { return &m_descriptor_buffer_info; }
 
     static std::vector<DescriptorBufferInfo>
-    from_vector(std::vector<buffers::StagedGpuBufferRef> &&buffer_refs);
+    from_vector(std::vector<buffers::GpuBufferRef> &&buffer_refs);
 };
 
 } // namespace vulkan

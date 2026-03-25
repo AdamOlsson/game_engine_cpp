@@ -8,12 +8,6 @@
 
 namespace vulkan::buffers {
 
-struct GpuBufferRef {
-    VkDeviceSize size;
-    VkBuffer buffer;
-    GpuBufferType type;
-};
-
 template <GpuBufferType BufferType> class BufferDescriptor;
 
 template <typename T, GpuBufferType BufferType> class GpuBuffer {
@@ -100,7 +94,7 @@ template <typename T, GpuBufferType BufferType> class GpuBuffer {
     GpuBuffer(GpuBuffer &&other) noexcept
         : m_ctx(std::move(other.m_ctx)), m_size(std::move(other.m_size)),
           m_buffers(std::move(other.m_buffers)), m_capacity(other.m_capacity),
-          m_swap_state(other.m_swap_state), m_refs(std::move(m_refs)) {
+          m_swap_state(other.m_swap_state), m_refs(std::move(other.m_refs)) {
         other.m_buffers.clear();
         other.m_capacity = 0;
     }
@@ -125,15 +119,20 @@ template <typename T, GpuBufferType BufferType> class GpuBuffer {
                        const size_t offset = 0) {
         const size_t current_buffer = m_swap_state.current();
         auto *base = static_cast<std::byte *>(m_buffers[current_buffer].buffer_mapped);
+        DEBUG_ASSERT(offset + indices.size() <= m_capacity,
+                     "Error: Write would exceed GPU buffer capacity!");
         for (size_t i : indices) {
             std::memcpy(base + offset * sizeof(T), &data[i], sizeof(T));
         }
     }
 
-    void write(const std::vector<T> &data) {
+    void write(const std::vector<T> &data, const size_t offset = 0) {
         const size_t current_buffer = m_swap_state.current();
         auto *base = static_cast<std::byte *>(m_buffers[current_buffer].buffer_mapped);
-        std::memcpy(base, data.data(), sizeof(T) * data.size());
+        const size_t num_elements = offset + data.size();
+        DEBUG_ASSERT(num_elements <= m_capacity,
+                     "Error: Write would exceed GPU buffer capacity!");
+        std::memcpy(base + offset * sizeof(T), data.data(), sizeof(T) * data.size());
     }
 
     size_t size() const { return m_size; }

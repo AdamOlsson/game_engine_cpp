@@ -9,7 +9,7 @@ namespace vulkan {
 class RenderPass {
   private:
     std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
-    VkRenderPass m_render_pass;
+    VkRenderPass m_render_pass = VK_NULL_HANDLE;
 
   public:
     RenderPass() = default;

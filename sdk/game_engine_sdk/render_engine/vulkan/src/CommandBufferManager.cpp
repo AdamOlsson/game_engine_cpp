@@ -3,7 +3,8 @@
 
 vulkan::CommandBufferManager::CommandBufferManager(
     std::shared_ptr<vulkan::context::GraphicsContext> ctx, const size_t num_buffers)
-    : m_ctx(ctx), m_num_buffers(num_buffers), m_command_pool(vulkan::CommandPool(m_ctx)),
+    : m_ctx(ctx), m_num_buffers(num_buffers), m_next_buffer(0),
+      m_command_pool(vulkan::CommandPool(m_ctx)),
       m_command_buffers(create_command_buffers()) {}
 
 vulkan::CommandBufferManager::~CommandBufferManager() {}

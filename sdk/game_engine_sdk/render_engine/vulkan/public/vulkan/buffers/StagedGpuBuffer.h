@@ -8,12 +8,6 @@
 #include <memory>
 namespace vulkan::buffers {
 
-struct StagedGpuBufferRef {
-    VkDeviceSize size;
-    VkBuffer buffer;
-    GpuBufferType type;
-};
-
 template <GpuBufferType BufferType> class BufferDescriptor;
 
 template <typename T, GpuBufferType BufferType> class StagedGpuBuffer {
@@ -21,7 +15,6 @@ template <typename T, GpuBufferType BufferType> class StagedGpuBuffer {
     std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
 
     std::vector<T> m_staging_buffer;
-    std::vector<size_t> m_delta_ids;
 
     size_t m_capacity;   // number of elements
     VkDeviceSize m_size; // number of bytes
@@ -33,7 +26,7 @@ template <typename T, GpuBufferType BufferType> class StagedGpuBuffer {
     };
 
     std::vector<Buffer> m_buffers;
-    std::vector<StagedGpuBufferRef> m_refs;
+    std::vector<GpuBufferRef> m_refs;
 
     struct {
         size_t swap_size;
@@ -70,7 +63,6 @@ template <typename T, GpuBufferType BufferType> class StagedGpuBuffer {
         }
 
         m_staging_buffer.reserve(capacity);
-        m_delta_ids.reserve(capacity);
 
         m_buffers.resize(m_swap_state.swap_size);
         m_refs.reserve(m_swap_state.swap_size);
@@ -84,7 +76,7 @@ template <typename T, GpuBufferType BufferType> class StagedGpuBuffer {
                         &b.buffer_mapped);
             memset(b.buffer_mapped, 0, m_size);
 
-            m_refs.push_back(StagedGpuBufferRef{
+            m_refs.push_back(GpuBufferRef{
                 .size = m_size, .buffer = b.buffer_handle, .type = BufferType});
         }
     }
@@ -107,7 +99,7 @@ template <typename T, GpuBufferType BufferType> class StagedGpuBuffer {
         : m_ctx(std::move(other.m_ctx)), m_size(std::move(other.m_size)),
           m_staging_buffer(std::move(other.m_staging_buffer)),
           m_buffers(std::move(other.m_buffers)), m_capacity(other.m_capacity),
-          m_swap_state(other.m_swap_state), m_refs(std::move(m_refs)) {
+          m_swap_state(other.m_swap_state), m_refs(std::move(other.m_refs)) {
         other.m_buffers.clear();
         other.m_capacity = 0;
     }
@@ -129,26 +121,9 @@ template <typename T, GpuBufferType BufferType> class StagedGpuBuffer {
 
     VkBuffer handle() { return m_buffers[m_swap_state.current()].buffer_handle; }
 
-    void write_indices(const std::vector<T> &data, const std::vector<size_t> &indices,
-                       const size_t offset = 0) {
-        // This function is an alternative to passing data to the device buffer where the
-        // staging buffer is skipped.
-        const size_t current_buffer = m_swap_state.current();
-        auto *base = static_cast<std::byte *>(m_buffers[current_buffer].buffer_mapped);
-        for (size_t i : indices) {
-            std::memcpy(base + offset * sizeof(T), &data[i], sizeof(T));
-        }
-    }
-
-    void write(const std::vector<T> &data) {
-        const size_t current_buffer = m_swap_state.current();
-        auto *base = static_cast<std::byte *>(m_buffers[current_buffer].buffer_mapped);
-        std::memcpy(base, data.data(), sizeof(T) * data.size());
-    }
-
     void resize(const size_t size) { m_staging_buffer.resize(size); }
     size_t size() const { return m_size; }
-    std::vector<StagedGpuBufferRef> get_reference() { return m_refs; }
+    std::vector<GpuBufferRef> get_reference() { return m_refs; }
     size_t num_elements() const { return m_staging_buffer.size(); }
     size_t size_of_T() { return sizeof(T); }
 
@@ -165,28 +140,17 @@ template <typename T, GpuBufferType BufferType> class StagedGpuBuffer {
         // Transfer the current state of the staging buffer to the next device buffer not
         // currently displayed
         const size_t current_buffer = m_swap_state.current();
-        memcpy(m_buffers[current_buffer].buffer_mapped, m_staging_buffer.data(), m_size);
-        m_delta_ids.clear();
+        memcpy(m_buffers[current_buffer].buffer_mapped, m_staging_buffer.data(),
+               m_staging_buffer.size() * sizeof(T));
     }
 
     void sync_all() {
         // Transfer the current state of the staging buffer to the all device buffers in
         // the swap not currently displayed
         for (auto i = 0; i < m_swap_state.swap_size; i++) {
-            memcpy(m_buffers[i].buffer_mapped, m_staging_buffer.data(), m_size);
+            memcpy(m_buffers[i].buffer_mapped, m_staging_buffer.data(),
+                   m_staging_buffer.size() * sizeof(T));
         }
-        m_delta_ids.clear();
-    }
-
-    void sync_delta() {
-        // Transfer the delta state of the staging buffer to the next device buffer not
-        // currently displayed
-        const size_t next_buffer = m_swap_state.next();
-        T *device_buffer = static_cast<T *>(m_buffers[next_buffer].buffer_mapped);
-        for (auto id : m_delta_ids) {
-            device_buffer[id] = m_staging_buffer[id];
-        }
-        m_delta_ids.clear();
     }
 
     T &back() { return m_staging_buffer.back(); }
@@ -194,56 +158,32 @@ template <typename T, GpuBufferType BufferType> class StagedGpuBuffer {
     decltype(auto) push_back(T &t) {
         DEBUG_ASSERT(m_staging_buffer.size() < m_capacity,
                      "Exceeding the GPU buffers size!");
-        m_delta_ids.push_back(m_staging_buffer.size() + 1);
         return m_staging_buffer.push_back(t);
     }
 
     decltype(auto) push_back(const T &t) {
         DEBUG_ASSERT(m_staging_buffer.size() < m_capacity,
                      "Exceeding the GPU buffers size!");
-        m_delta_ids.push_back(m_staging_buffer.size() + 1);
         return m_staging_buffer.push_back(t);
     }
 
     decltype(auto) push_back(T &&t) {
         DEBUG_ASSERT(m_staging_buffer.size() < m_capacity,
                      "Exceeding the GPU buffers size!");
-        m_delta_ids.push_back(m_staging_buffer.size() + 1);
         return m_staging_buffer.push_back(std::forward<T>(t));
     }
 
     template <typename... Args> decltype(auto) emplace_back(Args &&...args) {
         DEBUG_ASSERT(m_staging_buffer.size() < m_capacity,
                      "Exceeding the GPU buffers size!");
-        m_delta_ids.push_back(m_staging_buffer.size() + 1);
         return m_staging_buffer.emplace_back(std::forward<Args>(args)...);
     }
 
-    T &operator[](size_t index) {
-        // Note: Its not necesarrily true that if a user indexes into the staging buffer,
-        // that they will update it. However, there is no other way of tracking if they do
-        // so we have to be defensive and asssume that changes are made. The type of
-        // indexing I refer to is:
-        //
-        // auto& buffer_memeber = gpu_buffer[index];
-        //
-        // In the const case, its not possible to update the reference so no need assume
-        // changes.
-        m_delta_ids.push_back(index);
-        return m_staging_buffer[index];
-    }
+    T &operator[](size_t index) { return m_staging_buffer[index]; }
 
     T &at(size_t index) {
-        // Note: Its not necesarrily true that if a user indexes into the staging buffer,
-        // that they will update it. However, there is no other way of tracking if they do
-        // so we have to be defensive and asssume that changes are made. The type of
-        // indexing I refer to is:
-        //
-        // auto& buffer_memeber = gpu_buffer[index];
-        //
-        // In the const case, its not possible to update the reference so no need assume
-        // changes.
-        m_delta_ids.push_back(index);
+        DEBUG_ASSERT(index < m_staging_buffer.size(),
+                     "Error: Indexing beyond staging buffers size");
         return m_staging_buffer[index];
     }
 

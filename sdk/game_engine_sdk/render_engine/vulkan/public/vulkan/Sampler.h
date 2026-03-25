@@ -28,7 +28,7 @@ struct SamplerOpts {
 class Sampler {
   private:
     std::shared_ptr<context::GraphicsContext> m_ctx;
-    VkSampler m_sampler;
+    VkSampler m_sampler = VK_NULL_HANDLE;
 
     VkSampler create_sampler(vulkan::Filter filter,
                              vulkan::SamplerAddressMode address_mode);

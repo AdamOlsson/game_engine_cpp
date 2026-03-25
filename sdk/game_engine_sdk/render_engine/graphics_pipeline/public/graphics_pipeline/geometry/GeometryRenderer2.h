@@ -8,7 +8,6 @@
 #include "vulkan/DrawIndexedIndirectCommand.h"
 #include "vulkan/buffers/GpuBuffer.h"
 #include "vulkan/buffers/IndexBuffer.h"
-#include "vulkan/buffers/StagedGpuBuffer.h"
 #include "vulkan/buffers/VertexBuffer.h"
 #include <limits>
 #include <memory>
@@ -17,7 +16,7 @@ namespace graphics_pipeline::geometry {
 
 class GeometrySBOHandle;
 
-class GeometryRenderer {
+class GeometryRenderer2 {
   private:
     std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
 
@@ -30,38 +29,32 @@ class GeometryRenderer {
 
     SwapDescriptorSet m_descriptor_sets;
 
-    struct {
-        size_t next_id;
-        size_t dense_count;
-        std::vector<size_t> sparse;
-        std::vector<size_t> reverse;
-        std::vector<size_t> available;
-        vulkan::buffers::StagedStorageBuffer<GeometryPipelineSBO> dense;
-    } m_sparse_set;
-
+    vulkan::buffers::StorageBuffer<GeometryPipelineSBO> m_instances;
     vulkan::buffers::IndirectBuffer<vulkan::DrawIndexedIndirectCommand> m_draw_commands;
 
     static constexpr size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
-    bool contains(size_t id) const;
 
     static vulkan::DescriptorSetLayout
     get_descriptor_set_layout(std::shared_ptr<vulkan::context::GraphicsContext> &ctx);
 
   public:
-    GeometryRenderer(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
-                     vulkan::CommandBufferManager *command_buffer_manager,
-                     RendererOpts &opts);
+    GeometryRenderer2(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
+                      vulkan::CommandBufferManager *command_buffer_manager,
+                      RendererOpts &opts);
 
-    GeometryRenderer(GeometryRenderer &&) noexcept = delete;
-    GeometryRenderer &operator=(GeometryRenderer &&) noexcept = delete;
+    GeometryRenderer2(GeometryRenderer2 &&) noexcept = delete;
+    GeometryRenderer2 &operator=(GeometryRenderer2 &&) noexcept = delete;
 
-    GeometryRenderer(const GeometryRenderer &) = delete;
-    GeometryRenderer &operator=(const GeometryRenderer &) = delete;
+    GeometryRenderer2(const GeometryRenderer2 &) = delete;
+    GeometryRenderer2 &operator=(const GeometryRenderer2 &) = delete;
 
-    GeometrySBOHandle request_render_slot();
-    void return_render_slot(GeometrySBOHandle &handle);
-    GeometryPipelineSBO &get_instance(const GeometrySBOHandle &handle);
-    void sync_render_slots();
+    vulkan::DrawIndexedIndirectCommand
+    write_to_buffer_indexed(const std::vector<GeometryPipelineSBO> &instance_data,
+                            const std::vector<size_t> &indices, const size_t offset = 0);
+
+    vulkan::DrawIndexedIndirectCommand
+    write_to_buffer(const std::vector<GeometryPipelineSBO> &instance_data,
+                    const size_t offset = 0);
 
     template <typename PushConstantType>
     void render(const vulkan::CommandBuffer &command_buffer,

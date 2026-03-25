@@ -3,12 +3,11 @@
 #include "../GameState.h"
 #include "camera/Camera.h"
 #include "graphics_pipeline/geometry/GeometryRenderer.h"
+#include "graphics_pipeline/geometry/GeometryRenderer2.h"
 #include "graphics_pipeline/quad/QuadRenderer.h"
 #include "graphics_pipeline/text/TextRenderer.h"
 #include "state_machine/StateTransition.h"
 #include <vector>
-
-/*struct GameState;*/
 
 struct EntitySettingsPanel {
     static constexpr util::colors::Color background_color =
@@ -26,7 +25,7 @@ class DefendState {
   private:
     // World renderers
     graphics_pipeline::quad::QuadRenderer *m_world_quad_renderer = nullptr;
-    graphics_pipeline::geometry::GeometryRenderer *m_world_geometry_renderer = nullptr;
+    graphics_pipeline::geometry::GeometryRenderer2 *m_world_geometry_renderer = nullptr;
 
     // UI renderers
     graphics_pipeline::text::TextRenderer *m_ui_text_renderer = nullptr;
@@ -60,7 +59,7 @@ class DefendState {
     DefendState() = default;
 
     DefendState(graphics_pipeline::quad::QuadRenderer *world_quad_renderer,
-                graphics_pipeline::geometry::GeometryRenderer *world_geom_renderer,
+                graphics_pipeline::geometry::GeometryRenderer2 *world_geom_renderer,
                 graphics_pipeline::text::TextRenderer *ui_text_renderer,
                 graphics_pipeline::geometry::GeometryRenderer *ui_geom_renderer)
         : m_world_quad_renderer(world_quad_renderer),
@@ -81,8 +80,8 @@ class DefendState {
     util::StateTransition update(const float dt, GameState &game_state);
 
     template <typename PushConstantType>
-    void render_text(const vulkan::CommandBuffer &command_buffer,
-                     PushConstantType *push_constant) {
+    void render_ui(const vulkan::CommandBuffer &command_buffer,
+                   PushConstantType *push_constant) {
         if (m_settings_panel.is_open) {
             for (auto &text : m_settings_panel.text_handles) {
                 m_ui_text_renderer->render(command_buffer, text, push_constant);
@@ -96,22 +95,28 @@ class DefendState {
 
         // "Culling"
         // TODO: Requires additional refactoring to avoid this additional copying of
-        // instance data
+        // instance data. This refactor involves storing SBO in the game state, and let
+        // the entities store indices into this buffer.
         std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> data;
-        data.reserve(game_state.guards.size());
+        data.reserve(game_state.enemies.size());
+
         std::vector<size_t> indices;
-        indices.reserve(game_state.guards.size());
-        size_t count = 0;
+        indices.reserve(game_state.enemies.size());
+
         for (auto &entity : game_state.guards) {
-            if (entity.is_highlighted()) {
-                indices.push_back(count++);
-                data.push_back(entity.get_geometry_render_data());
-            }
+            entity.get_geometry_render_data(data);
         }
 
-        // CONTINUE: With Entity health bars
+        for (auto &entity : game_state.caravan) {
+            entity.get_geometry_render_data(data);
+        }
+
+        for (auto &entity : game_state.enemies) {
+            entity.get_geometry_render_data(data);
+        }
+
         vulkan::DrawIndexedIndirectCommand draw_command =
-            m_world_geometry_renderer->write_instance_buffer(data, indices);
+            m_world_geometry_renderer->write_to_buffer(data);
 
         std::vector<vulkan::DrawIndexedIndirectCommand> draw_commands;
         draw_commands.push_back(draw_command);

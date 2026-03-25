@@ -2,7 +2,6 @@
 #include "Health.h"
 #include "Weapon.h"
 #include "camera/Camera.h"
-#include "graphics_pipeline/geometry/GeometryRenderer.h"
 #include "graphics_pipeline/quad/QuadPipelineSBO.h"
 #include "math/Matrix.h"
 #include "math/Vector2.h"
@@ -169,10 +168,6 @@ class Entity {
     std::optional<graphics_pipeline::quad::QuadSBOHandle> m_render_data_handle =
         std::nullopt;
 
-    graphics_pipeline::geometry::GeometryRenderer *m_geometry_renderer = nullptr;
-    std::optional<graphics_pipeline::geometry::GeometrySBOHandle>
-        m_highlight_render_data = std::nullopt;
-
     std::optional<Health> m_health = std::nullopt;
     std::optional<Weapon> m_weapon = std::nullopt;
     std::optional<AttackRangeRenderData> m_attack_range_render_data = std::nullopt;
@@ -269,8 +264,7 @@ class Entity {
         return e;
     }
 
-    void set_render_data(graphics_pipeline::quad::QuadRenderer *quad_renderer,
-                         graphics_pipeline::geometry::GeometryRenderer *geom_renderer) {
+    void set_render_data(graphics_pipeline::quad::QuadRenderer *quad_renderer) {
         m_quad_renderer = quad_renderer;
         m_render_data_handle = m_quad_renderer->request_render_slot();
         auto &instance = m_quad_renderer->get_instance(m_render_data_handle.value());
@@ -286,8 +280,6 @@ class Entity {
 
         instance.color = m_color;
 
-        m_geometry_renderer = geom_renderer;
-
         if (holds<enemy_t>() || holds<caravan_cart_t>()) {
             math::Vector2 health_bar_position_offset =
                 math::Vector2(0.0f, (m_size.y() / 2.0f) + 20.0f);
@@ -299,7 +291,7 @@ class Entity {
             health_bar_opts.type = HealthBarType::Normal;
             health_bar_opts.max_health = get_max_health();
 
-            m_health = Health(m_geometry_renderer, health_bar_size, health_bar_opts);
+            m_health = Health(health_bar_size, health_bar_opts);
             m_health->set_health_bar_offset(health_bar_position_offset);
             m_health->set_health_bar_position(health_bar_position);
         }
@@ -311,24 +303,25 @@ class Entity {
         }
     }
 
-    graphics_pipeline::geometry::GeometryPipelineSBO get_geometry_render_data() {
-        if (m_attack_range_render_data.has_value()) {
-            return m_attack_range_render_data->data;
+    void get_geometry_render_data(
+        std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> &out) {
+
+        if (is_highlighted() && m_attack_range_render_data.has_value()) {
+            out.push_back(m_attack_range_render_data->data);
         }
-        DEBUG_ASSERT(false, "Error: Called get_geometry_render_data() on an object that "
-                            "does not have geometry render data.");
-        return graphics_pipeline::geometry::GeometryPipelineSBO{};
+
+        if (m_health.has_value()) {
+            const auto &health = m_health->get_render_data();
+            for (const auto &h : health) {
+                out.push_back(h);
+            }
+        }
     }
 
     void clear_render_data() {
         if (m_quad_renderer != nullptr) {
             m_quad_renderer->return_render_slot(m_render_data_handle.value());
             m_quad_renderer = nullptr;
-        }
-
-        if (m_geometry_renderer != nullptr) {
-            m_health = std::nullopt;
-            m_geometry_renderer = nullptr;
         }
     }
 
@@ -372,9 +365,6 @@ class Entity {
     }
     void handle_highlight(const bool prev_value, const bool new_value) {
         DEBUG_ASSERT(m_quad_renderer != nullptr,
-                     "Error: Changing the highlight value of an entity requires the "
-                     "render data to be set.");
-        DEBUG_ASSERT(m_geometry_renderer != nullptr,
                      "Error: Changing the highlight value of an entity requires the "
                      "render data to be set.");
         if (m_quad_renderer == nullptr || prev_value == new_value) {
@@ -515,16 +505,6 @@ class Entity {
     Entity attack(Entity &target_entity) {
         DEBUG_ASSERT(m_weapon.has_value(),
                      "Error: Calling attack() but entity does not have a weapon.");
-        /*auto &guard = guard_entity.get<guard_t>();*/
-        /*guard.last_attack = guard_t::Clock::now();*/
-
-        /*const uint enemy_type = static_cast<uint>(get_enemy_type(enemy_entity));*/
-        /*const uint guard_type = static_cast<uint>(guard.damage_type);*/
-        /*float damage = 1.0f;*/
-        /*if (enemy_type == guard_type) {*/
-        /*    damage = 3.0f;*/
-        /*}*/
-        /*enemy_entity.damage(damage);*/
         m_weapon->fire();
         target_entity.damage(m_weapon.value());
 
