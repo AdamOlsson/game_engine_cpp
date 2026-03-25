@@ -153,6 +153,9 @@ class CaravanDefence : public Game {
         } else if (m_state_machine.is_in_state<IntroState>()) {
             auto &state = m_state_machine.get_state<IntroState>();
             state.event->render_text(command_buffer, &ui_push_constant);
+        } else if (m_state_machine.is_in_state<DefendState>()) {
+            auto &state = m_state_machine.get_state<DefendState>();
+            state.render_text(command_buffer, &ui_push_constant);
         }
 
         frame.end_render_pass();

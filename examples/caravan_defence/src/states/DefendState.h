@@ -13,8 +13,12 @@ struct EntitySettingsPanel {
     static constexpr util::colors::Color background_color =
         util::colors::rgba(0.02f, 0.02f, 0.02f, 0.8f);
     static constexpr util::colors::Color border_color = util::colors::hex(0x8bac0f);
-    bool is_open = false;
+    static constexpr util::colors::Color font_color = util::colors::hex(0x9bbc0f);
+
     graphics_pipeline::geometry::GeometrySBOHandle bbox_handle;
+    std::vector<graphics_pipeline::text::TextHandle> text_handles;
+
+    bool is_open = false;
 };
 
 class DefendState {
@@ -69,7 +73,19 @@ class DefendState {
     DefendState &operator=(DefendState &&) = default;
     DefendState &operator=(const DefendState &) = delete;
 
+    ~DefendState() {}
+
     void on_enter(GameState &game_state);
     void on_exit(GameState &game_state);
     util::StateTransition update(const float dt, GameState &game_state);
+
+    template <typename PushConstantType>
+    void render_text(const vulkan::CommandBuffer &command_buffer,
+                     PushConstantType *push_constant) {
+        if (m_settings_panel.is_open) {
+            for (auto &text : m_settings_panel.text_handles) {
+                m_ui_text_renderer->render(command_buffer, text, push_constant);
+            }
+        }
+    }
 };

@@ -420,9 +420,10 @@ Text TextRenderer::layout_text(const font::Unicode &codepoint, const TextOpts &o
     const font::FontBBox font_bbox = m_font_loader->get_font_bbox();
     const math::Vector2 font_bbox_size = math::Vector2(font_bbox.x_max - font_bbox.x_min,
                                                        font_bbox.y_max - font_bbox.y_min);
+
     const float font_scale = opts.font_size / units_per_em;
     const float line_width = opts.line_width / font_scale;
-    const float line_height = opts.line_height / font_scale;
+    const float line_height = fmax(opts.line_height / font_scale, font_bbox_size.y());
     const float line_padding = fmax(0.0f, (line_height - font_bbox_size.y()) / 2.0f);
 
     // Identify start and stop for all words
@@ -487,9 +488,6 @@ Text TextRenderer::layout_text(const font::Unicode &codepoint, const TextOpts &o
             pen_position = math::Vector2(0.0f, line_height * line_count);
             word.offset = pen_position;
         }
-
-        // offset word to be in the middle of the line height
-        /*word.offset.y() -= line_padding;*/
 
         // Find the bbox of the text
         bbox_top_left.y() = -fmax(bbox_top_left.y(), word.bbox.y());

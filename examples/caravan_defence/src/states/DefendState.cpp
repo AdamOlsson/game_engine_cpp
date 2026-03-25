@@ -140,12 +140,27 @@ EntitySettingsPanel DefendState::init_entity_settings_panel() {
     EntitySettingsPanel panel;
     panel.is_open = false;
     panel.bbox_handle = m_ui_geometry_renderer->request_render_slot();
+
+    const float bbox_center_line_x = -0.7f;
+
     auto &bbox_instance = m_ui_geometry_renderer->get_instance(panel.bbox_handle);
     bbox_instance.color = util::colors::TRANSPARENT;
     bbox_instance.border.color = util::colors::TRANSPARENT;
     bbox_instance.border.width = 0.015f;
     bbox_instance.border.radius = 0.05f;
-    bbox_instance.model_matrix = math::Matrix().translate(-0.7f, 0.0f).scale(0.6f, 2.0f);
+    bbox_instance.model_matrix =
+        math::Matrix().translate(bbox_center_line_x, 0.0f).scale(0.6f, 2.0f);
+
+    auto text_opts = graphics_pipeline::text::TextOpts{};
+    text_opts.font_color = EntitySettingsPanel::font_color;
+    text_opts.font_size = 0.05f;
+    text_opts.line_width = 0.20f;
+    text_opts.position =
+        math::Vector2(bbox_center_line_x - text_opts.line_width / 2.0f, -0.90f);
+
+    auto headline_handle = m_ui_text_renderer->create_text2("Guard", text_opts);
+    panel.text_handles.push_back(std::move(headline_handle));
+
     return panel;
 }
 
