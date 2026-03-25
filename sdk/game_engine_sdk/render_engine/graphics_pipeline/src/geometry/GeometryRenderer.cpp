@@ -21,7 +21,9 @@ GeometryRenderer::GeometryRenderer(std::shared_ptr<vulkan::context::GraphicsCont
     : m_ctx(ctx), m_quad_vertex_buffer(vulkan::buffers::VertexBuffer(
                       m_ctx, m_quad_vertices, command_buffer_manager)),
       m_quad_index_buffer(
-          vulkan::buffers::IndexBuffer(m_ctx, m_quad_indices, command_buffer_manager)) {
+          vulkan::buffers::IndexBuffer(m_ctx, m_quad_indices, command_buffer_manager)),
+      m_draw_commands(vulkan::buffers::IndirectBuffer<vulkan::DrawIndexedIndirectCommand>(
+          m_ctx, 32, 2)) {
 
     m_descriptor_pool = vulkan::DescriptorPool(m_ctx, opts.geometry.pool_opts);
 

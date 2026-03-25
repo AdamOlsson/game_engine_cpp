@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../GameState.h"
 #include "camera/Camera.h"
 #include "graphics_pipeline/geometry/GeometryRenderer.h"
 #include "graphics_pipeline/quad/QuadRenderer.h"
@@ -7,7 +8,7 @@
 #include "state_machine/StateTransition.h"
 #include <vector>
 
-struct GameState;
+/*struct GameState;*/
 
 struct EntitySettingsPanel {
     static constexpr util::colors::Color background_color =
@@ -87,5 +88,34 @@ class DefendState {
                 m_ui_text_renderer->render(command_buffer, text, push_constant);
             }
         }
+    }
+
+    template <typename PushConstantType>
+    void render(const vulkan::CommandBuffer &command_buffer,
+                PushConstantType *push_constant, GameState &game_state) {
+
+        // "Culling"
+        // TODO: Requires additional refactoring to avoid this additional copying of
+        // instance data
+        std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> data;
+        data.reserve(game_state.guards.size());
+        std::vector<size_t> indices;
+        indices.reserve(game_state.guards.size());
+        size_t count = 0;
+        for (auto &entity : game_state.guards) {
+            if (entity.is_highlighted()) {
+                indices.push_back(count++);
+                data.push_back(entity.get_geometry_render_data());
+            }
+        }
+
+        vulkan::DrawIndexedIndirectCommand draw_command =
+            m_world_geometry_renderer->write_instance_buffer(data, indices);
+
+        std::vector<vulkan::DrawIndexedIndirectCommand> draw_commands;
+        draw_commands.push_back(draw_command);
+
+        m_world_geometry_renderer->render_indirect(command_buffer, push_constant,
+                                                   draw_commands);
     }
 };

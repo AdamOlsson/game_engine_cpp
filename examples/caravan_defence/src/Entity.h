@@ -103,6 +103,29 @@ struct ranged_attack_t {
     ~ranged_attack_t() {}
 };
 
+class AttackRangeRenderData {
+  private:
+    float m_range = 1.0f;
+
+  public:
+    graphics_pipeline::geometry::GeometryPipelineSBO data;
+
+    AttackRangeRenderData() = default;
+    AttackRangeRenderData(const math::Vector2 &position, const float range)
+        : m_range(range) {
+        data.flags |=
+            static_cast<uint32_t>(graphics_pipeline::geometry::GeometryShape::Circle);
+        data.color = util::colors::rgba(0.8f, 0.8f, 0.8f, 0.01f);
+        data.model_matrix =
+            math::Matrix().translate(position).scale(m_range * 2, m_range * 2);
+    }
+
+    void set_position(const math::Vector2 &position) {
+        data.model_matrix =
+            math::Matrix().translate(position).scale(m_range * 2, m_range * 2);
+    }
+};
+
 template <typename T>
 concept is_valid_entity = requires(T t) {
     { t.velocity } -> std::convertible_to<float>;
@@ -152,6 +175,7 @@ class Entity {
 
     std::optional<Health> m_health = std::nullopt;
     std::optional<Weapon> m_weapon = std::nullopt;
+    std::optional<AttackRangeRenderData> m_attack_range_render_data = std::nullopt;
 
     struct {
         float velocity = 0.0f;
@@ -279,6 +303,21 @@ class Entity {
             m_health->set_health_bar_offset(health_bar_position_offset);
             m_health->set_health_bar_position(health_bar_position);
         }
+
+        if (holds<guard_t>()) {
+            const float attack_range = m_weapon.has_value() ? m_weapon->range : 0.0f;
+            m_attack_range_render_data =
+                AttackRangeRenderData(get_world_position(), attack_range);
+        }
+    }
+
+    graphics_pipeline::geometry::GeometryPipelineSBO get_geometry_render_data() {
+        if (m_attack_range_render_data.has_value()) {
+            return m_attack_range_render_data->data;
+        }
+        DEBUG_ASSERT(false, "Error: Called get_geometry_render_data() on an object that "
+                            "does not have geometry render data.");
+        return graphics_pipeline::geometry::GeometryPipelineSBO{};
     }
 
     void clear_render_data() {
@@ -344,32 +383,6 @@ class Entity {
 
         auto &instance = m_quad_renderer->get_instance(m_render_data_handle.value());
         instance.color = new_value ? get_highlighted_color() : m_color;
-
-        if (holds<guard_t>()) {
-            if (prev_value) {
-                DEBUG_ASSERT(
-                    m_highlight_render_data.has_value(),
-                    "Error: Expected highlight render data if guard is highlighted.");
-                m_geometry_renderer->return_render_slot(m_highlight_render_data.value());
-                m_highlight_render_data = std::nullopt;
-            } else {
-                DEBUG_ASSERT(
-                    !m_highlight_render_data.has_value(),
-                    "Error: Did not expect highlight render data if guard is not "
-                    "highlighted.");
-                const float attack_range = m_weapon.has_value() ? m_weapon->range : 0.0f;
-                m_highlight_render_data = m_geometry_renderer->request_render_slot();
-                auto &highlight_instance =
-                    m_geometry_renderer->get_instance(m_highlight_render_data.value());
-                highlight_instance.flags |= static_cast<uint32_t>(
-                    graphics_pipeline::geometry::GeometryShape::Circle);
-                highlight_instance.color = util::colors::rgba(0.8f, 0.8f, 0.8f, 0.01f);
-                highlight_instance.model_matrix =
-                    math::Matrix()
-                        .translate(get_world_position())
-                        .scale(attack_range * 2, attack_range * 2);
-            }
-        }
     }
 
     bool is_selected() { return m_is_selected; }
@@ -461,6 +474,8 @@ class Entity {
             if (slot.occupying_guard != nullptr) {
                 set_visibility(slot.occupying_guard->is_moving());
             }
+        } else if (holds<guard_t>()) {
+            m_attack_range_render_data->set_position(new_position);
         }
     }
 

@@ -7,7 +7,7 @@
 #include <memory>
 namespace vulkan::buffers {
 
-enum class GpuBufferType { Uniform, Storage };
+enum class GpuBufferType { Uniform, Storage, Indirect };
 
 struct GpuBufferRef {
     VkDeviceSize size;
@@ -62,6 +62,8 @@ template <typename T, GpuBufferType BufferType> class GpuBuffer {
             usage_ = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
         } else if constexpr (BufferType == GpuBufferType::Uniform) {
             usage_ = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+        } else if constexpr (BufferType == GpuBufferType::Indirect) {
+            usage_ = VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
         }
 
         if (usage.has_value()) {
@@ -126,6 +128,8 @@ template <typename T, GpuBufferType BufferType> class GpuBuffer {
         return *this;
     }
 
+    VkBuffer handle() { return m_buffers[m_swap_state.current()].buffer_handle; }
+
     void resize(const size_t size) { m_staging_buffer.resize(size); }
     size_t size() const { return m_size; }
     std::vector<GpuBufferRef> get_reference() { return m_refs; }
@@ -147,6 +151,23 @@ template <typename T, GpuBufferType BufferType> class GpuBuffer {
         const size_t current_buffer = m_swap_state.current();
         memcpy(m_buffers[current_buffer].buffer_mapped, m_staging_buffer.data(), m_size);
         m_delta_ids.clear();
+    }
+
+    void write_indices(const std::vector<T> &data, const std::vector<size_t> &indices,
+                       const size_t offset = 0) {
+        // This function is an alternative to passing data to the device buffer where the
+        // staging buffer is skipped.
+        const size_t current_buffer = m_swap_state.current();
+        auto *base = static_cast<std::byte *>(m_buffers[current_buffer].buffer_mapped);
+        for (size_t i : indices) {
+            std::memcpy(base + offset * sizeof(T), &data[i], sizeof(T));
+        }
+    }
+
+    void write(const std::vector<T> &data) {
+        const size_t current_buffer = m_swap_state.current();
+        auto *base = static_cast<std::byte *>(m_buffers[current_buffer].buffer_mapped);
+        std::memcpy(base, data.data(), sizeof(T) * data.size());
     }
 
     void sync_all() {
@@ -291,6 +312,7 @@ template <typename T, GpuBufferType BufferType> class GpuBuffer {
 
 template <typename T> using StorageBuffer = GpuBuffer<T, GpuBufferType::Storage>;
 template <typename T> using UniformBuffer = GpuBuffer<T, GpuBufferType::Uniform>;
+template <typename T> using IndirectBuffer = GpuBuffer<T, GpuBufferType::Indirect>;
 
 template <GpuBufferType BufferType> class BufferDescriptor2 {
   public:
