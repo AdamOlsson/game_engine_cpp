@@ -47,13 +47,15 @@ class CaravanDefence : public Game {
     // World renderers
     vulkan::RenderPass m_world_render_pass;
     std::unique_ptr<graphics_pipeline::quad::QuadRenderer> m_quad_renderer;
-    std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer> m_geom_renderer;
-    std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer2> m_geom_renderer2;
+    std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer> m_world_geom_renderer;
+    std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer2>
+        m_world_geom_renderer2;
 
     // UI renderers
     vulkan::RenderPass m_ui_render_pass;
     std::unique_ptr<graphics_pipeline::text::TextRenderer> m_ui_text_renderer;
     std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer> m_ui_geom_renderer;
+    std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer2> m_ui_geom_renderer2;
 
     struct GameState m_game_state;
     util::StateMachine<CaravanDefenceStates, GameState> m_state_machine;
@@ -90,8 +92,8 @@ class CaravanDefence : public Game {
         m_state_machine.get_state<IntroState>() =
             IntroState(m_ui_text_renderer.get(), m_ui_geom_renderer.get());
         m_state_machine.get_state<DefendState>() =
-            DefendState(m_quad_renderer.get(), m_geom_renderer2.get(),
-                        m_ui_text_renderer.get(), m_ui_geom_renderer.get());
+            DefendState(m_quad_renderer.get(), m_world_geom_renderer2.get(),
+                        m_ui_text_renderer.get(), m_ui_geom_renderer2.get());
         m_state_machine.get_state<EventState>() =
             EventState(m_ui_text_renderer.get(), m_ui_geom_renderer.get());
 
@@ -128,7 +130,7 @@ class CaravanDefence : public Game {
         }
 
         m_quad_renderer->sync_render_slots();
-        m_geom_renderer->sync_render_slots();
+        m_world_geom_renderer->sync_render_slots();
         m_ui_geom_renderer->sync_render_slots();
         m_ui_text_renderer->sync_render_slots();
 
@@ -145,7 +147,7 @@ class CaravanDefence : public Game {
         defend_state.render(command_buffer, &push_constant, m_game_state);
 
         m_quad_renderer->render(command_buffer, &push_constant, num_instances);
-        m_geom_renderer->render(command_buffer, &push_constant, num_instances);
+        m_world_geom_renderer->render(command_buffer, &push_constant, num_instances);
         frame.end_render_pass();
 
         const math::Matrix ui_push_constant = math::Matrix();

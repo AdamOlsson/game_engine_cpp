@@ -304,7 +304,7 @@ class Entity {
     }
 
     void get_geometry_render_data(
-        std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> &out) {
+        std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> &out) const {
 
         if (is_highlighted() && m_attack_range_render_data.has_value()) {
             out.push_back(m_attack_range_render_data->data);
@@ -356,7 +356,7 @@ class Entity {
         }
     }
 
-    bool is_highlighted() { return m_is_highlighted; }
+    bool is_highlighted() const { return m_is_highlighted; }
     void toggle_highlighted() { set_highlighted(!m_is_highlighted); }
     void set_highlighted(bool is_highlighted) {
         const bool old_value = m_is_highlighted;

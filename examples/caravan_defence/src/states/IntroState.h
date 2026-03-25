@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../events/Event.h"
-#include "DefendState.h"
 #include "graphics_pipeline/geometry/GeometryRenderer.h"
 #include "graphics_pipeline/text/TextRenderer.h"
 #include "state_machine/StateTransition.h"

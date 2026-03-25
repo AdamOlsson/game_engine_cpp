@@ -2,7 +2,6 @@
 
 #include "../GameState.h"
 #include "camera/Camera.h"
-#include "graphics_pipeline/geometry/GeometryRenderer.h"
 #include "graphics_pipeline/geometry/GeometryRenderer2.h"
 #include "graphics_pipeline/quad/QuadRenderer.h"
 #include "graphics_pipeline/text/TextRenderer.h"
@@ -15,7 +14,7 @@ struct EntitySettingsPanel {
     static constexpr util::colors::Color border_color = util::colors::hex(0x8bac0f);
     static constexpr util::colors::Color font_color = util::colors::hex(0x9bbc0f);
 
-    graphics_pipeline::geometry::GeometrySBOHandle bbox_handle;
+    graphics_pipeline::geometry::GeometryPipelineSBO bbox_render_data;
     std::vector<graphics_pipeline::text::TextHandle> text_handles;
 
     bool is_open = false;
@@ -29,7 +28,7 @@ class DefendState {
 
     // UI renderers
     graphics_pipeline::text::TextRenderer *m_ui_text_renderer = nullptr;
-    graphics_pipeline::geometry::GeometryRenderer *m_ui_geometry_renderer = nullptr;
+    graphics_pipeline::geometry::GeometryRenderer2 *m_ui_geometry_renderer = nullptr;
 
     EntitySettingsPanel m_settings_panel;
 
@@ -61,7 +60,7 @@ class DefendState {
     DefendState(graphics_pipeline::quad::QuadRenderer *world_quad_renderer,
                 graphics_pipeline::geometry::GeometryRenderer2 *world_geom_renderer,
                 graphics_pipeline::text::TextRenderer *ui_text_renderer,
-                graphics_pipeline::geometry::GeometryRenderer *ui_geom_renderer)
+                graphics_pipeline::geometry::GeometryRenderer2 *ui_geom_renderer)
         : m_world_quad_renderer(world_quad_renderer),
           m_world_geometry_renderer(world_geom_renderer),
           m_ui_text_renderer(ui_text_renderer), m_ui_geometry_renderer(ui_geom_renderer) {
@@ -82,7 +81,17 @@ class DefendState {
     template <typename PushConstantType>
     void render_ui(const vulkan::CommandBuffer &command_buffer,
                    PushConstantType *push_constant) {
+
         if (m_settings_panel.is_open) {
+
+            vulkan::DrawIndexedIndirectCommand draw_command =
+                m_ui_geometry_renderer->write_to_buffer(
+                    {m_settings_panel.bbox_render_data});
+            m_ui_geometry_renderer->render_indirect(command_buffer, push_constant,
+                                                    {draw_command});
+
+            std::vector<vulkan::DrawIndexedIndirectCommand> draw_commands;
+            draw_commands.push_back(draw_command);
             for (auto &text : m_settings_panel.text_handles) {
                 m_ui_text_renderer->render(command_buffer, text, push_constant);
             }
@@ -91,7 +100,7 @@ class DefendState {
 
     template <typename PushConstantType>
     void render(const vulkan::CommandBuffer &command_buffer,
-                PushConstantType *push_constant, GameState &game_state) {
+                PushConstantType *push_constant, const GameState &game_state) {
 
         // "Culling"
         // TODO: Requires additional refactoring to avoid this additional copying of
@@ -99,9 +108,6 @@ class DefendState {
         // the entities store indices into this buffer.
         std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> data;
         data.reserve(game_state.enemies.size());
-
-        std::vector<size_t> indices;
-        indices.reserve(game_state.enemies.size());
 
         for (auto &entity : game_state.guards) {
             entity.get_geometry_render_data(data);

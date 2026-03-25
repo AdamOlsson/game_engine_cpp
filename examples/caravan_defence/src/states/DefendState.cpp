@@ -137,16 +137,14 @@ util::StateTransition DefendState::update(const float dt, GameState &game_state)
 EntitySettingsPanel DefendState::init_entity_settings_panel() {
     EntitySettingsPanel panel;
     panel.is_open = false;
-    panel.bbox_handle = m_ui_geometry_renderer->request_render_slot();
 
     const float bbox_center_line_x = -0.7f;
 
-    auto &bbox_instance = m_ui_geometry_renderer->get_instance(panel.bbox_handle);
-    bbox_instance.color = util::colors::TRANSPARENT;
-    bbox_instance.border.color = util::colors::TRANSPARENT;
-    bbox_instance.border.width = 0.015f;
-    bbox_instance.border.radius = 0.05f;
-    bbox_instance.model_matrix =
+    panel.bbox_render_data.color = EntitySettingsPanel::background_color;
+    panel.bbox_render_data.border.color = EntitySettingsPanel::border_color;
+    panel.bbox_render_data.border.width = 0.015f;
+    panel.bbox_render_data.border.radius = 0.05f;
+    panel.bbox_render_data.model_matrix =
         math::Matrix().translate(bbox_center_line_x, 0.0f).scale(0.6f, 2.0f);
 
     auto text_opts = graphics_pipeline::text::TextOpts{};
@@ -164,18 +162,18 @@ EntitySettingsPanel DefendState::init_entity_settings_panel() {
 
 void DefendState::open_entity_settings_panel() {
     m_settings_panel.is_open = true;
-    auto &bbox_instance =
-        m_ui_geometry_renderer->get_instance(m_settings_panel.bbox_handle);
-    bbox_instance.color = EntitySettingsPanel::background_color;
-    bbox_instance.border.color = EntitySettingsPanel::border_color;
+    /*auto &bbox_instance =*/
+    /*    m_ui_geometry_renderer->get_instance(m_settings_panel.bbox_handle);*/
+    /*bbox_instance.color = ;*/
+    /*bbox_instance.border.color = EntitySettingsPanel::border_color;*/
 }
 
 void DefendState::close_entity_settings_panel() {
     m_settings_panel.is_open = false;
-    auto &bbox_instance =
-        m_ui_geometry_renderer->get_instance(m_settings_panel.bbox_handle);
-    bbox_instance.color = util::colors::TRANSPARENT;
-    bbox_instance.border.color = util::colors::TRANSPARENT;
+    /*auto &bbox_instance =*/
+    /*    m_ui_geometry_renderer->get_instance(m_settings_panel.bbox_handle);*/
+    /*bbox_instance.color = util::colors::TRANSPARENT;*/
+    /*bbox_instance.border.color = util::colors::TRANSPARENT;*/
 }
 
 void DefendState::handle_cursor(GameState &game_state,

@@ -31,11 +31,11 @@ void Configuration::setup_world_renderers(
     game.m_quad_renderer = std::make_unique<graphics_pipeline::quad::QuadRenderer>(
         ctx, game.m_command_buffer_manager.get(), renderer_opts);
 
-    game.m_geom_renderer =
+    game.m_world_geom_renderer =
         std::make_unique<graphics_pipeline::geometry::GeometryRenderer>(
             ctx, game.m_command_buffer_manager.get(), renderer_opts);
 
-    game.m_geom_renderer2 =
+    game.m_world_geom_renderer2 =
         std::make_unique<graphics_pipeline::geometry::GeometryRenderer2>(
             ctx, game.m_command_buffer_manager.get(), renderer_opts);
 }
@@ -71,6 +71,10 @@ void Configuration::setup_ui_renderers(
 
     game.m_ui_geom_renderer =
         std::make_unique<graphics_pipeline::geometry::GeometryRenderer>(
+            ctx, game.m_command_buffer_manager.get(), ui_renderer_opts);
+
+    game.m_ui_geom_renderer2 =
+        std::make_unique<graphics_pipeline::geometry::GeometryRenderer2>(
             ctx, game.m_command_buffer_manager.get(), ui_renderer_opts);
 }
 

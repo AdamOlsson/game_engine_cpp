@@ -1,6 +1,7 @@
 #include "IntroState.h"
 #include "../GameState.h"
 #include "../events/DialogFactory.h"
+#include "DefendState.h"
 
 void IntroState::on_enter(GameState &game_state) {
     DEBUG_ASSERT(m_text_renderer != nullptr,
