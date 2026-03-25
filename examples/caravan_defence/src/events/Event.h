@@ -3,21 +3,21 @@
 #include "Dialog.h"
 #include "camera/Camera.h"
 #include "graphics_pipeline/geometry/GeometryPipelineSBO.h"
-#include "graphics_pipeline/geometry/GeometryRenderer.h"
+#include "graphics_pipeline/geometry/GeometryRenderer2.h"
 
 class Event {
   private:
-    graphics_pipeline::geometry::GeometryRenderer *m_geometry_renderer = nullptr;
+    graphics_pipeline::geometry::GeometryRenderer2 *m_geometry_renderer = nullptr;
     graphics_pipeline::text::TextRenderer *m_text_renderer = nullptr;
 
-    graphics_pipeline::geometry::GeometrySBOHandle m_bbox_render_data;
+    graphics_pipeline::geometry::GeometryPipelineSBO m_bbox_render_data;
 
     std::unordered_map<std::string, DialogNode> m_nodes;
     std::string m_current_node = "";
 
   public:
     Event() = default;
-    Event(graphics_pipeline::geometry::GeometryRenderer *geometry_renderer,
+    Event(graphics_pipeline::geometry::GeometryRenderer2 *geometry_renderer,
           graphics_pipeline::text::TextRenderer *text_renderer)
         : m_geometry_renderer(geometry_renderer), m_text_renderer(text_renderer) {}
 
@@ -52,16 +52,34 @@ class Event {
         }
     }
 
-    void remove_event() {
-        if (m_geometry_renderer != nullptr) {
-            m_geometry_renderer->return_render_slot(m_bbox_render_data);
+    template <typename PushConstantType>
+    void render_geometry(const vulkan::CommandBuffer &command_buffer,
+                         PushConstantType *push_constant) {
+        DEBUG_ASSERT(m_geometry_renderer != nullptr,
+                     "Error: Attempted to render event geometry with non-existing "
+                     "pointer to a geometry renderer.");
+
+        std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> data;
+        data.reserve(1 + m_nodes[m_current_node].options.size());
+
+        data.push_back(m_bbox_render_data);
+
+        for (auto &option : m_nodes[m_current_node].options) {
+            data.push_back(option.bbox_render_data);
         }
 
+        vulkan::DrawIndexedIndirectCommand draw_command =
+            m_geometry_renderer->write_to_buffer(data);
+
+        m_geometry_renderer->render_indirect(command_buffer, push_constant,
+                                             {draw_command});
+    }
+
+    void remove_event() {
         if (m_text_renderer != nullptr) {
             for (auto &node : m_nodes) {
                 m_text_renderer->remove_text(std::move(node.second.text_handle));
                 for (auto &option : node.second.options) {
-                    m_geometry_renderer->return_render_slot(option.bbox_handle);
                     m_text_renderer->remove_text(std::move(option.text_handle));
                 }
             }

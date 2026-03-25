@@ -5,7 +5,6 @@
 #include "EventFactory.h"
 #include "GameState.h"
 #include "camera/Camera.h"
-#include "events/Event.h"
 #include "game_engine_sdk/Game.h"
 #include "graphics_pipeline/geometry/GeometryRenderer2.h"
 #include "graphics_pipeline/quad/QuadRenderer.h"
@@ -47,14 +46,12 @@ class CaravanDefence : public Game {
     // World renderers
     vulkan::RenderPass m_world_render_pass;
     std::unique_ptr<graphics_pipeline::quad::QuadRenderer> m_quad_renderer;
-    std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer> m_world_geom_renderer;
     std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer2>
         m_world_geom_renderer2;
 
     // UI renderers
     vulkan::RenderPass m_ui_render_pass;
     std::unique_ptr<graphics_pipeline::text::TextRenderer> m_ui_text_renderer;
-    std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer> m_ui_geom_renderer;
     std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer2> m_ui_geom_renderer2;
 
     struct GameState m_game_state;
@@ -90,12 +87,12 @@ class CaravanDefence : public Game {
         Configuration::setup_initial_game_state(m_quad_renderer.get(), m_game_state);
 
         m_state_machine.get_state<IntroState>() =
-            IntroState(m_ui_text_renderer.get(), m_ui_geom_renderer.get());
+            IntroState(m_ui_text_renderer.get(), m_ui_geom_renderer2.get());
         m_state_machine.get_state<DefendState>() =
             DefendState(m_quad_renderer.get(), m_world_geom_renderer2.get(),
                         m_ui_text_renderer.get(), m_ui_geom_renderer2.get());
         m_state_machine.get_state<EventState>() =
-            EventState(m_ui_text_renderer.get(), m_ui_geom_renderer.get());
+            EventState(m_ui_text_renderer.get(), m_ui_geom_renderer2.get());
 
         m_state_machine.init<IntroState>();
     }
@@ -130,8 +127,6 @@ class CaravanDefence : public Game {
         }
 
         m_quad_renderer->sync_render_slots();
-        m_world_geom_renderer->sync_render_slots();
-        m_ui_geom_renderer->sync_render_slots();
         m_ui_text_renderer->sync_render_slots();
 
         math::Matrix push_constant = m_game_state.camera.get_view_projection_matrix();
@@ -147,20 +142,17 @@ class CaravanDefence : public Game {
         defend_state.render(command_buffer, &push_constant, m_game_state);
 
         m_quad_renderer->render(command_buffer, &push_constant, num_instances);
-        m_world_geom_renderer->render(command_buffer, &push_constant, num_instances);
         frame.end_render_pass();
 
         const math::Matrix ui_push_constant = math::Matrix();
         frame.begin_render_pass(&m_ui_render_pass);
 
-        m_ui_geom_renderer->render(command_buffer, &ui_push_constant, 256);
-
         if (m_state_machine.is_in_state<EventState>()) {
             auto &state = m_state_machine.get_state<EventState>();
-            state.event->render_text(command_buffer, &ui_push_constant);
+            state.render_ui(command_buffer, &ui_push_constant);
         } else if (m_state_machine.is_in_state<IntroState>()) {
             auto &state = m_state_machine.get_state<IntroState>();
-            state.event->render_text(command_buffer, &ui_push_constant);
+            state.render_ui(command_buffer, &ui_push_constant);
         } else if (m_state_machine.is_in_state<DefendState>()) {
             auto &state = m_state_machine.get_state<DefendState>();
             state.render_ui(command_buffer, &ui_push_constant);

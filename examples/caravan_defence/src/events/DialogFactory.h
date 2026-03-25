@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Dialog.h"
-#include "graphics_pipeline/geometry/GeometryRenderer.h"
+#include "graphics_pipeline/geometry/GeometryRenderer2.h"
 #include "graphics_pipeline/text/TextRenderer.h"
 #include "math/Matrix.h"
 #include <optional>
@@ -9,7 +9,7 @@
 class DialogFactory {
   private:
     graphics_pipeline::text::TextRenderer *m_text_renderer = nullptr;
-    graphics_pipeline::geometry::GeometryRenderer *m_geometry_renderer = nullptr;
+    graphics_pipeline::geometry::GeometryRenderer2 *m_geometry_renderer = nullptr;
 
     std::optional<graphics_pipeline::text::TextOpts> m_dialog_text_opts = std::nullopt;
     std::optional<graphics_pipeline::text::TextOpts> m_dialog_option_text_opts =
@@ -25,7 +25,7 @@ class DialogFactory {
   public:
     DialogFactory() = delete;
     DialogFactory(graphics_pipeline::text::TextRenderer *text_renderer,
-                  graphics_pipeline::geometry::GeometryRenderer *geometry_renderer)
+                  graphics_pipeline::geometry::GeometryRenderer2 *geometry_renderer)
         : m_text_renderer(text_renderer), m_geometry_renderer(geometry_renderer) {}
 
     void set_event_dialog_text_opts(const graphics_pipeline::text::TextOpts &opts) {
@@ -96,19 +96,10 @@ class DialogFactory {
 
             const math::Bbox &text_bbox = option.text_handle.get_bbox();
 
-            option.bbox_handle = m_geometry_renderer->request_render_slot();
-            auto &bbox_instance = m_geometry_renderer->get_instance(option.bbox_handle);
-            bbox_instance.model_matrix =
+            option.bbox_render_data.model_matrix =
                 math::Matrix().translate(text_bbox.center()).scale(text_bbox.size());
 
-            // TODO: When switching between DialogNodes I need a way to hide the bbox (or
-            // geometry instance) so that they its not visible. This happens because of
-            // the difference between how the TextRenderer and GeometryRenderer renders.
-            // TextRenderer specifically renderers the handles it is given and
-            // GeometryRenderer renderers its entire buffer. The technical reason for this
-            // is that the TextRenderer contains multiple outlines for each glyph where
-            // the geometry renderer contains only one outline of a quad.
-            bbox_instance.color = util::colors::TRANSPARENT;
+            option.bbox_render_data.color = util::colors::TRANSPARENT;
         }
 
         m_id.clear();

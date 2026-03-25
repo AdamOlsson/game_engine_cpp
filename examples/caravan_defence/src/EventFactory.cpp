@@ -2,10 +2,11 @@
 #include "GameState.h"
 #include "events/DialogFactory.h"
 #include "events/Event.h"
+#include "states/DefendState.h"
 #include "states/EventState.h"
 
 Event EventFactory::my_first_event(
-    graphics_pipeline::geometry::GeometryRenderer *geom_renderer,
+    graphics_pipeline::geometry::GeometryRenderer2 *geom_renderer,
     graphics_pipeline::text::TextRenderer *text_renderer, GameState &game_state,
     EventState &event_state) {
 
@@ -80,7 +81,7 @@ Event EventFactory::my_first_event(
 }
 
 Event EventFactory::the_scavenger_ambush(
-    graphics_pipeline::geometry::GeometryRenderer *geom_renderer,
+    graphics_pipeline::geometry::GeometryRenderer2 *geom_renderer,
     graphics_pipeline::text::TextRenderer *text_renderer, GameState &game_state,
     EventState &event_state) {
 
@@ -194,7 +195,7 @@ Event EventFactory::the_scavenger_ambush(
 }
 
 Event EventFactory::defectors_den(
-    graphics_pipeline::geometry::GeometryRenderer *geom_renderer,
+    graphics_pipeline::geometry::GeometryRenderer2 *geom_renderer,
     graphics_pipeline::text::TextRenderer *text_renderer, GameState &game_state,
     EventState &event_state) {
 

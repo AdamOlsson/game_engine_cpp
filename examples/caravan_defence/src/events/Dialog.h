@@ -10,7 +10,7 @@ using DialogOptionCb = std::function<void()>;
 struct DialogOption {
     std::string label;
     graphics_pipeline::text::TextHandle text_handle;
-    graphics_pipeline::geometry::GeometrySBOHandle bbox_handle;
+    graphics_pipeline::geometry::GeometryPipelineSBO bbox_render_data;
 
     std::optional<std::string> next_dialog_node;
     std::function<void()> on_click = []() {};

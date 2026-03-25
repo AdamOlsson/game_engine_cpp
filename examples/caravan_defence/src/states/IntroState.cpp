@@ -51,7 +51,7 @@ util::StateTransition IntroState::update(const float dt, GameState &game_state) 
 }
 
 Event IntroState::create_intro_contract(
-    graphics_pipeline::geometry::GeometryRenderer *geom_renderer,
+    graphics_pipeline::geometry::GeometryRenderer2 *geom_renderer,
     graphics_pipeline::text::TextRenderer *text_renderer, GameState &game_state,
     IntroState &event_state) {
 

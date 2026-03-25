@@ -32,16 +32,14 @@ void Event::create_dialog_bbox(const camera::Camera2D &camera) {
     const float box_width_ndc = 1.80f;
     const float box_height_ndc = 1.20f;
 
-    m_bbox_render_data = m_geometry_renderer->request_render_slot();
-    auto &event_box_instance = m_geometry_renderer->get_instance(m_bbox_render_data);
-    event_box_instance.model_matrix =
+    m_bbox_render_data.model_matrix =
         math::Matrix().translate(box_center).scale(box_width_ndc, box_height_ndc);
-    event_box_instance.color = util::colors::rgba(0.0f, 0.0f, 0.0f, 0.95f);
-    event_box_instance.flags |=
+    m_bbox_render_data.color = util::colors::rgba(0.0f, 0.0f, 0.0f, 0.95f);
+    m_bbox_render_data.flags |=
         static_cast<uint32_t>(graphics_pipeline::geometry::GeometryShape::Rectangle);
-    event_box_instance.border.width = camera.to_ndc_width(6.0f);
-    event_box_instance.border.radius = camera.to_ndc_width(15.0f);
-    event_box_instance.border.color = util::colors::WHITE;
+    m_bbox_render_data.border.width = camera.to_ndc_width(6.0f);
+    m_bbox_render_data.border.radius = camera.to_ndc_width(15.0f);
+    m_bbox_render_data.border.color = util::colors::WHITE;
 }
 
 void Event::add_dialog_node(DialogNode &&node) {
