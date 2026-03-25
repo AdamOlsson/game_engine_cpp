@@ -27,6 +27,6 @@ class Configuration {
                                  CaravanDefence &game);
 
     static void
-    setup_initial_game_state(graphics_pipeline::quad::QuadRenderer *quad_renderer,
+    setup_initial_game_state(graphics_pipeline::quad::QuadRenderer2 *quad_renderer,
                              GameState &game_state);
 };

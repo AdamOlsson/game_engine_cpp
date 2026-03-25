@@ -3,7 +3,7 @@
 #include "../GameState.h"
 #include "camera/Camera.h"
 #include "graphics_pipeline/geometry/GeometryRenderer2.h"
-#include "graphics_pipeline/quad/QuadRenderer.h"
+#include "graphics_pipeline/quad/QuadRenderer2.h"
 #include "graphics_pipeline/text/TextRenderer.h"
 #include "state_machine/StateTransition.h"
 #include <vector>
@@ -23,7 +23,7 @@ struct EntitySettingsPanel {
 class DefendState {
   private:
     // World renderers
-    graphics_pipeline::quad::QuadRenderer *m_world_quad_renderer = nullptr;
+    graphics_pipeline::quad::QuadRenderer2 *m_world_quad_renderer = nullptr;
     graphics_pipeline::geometry::GeometryRenderer2 *m_world_geometry_renderer = nullptr;
 
     // UI renderers
@@ -57,7 +57,7 @@ class DefendState {
   public:
     DefendState() = default;
 
-    DefendState(graphics_pipeline::quad::QuadRenderer *world_quad_renderer,
+    DefendState(graphics_pipeline::quad::QuadRenderer2 *world_quad_renderer,
                 graphics_pipeline::geometry::GeometryRenderer2 *world_geom_renderer,
                 graphics_pipeline::text::TextRenderer *ui_text_renderer,
                 graphics_pipeline::geometry::GeometryRenderer2 *ui_geom_renderer)
@@ -102,32 +102,61 @@ class DefendState {
     void render(const vulkan::CommandBuffer &command_buffer,
                 PushConstantType *push_constant, const GameState &game_state) {
 
-        // "Culling"
-        // TODO: Requires additional refactoring to avoid this additional copying of
-        // instance data. This refactor involves storing SBO in the game state, and let
-        // the entities store indices into this buffer.
-        std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> data;
-        data.reserve(game_state.enemies.size());
-
-        for (auto &entity : game_state.guards) {
-            entity.get_geometry_render_data(data);
-        }
+        std::vector<graphics_pipeline::quad::QuadPipelineSBO> quad_data;
+        quad_data.reserve(game_state.guards.size() + game_state.caravan.size() +
+                          game_state.enemies.size());
 
         for (auto &entity : game_state.caravan) {
-            entity.get_geometry_render_data(data);
+            entity.get_quad_render_data(quad_data);
+        }
+
+        for (auto &entity : game_state.caravan_slots) {
+            entity.get_quad_render_data(quad_data);
+        }
+
+        for (auto &entity : game_state.guards) {
+            entity.get_quad_render_data(quad_data);
         }
 
         for (auto &entity : game_state.enemies) {
-            entity.get_geometry_render_data(data);
+            entity.get_quad_render_data(quad_data);
         }
 
-        vulkan::DrawIndexedIndirectCommand draw_command =
-            m_world_geometry_renderer->write_to_buffer(data);
+        for (auto &entity : game_state.attacks) {
+            entity.get_quad_render_data(quad_data);
+        }
 
-        std::vector<vulkan::DrawIndexedIndirectCommand> draw_commands;
-        draw_commands.push_back(draw_command);
+        vulkan::DrawIndexedIndirectCommand quad_draw_command =
+            m_world_quad_renderer->write_to_buffer(quad_data);
+
+        std::vector<vulkan::DrawIndexedIndirectCommand> quad_draw_commands;
+        quad_draw_commands.push_back(quad_draw_command);
+
+        m_world_quad_renderer->render_indirect(command_buffer, push_constant,
+                                               quad_draw_commands);
+
+        std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> geometry_data;
+        geometry_data.reserve(game_state.enemies.size());
+
+        for (auto &entity : game_state.guards) {
+            entity.get_geometry_render_data(geometry_data);
+        }
+
+        for (auto &entity : game_state.caravan) {
+            entity.get_geometry_render_data(geometry_data);
+        }
+
+        for (auto &entity : game_state.enemies) {
+            entity.get_geometry_render_data(geometry_data);
+        }
+
+        vulkan::DrawIndexedIndirectCommand geometry_draw_command =
+            m_world_geometry_renderer->write_to_buffer(geometry_data);
+
+        std::vector<vulkan::DrawIndexedIndirectCommand> geometry_draw_commands;
+        geometry_draw_commands.push_back(geometry_draw_command);
 
         m_world_geometry_renderer->render_indirect(command_buffer, push_constant,
-                                                   draw_commands);
+                                                   geometry_draw_commands);
     }
 };

@@ -8,6 +8,7 @@
 namespace graphics_pipeline::quad {
 
 class QuadRenderer;
+class QuadRenderer2;
 
 enum class TextureSamplerMode : uint32_t {
     Default = 0,
@@ -52,6 +53,9 @@ class QuadSBOHandle {
 
     QuadSBOHandle &operator=(const QuadSBOHandle &&) = delete;
     QuadSBOHandle &operator=(QuadSBOHandle &&other) noexcept = default;
+
+    friend class QuadRenderer;
+    friend class QuadRenderer2;
 };
 
 } // namespace graphics_pipeline::quad

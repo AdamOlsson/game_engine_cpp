@@ -7,7 +7,7 @@
 #include "camera/Camera.h"
 #include "game_engine_sdk/Game.h"
 #include "graphics_pipeline/geometry/GeometryRenderer2.h"
-#include "graphics_pipeline/quad/QuadRenderer.h"
+#include "graphics_pipeline/quad/QuadRenderer2.h"
 #include "graphics_pipeline/text/TextRenderer.h"
 #include "states/IntroState.h"
 #include "states/state_machine/StateMachine.h"
@@ -45,7 +45,7 @@ class CaravanDefence : public Game {
 
     // World renderers
     vulkan::RenderPass m_world_render_pass;
-    std::unique_ptr<graphics_pipeline::quad::QuadRenderer> m_quad_renderer;
+    std::unique_ptr<graphics_pipeline::quad::QuadRenderer2> m_quad_renderer;
     std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer2>
         m_world_geom_renderer2;
 
@@ -126,11 +126,9 @@ class CaravanDefence : public Game {
             guard.set_highlighted(guard.is_point_inside(cursor_world_point));
         }
 
-        m_quad_renderer->sync_render_slots();
         m_ui_text_renderer->sync_render_slots();
 
         math::Matrix push_constant = m_game_state.camera.get_view_projection_matrix();
-        const size_t num_instances = 256; // Size of instance buffers
 
         auto command_buffer = m_command_buffer_manager->get_command_buffer();
 
@@ -141,7 +139,6 @@ class CaravanDefence : public Game {
         auto &defend_state = m_state_machine.get_state<DefendState>();
         defend_state.render(command_buffer, &push_constant, m_game_state);
 
-        m_quad_renderer->render(command_buffer, &push_constant, num_instances);
         frame.end_render_pass();
 
         const math::Matrix ui_push_constant = math::Matrix();

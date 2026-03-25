@@ -28,7 +28,7 @@ void Configuration::setup_world_renderers(
     renderer_opts.quad.texture = graphics_pipeline::Texture::from_filepath(
         ctx, game.m_command_buffer_manager.get(), ASSET_FILE("sprite_sheet.png"));
 
-    game.m_quad_renderer = std::make_unique<graphics_pipeline::quad::QuadRenderer>(
+    game.m_quad_renderer = std::make_unique<graphics_pipeline::quad::QuadRenderer2>(
         ctx, game.m_command_buffer_manager.get(), renderer_opts);
 
     game.m_world_geom_renderer2 =
@@ -133,7 +133,7 @@ void Configuration::setup_keyboard_event_handler(
 }
 
 void Configuration::setup_initial_game_state(
-    graphics_pipeline::quad::QuadRenderer *quad_renderer, GameState &game_state) {
+    graphics_pipeline::quad::QuadRenderer2 *quad_renderer, GameState &game_state) {
 
     DEBUG_ASSERT(
         quad_renderer != nullptr,
@@ -143,29 +143,29 @@ void Configuration::setup_initial_game_state(
     // Add entities
     game_state.caravan.push_back(
         entity::Entity::create_caravan_cart(camera::WorldPoint2D(0.0f, 0.0f)));
-    game_state.caravan.back().set_render_data(quad_renderer);
+    game_state.caravan.back().set_render_data();
     game_state.caravan.back().set_uvwt(0.3f, 0.0f, 0.4f, 0.2f);
     game_state.caravan_slots.push_back(
         entity::Entity::create_caravan_slot(camera::WorldPoint2D(
             slot_distance_x, game_state.caravan.back().get_world_position().y)));
-    game_state.caravan_slots.back().set_render_data(quad_renderer);
+    game_state.caravan_slots.back().set_render_data();
     game_state.caravan_slots.push_back(
         entity::Entity::create_caravan_slot(camera::WorldPoint2D(
             -slot_distance_x, game_state.caravan.back().get_world_position().y)));
-    game_state.caravan_slots.back().set_render_data(quad_renderer);
+    game_state.caravan_slots.back().set_render_data();
 
     game_state.caravan.push_back(
         entity::Entity::create_caravan_cart(camera::WorldPoint2D(0.0f, 275.0f)));
-    game_state.caravan.back().set_render_data(quad_renderer);
+    game_state.caravan.back().set_render_data();
     game_state.caravan.back().set_uvwt(0.2f, 0.0f, 0.3f, 0.2f);
     game_state.caravan_slots.push_back(
         entity::Entity::create_caravan_slot(camera::WorldPoint2D(
             slot_distance_x, game_state.caravan.back().get_world_position().y)));
-    game_state.caravan_slots.back().set_render_data(quad_renderer);
+    game_state.caravan_slots.back().set_render_data();
     game_state.caravan_slots.push_back(
         entity::Entity::create_caravan_slot(camera::WorldPoint2D(
             -slot_distance_x, game_state.caravan.back().get_world_position().y)));
-    game_state.caravan_slots.back().set_render_data(quad_renderer);
+    game_state.caravan_slots.back().set_render_data();
 
     game_state.guards.reserve(16); // 16 is magic
     game_state.guards.push_back(
@@ -178,7 +178,7 @@ void Configuration::setup_initial_game_state(
     game_state.attacks.reserve(8);
 
     for (size_t i = 0; i < game_state.guards.size(); i++) {
-        game_state.guards[i].set_render_data(quad_renderer);
+        game_state.guards[i].set_render_data();
         entity::set_caravan_slot(game_state.guards[i], &game_state.caravan_slots[i]);
         entity::set_occupying_guard(game_state.caravan_slots[i], &game_state.guards[i]);
     }

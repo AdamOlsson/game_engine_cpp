@@ -164,9 +164,7 @@ class Entity {
     math::Vector2 m_size;
     float m_rotation_rad = 0;
 
-    graphics_pipeline::quad::QuadRenderer *m_quad_renderer = nullptr;
-    std::optional<graphics_pipeline::quad::QuadSBOHandle> m_render_data_handle =
-        std::nullopt;
+    graphics_pipeline::quad::QuadPipelineSBO m_render_data;
 
     std::optional<Health> m_health = std::nullopt;
     std::optional<Weapon> m_weapon = std::nullopt;
@@ -264,21 +262,17 @@ class Entity {
         return e;
     }
 
-    void set_render_data(graphics_pipeline::quad::QuadRenderer *quad_renderer) {
-        m_quad_renderer = quad_renderer;
-        m_render_data_handle = m_quad_renderer->request_render_slot();
-        auto &instance = m_quad_renderer->get_instance(m_render_data_handle.value());
-        instance.model_matrix = m_model_matrix;
+    void set_render_data() {
 
         if (holds<enemy_t>()) {
-            instance.texture_id = 0;
-            instance.sampling_mode =
+            m_render_data.texture_id = 0;
+            m_render_data.sampling_mode =
                 static_cast<uint32_t>(graphics_pipeline::quad::TextureSamplerMode::SDF);
-            instance.uvwt = math::Vector4(0.0f, 0.0f, 0.2f, 0.2f);
+            m_render_data.uvwt = math::Vector4(0.0f, 0.0f, 0.2f, 0.2f);
             m_color = enemy_t::color;
         }
 
-        instance.color = m_color;
+        m_render_data.color = m_color;
 
         if (holds<enemy_t>() || holds<caravan_cart_t>()) {
             math::Vector2 health_bar_position_offset =
@@ -318,11 +312,10 @@ class Entity {
         }
     }
 
-    void clear_render_data() {
-        if (m_quad_renderer != nullptr) {
-            m_quad_renderer->return_render_slot(m_render_data_handle.value());
-            m_quad_renderer = nullptr;
-        }
+    void get_quad_render_data(
+        std::vector<graphics_pipeline::quad::QuadPipelineSBO> &out) const {
+
+        out.push_back(m_render_data);
     }
 
     bool is_point_inside(const camera::WorldPoint2D &point) {
@@ -335,10 +328,7 @@ class Entity {
     void set_world_position(const camera::WorldPoint2D &position) {
         m_model_matrix =
             math::Matrix().translate(position).rotate_z(m_rotation_rad).scale(m_size);
-        if (m_quad_renderer != nullptr) {
-            auto &instance = m_quad_renderer->get_instance(m_render_data_handle.value());
-            instance.model_matrix = m_model_matrix;
-        }
+        m_render_data.model_matrix = m_model_matrix;
         update_health();
     }
 
@@ -350,10 +340,7 @@ class Entity {
     void toggle_visibility() { set_visibility(!m_is_visible); }
     void set_visibility(const bool is_visible) {
         m_is_visible = is_visible;
-        if (m_quad_renderer != nullptr) {
-            auto &instance = m_quad_renderer->get_instance(m_render_data_handle.value());
-            instance.color = m_is_visible ? m_color : util::colors::TRANSPARENT;
-        }
+        m_render_data.color = m_is_visible ? m_color : util::colors::TRANSPARENT;
     }
 
     bool is_highlighted() const { return m_is_highlighted; }
@@ -364,25 +351,14 @@ class Entity {
         handle_highlight(old_value, is_highlighted);
     }
     void handle_highlight(const bool prev_value, const bool new_value) {
-        DEBUG_ASSERT(m_quad_renderer != nullptr,
-                     "Error: Changing the highlight value of an entity requires the "
-                     "render data to be set.");
-        if (m_quad_renderer == nullptr || prev_value == new_value) {
-            return;
-        }
-
-        auto &instance = m_quad_renderer->get_instance(m_render_data_handle.value());
-        instance.color = new_value ? get_highlighted_color() : m_color;
+        m_render_data.color = new_value ? get_highlighted_color() : m_color;
     }
 
     bool is_selected() { return m_is_selected; }
     void toggle_selected() { set_selected(!m_is_selected); }
     void set_selected(const bool is_selected) {
         m_is_selected = is_selected;
-        if (m_quad_renderer != nullptr) {
-            auto &instance = m_quad_renderer->get_instance(m_render_data_handle.value());
-            instance.color = m_is_selected ? get_selected_color() : m_color;
-        }
+        m_render_data.color = m_is_selected ? get_selected_color() : m_color;
     }
 
     float get_current_health() {
@@ -474,8 +450,7 @@ class Entity {
     }
 
     void set_uvwt(const float u, const float v, const float w, const float t) {
-        auto &instance = m_quad_renderer->get_instance(m_render_data_handle.value());
-        instance.uvwt = math::Vector4(u, v, w, t);
+        m_render_data.uvwt = math::Vector4(u, v, w, t);
     }
 
     void add_health_bar(const HealthBarOpts &opts) {

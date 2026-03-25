@@ -28,7 +28,7 @@ constexpr void DefendState::spawn_group_of_enemies(GameState &game_state) {
         const size_t caravan_cart_id = game_state.rng.uniform(0, 1);
         game_state.enemies.back().set_move_target(
             game_state.caravan[caravan_cart_id].get_world_position());
-        game_state.enemies.back().set_render_data(m_world_quad_renderer);
+        game_state.enemies.back().set_render_data();
 
         if (game_state.rng.uniform(0.0f, 1.0f) < 0.3f) {
             const size_t health_bar_type_id = game_state.rng.uniform(0, 1);
@@ -84,7 +84,6 @@ util::StateTransition DefendState::update(const float dt, GameState &game_state)
 
     for (int i = game_state.attacks.size() - 1; i >= 0; i--) {
         if (!game_state.attacks[i].is_visible()) {
-            game_state.attacks[i].clear_render_data();
             game_state.attacks.erase(game_state.attacks.begin() + i);
         }
     }
@@ -103,7 +102,7 @@ util::StateTransition DefendState::update(const float dt, GameState &game_state)
 
                 // Create attack
                 game_state.attacks.push_back(guard.attack(enemy));
-                game_state.attacks.back().set_render_data(m_world_quad_renderer);
+                game_state.attacks.back().set_render_data();
                 break;
             }
         }
@@ -116,7 +115,6 @@ util::StateTransition DefendState::update(const float dt, GameState &game_state)
         }
 
         if (enemy.is_dead()) {
-            enemy.clear_render_data();
             game_state.enemies.erase(game_state.enemies.begin() + i);
         }
     }
@@ -160,21 +158,9 @@ EntitySettingsPanel DefendState::init_entity_settings_panel() {
     return panel;
 }
 
-void DefendState::open_entity_settings_panel() {
-    m_settings_panel.is_open = true;
-    /*auto &bbox_instance =*/
-    /*    m_ui_geometry_renderer->get_instance(m_settings_panel.bbox_handle);*/
-    /*bbox_instance.color = ;*/
-    /*bbox_instance.border.color = EntitySettingsPanel::border_color;*/
-}
+void DefendState::open_entity_settings_panel() { m_settings_panel.is_open = true; }
 
-void DefendState::close_entity_settings_panel() {
-    m_settings_panel.is_open = false;
-    /*auto &bbox_instance =*/
-    /*    m_ui_geometry_renderer->get_instance(m_settings_panel.bbox_handle);*/
-    /*bbox_instance.color = util::colors::TRANSPARENT;*/
-    /*bbox_instance.border.color = util::colors::TRANSPARENT;*/
-}
+void DefendState::close_entity_settings_panel() { m_settings_panel.is_open = false; }
 
 void DefendState::handle_cursor(GameState &game_state,
                                 interface::ViewportPoint &click_point) {
