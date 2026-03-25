@@ -3,15 +3,31 @@
 #include "camera/Camera.h"
 #include "graphics_pipeline/geometry/GeometryRenderer.h"
 #include "graphics_pipeline/quad/QuadRenderer.h"
+#include "graphics_pipeline/text/TextRenderer.h"
 #include "state_machine/StateTransition.h"
 #include <vector>
 
 struct GameState;
 
+struct EntitySettingsPanel {
+    static constexpr util::colors::Color background_color =
+        util::colors::rgba(0.02f, 0.02f, 0.02f, 0.8f);
+    static constexpr util::colors::Color border_color = util::colors::hex(0x8bac0f);
+    bool is_open = false;
+    graphics_pipeline::geometry::GeometrySBOHandle bbox_handle;
+};
+
 class DefendState {
   private:
-    graphics_pipeline::quad::QuadRenderer *m_quad_renderer = nullptr;
-    graphics_pipeline::geometry::GeometryRenderer *m_geometry_renderer = nullptr;
+    // World renderers
+    graphics_pipeline::quad::QuadRenderer *m_world_quad_renderer = nullptr;
+    graphics_pipeline::geometry::GeometryRenderer *m_world_geometry_renderer = nullptr;
+
+    // UI renderers
+    graphics_pipeline::text::TextRenderer *m_ui_text_renderer = nullptr;
+    graphics_pipeline::geometry::GeometryRenderer *m_ui_geometry_renderer = nullptr;
+
+    EntitySettingsPanel m_settings_panel;
 
     constexpr void spawn_group_of_enemies(GameState &game_state);
 
@@ -31,12 +47,22 @@ class DefendState {
 
     void handle_cursor(GameState &game_state, interface::ViewportPoint &click_point);
 
+    EntitySettingsPanel init_entity_settings_panel();
+    void open_entity_settings_panel();
+    void close_entity_settings_panel();
+
   public:
     DefendState() = default;
 
-    DefendState(graphics_pipeline::quad::QuadRenderer *quad_renderer,
-                graphics_pipeline::geometry::GeometryRenderer *geom_renderer)
-        : m_quad_renderer(quad_renderer), m_geometry_renderer(geom_renderer) {}
+    DefendState(graphics_pipeline::quad::QuadRenderer *world_quad_renderer,
+                graphics_pipeline::geometry::GeometryRenderer *world_geom_renderer,
+                graphics_pipeline::text::TextRenderer *ui_text_renderer,
+                graphics_pipeline::geometry::GeometryRenderer *ui_geom_renderer)
+        : m_world_quad_renderer(world_quad_renderer),
+          m_world_geometry_renderer(world_geom_renderer),
+          m_ui_text_renderer(ui_text_renderer), m_ui_geometry_renderer(ui_geom_renderer) {
+        m_settings_panel = init_entity_settings_panel();
+    }
 
     DefendState(DefendState &&) noexcept = default;
     DefendState(const DefendState &) = delete;

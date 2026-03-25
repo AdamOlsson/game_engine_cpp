@@ -88,7 +88,8 @@ class CaravanDefence : public Game {
         m_state_machine.get_state<IntroState>() =
             IntroState(m_ui_text_renderer.get(), m_ui_geom_renderer.get());
         m_state_machine.get_state<DefendState>() =
-            DefendState(m_quad_renderer.get(), m_geom_renderer.get());
+            DefendState(m_quad_renderer.get(), m_geom_renderer.get(),
+                        m_ui_text_renderer.get(), m_ui_geom_renderer.get());
         m_state_machine.get_state<EventState>() =
             EventState(m_ui_text_renderer.get(), m_ui_geom_renderer.get());
 
@@ -144,13 +145,13 @@ class CaravanDefence : public Game {
         const math::Matrix ui_push_constant = math::Matrix();
         frame.begin_render_pass(&m_ui_render_pass);
 
+        m_ui_geom_renderer->render(command_buffer, &ui_push_constant, 256);
+
         if (m_state_machine.is_in_state<EventState>()) {
             auto &state = m_state_machine.get_state<EventState>();
-            m_ui_geom_renderer->render(command_buffer, &ui_push_constant, 256);
             state.event->render_text(command_buffer, &ui_push_constant);
         } else if (m_state_machine.is_in_state<IntroState>()) {
             auto &state = m_state_machine.get_state<IntroState>();
-            m_ui_geom_renderer->render(command_buffer, &ui_push_constant, 256);
             state.event->render_text(command_buffer, &ui_push_constant);
         }
 
