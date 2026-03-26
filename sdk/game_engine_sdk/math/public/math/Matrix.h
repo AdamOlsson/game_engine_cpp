@@ -1,6 +1,7 @@
 #pragma once
 #include "math/Vector2.h"
 #include "traits.h"
+#include "util/assert.h"
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/glm.hpp>
 
@@ -50,9 +51,30 @@ class Matrix {
 
     operator glm::mat4() const { return m_matrix; }
 
-    glm::vec2 position_2d() const { return glm::vec2(m_matrix[3].x, m_matrix[3].y); }
+    math::Vector2 position_2d() const {
+        return math::Vector2(m_matrix[3].x, m_matrix[3].y);
+    }
+    static constexpr math::Vector2 position_2d(const glm::mat4 &mat) {
+        return math::Vector2(mat[3].x, mat[3].y);
+    }
+
     glm::vec3 position_3d() const {
         return glm::vec3(m_matrix[3].x, m_matrix[3].y, m_matrix[3].z);
+    }
+    static constexpr glm::vec3 position_3d(const glm::mat4 &mat) {
+        return glm::vec3(mat[3].x, mat[3].y, mat[3].z);
+    }
+
+    static constexpr math::Vector2 scale_2d(const glm::mat4 &mat) {
+        return math::Vector2(glm::length(glm::vec3(mat[0])),
+                             glm::length(glm::vec3(mat[1])));
+    }
+
+    static constexpr math::Vector2 scale_2d_axis(const glm::mat4 &mat) {
+        DEBUG_ASSERT(
+            mat[0][1] == 0.0f && mat[1][0] == 0.0f,
+            "Error: scale_2d_axis is only valid when the matrix is not rotated.");
+        return math::Vector2(mat[0][0], mat[1][1]);
     }
 
     float rotation_z() const { return glm::atan(m_matrix[1].x, m_matrix[0].x); }

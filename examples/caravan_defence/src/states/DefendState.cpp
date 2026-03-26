@@ -64,16 +64,27 @@ void DefendState::on_exit(GameState &game_state) {
                  "Error: Geometry renderer is not set in DefendState.");
 };
 
+void DefendState::handle_cursor(const interface::NDCPoint &cursor_position,
+                                const bool has_clicked) {}
+
 util::StateTransition DefendState::update(const float dt, GameState &game_state) {
     DEBUG_ASSERT(m_world_quad_renderer != nullptr,
                  "Error: Quad renderer is not set in DefendState.");
     DEBUG_ASSERT(m_world_geometry_renderer != nullptr,
                  "Error: Geometry renderer is not set in DefendState.");
 
-    if (game_state.cursor.click_point.has_value()) {
-        handle_cursor(game_state, game_state.cursor.click_point.value());
-        game_state.cursor.click_point = std::nullopt;
+    const interface::NDCPoint ndc_point =
+        game_state.camera.to_ndc_point(game_state.cursor.viewport_position);
+
+    if (m_settings_panel.is_point_inside(ndc_point)) {
+        m_settings_panel.handle_cursor(ndc_point,
+                                       game_state.cursor.click_point.has_value());
+    } else if (game_state.cursor.click_point.has_value()) {
+        handle_click(game_state, game_state.cursor.click_point.value());
     }
+    game_state.cursor.click_point = std::nullopt;
+
+    handle_hover(game_state, game_state.cursor.viewport_position);
 
     update_all(dt, game_state.caravan);
     update_all(dt, game_state.caravan_slots);
@@ -126,52 +137,65 @@ util::StateTransition DefendState::update(const float dt, GameState &game_state)
 
     game_state.time_elapsed_ms += dt * 1000;
 
-    // Return nullopt to indicate no state transition (stay in current state)
     return util::StateTransition::none();
 }
 
 EntitySettingsPanel DefendState::init_entity_settings_panel() {
-    EntitySettingsPanel panel;
-    panel.is_open = false;
 
     const float bbox_center_line_x = -0.7f;
+
+    EntitySettingsPanel panel;
+    panel.center_x = bbox_center_line_x;
+    panel.is_open = false;
+    panel.size = math::Vector2(0.6f, 2.0f);
 
     panel.bbox_render_data.color = EntitySettingsPanel::background_color;
     panel.bbox_render_data.border.color = EntitySettingsPanel::border_color;
     panel.bbox_render_data.border.width = 0.015f;
     panel.bbox_render_data.border.radius = 0.05f;
     panel.bbox_render_data.model_matrix =
-        math::Matrix().translate(bbox_center_line_x, 0.0f).scale(0.6f, 2.0f);
+        math::Matrix().translate(panel.center_x, 0.0f).scale(panel.size);
 
     auto text_opts = graphics_pipeline::text::TextOpts{};
     text_opts.font_color = EntitySettingsPanel::font_color;
     text_opts.font_size = 0.05f;
     text_opts.line_width = 0.20f;
     text_opts.position =
-        math::Vector2(bbox_center_line_x - text_opts.line_width / 2.0f, -0.90f);
+        math::Vector2(panel.center_x - text_opts.line_width / 2.0f, -0.90f);
 
     auto headline_handle = m_ui_text_renderer->create_text2("Guard", text_opts);
     panel.text_handles.push_back(std::move(headline_handle));
 
+    EntitySettingsPanel::DropDown drop_down{};
+    drop_down.bbox.color = EntitySettingsPanel::DropDown::background_color;
+    drop_down.bbox.border.color = EntitySettingsPanel::border_color;
+    drop_down.bbox.border.width = 0.005;
+    drop_down.bbox.model_matrix =
+        math::Matrix().translate(panel.center_x, -0.8f).scale(0.4f, 0.05f);
+
+    drop_down.add_drop_down_item();
+    drop_down.add_drop_down_item();
+    drop_down.add_drop_down_item();
+
+    panel.drop_downs.push_back(drop_down);
+
     return panel;
 }
 
-void DefendState::open_entity_settings_panel() { m_settings_panel.is_open = true; }
-
-void DefendState::close_entity_settings_panel() { m_settings_panel.is_open = false; }
-
-void DefendState::handle_cursor(GameState &game_state,
-                                interface::ViewportPoint &click_point) {
+void DefendState::handle_click(GameState &game_state,
+                               interface::ViewportPoint &click_position) {
 
     const camera::WorldPoint2D world_point =
-        game_state.camera.viewport_to_world(click_point);
+        game_state.camera.viewport_to_world(click_position);
+
+    const interface::NDCPoint ndc_point = game_state.camera.to_ndc_point(click_position);
     const auto &current_selected_guard = game_state.selected_guard;
 
     // Clear currently selected guard
     if (current_selected_guard.has_value()) {
         game_state.guards[current_selected_guard.value()].set_selected(false);
         game_state.guards[current_selected_guard.value()].set_highlighted(false);
-        close_entity_settings_panel();
+        m_settings_panel.close();
     }
 
     const auto new_selected_guard = find_selected_guard(game_state, world_point);
@@ -194,10 +218,39 @@ void DefendState::handle_cursor(GameState &game_state,
     if (new_selected_guard.has_value()) {
         game_state.guards[new_selected_guard.value()].set_selected(true);
         game_state.guards[new_selected_guard.value()].set_highlighted(true);
-        open_entity_settings_panel();
+        m_settings_panel.open();
     }
 
     game_state.selected_guard = new_selected_guard;
+}
+
+void DefendState::handle_hover(GameState &game_state,
+                               interface::ViewportPoint &cursor_position) {
+
+    const camera::WorldPoint2D cursor_world_point =
+        game_state.camera.viewport_to_world(cursor_position);
+
+    // Only highlight slots when hover if a guard is selected
+    if (game_state.selected_guard.has_value()) {
+        for (size_t i = 0; i < game_state.caravan_slots.size(); i++) {
+            if (!game_state.caravan_slots[i].is_visible()) {
+                continue;
+            }
+            game_state.caravan_slots[i].set_highlighted(
+                game_state.caravan_slots[i].is_point_inside(cursor_world_point));
+        }
+    }
+
+    const auto &selected_guard = game_state.selected_guard;
+    // Highlight the guard the cursor is hovering over
+    for (size_t i = 0; i < game_state.guards.size(); i++) {
+        entity::Entity &guard = game_state.guards[i];
+        // If a guard is selected, we keep it highlighted
+        if (selected_guard.has_value() && selected_guard.value() == i) {
+            continue;
+        }
+        guard.set_highlighted(guard.is_point_inside(cursor_world_point));
+    }
 }
 
 std::optional<size_t>

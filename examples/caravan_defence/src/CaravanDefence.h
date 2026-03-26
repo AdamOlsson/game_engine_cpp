@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Configuration.h"
-#include "Entity.h"
 #include "EventFactory.h"
 #include "GameState.h"
 #include "camera/Camera.h"
@@ -100,31 +99,6 @@ class CaravanDefence : public Game {
     void update(const float dt) override { m_state_machine.update(dt, m_game_state); };
 
     void render() override {
-
-        const camera::WorldPoint2D cursor_world_point =
-            m_game_state.camera.viewport_to_world(m_game_state.cursor.viewport_position);
-
-        // Only highlight slots when hover if a guard is selected
-        if (m_game_state.selected_guard.has_value()) {
-            for (size_t i = 0; i < m_game_state.caravan_slots.size(); i++) {
-                if (!m_game_state.caravan_slots[i].is_visible()) {
-                    continue;
-                }
-                m_game_state.caravan_slots[i].set_highlighted(
-                    m_game_state.caravan_slots[i].is_point_inside(cursor_world_point));
-            }
-        }
-
-        const auto &selected_guard = m_game_state.selected_guard;
-        // Highlight the guard the cursor is hovering over
-        for (size_t i = 0; i < m_game_state.guards.size(); i++) {
-            entity::Entity &guard = m_game_state.guards[i];
-            // If a guard is selected, we keep it highlighted
-            if (selected_guard.has_value() && selected_guard.value() == i) {
-                continue;
-            }
-            guard.set_highlighted(guard.is_point_inside(cursor_world_point));
-        }
 
         m_ui_text_renderer->sync_render_slots();
 

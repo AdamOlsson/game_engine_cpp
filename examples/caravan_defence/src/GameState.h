@@ -25,7 +25,7 @@ struct GameState {
     std::optional<size_t> selected_guard = std::nullopt;
 
     camera::Camera2D camera;
-    struct {
+    struct Cursor {
         std::optional<interface::ViewportPoint> click_point = std::nullopt;
         interface::ViewportPoint viewport_position = interface::ViewportPoint(1e6, 1e6);
         bool is_right_button_pressed = false;
