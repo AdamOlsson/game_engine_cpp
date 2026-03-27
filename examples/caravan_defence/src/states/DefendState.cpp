@@ -77,8 +77,7 @@ util::StateTransition DefendState::update(const float dt, GameState &game_state)
         game_state.camera.to_ndc_point(game_state.cursor.viewport_position);
 
     if (m_settings_panel.is_point_inside(ndc_point)) {
-        m_settings_panel.handle_cursor(ndc_point,
-                                       game_state.cursor.click_point.has_value());
+        m_settings_panel.handle_cursor(game_state);
     } else if (game_state.cursor.click_point.has_value()) {
         handle_click(game_state, game_state.cursor.click_point.value());
     }
@@ -166,16 +165,40 @@ EntitySettingsPanel DefendState::init_entity_settings_panel() {
     auto headline_handle = m_ui_text_renderer->create_text2("Guard", text_opts);
     panel.text_handles.push_back(std::move(headline_handle));
 
-    EntitySettingsPanel::DropDown drop_down{};
-    drop_down.bbox.color = EntitySettingsPanel::DropDown::background_color;
+    DropDown drop_down{};
+    drop_down.bbox.color = DropDown::background_color;
     drop_down.bbox.border.color = EntitySettingsPanel::border_color;
     drop_down.bbox.border.width = 0.005;
     drop_down.bbox.model_matrix =
         math::Matrix().translate(panel.center_x, -0.8f).scale(0.4f, 0.05f);
 
-    drop_down.add_drop_down_item();
-    drop_down.add_drop_down_item();
-    drop_down.add_drop_down_item();
+    const auto change_weapon_to_sniper = [](GameState &game_state) {
+        DEBUG_ASSERT(
+            game_state.selected_guard.has_value(),
+            "Error: Settings panel is open for a guard, but no guard is selected.");
+        game_state.guards[game_state.selected_guard.value()].set_weapon(
+            Weapon::create_weapon<Sniper>());
+    };
+
+    const auto change_weapon_to_bow = [](GameState &game_state) {
+        DEBUG_ASSERT(
+            game_state.selected_guard.has_value(),
+            "Error: Settings panel is open for a guard, but no guard is selected.");
+        game_state.guards[game_state.selected_guard.value()].set_weapon(
+            Weapon::create_weapon<Bow>());
+    };
+
+    const auto change_weapon_to_sword = [](GameState &game_state) {
+        DEBUG_ASSERT(
+            game_state.selected_guard.has_value(),
+            "Error: Settings panel is open for a guard, but no guard is selected.");
+        game_state.guards[game_state.selected_guard.value()].set_weapon(
+            Weapon::create_weapon<Sword>());
+    };
+
+    drop_down.add_drop_down_item(change_weapon_to_sniper);
+    drop_down.add_drop_down_item(change_weapon_to_bow);
+    drop_down.add_drop_down_item(change_weapon_to_sword);
 
     panel.drop_downs.push_back(drop_down);
 

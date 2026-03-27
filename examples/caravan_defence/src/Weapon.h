@@ -29,8 +29,8 @@ struct Sniper {
 struct Sword {
     static constexpr float damage = 3.0f;
     static constexpr DamageType damage_type = DamageType::Physical;
-    static constexpr float range = 10.0f;
-    static constexpr Duration fire_rate = std::chrono::seconds(1);
+    static constexpr float range = 150.0f;
+    static constexpr Duration fire_rate = std::chrono::milliseconds(500);
 };
 
 template <typename T>
