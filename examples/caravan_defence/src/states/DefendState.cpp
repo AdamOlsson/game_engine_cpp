@@ -196,11 +196,11 @@ EntitySettingsPanel DefendState::init_entity_settings_panel() {
             Weapon::create_weapon<Sword>());
     };
 
-    drop_down.add_drop_down_item(change_weapon_to_sniper);
-    drop_down.add_drop_down_item(change_weapon_to_bow);
-    drop_down.add_drop_down_item(change_weapon_to_sword);
+    drop_down.add_drop_down_item(m_ui_text_renderer, "Sniper", change_weapon_to_sniper);
+    drop_down.add_drop_down_item(m_ui_text_renderer, "Bow", change_weapon_to_bow);
+    drop_down.add_drop_down_item(m_ui_text_renderer, "Sword", change_weapon_to_sword);
 
-    panel.drop_downs.push_back(drop_down);
+    panel.drop_downs.push_back(std::move(drop_down));
 
     return panel;
 }

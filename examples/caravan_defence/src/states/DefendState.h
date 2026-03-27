@@ -28,28 +28,32 @@ struct EntitySettingsPanel {
 
     bool is_open = false;
 
-    std::vector<graphics_pipeline::geometry::GeometryPipelineSBO>
-    get_geometry_render_data() {
-        std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> item_render_data{
-            bbox_render_data};
+    void get_geometry_render_data(
+        std::vector<graphics_pipeline::text::TextHandle *> &text_out,
+        std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> &geom_out) {
+
+        geom_out.push_back(bbox_render_data);
+        for (auto &text : text_handles) {
+            text_out.push_back(&text);
+        }
 
         if (!is_open) {
-            return item_render_data;
+            return;
         }
 
         if (drop_downs.size() > 0) {
             for (auto &dd : drop_downs) {
                 if (dd.is_open) {
-                    for (const auto &item : dd.items) {
-                        item_render_data.push_back(item.bbox);
+                    for (auto &item : dd.items) {
+                        geom_out.push_back(item.bbox);
+                        text_out.push_back(&item.text_handle);
                     }
                 } else {
-                    item_render_data.push_back(dd.bbox);
+                    geom_out.push_back(dd.bbox);
                 }
             }
-            return item_render_data;
+            return;
         }
-        return item_render_data;
     }
 
     bool is_point_inside(const math::Vector2 &point) const {
@@ -63,13 +67,41 @@ struct EntitySettingsPanel {
             return;
         }
 
+        const interface::NDCPoint cursor_position =
+            game_state.camera.to_ndc_point(game_state.cursor.viewport_position);
+        const bool has_clicked = game_state.cursor.click_point.has_value();
+
+        if (has_clicked && is_point_inside(cursor_position)) {
+            bool click_inside_any_dropdown = false;
+            for (auto &dd : drop_downs) {
+                if (dd.is_point_inside(cursor_position)) {
+                    click_inside_any_dropdown = true;
+                    break;
+                }
+            }
+            if (!click_inside_any_dropdown) {
+                close_drop_downs();
+                return;
+            }
+        }
+
         for (auto &dd : drop_downs) {
             dd.handle_cursor(game_state);
         }
     }
 
     void open() { is_open = true; }
-    void close() { is_open = false; }
+    void close() {
+        is_open = false;
+        for (auto &dd : drop_downs) {
+            dd.close();
+        }
+    }
+    void close_drop_downs() {
+        for (auto &dd : drop_downs) {
+            dd.close();
+        }
+    }
 };
 
 class DefendState {
@@ -137,8 +169,10 @@ class DefendState {
 
         if (m_settings_panel.is_open) {
 
-            std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> geometry_data =
-                m_settings_panel.get_geometry_render_data();
+            std::vector<graphics_pipeline::text::TextHandle *> text_handles{};
+            std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> geometry_data;
+
+            m_settings_panel.get_geometry_render_data(text_handles, geometry_data);
 
             vulkan::DrawIndexedIndirectCommand draw_command =
                 m_ui_geometry_renderer->write_to_buffer(geometry_data);
@@ -149,6 +183,11 @@ class DefendState {
             draw_commands.push_back(draw_command);
             for (auto &text : m_settings_panel.text_handles) {
                 m_ui_text_renderer->render(command_buffer, text, push_constant);
+            }
+
+            draw_commands.push_back(draw_command);
+            for (auto text : text_handles) {
+                m_ui_text_renderer->render(command_buffer, *text, push_constant);
             }
         }
     }

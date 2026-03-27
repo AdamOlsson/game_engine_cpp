@@ -426,7 +426,7 @@ Text TextRenderer::layout_text(const font::Unicode &codepoint, const TextOpts &o
     const float font_scale = opts.font_size / units_per_em;
     const float line_width = opts.line_width / font_scale;
     const float line_height = fmax(opts.line_height / font_scale, font_bbox_size.y());
-    const float line_padding = fmax(0.0f, (line_height - font_bbox_size.y()) / 2.0f);
+    const float line_padding = fmax(0.0f, line_height - font_bbox_size.y());
 
     // Identify start and stop for all words
     std::vector<std::pair<size_t, size_t>> words;
@@ -490,6 +490,8 @@ Text TextRenderer::layout_text(const font::Unicode &codepoint, const TextOpts &o
             pen_position = math::Vector2(0.0f, line_height * line_count);
             word.offset = pen_position;
         }
+
+        word.offset.y() += line_padding;
 
         // Find the bbox of the text
         bbox_top_left.y() = -fmax(bbox_top_left.y(), word.bbox.y());

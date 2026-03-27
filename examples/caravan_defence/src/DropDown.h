@@ -2,14 +2,13 @@
 
 #include "GameState.h"
 #include "graphics_pipeline/geometry/GeometryPipelineSBO.h"
+#include "graphics_pipeline/text/TextRenderer.h"
 #include "util/colors.h"
 struct DropDown {
 
     struct DropDownItem {
-        static constexpr util::colors::Color hover_color =
-            util::colors::rgba(1.0f, 0.05f, 0.05f, 0.90f);
-
         graphics_pipeline::geometry::GeometryPipelineSBO bbox;
+        graphics_pipeline::text::TextHandle text_handle;
 
         std::function<void(GameState &)> on_click_cb = [](GameState &) {};
 
@@ -36,10 +35,12 @@ struct DropDown {
 
     std::vector<DropDownItem> items;
 
-    size_t selected_id = std::numeric_limits<size_t>::max();
+    size_t selected_item_id = std::numeric_limits<size_t>::max();
     size_t hovered_item_id = std::numeric_limits<size_t>::max();
 
-    void add_drop_down_item(std::function<void(GameState &)> on_click_cb) {
+    void add_drop_down_item(graphics_pipeline::text::TextRenderer *text_renderer,
+                            const std::string &text,
+                            std::function<void(GameState &)> on_click_cb) {
         const math::Vector2 parent_position =
             math::Matrix::position_2d(bbox.model_matrix);
         const math::Vector2 parent_size = math::Matrix::scale_2d_axis(bbox.model_matrix);
@@ -47,24 +48,47 @@ struct DropDown {
         const float drop_down_item_y_pos =
             parent_position.y() + parent_size.y() * items.size();
 
+        auto text_opts = graphics_pipeline::text::TextOpts{};
+        text_opts.font_color = font_color;
+        text_opts.font_size = 0.03f;
+        text_opts.line_width = parent_size.x();
+        text_opts.line_height = parent_size.y();
+        text_opts.position = math::Vector2(parent_position.x() - parent_size.x() / 2.0f,
+                                           drop_down_item_y_pos);
+        auto text_handle = text_renderer->create_text2(text, text_opts);
+
         DropDownItem item{};
+        item.text_handle = std::move(text_handle);
         item.on_click_cb = on_click_cb;
         item.bbox.color = background_color;
-        item.bbox.border.color =
-            items.size() % 2 == 0 ? util::colors::BLUE : util::colors::RED;
-        item.bbox.border.width = 0.005f;
+        item.bbox.border.width = 0.005;
         item.bbox.model_matrix = math::Matrix()
                                      .translate(parent_position.x(), drop_down_item_y_pos)
                                      .scale(parent_size);
 
-        items.push_back(item);
+        items.push_back(std::move(item));
     }
 
     bool is_point_inside(const math::Vector2 &point) const {
-        const camera::WorldPoint2D position =
-            math::Matrix::position_2d(bbox.model_matrix);
+        const math::Vector2 position = math::Matrix::position_2d(bbox.model_matrix);
         const math::Vector2 size = math::Matrix::scale_2d_axis(bbox.model_matrix);
-        return math::is_point_inside_rectangle(point, position, size.x(), size.y());
+
+        if (!is_open) {
+            return math::is_point_inside_rectangle(point, position, size.x(), size.y());
+        }
+
+        const size_t num_items = items.size();
+        const math::Vector2 open_size = math::Vector2(size.x(), size.y() * num_items);
+
+        float open_mid_point_y = 0.0f;
+        for (const auto &item : items) {
+            open_mid_point_y += math::Matrix::position_2d(item.bbox.model_matrix).y();
+        }
+        open_mid_point_y /= num_items;
+        const math::Vector2 open_mid_point =
+            math::Vector2(position.x(), open_mid_point_y);
+        return math::is_point_inside_rectangle(point, open_mid_point, open_size.x(),
+                                               open_size.y());
     }
 
     void handle_cursor(GameState &game_state) {
@@ -92,8 +116,10 @@ struct DropDown {
                 items[hovered_item_id].remove_hover_effects();
                 hovered_item_id = std::numeric_limits<size_t>::max();
             }
-            if (has_clicked) {
-                items[hovered_item_id].on_click_cb(game_state);
+            if (has_clicked && hovered_item_id < items.size()) {
+                selected_item_id = hovered_item_id;
+                items[selected_item_id].on_click_cb(game_state);
+                close();
             }
         } else {
             if (is_point_inside(cursor_position)) {
