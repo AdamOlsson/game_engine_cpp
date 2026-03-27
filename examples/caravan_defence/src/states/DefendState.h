@@ -28,11 +28,12 @@ struct EntitySettingsPanel {
 
     bool is_open = false;
 
-    void get_geometry_render_data(
+    void get_render_data(
         std::vector<graphics_pipeline::text::TextHandle *> &text_out,
         std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> &geom_out) {
 
         geom_out.push_back(bbox_render_data);
+
         for (auto &text : text_handles) {
             text_out.push_back(&text);
         }
@@ -43,6 +44,7 @@ struct EntitySettingsPanel {
 
         if (drop_downs.size() > 0) {
             for (auto &dd : drop_downs) {
+                text_out.push_back(&dd.headline_handle);
                 if (dd.is_open) {
                     for (auto &item : dd.items) {
                         geom_out.push_back(item.bbox);
@@ -172,7 +174,7 @@ class DefendState {
             std::vector<graphics_pipeline::text::TextHandle *> text_handles{};
             std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> geometry_data;
 
-            m_settings_panel.get_geometry_render_data(text_handles, geometry_data);
+            m_settings_panel.get_render_data(text_handles, geometry_data);
 
             vulkan::DrawIndexedIndirectCommand draw_command =
                 m_ui_geometry_renderer->write_to_buffer(geometry_data);

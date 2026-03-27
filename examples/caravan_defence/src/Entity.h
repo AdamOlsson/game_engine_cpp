@@ -11,10 +11,6 @@
 #include <variant>
 namespace entity {
 
-// CONTINUE: Make is possible to:
-// - change guard weapon
-// - change guard preferred target
-
 class Entity;
 
 using Clock = std::chrono::steady_clock;

@@ -29,6 +29,7 @@ struct DropDown {
     static constexpr util::colors::Color border_color = util::colors::hex(0x8bac0f);
     static constexpr util::colors::Color font_color = util::colors::hex(0x9bbc0f);
 
+    graphics_pipeline::text::TextHandle headline_handle;
     graphics_pipeline::geometry::GeometryPipelineSBO bbox;
 
     bool is_open = false;
@@ -37,6 +38,27 @@ struct DropDown {
 
     size_t selected_item_id = std::numeric_limits<size_t>::max();
     size_t hovered_item_id = std::numeric_limits<size_t>::max();
+
+    void add_headline(graphics_pipeline::text::TextRenderer *text_renderer,
+                      const std::string &text) {
+
+        const math::Vector2 drop_down_position =
+            math::Matrix::position_2d(bbox.model_matrix);
+        const math::Vector2 drop_down_size =
+            math::Matrix::scale_2d_axis(bbox.model_matrix);
+
+        const float headline_pos_y = drop_down_position.y() - drop_down_size.y();
+
+        auto text_opts = graphics_pipeline::text::TextOpts{};
+        text_opts.font_color = font_color;
+        text_opts.font_size = 0.03f;
+        text_opts.line_width = drop_down_size.x();
+        text_opts.line_height = drop_down_size.y();
+
+        text_opts.position = math::Vector2(
+            drop_down_position.x() - drop_down_size.x() / 2.0f, headline_pos_y);
+        headline_handle = text_renderer->create_text2(text, text_opts);
+    }
 
     void add_drop_down_item(graphics_pipeline::text::TextRenderer *text_renderer,
                             const std::string &text,
