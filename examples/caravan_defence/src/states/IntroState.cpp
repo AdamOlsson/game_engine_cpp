@@ -77,7 +77,7 @@ Event IntroState::create_intro_contract(
     const float text_start_y_options_ndc =
         content_bottom_y_ndc - dialog_line_size.y() * 3;
 
-    auto event_desc_opts = graphics_pipeline::text::TextOpts{};
+    auto event_desc_opts = font::TextOpts{};
     event_desc_opts.position =
         interface::NDCPoint(dialog_text_start_x_ndc, text_start_y_ndc);
     event_desc_opts.font_color = util::colors::WHITE;
@@ -85,7 +85,7 @@ Event IntroState::create_intro_contract(
     event_desc_opts.line_width = dialog_line_size.x();
     event_desc_opts.line_height = dialog_line_size.y();
 
-    graphics_pipeline::text::TextOpts event_dialog_option_opts{};
+    font::TextOpts event_dialog_option_opts{};
     event_dialog_option_opts.position = interface::NDCPoint(
         dialog_text_start_x_ndc, text_start_y_options_ndc - dialog_line_size.y());
     event_dialog_option_opts.font_color = util::colors::WHITE;

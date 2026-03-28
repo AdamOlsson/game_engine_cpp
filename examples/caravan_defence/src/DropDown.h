@@ -49,7 +49,7 @@ struct DropDown {
 
         const float headline_pos_y = drop_down_position.y() - drop_down_size.y();
 
-        auto text_opts = graphics_pipeline::text::TextOpts{};
+        auto text_opts = font::TextOpts{};
         text_opts.font_color = font_color;
         text_opts.font_size = 0.03f;
         text_opts.line_width = drop_down_size.x();
@@ -70,7 +70,7 @@ struct DropDown {
         const float drop_down_item_y_pos =
             parent_position.y() + parent_size.y() * items.size();
 
-        auto text_opts = graphics_pipeline::text::TextOpts{};
+        auto text_opts = font::TextOpts{};
         text_opts.font_color = font_color;
         text_opts.font_size = 0.03f;
         text_opts.line_width = parent_size.x();

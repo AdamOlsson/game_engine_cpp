@@ -1,12 +1,10 @@
 #pragma once
 
-#include "font/FontLoader.h"
+#include "font/Font.h"
 #include "font/Unicode.h"
 #include "graphics_pipeline/RendererOpts.h"
 #include "graphics_pipeline/SwapDescriptorSet.h"
 #include "graphics_pipeline/text/GlyphVertex.h"
-#include "graphics_pipeline/text/TextFormatter.h"
-#include "graphics_pipeline/text/TextOpts.h"
 #include "graphics_pipeline/text/TextPipeline.h"
 #include "math/Bbox.h"
 #include "math/Vector2.h"
@@ -109,13 +107,10 @@ class TextRenderer {
 
     TextPipeline m_text_pipeline;
 
-    std::optional<font::FontLoader> m_font_loader;
-    TextFormatter m_formatter;
+    font::Font m_font;
 
     std::optional<vulkan::buffers::VertexBuffer<GlyphVertex>> m_glyph_vertex_buffer;
     std::optional<vulkan::buffers::IndexBuffer> m_glyph_index_buffer;
-
-    std::vector<std::pair<size_t, size_t>> m_glyph_draw_info;
 
     struct {
         vulkan::buffers::StagedStorageBuffer<TextFormatSBO> dense;
@@ -151,13 +146,12 @@ class TextRenderer {
     void return_format_slot(TextFormatSBOHandle &handle);
     void return_glyph_slot(TextGlyphSBOHandle &handle);
 
-    TextFormatSBOHandle create_text_format_handle(const TextOpts &opts);
+    TextFormatSBOHandle create_text_format_handle(const font::TextOpts &opts);
 
     static vulkan::DescriptorSetLayout
     get_descriptor_set_layout(std::shared_ptr<vulkan::context::GraphicsContext> &ctx);
 
     void _render(const vulkan::CommandBuffer &command_buffer, const TextHandle &text);
-    void allocate_descriptor_set();
 
   public:
     TextRenderer() = default;
@@ -169,16 +163,17 @@ class TextRenderer {
     TextHandle get_font_showcase_text();
 
     TextHandle create_text2(const font::Unicode &codepoint,
-                            const TextOpts &opts = TextOpts{});
+                            const font::TextOpts &opts = font::TextOpts{});
 
     void remove_text(TextHandle &&handle);
 
     TextFormatSBO &get_text_format_instance(const TextHandle &handle);
     TextFormatSBO &get_text_format_instance(const TextFormatSBOHandle &handle);
 
-    bool is_font_loaded() { return m_font_loader.has_value(); }
+    bool is_font_loaded() { return m_font.is_loaded(); }
+
     void load_font(vulkan::CommandBufferManager *command_buffer_manager,
-                   font::FontLoader &&font_loader);
+                   const std::string &font_path);
 
     void sync_render_slots();
     void rotate_descriptors();

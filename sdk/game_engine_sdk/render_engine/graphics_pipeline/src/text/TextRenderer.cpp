@@ -1,17 +1,11 @@
 #include "graphics_pipeline/text/TextRenderer.h"
 #include "graphics_pipeline/DescriptorSetLayoutBuilder.h"
-#include "graphics_pipeline/Polygon.h"
 #include "graphics_pipeline/SwapDescriptorSetBuilder.h"
 #include "graphics_pipeline/text/GlyphVertex.h"
 #include "graphics_pipeline/text/TextPipeline.h"
 #include "math/Bbox.h"
 #include "math/Matrix.h"
-#include "math/winding.h"
-#include "triangulation/mapbox/earcut.h"
 #include "vulkan/CommandBufferManager.h"
-
-constexpr char SPACE = U' ';
-constexpr char LF = U'\n';
 
 namespace graphics_pipeline::text {
 
@@ -185,90 +179,21 @@ void TextRenderer::sync_render_slots() {
 }
 
 void TextRenderer::load_font(vulkan::CommandBufferManager *command_buffer_manager,
-                             font::FontLoader &&font_loader) {
+                             const std::string &font_path) {
 
-    if (is_font_loaded()) {
-        throw std::runtime_error("Error: Font is already loaded.");
-    }
-
-    m_glyph_draw_info.reserve(font_loader.get_num_glyphs());
+    m_font = font::Font(font_path);
 
     std::vector<GlyphVertex> vertices;
-    std::vector<uint16_t> indices;
+    vertices.reserve(m_font.vertices.size());
 
-    for (const auto glyph_index : font_loader) {
-        font::GlyphOutlines outlines = font_loader.get_glyph_outline(glyph_index);
-        const font::FontFill exterior_fill = outlines.fill;
-
-        const size_t first_index = indices.size();
-        if (!outlines.line_segments.empty()) {
-            const std::vector<graphics_pipeline::Polygon> glyph_polygons =
-                graphics_pipeline::Polygon::construct_polygons(outlines);
-
-            for (const graphics_pipeline::Polygon polygon : glyph_polygons) {
-                const size_t first_vertex = vertices.size();
-
-                const std::vector<unsigned int> triangle_indices =
-                    mapbox::earcut(polygon.get_outlines());
-
-                // First load write all vertices from earcut to the vertex buffer
-                for (const std::vector<std::pair<float, float>> &outline :
-                     polygon.get_outlines()) {
-                    for (const std::pair<float, float> &vertex : outline) {
-                        vertices.emplace_back(vertex.first, vertex.second, 0.0f, 0.0f,
-                                              0.0f, 0.0f);
-                    }
-                }
-
-                // Secondly write the indices forming the triangles from earcut into
-                // to index buffer
-                for (const unsigned int index : triangle_indices) {
-                    indices.emplace_back(first_vertex + index);
-                }
-
-                // Thirdly write all curve segments into vertex and index buffer
-                // (which by nature of bezier curves are already triangulated)
-                const auto quad_curves = polygon.get_quadratic_curves();
-                for (size_t outline_index = 0; outline_index < quad_curves.size();
-                     outline_index++) {
-
-                    const std::vector<std::array<std::pair<float, float>, 3>> &outline =
-                        quad_curves[outline_index];
-
-                    for (const std::array<std::pair<float, float>, 3> &curve : outline) {
-                        const bool ccw = math::is_counter_clockwise_winding(curve);
-
-                        const bool wants_right_fill =
-                            (exterior_fill == font::FontFill::Right);
-                        const float winding_order =
-                            (wants_right_fill == !ccw) ? 1.0f : -1.0f;
-
-                        indices.emplace_back(vertices.size());
-                        vertices.emplace_back(curve[0].first, curve[0].second,
-                                              winding_order, 0.0f, 0.0f, 1.0f);
-
-                        indices.emplace_back(vertices.size());
-                        vertices.emplace_back(curve[1].first, curve[1].second,
-                                              winding_order, 0.5f, 0.0f, 1.0f);
-
-                        indices.emplace_back(vertices.size());
-                        vertices.emplace_back(curve[2].first, curve[2].second,
-                                              winding_order, 1.0f, 1.0f, 1.0f);
-                    }
-                }
-            }
-        }
-
-        const size_t count = indices.size() - first_index;
-        m_glyph_draw_info.emplace_back(count, first_index);
+    for (const auto &v : m_font.vertices) {
+        vertices.emplace_back(v.x, v.y, v.z, v.u, v.v, v.w);
     }
 
     m_glyph_vertex_buffer =
         vulkan::buffers::VertexBuffer(m_ctx, vertices, command_buffer_manager);
     m_glyph_index_buffer =
-        vulkan::buffers::IndexBuffer(m_ctx, indices, command_buffer_manager);
-    m_font_loader = std::move(font_loader);
-    m_formatter = TextFormatter(&m_font_loader.value());
+        vulkan::buffers::IndexBuffer(m_ctx, m_font.indices, command_buffer_manager);
 }
 
 void TextRenderer::remove_text(TextHandle &&handle) {
@@ -284,7 +209,7 @@ TextHandle TextRenderer::get_font_showcase_text() {
             "Error: Can't render font showcase because font is not loaded.");
     }
 
-    const size_t num_glyphs = m_font_loader->get_num_glyphs();
+    const size_t num_glyphs = m_font.get_num_glyphs();
 
     TextFormatSBOHandle format_handle = request_format_slot();
     TextFormatSBO &format_instance = get_text_format_instance(format_handle.id);
@@ -296,7 +221,7 @@ TextHandle TextRenderer::get_font_showcase_text() {
     index_count.reserve(num_glyphs);
     first_index.reserve(num_glyphs);
 
-    const font::FontBBox bbox = m_font_loader->get_font_bbox();
+    const font::FontBBox bbox = m_font.get_font_bbox();
     const float column_width = bbox.x_max - bbox.x_min;
     const float column_height = bbox.x_max - bbox.x_min;
 
@@ -315,7 +240,7 @@ TextHandle TextRenderer::get_font_showcase_text() {
             .model_matrix = math::Matrix().translate(x, y, 0.0f).scale(0.1),
         };
 
-        const std::pair<size_t, size_t> glyph_info = m_glyph_draw_info[gid];
+        const std::pair<size_t, size_t> glyph_info = m_font.get_glyph_draw_info(gid);
         index_count.push_back(glyph_info.first);
         first_index.push_back(glyph_info.second);
     }
@@ -340,7 +265,7 @@ void TextRenderer::_render(const vulkan::CommandBuffer &command_buffer,
     }
 }
 
-TextFormatSBOHandle TextRenderer::create_text_format_handle(const TextOpts &opts) {
+TextFormatSBOHandle TextRenderer::create_text_format_handle(const font::TextOpts &opts) {
     TextFormatSBOHandle format_handle = request_format_slot();
     TextFormatSBO &format_instance = get_text_format_instance(format_handle.id);
     format_instance.model_matrix = math::Matrix().translate(opts.position);
@@ -349,16 +274,16 @@ TextFormatSBOHandle TextRenderer::create_text_format_handle(const TextOpts &opts
 }
 
 TextHandle TextRenderer::create_text2(const font::Unicode &codepoint,
-                                      const TextOpts &opts) {
+                                      const font::TextOpts &opts) {
 
     if (!is_font_loaded()) {
         throw std::runtime_error(
             "Error: can't create text because a font is not loaded.");
     }
 
-    Text text = m_formatter.format(codepoint, opts);
+    font::Text text = m_font.format(codepoint, opts);
 
-    const unsigned short units_per_em = m_font_loader->get_units_per_em();
+    const unsigned short units_per_em = m_font.get_units_per_em();
     const float font_scale = opts.font_size / units_per_em;
 
     TextHandle result;
@@ -372,12 +297,13 @@ TextHandle TextRenderer::create_text2(const font::Unicode &codepoint,
     TextFormatSBOHandle format_handle = create_text_format_handle(opts);
     result.format_handle = std::move(format_handle);
 
-    for (const Word &word : text.words) {
+    for (const font::Word &word : text.words) {
         const size_t num_chars = word.end_idx - word.start_idx;
         for (size_t char_idx = 0; char_idx < num_chars; char_idx++) {
             const char32_t &c = codepoint[word.start_idx + char_idx];
-            std::pair<size_t, size_t> draw_info =
-                m_glyph_draw_info[m_font_loader->get_glyph_index(c)];
+
+            std::pair<size_t, size_t> draw_info = m_font.get_draw_info(c);
+
             result.index_count.push_back(draw_info.first);
             result.first_index.push_back(draw_info.second);
 

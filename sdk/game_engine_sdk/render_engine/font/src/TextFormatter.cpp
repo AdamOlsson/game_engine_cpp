@@ -1,6 +1,6 @@
-#include "graphics_pipeline/text/TextFormatter.h"
+#include "font/TextFormatter.h"
 
-namespace graphics_pipeline::text {
+namespace font {
 
 Text TextFormatter::layout_text(const font::Unicode &codepoint, const TextOpts &opts) {
     /* line_height_top ---------------- < bbox top >
@@ -150,4 +150,4 @@ Word TextFormatter::layout_word(const font::Unicode &codepoint, const size_t sta
     };
 }
 
-} // namespace graphics_pipeline::text
+} // namespace font

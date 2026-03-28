@@ -3,7 +3,8 @@
 #include "font/FontLoader.h"
 #include <span>
 #include <vector>
-namespace graphics_pipeline {
+
+namespace font {
 
 class Polygon {
   public:
@@ -23,8 +24,7 @@ class Polygon {
         const std::vector<std::vector<std::array<std::pair<float, float>, 3>>>
             &quadratic_curves);
 
-    static std::vector<Polygon>
-    construct_polygons(const font::GlyphOutlines &glyph_outlines);
+    static std::vector<Polygon> construct_polygons(const GlyphOutlines &glyph_outlines);
 
     const std::vector<std::vector<std::pair<float, float>>> &get_outlines() const;
     const std::vector<std::pair<float, float>> &get_exterior_outline() const;
@@ -46,4 +46,4 @@ class Polygon {
 
     void reverse_contour(std::vector<std::array<std::pair<float, float>, 3>> &contour);
 };
-} // namespace graphics_pipeline
+} // namespace font

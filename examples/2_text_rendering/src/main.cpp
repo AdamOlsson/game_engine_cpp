@@ -1,5 +1,5 @@
 #include "camera/Camera.h"
-#include "font/FontLoader.h"
+#include "font/Font.h"
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
 #include "graphics_pipeline/RendererOpts.h"
@@ -34,13 +34,6 @@ class ExampleTextRendering : public Game {
 
     void setup(std::shared_ptr<vulkan::context::GraphicsContext> &ctx) override {
 
-        font::FontLoader font_loader = font::FontLoader(
-            /*ASSET_FILE("Quaaykop-DYE1R.ttf")*/
-            ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf")
-            /*ASSET_FILE("ftystrategycidencv.otf")*/
-            /*ASSET_FILE("TypeLightSans-KV84p.otf")*/
-        );
-
         auto window_size = ctx->window->get_framebuffer_size<float>();
         const float num_pixels_at_default_zoom = 200.0f;
         m_camera = camera::Camera2D(window_size.width, window_size.height,
@@ -67,11 +60,11 @@ class ExampleTextRendering : public Game {
             std::make_unique<graphics_pipeline::text::TextRenderer>(ctx, renderer_opts);
 
         m_text_renderer->load_font(m_command_buffer_manager.get(),
-                                   std::move(font_loader));
+                                   ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
 
         std::string sentence = "Pack my box with five dozen liquor jugs.";
         m_texts.push_back(
-            m_text_renderer->create_text2(sentence, graphics_pipeline::text::TextOpts{
+            m_text_renderer->create_text2(sentence, font::TextOpts{
                                                         .position = math::Vector2(0, 0),
                                                         .font_color = util::colors::WHITE,
                                                         .font_size = 11,
@@ -79,7 +72,7 @@ class ExampleTextRendering : public Game {
                                                     }));
 
         m_texts.push_back(
-            m_text_renderer->create_text2(sentence, graphics_pipeline::text::TextOpts{
+            m_text_renderer->create_text2(sentence, font::TextOpts{
                                                         .position = math::Vector2(0, 22),
                                                         .font_color = util::colors::RED,
                                                         .font_size = 17,
@@ -87,7 +80,7 @@ class ExampleTextRendering : public Game {
                                                     }));
 
         m_texts.push_back(
-            m_text_renderer->create_text2(sentence, graphics_pipeline::text::TextOpts{
+            m_text_renderer->create_text2(sentence, font::TextOpts{
                                                         .position = math::Vector2(0, 50),
                                                         .font_color = util::colors::BLUE,
                                                         .font_size = 24,
@@ -139,7 +132,7 @@ class ExampleTextRendering : public Game {
                     if (m_texts.size() < 3) {
                         std::string sentence = "Pack my box with five dozen liquor jugs.";
                         m_texts.push_back(m_text_renderer->create_text2(
-                            sentence, graphics_pipeline::text::TextOpts{
+                            sentence, font::TextOpts{
                                           .position = math::Vector2(0, 50),
                                           .font_color = util::colors::BLUE,
                                           .font_size = 24,

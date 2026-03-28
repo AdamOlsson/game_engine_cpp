@@ -1,8 +1,10 @@
-#include "graphics_pipeline/Polygon.h"
+#include "font/Polygon.h"
 #include "math/winding.h"
 #include "util/assert.h"
 
-std::vector<graphics_pipeline::Polygon> graphics_pipeline::Polygon::construct_polygons(
+namespace font {
+
+std::vector<Polygon> Polygon::construct_polygons(
     const std::vector<std::vector<std::pair<float, float>>> &outlines) {
 
     std::vector<size_t> nesting_levels(outlines.size());
@@ -56,7 +58,7 @@ std::vector<graphics_pipeline::Polygon> graphics_pipeline::Polygon::construct_po
     return polygons;
 }
 
-std::vector<graphics_pipeline::Polygon> graphics_pipeline::Polygon::construct_polygons(
+std::vector<Polygon> Polygon::construct_polygons(
     const std::vector<std::vector<std::array<std::pair<float, float>, 3>>>
         &quadratic_curve_segments) {
 
@@ -127,8 +129,8 @@ std::vector<graphics_pipeline::Polygon> graphics_pipeline::Polygon::construct_po
     return polygons;
 }
 
-std::vector<graphics_pipeline::Polygon> graphics_pipeline::Polygon::construct_polygons(
-    const font::GlyphOutlines &glyph_outlines) {
+std::vector<Polygon>
+Polygon::construct_polygons(const font::GlyphOutlines &glyph_outlines) {
 
     const auto &outlines = glyph_outlines.line_segments;
     const auto &curves = glyph_outlines.quadratic_curves;
@@ -197,8 +199,7 @@ std::vector<graphics_pipeline::Polygon> graphics_pipeline::Polygon::construct_po
     return polygons;
 }
 
-graphics_pipeline::Polygon::Polygon(
-    const std::vector<std::vector<std::pair<float, float>>> &outlines)
+Polygon::Polygon(const std::vector<std::vector<std::pair<float, float>>> &outlines)
     : m_outlines(outlines) {
     // Ensure that the exterior outline is clockwise and interior is counter clockwise
     if (m_outlines.size() > 1) {
@@ -214,15 +215,13 @@ graphics_pipeline::Polygon::Polygon(
     }
 }
 
-graphics_pipeline::Polygon::Polygon(
-    const std::vector<std::vector<std::array<std::pair<float, float>, 3>>>
-        &quadratic_curves)
+Polygon::Polygon(const std::vector<std::vector<std::array<std::pair<float, float>, 3>>>
+                     &quadratic_curves)
     : m_quadratic_curves(quadratic_curves) {}
 
-graphics_pipeline::Polygon::Polygon(
-    const std::vector<std::vector<std::pair<float, float>>> &outlines,
-    const std::vector<std::vector<std::array<std::pair<float, float>, 3>>>
-        &quadratic_curves)
+Polygon::Polygon(const std::vector<std::vector<std::pair<float, float>>> &outlines,
+                 const std::vector<std::vector<std::array<std::pair<float, float>, 3>>>
+                     &quadratic_curves)
     : m_outlines(outlines), m_quadratic_curves(quadratic_curves) {
 
     // Ensure that the extrior outline is clockwise and interior is counter clockwise
@@ -239,7 +238,7 @@ graphics_pipeline::Polygon::Polygon(
     }
 }
 
-bool graphics_pipeline::Polygon::has_consistent_winding(
+bool Polygon::has_consistent_winding(
     const std::vector<std::array<std::pair<float, float>, 3>> &contour) {
     if (contour.empty()) {
         return true;
@@ -255,7 +254,7 @@ bool graphics_pipeline::Polygon::has_consistent_winding(
     return true;
 };
 
-void graphics_pipeline::Polygon::reverse_contour(
+void Polygon::reverse_contour(
     std::vector<std::array<std::pair<float, float>, 3>> &contour) {
     std::ranges::reverse(contour);
 
@@ -265,33 +264,30 @@ void graphics_pipeline::Polygon::reverse_contour(
     }
 }
 
-const std::vector<std::pair<float, float>> &
-graphics_pipeline::Polygon::get_exterior_outline() const {
+const std::vector<std::pair<float, float>> &Polygon::get_exterior_outline() const {
     if (m_outlines.empty()) {
         throw std::runtime_error("Error: There are not outlines in polygon.");
     }
     return m_outlines[0];
 }
 
-const std::vector<std::vector<std::pair<float, float>>> &
-graphics_pipeline::Polygon::get_outlines() const {
+const std::vector<std::vector<std::pair<float, float>>> &Polygon::get_outlines() const {
     return m_outlines;
 }
 
 const std::vector<std::vector<std::array<std::pair<float, float>, 3>>> &
-graphics_pipeline::Polygon::get_quadratic_curves() const {
+Polygon::get_quadratic_curves() const {
     return m_quadratic_curves;
 }
 
-std::span<const std::vector<std::pair<float, float>>>
-graphics_pipeline::Polygon::get_holes() const {
+std::span<const std::vector<std::pair<float, float>>> Polygon::get_holes() const {
     if (m_outlines.size() <= 1) {
         return {}; // return empty span
     }
     return std::span(m_outlines).subspan(1);
 }
 
-bool graphics_pipeline::Polygon::outline_contains_outline(
+bool Polygon::outline_contains_outline(
     const std::vector<std::pair<float, float>> &inner,
     const std::vector<std::pair<float, float>> &outer) {
     for (const auto &v : inner) {
@@ -301,3 +297,5 @@ bool graphics_pipeline::Polygon::outline_contains_outline(
     }
     return true;
 }
+
+} // namespace font

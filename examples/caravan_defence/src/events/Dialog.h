@@ -2,6 +2,7 @@
 
 #include "graphics_pipeline/geometry/GeometryPipelineSBO.h"
 #include "graphics_pipeline/text/TextRenderer.h"
+#include "graphics_pipeline/text/TextRenderer2.h"
 #include "interface/NDCPosition.h"
 #include <vector>
 
@@ -9,12 +10,17 @@ using DialogOptionCb = std::function<void()>;
 
 struct DialogOption {
     std::string label;
-    graphics_pipeline::text::TextHandle text_handle;
+
+    graphics_pipeline::text::TextFormatSBO2 text_format;
+    std::vector<graphics_pipeline::text::TextGlyphSBO2> text_glyphs;
+
+    graphics_pipeline::text::TextHandle text_handle; // TODO: Remove
     graphics_pipeline::geometry::GeometryPipelineSBO bbox_render_data;
 
     std::optional<std::string> next_dialog_node;
     std::function<void()> on_click = []() {};
 
+    // TODO: refactor
     bool is_inside(const interface::NDCPoint &point) {
         return text_handle.is_point_inside(point);
     }
@@ -22,9 +28,11 @@ struct DialogOption {
 
 struct DialogNode {
     std::string id;
-    graphics_pipeline::text::TextHandle text_handle;
-    // TODO: TextFormatSBO text_format;
-    // TODO: std::vector<TextGlyphSBO> text_glyphs;
+
+    graphics_pipeline::text::TextFormatSBO2 text_format;
+    std::vector<graphics_pipeline::text::TextGlyphSBO2> text_glyphs;
+
+    graphics_pipeline::text::TextHandle text_handle; // TODO: Remove
 
     std::vector<DialogOption> options;
 

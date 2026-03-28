@@ -11,9 +11,8 @@ class DialogFactory {
     graphics_pipeline::text::TextRenderer *m_text_renderer = nullptr;
     graphics_pipeline::geometry::GeometryRenderer2 *m_geometry_renderer = nullptr;
 
-    std::optional<graphics_pipeline::text::TextOpts> m_dialog_text_opts = std::nullopt;
-    std::optional<graphics_pipeline::text::TextOpts> m_dialog_option_text_opts =
-        std::nullopt;
+    std::optional<font::TextOpts> m_dialog_text_opts = std::nullopt;
+    std::optional<font::TextOpts> m_dialog_option_text_opts = std::nullopt;
 
     std::string m_id = "";
     std::string m_dialog_text = "";
@@ -28,12 +27,11 @@ class DialogFactory {
                   graphics_pipeline::geometry::GeometryRenderer2 *geometry_renderer)
         : m_text_renderer(text_renderer), m_geometry_renderer(geometry_renderer) {}
 
-    void set_event_dialog_text_opts(const graphics_pipeline::text::TextOpts &opts) {
+    void set_event_dialog_text_opts(const font::TextOpts &opts) {
         m_dialog_text_opts = opts;
     }
 
-    void
-    set_event_dialog_option_text_opts(const graphics_pipeline::text::TextOpts &opts) {
+    void set_event_dialog_option_text_opts(const font::TextOpts &opts) {
         m_dialog_option_text_opts = opts;
     }
 
@@ -79,8 +77,13 @@ class DialogFactory {
         dialog.text_handle = m_text_renderer->create_text2(std::move(m_dialog_text),
                                                            m_dialog_text_opts.value());
 
+        // TODO: How should the user create a text?
         // TODO: Instead of a text_handle, simply store the text data:
-        // dialog.text = text_formatter.format(m_dialog_text);
+        // Text{
+        //  TextFormatSBO2 format;
+        //  std::vector<TextGlyphSBO2> glyphs;
+        // };
+        // dialog.text = m_font->create_text(m_dialog_text);
 
         dialog.options.reserve(m_dialog_option_texts.size());
         for (size_t i = 0; i < m_dialog_option_texts.size(); i++) {

@@ -62,7 +62,7 @@ class FontLoader {
     FontFormat m_format;
 
   public:
-    FontLoader() = default;
+    FontLoader() : m_library(nullptr), m_face(nullptr), m_format(FontFormat::Unknown) {}
     FontLoader(const std::string &filepath);
     FontLoader(const std::vector<char> &font_data);
     FontLoader(const FontLoader &) = delete;

@@ -155,7 +155,7 @@ EntitySettingsPanel DefendState::init_entity_settings_panel() {
     panel.bbox_render_data.model_matrix =
         math::Matrix().translate(panel.center_x, 0.0f).scale(panel.size);
 
-    auto text_opts = graphics_pipeline::text::TextOpts{};
+    auto text_opts = font::TextOpts{};
     text_opts.font_color = EntitySettingsPanel::font_color;
     text_opts.font_size = 0.05f;
     text_opts.line_width = 0.20f;

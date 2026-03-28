@@ -54,20 +54,10 @@ font::FontLoader::FontLoader(FontLoader &&other) noexcept
 }
 
 font::FontLoader &font::FontLoader::operator=(FontLoader &&other) noexcept {
-    if (this != &other) {
-        if (m_face) {
-            FT_Done_Face(m_face);
-        }
-
-        if (m_library) {
-            FT_Done_FreeType(m_library);
-        }
-
-        m_library = other.m_library;
-        m_face = other.m_face;
-        other.m_library = nullptr;
-        other.m_face = nullptr;
-    }
+    FontLoader tmp(std::move(other));
+    std::swap(m_library, tmp.m_library);
+    std::swap(m_face, tmp.m_face);
+    std::swap(m_format, tmp.m_format);
     return *this;
 }
 

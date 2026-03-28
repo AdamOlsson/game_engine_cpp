@@ -9,7 +9,6 @@
 #include "vulkan/buffers/GpuBuffer.h"
 #include "vulkan/buffers/IndexBuffer.h"
 #include "vulkan/buffers/VertexBuffer.h"
-#include <limits>
 #include <memory>
 
 namespace graphics_pipeline::geometry {
@@ -31,8 +30,6 @@ class GeometryRenderer2 {
 
     vulkan::buffers::StorageBuffer<GeometryPipelineSBO> m_instances;
     vulkan::buffers::IndirectBuffer<vulkan::DrawIndexedIndirectCommand> m_draw_commands;
-
-    static constexpr size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
 
     static vulkan::DescriptorSetLayout
     get_descriptor_set_layout(std::shared_ptr<vulkan::context::GraphicsContext> &ctx);
