@@ -79,6 +79,9 @@ class DialogFactory {
         dialog.text_handle = m_text_renderer->create_text2(std::move(m_dialog_text),
                                                            m_dialog_text_opts.value());
 
+        // TODO: Instead of a text_handle, simply store the text data:
+        // dialog.text = text_formatter.format(m_dialog_text);
+
         dialog.options.reserve(m_dialog_option_texts.size());
         for (size_t i = 0; i < m_dialog_option_texts.size(); i++) {
 
@@ -86,6 +89,8 @@ class DialogFactory {
             auto opts = m_dialog_option_text_opts.value();
             opts.position.y() += (opts.line_height + 0.02f) * i;
 
+            // TODO: Instead of a text_handle, simply store the text data:
+            // dialog.text = text_formatter.format(m_dialog_text);
             DialogOption option{};
             option.label = m_dialog_option_labels[i];
             option.text_handle =

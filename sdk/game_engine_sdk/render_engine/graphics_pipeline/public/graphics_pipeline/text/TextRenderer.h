@@ -5,6 +5,8 @@
 #include "graphics_pipeline/RendererOpts.h"
 #include "graphics_pipeline/SwapDescriptorSet.h"
 #include "graphics_pipeline/text/GlyphVertex.h"
+#include "graphics_pipeline/text/TextFormatter.h"
+#include "graphics_pipeline/text/TextOpts.h"
 #include "graphics_pipeline/text/TextPipeline.h"
 #include "math/Bbox.h"
 #include "math/Vector2.h"
@@ -20,9 +22,6 @@
 
 namespace graphics_pipeline::text {
 
-struct Word;
-struct Text;
-
 // Glyph specific data like
 // - kerning information
 struct TextGlyphSBO {
@@ -37,14 +36,6 @@ struct TextGlyphSBO {
 struct TextFormatSBO {
     alignas(16) glm::mat4 model_matrix = glm::mat4(1.0f);
     alignas(16) glm::vec4 font_color = util::colors::WHITE;
-};
-
-struct TextOpts {
-    math::Vector2 position = math::Vector2(0, 0);
-    util::colors::Color font_color = util::colors::WHITE;
-    float font_size = 11;
-    float line_width = 100.0f;
-    float line_height = 0.0f;
 };
 
 class TextRenderer;
@@ -119,6 +110,8 @@ class TextRenderer {
     TextPipeline m_text_pipeline;
 
     std::optional<font::FontLoader> m_font_loader;
+    TextFormatter m_formatter;
+
     std::optional<vulkan::buffers::VertexBuffer<GlyphVertex>> m_glyph_vertex_buffer;
     std::optional<vulkan::buffers::IndexBuffer> m_glyph_index_buffer;
 
@@ -157,12 +150,6 @@ class TextRenderer {
 
     void return_format_slot(TextFormatSBOHandle &handle);
     void return_glyph_slot(TextGlyphSBOHandle &handle);
-
-    bool ends_with(const font::Unicode &codepoint, const Word &word,
-                   const char character);
-    Word layout_word(const font::Unicode &codepoint, const size_t start, const size_t end,
-                     const math::Vector2 &offset);
-    Text layout_text(const font::Unicode &codepoint, const TextOpts &opts);
 
     TextFormatSBOHandle create_text_format_handle(const TextOpts &opts);
 

@@ -23,6 +23,8 @@ struct DialogOption {
 struct DialogNode {
     std::string id;
     graphics_pipeline::text::TextHandle text_handle;
+    // TODO: TextFormatSBO text_format;
+    // TODO: std::vector<TextGlyphSBO> text_glyphs;
 
     std::vector<DialogOption> options;
 

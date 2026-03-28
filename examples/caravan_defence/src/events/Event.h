@@ -43,6 +43,17 @@ class Event {
                      "pointer to a text renderer.");
         DEBUG_ASSERT(!m_current_node.empty(), "Error: Current dialog node id is empty.");
 
+        // TODO: Write text format data to gpu buffer:
+        // m_text_renderer->write_format_data(...);
+
+        // TODO: Write text glyph data to gpu buffer:
+        // vulkan::DrawIndexedIndirectCommand draw_command =
+        // m_text_renderer->write_glyph_data(...);
+
+        // TODO: Issue render indirect call
+        // m_text_renderer->render_indirect(command_buffer, push_constant,
+        // {draw_command});
+
         DialogNode &node = m_nodes[m_current_node];
         m_text_renderer->render(command_buffer, node.text_handle, push_constant);
 
