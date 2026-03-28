@@ -1,9 +1,5 @@
 #include "graphics_pipeline/text/TextRenderer2.h"
-#include "font/Polygon.h"
 #include "graphics_pipeline/SwapDescriptorSetBuilder.h"
-#include "graphics_pipeline/text/TextFormatter.h"
-#include "math/winding.h"
-#include "triangulation/mapbox/earcut.h"
 
 namespace graphics_pipeline::text {
 
@@ -71,93 +67,24 @@ TextRenderer2::write_to_glyph_buffer(const std::vector<TextGlyphSBO2> &instance_
     return draw_commands;
 }
 
-bool TextRenderer2::is_font_loaded() { return m_font_loader.has_value(); }
+bool TextRenderer2::is_font_loaded() { return m_font.is_loaded(); }
 
 void TextRenderer2::load_font(vulkan::CommandBufferManager *command_buffer_manager,
-                              font::FontLoader &&font_loader) {
+                              const std::string &font_path) {
 
-    if (is_font_loaded()) {
-        throw std::runtime_error("Error: Font is already loaded.");
-    }
-
-    m_glyph_draw_info.reserve(font_loader.get_num_glyphs());
+    m_font = font::Font(font_path);
 
     std::vector<GlyphVertex> vertices;
-    std::vector<uint16_t> indices;
+    vertices.reserve(m_font.vertices.size());
 
-    for (const auto glyph_index : font_loader) {
-        font::GlyphOutlines outlines = font_loader.get_glyph_outline(glyph_index);
-        const font::FontFill exterior_fill = outlines.fill;
-
-        const size_t first_index = indices.size();
-        if (!outlines.line_segments.empty()) {
-            const std::vector<font::Polygon> glyph_polygons =
-                font::Polygon::construct_polygons(outlines);
-
-            for (const font::Polygon polygon : glyph_polygons) {
-                const size_t first_vertex = vertices.size();
-
-                const std::vector<unsigned int> triangle_indices =
-                    mapbox::earcut(polygon.get_outlines());
-
-                // First load write all vertices from earcut to the vertex buffer
-                for (const std::vector<std::pair<float, float>> &outline :
-                     polygon.get_outlines()) {
-                    for (const std::pair<float, float> &vertex : outline) {
-                        vertices.emplace_back(vertex.first, vertex.second, 0.0f, 0.0f,
-                                              0.0f, 0.0f);
-                    }
-                }
-
-                // Secondly write the indices forming the triangles from earcut into
-                // to index buffer
-                for (const unsigned int index : triangle_indices) {
-                    indices.emplace_back(first_vertex + index);
-                }
-
-                // Thirdly write all curve segments into vertex and index buffer
-                // (which by nature of bezier curves are already triangulated)
-                const auto quad_curves = polygon.get_quadratic_curves();
-                for (size_t outline_index = 0; outline_index < quad_curves.size();
-                     outline_index++) {
-
-                    const std::vector<std::array<std::pair<float, float>, 3>> &outline =
-                        quad_curves[outline_index];
-
-                    for (const std::array<std::pair<float, float>, 3> &curve : outline) {
-                        const bool ccw = math::is_counter_clockwise_winding(curve);
-
-                        const bool wants_right_fill =
-                            (exterior_fill == font::FontFill::Right);
-                        const float winding_order =
-                            (wants_right_fill == !ccw) ? 1.0f : -1.0f;
-
-                        indices.emplace_back(vertices.size());
-                        vertices.emplace_back(curve[0].first, curve[0].second,
-                                              winding_order, 0.0f, 0.0f, 1.0f);
-
-                        indices.emplace_back(vertices.size());
-                        vertices.emplace_back(curve[1].first, curve[1].second,
-                                              winding_order, 0.5f, 0.0f, 1.0f);
-
-                        indices.emplace_back(vertices.size());
-                        vertices.emplace_back(curve[2].first, curve[2].second,
-                                              winding_order, 1.0f, 1.0f, 1.0f);
-                    }
-                }
-            }
-        }
-
-        const size_t count = indices.size() - first_index;
-        m_glyph_draw_info.emplace_back(count, first_index);
+    for (const auto &v : m_font.vertices) {
+        vertices.emplace_back(v.x, v.y, v.z, v.u, v.v, v.w);
     }
 
     m_glyph_vertex_buffer =
         vulkan::buffers::VertexBuffer(m_ctx, vertices, command_buffer_manager);
     m_glyph_index_buffer =
-        vulkan::buffers::IndexBuffer(m_ctx, indices, command_buffer_manager);
-    m_font_loader = std::move(font_loader);
-    m_formatter = TextFormatter(&m_font_loader.value());
+        vulkan::buffers::IndexBuffer(m_ctx, m_font.indices, command_buffer_manager);
 }
 
 } // namespace graphics_pipeline::text

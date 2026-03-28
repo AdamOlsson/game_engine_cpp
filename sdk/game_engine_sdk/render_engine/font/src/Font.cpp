@@ -1,5 +1,6 @@
 #include "font/Font.h"
 #include "font/Polygon.h"
+#include "math/Matrix.h"
 #include "math/winding.h"
 #include "triangulation/mapbox/earcut.h"
 
@@ -11,7 +12,37 @@ Font::Font(const std::string &font_path)
 }
 
 Text Font::format(const font::Unicode &codepoint, const TextOpts &opts) {
-    return m_formatter.format(codepoint, opts);
+
+    TextLayout layout = m_formatter.format(codepoint, opts);
+    const float font_scale = opts.font_size / m_loader.get_units_per_em();
+
+    Text text{};
+    text.glyphs.reserve(layout.char_count);
+    text.bbox = layout.bbox;
+
+    for (const font::Word &word : layout.words) {
+        const size_t num_chars_in_word = word.end_idx - word.start_idx;
+
+        for (size_t char_idx = 0; char_idx < num_chars_in_word; char_idx++) {
+
+            const char32_t &c = codepoint[word.start_idx + char_idx];
+            std::pair<size_t, size_t> draw_info = get_draw_info(c);
+
+            const math::Vector2 &char_offset = word.glyph_positions[char_idx];
+
+            Glyph glyph{};
+            glyph.unicode_char = c;
+            glyph.index_count = draw_info.first;
+            glyph.first_index = draw_info.second;
+            glyph.model_matrix = math::Matrix()
+                                     .scale(font_scale, font_scale, 1.0f)
+                                     .translate(word.offset + char_offset);
+
+            text.glyphs.push_back(glyph);
+        }
+    }
+
+    return text;
 }
 
 std::pair<size_t, size_t> Font::get_draw_info(const char32_t &c) {

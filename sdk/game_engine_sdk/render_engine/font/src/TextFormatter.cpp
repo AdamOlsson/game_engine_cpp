@@ -1,8 +1,17 @@
 #include "font/TextFormatter.h"
+#include "math/Bbox.h"
+#include "util/assert.h"
 
 namespace font {
 
-Text TextFormatter::layout_text(const font::Unicode &codepoint, const TextOpts &opts) {
+TextLayout TextFormatter::format(const font::Unicode &codepoint, const TextOpts &opts) {
+    DEBUG_ASSERT(m_font_loader != nullptr,
+                 "Error: Trying to format code when the font loader is not set.");
+    return layout_text(codepoint, opts);
+}
+
+TextLayout TextFormatter::layout_text(const font::Unicode &codepoint,
+                                      const TextOpts &opts) {
     /* line_height_top ---------------- < bbox top >
      * font_padding        <padding>
      * font_bbox_top   ---------------- < word bbox >
@@ -56,7 +65,7 @@ Text TextFormatter::layout_text(const font::Unicode &codepoint, const TextOpts &
         m_font_loader->get_glyph_advance(font::Unicode(SPACE));
     const math::Vector2 space_advance = math::Vector2(_space_advance.x, (signed long)0);
 
-    Text text{};
+    TextLayout text{};
     text.words.reserve(words.size());
 
     math::Vector2 pen_position = math::Vector2(0, 0);

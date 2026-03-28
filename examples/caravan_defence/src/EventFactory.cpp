@@ -56,7 +56,7 @@ Event EventFactory::my_first_event(
     event.create_dialog_bbox(game_state.camera);
 
     // Consistent, same every time for all events
-    DialogFactory dialog_factory = DialogFactory(text_renderer, geom_renderer);
+    DialogFactory dialog_factory = DialogFactory(text_renderer);
     dialog_factory.set_event_dialog_text_opts(event_desc_opts);
     dialog_factory.set_event_dialog_option_text_opts(event_dialog_option_opts);
 
@@ -131,7 +131,7 @@ Event EventFactory::the_scavenger_ambush(
     event.create_dialog_bbox(game_state.camera);
 
     // Consistent, same every time for all events
-    DialogFactory dialog_factory = DialogFactory(text_renderer, geom_renderer);
+    DialogFactory dialog_factory = DialogFactory(text_renderer);
     dialog_factory.set_event_dialog_text_opts(event_desc_opts);
     dialog_factory.set_event_dialog_option_text_opts(event_dialog_option_opts);
 
@@ -245,7 +245,7 @@ Event EventFactory::defectors_den(
     event.create_dialog_bbox(game_state.camera);
 
     // Consistent, same every time for all events
-    DialogFactory dialog_factory = DialogFactory(text_renderer, geom_renderer);
+    DialogFactory dialog_factory = DialogFactory(text_renderer);
     dialog_factory.set_event_dialog_text_opts(event_desc_opts);
     dialog_factory.set_event_dialog_option_text_opts(event_dialog_option_opts);
 

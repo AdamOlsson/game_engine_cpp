@@ -5,7 +5,6 @@
 #include "math/Bbox.h"
 #include "math/Vector2.h"
 #include "math/Vector4.h"
-#include "util/assert.h"
 
 #include <cstddef>
 
@@ -21,7 +20,7 @@ struct Word {
     std::vector<math::Vector2> glyph_positions;
 };
 
-struct Text {
+struct TextLayout {
     size_t char_count = 0;
     math::Bbox bbox;
     std::vector<Word> words;
@@ -34,7 +33,7 @@ class TextFormatter {
 
     font::FontLoader *m_font_loader = nullptr;
 
-    Text layout_text(const font::Unicode &codepoint, const TextOpts &opts);
+    TextLayout layout_text(const font::Unicode &codepoint, const TextOpts &opts);
     Word layout_word(const font::Unicode &codepoint, const size_t start, const size_t end,
                      const math::Vector2 &offset);
 
@@ -52,12 +51,7 @@ class TextFormatter {
     }
 
     void set_font_loader(FontLoader *font_loader) { m_font_loader = font_loader; }
-
-    Text format(const font::Unicode &codepoint, const TextOpts &opts) {
-        DEBUG_ASSERT(m_font_loader != nullptr,
-                     "Error: Trying to format code when the font loader is not set.");
-        return layout_text(codepoint, opts);
-    }
+    TextLayout format(const font::Unicode &codepoint, const TextOpts &opts);
 };
 
 } // namespace font

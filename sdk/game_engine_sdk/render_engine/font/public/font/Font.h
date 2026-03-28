@@ -2,11 +2,12 @@
 
 #include "font/FontLoader.h"
 #include "font/TextFormatter.h"
+#include "font/types.h"
 #include <string>
 
 namespace font {
 
-// TODO: Keep private
+// TODO: Make private
 struct GlyphVertex {
     float x = 0.0f;
     float y = 0.0f;
@@ -50,11 +51,17 @@ class Font {
     }
 
     std::pair<size_t, size_t> get_draw_info(const char32_t &c);
+
     Text format(const font::Unicode &codepoint, const TextOpts &opts);
+
     signed long get_num_glyphs() const;
+
     FontBBox get_font_bbox() const;
+
     unsigned short get_units_per_em() const;
+
     const std::pair<size_t, size_t> &get_glyph_draw_info(size_t glyph_index) const;
+
     bool is_loaded() const { return !vertices.empty(); }
 };
 

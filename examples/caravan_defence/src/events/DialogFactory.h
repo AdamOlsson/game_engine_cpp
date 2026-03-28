@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Dialog.h"
-#include "graphics_pipeline/geometry/GeometryRenderer2.h"
 #include "graphics_pipeline/text/TextRenderer.h"
 #include "math/Matrix.h"
 #include <optional>
@@ -9,7 +8,6 @@
 class DialogFactory {
   private:
     graphics_pipeline::text::TextRenderer *m_text_renderer = nullptr;
-    graphics_pipeline::geometry::GeometryRenderer2 *m_geometry_renderer = nullptr;
 
     std::optional<font::TextOpts> m_dialog_text_opts = std::nullopt;
     std::optional<font::TextOpts> m_dialog_option_text_opts = std::nullopt;
@@ -23,9 +21,8 @@ class DialogFactory {
 
   public:
     DialogFactory() = delete;
-    DialogFactory(graphics_pipeline::text::TextRenderer *text_renderer,
-                  graphics_pipeline::geometry::GeometryRenderer2 *geometry_renderer)
-        : m_text_renderer(text_renderer), m_geometry_renderer(geometry_renderer) {}
+    DialogFactory(graphics_pipeline::text::TextRenderer *text_renderer)
+        : m_text_renderer(text_renderer) {}
 
     void set_event_dialog_text_opts(const font::TextOpts &opts) {
         m_dialog_text_opts = opts;
@@ -49,7 +46,6 @@ class DialogFactory {
     }
 
     DialogNode build() {
-
         if (!m_dialog_text_opts.has_value()) {
             throw std::runtime_error("Error: For the DialogFactory it is required to set "
                                      "the dialog text opts.");
@@ -77,13 +73,11 @@ class DialogFactory {
         dialog.text_handle = m_text_renderer->create_text2(std::move(m_dialog_text),
                                                            m_dialog_text_opts.value());
 
-        // TODO: How should the user create a text?
-        // TODO: Instead of a text_handle, simply store the text data:
-        // Text{
-        //  TextFormatSBO2 format;
-        //  std::vector<TextGlyphSBO2> glyphs;
-        // };
-        // dialog.text = m_font->create_text(m_dialog_text);
+        // CONTINUE: Rework the DialogFactory to only store Text data and not TextHandle
+        /*dialog.text_format.model_matrix =*/
+        /*    math::Matrix().translate(m_dialog_text_opts->position);*/
+        /*dialog.text_format.font_color = m_dialog_text_opts->font_color;*/
+        /*font::Text text = m_font.format(m_dialog_text, m_dialog_text_opts.value());*/
 
         dialog.options.reserve(m_dialog_option_texts.size());
         for (size_t i = 0; i < m_dialog_option_texts.size(); i++) {

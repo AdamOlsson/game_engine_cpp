@@ -1,4 +1,5 @@
 #include "graphics_pipeline/text/TextRenderer.h"
+#include "font/types.h"
 #include "graphics_pipeline/DescriptorSetLayoutBuilder.h"
 #include "graphics_pipeline/SwapDescriptorSetBuilder.h"
 #include "graphics_pipeline/text/GlyphVertex.h"
@@ -283,13 +284,10 @@ TextHandle TextRenderer::create_text2(const font::Unicode &codepoint,
 
     font::Text text = m_font.format(codepoint, opts);
 
-    const unsigned short units_per_em = m_font.get_units_per_em();
-    const float font_scale = opts.font_size / units_per_em;
-
     TextHandle result;
-    result.glyph_handles.reserve(text.char_count);
-    result.index_count.reserve(text.char_count);
-    result.first_index.reserve(text.char_count);
+    result.glyph_handles.reserve(text.glyphs.size());
+    result.index_count.reserve(text.glyphs.size());
+    result.first_index.reserve(text.glyphs.size());
 
     result.bbox = text.bbox;
     result.bbox.offset(opts.position);
@@ -297,26 +295,16 @@ TextHandle TextRenderer::create_text2(const font::Unicode &codepoint,
     TextFormatSBOHandle format_handle = create_text_format_handle(opts);
     result.format_handle = std::move(format_handle);
 
-    for (const font::Word &word : text.words) {
-        const size_t num_chars = word.end_idx - word.start_idx;
-        for (size_t char_idx = 0; char_idx < num_chars; char_idx++) {
-            const char32_t &c = codepoint[word.start_idx + char_idx];
+    for (const auto &g : text.glyphs) {
+        TextGlyphSBOHandle glyph_handle = request_glyph_slot();
+        TextGlyphSBO &glyph_instance = get_text_glyph_instance(glyph_handle);
+        glyph_instance.text_id =
+            static_cast<uint16_t>(m_format_sparse_set.sparse[format_handle.id]);
+        glyph_instance.model_matrix = g.model_matrix;
+        result.glyph_handles.push_back(std::move(glyph_handle));
 
-            std::pair<size_t, size_t> draw_info = m_font.get_draw_info(c);
-
-            result.index_count.push_back(draw_info.first);
-            result.first_index.push_back(draw_info.second);
-
-            const math::Vector2 &char_offset = word.glyph_positions[char_idx];
-            TextGlyphSBOHandle glyph_handle = request_glyph_slot();
-            TextGlyphSBO &glyph_instance = get_text_glyph_instance(glyph_handle);
-            glyph_instance.text_id =
-                static_cast<uint16_t>(m_format_sparse_set.sparse[format_handle.id]);
-            glyph_instance.model_matrix = math::Matrix()
-                                              .scale(font_scale, font_scale, 1.0f)
-                                              .translate(word.offset + char_offset);
-            result.glyph_handles.push_back(std::move(glyph_handle));
-        }
+        result.index_count.push_back(g.index_count);
+        result.first_index.push_back(g.first_index);
     }
 
     return result;

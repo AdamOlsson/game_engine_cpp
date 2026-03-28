@@ -1,10 +1,9 @@
 #pragma once
 
-#include "font/FontLoader.h"
+#include "font/Font.h"
 #include "graphics_pipeline/RendererOpts.h"
 #include "graphics_pipeline/SwapDescriptorSet.h"
 #include "graphics_pipeline/text/GlyphVertex.h"
-#include "graphics_pipeline/text/TextFormatter.h"
 #include "graphics_pipeline/text/TextPipeline.h"
 #include "util/colors.h"
 #include "vulkan/CommandBufferManager.h"
@@ -49,10 +48,10 @@ class TextRenderer2 {
 
     TextPipeline m_text_pipeline;
 
-    std::optional<font::FontLoader> m_font_loader;
     std::optional<vulkan::buffers::VertexBuffer<GlyphVertex>> m_glyph_vertex_buffer;
     std::optional<vulkan::buffers::IndexBuffer> m_glyph_index_buffer;
-    TextFormatter m_formatter;
+
+    font::Font m_font;
 
     std::vector<std::pair<size_t, size_t>> m_glyph_draw_info;
 
@@ -71,7 +70,7 @@ class TextRenderer2 {
 
     bool is_font_loaded();
     void load_font(vulkan::CommandBufferManager *command_buffer_manager,
-                   font::FontLoader &&font_loader);
+                   const std::string &font_path);
 
     void write_to_format_buffer(const std::vector<TextFormatSBO2> &instance_data,
                                 const size_t offset = 0);

@@ -107,7 +107,7 @@ Event IntroState::create_intro_contract(
     event.create_dialog_bbox(game_state.camera);
 
     // Consistent, same every time for all events
-    DialogFactory dialog_factory = DialogFactory(text_renderer, geom_renderer);
+    DialogFactory dialog_factory = DialogFactory(text_renderer);
     dialog_factory.set_event_dialog_text_opts(event_desc_opts);
     dialog_factory.set_event_dialog_option_text_opts(event_dialog_option_opts);
 
