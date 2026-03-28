@@ -25,6 +25,7 @@ class QuadRenderer2 {
     vulkan::buffers::IndexBuffer m_quad_index_buffer;
 
     vulkan::DescriptorPool m_descriptor_pool;
+
     Texture m_texture;
     vulkan::Sampler m_sampler;
 
@@ -50,31 +51,6 @@ class QuadRenderer2 {
     vulkan::DrawIndexedIndirectCommand
     write_to_buffer(const std::vector<QuadPipelineSBO> &instance_data,
                     const size_t offset = 0);
-
-    template <typename PushConstantType>
-    void render(const vulkan::CommandBuffer &command_buffer,
-                PushConstantType *push_constant, const int num_instances) {
-
-        if (push_constant) {
-            vkCmdPushConstants(command_buffer, m_quad_pipeline.get_layout(),
-                               m_quad_pipeline.get_push_constant_stage(), 0,
-                               sizeof(*push_constant), push_constant);
-        }
-
-        const vulkan::DescriptorSet set = m_descriptor_sets.get_current();
-        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                m_quad_pipeline.get_layout(), 0, 1, &set, 0, nullptr);
-
-        m_quad_pipeline.bind(command_buffer);
-
-        const VkDeviceSize vertex_buffers_offset = 0;
-        vkCmdBindVertexBuffers(command_buffer, 0, 1, &m_quad_vertex_buffer.buffer,
-                               &vertex_buffers_offset);
-        vkCmdBindIndexBuffer(command_buffer, m_quad_index_buffer.buffer, 0,
-                             VK_INDEX_TYPE_UINT16);
-        vkCmdDrawIndexed(command_buffer, m_quad_index_buffer.num_indices, num_instances,
-                         0, 0, 0);
-    }
 
     template <typename PushConstantType>
     void render_indirect(
