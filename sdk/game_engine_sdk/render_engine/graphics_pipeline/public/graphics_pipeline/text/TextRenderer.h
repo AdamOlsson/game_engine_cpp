@@ -20,20 +20,15 @@
 
 namespace graphics_pipeline::text {
 
-// Glyph specific data like
-// - kerning information
 struct TextGlyphSBO {
     alignas(4) uint32_t text_id = 0; // Which text this glyph belongs to
-    alignas(16) glm::mat4 model_matrix = glm::mat4(1.0f);
+    alignas(16) glm::vec3 offset = glm::vec3(0.0f);
 };
 
-// Common data for the entire string, like
-// - text color
-// - font size
-// - text position
 struct TextFormatSBO {
-    alignas(16) glm::mat4 model_matrix = glm::mat4(1.0f);
+    alignas(16) glm::vec3 position = glm::vec3(0.0f);
     alignas(16) glm::vec4 font_color = util::colors::WHITE;
+    alignas(4) float font_size = 11.0f;
 };
 
 class TextRenderer;

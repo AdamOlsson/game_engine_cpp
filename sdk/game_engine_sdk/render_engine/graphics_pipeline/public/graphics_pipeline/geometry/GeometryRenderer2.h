@@ -22,7 +22,7 @@ class GeometryRenderer2 {
     vulkan::buffers::VertexBuffer<vulkan::Vertex> m_quad_vertex_buffer;
     vulkan::buffers::IndexBuffer m_quad_index_buffer;
 
-    std::unique_ptr<GeometryPipeline> m_geometry_pipeline;
+    GeometryPipeline m_geometry_pipeline;
 
     vulkan::DescriptorPool m_descriptor_pool;
 
@@ -59,18 +59,17 @@ class GeometryRenderer2 {
         const std::vector<vulkan::DrawIndexedIndirectCommand> &draw_commands) {
 
         if (push_constant) {
-            vkCmdPushConstants(command_buffer, m_geometry_pipeline->get_layout(),
-                               m_geometry_pipeline->get_push_constant_stage(), 0,
+            vkCmdPushConstants(command_buffer, m_geometry_pipeline.get_layout(),
+                               m_geometry_pipeline.get_push_constant_stage(), 0,
                                sizeof(*push_constant), push_constant);
         }
 
         // Handle descriptor set
         const vulkan::DescriptorSet set = m_descriptor_sets.get_current();
         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                m_geometry_pipeline->get_layout(), 0, 1, &set, 0,
-                                nullptr);
+                                m_geometry_pipeline.get_layout(), 0, 1, &set, 0, nullptr);
 
-        m_geometry_pipeline->bind(command_buffer);
+        m_geometry_pipeline.bind(command_buffer);
 
         const VkDeviceSize vertex_buffers_offset = 0;
         vkCmdBindVertexBuffers(command_buffer, 0, 1, &m_quad_vertex_buffer.buffer,
@@ -81,7 +80,8 @@ class GeometryRenderer2 {
         m_draw_commands.write(draw_commands);
 
         vkCmdDrawIndexedIndirect(command_buffer, m_draw_commands.handle(), 0,
-                                 draw_commands.size(), 1);
+                                 draw_commands.size(),
+                                 sizeof(VkDrawIndexedIndirectCommand));
     }
 };
 

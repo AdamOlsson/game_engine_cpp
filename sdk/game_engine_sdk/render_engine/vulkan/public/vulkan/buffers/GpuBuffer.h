@@ -1,5 +1,6 @@
 #pragma once
 
+#include "util/assert.h"
 #include "vulkan/buffers/BufferTypes.h"
 #include "vulkan/buffers/common.h"
 #include "vulkan/context/GraphicsContext.h"
@@ -104,7 +105,7 @@ template <typename T, GpuBufferType BufferType> class GpuBuffer {
             m_ctx = std::move(other.m_ctx);
             m_size = std::move(other.m_size);
             m_buffers = std::move(other.m_buffers);
-            m_swap_state = other.m_swap_state;
+            m_swap_state = std::move(other.m_swap_state);
             m_refs = std::move(other.m_refs);
             m_capacity = other.m_capacity;
 

@@ -10,8 +10,6 @@ void IntroState::on_enter(GameState &game_state) {
                  "Error: Geometry renderer is not set in IntroState.");
 
     m_pending_transition = std::nullopt;
-    event =
-        create_intro_contract(m_geometry_renderer, m_text_renderer, game_state, *this);
 }
 
 void IntroState::on_exit(GameState &game_state) {
@@ -102,12 +100,12 @@ Event IntroState::create_intro_contract(
         "Error: Creating intro contract with geometry renderer pointer as nullptr.");
     DEBUG_ASSERT(text_renderer != nullptr,
                  "Error: Creating intro contract with text renderer pointer as nullptr.");
-    Event event = Event(geom_renderer, text_renderer);
+    Event event = Event(geom_renderer, text_renderer, m_text_renderer2);
 
     event.create_dialog_bbox(game_state.camera);
 
     // Consistent, same every time for all events
-    DialogFactory dialog_factory = DialogFactory(text_renderer);
+    DialogFactory dialog_factory = DialogFactory(text_renderer, m_text_renderer2);
     dialog_factory.set_event_dialog_text_opts(event_desc_opts);
     dialog_factory.set_event_dialog_option_text_opts(event_dialog_option_opts);
 

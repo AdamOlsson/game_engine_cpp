@@ -5,7 +5,7 @@
 #include "graphics_pipeline/text/GlyphVertex.h"
 #include "graphics_pipeline/text/TextPipeline.h"
 #include "math/Bbox.h"
-#include "math/Matrix.h"
+#include "math/Vector3.h"
 #include "vulkan/CommandBufferManager.h"
 
 namespace graphics_pipeline::text {
@@ -35,6 +35,7 @@ TextRenderer::TextRenderer(std::shared_ptr<vulkan::context::GraphicsContext> &ct
                                         .num_storage_buffers = 2,
                                         .num_uniform_buffers = 0,
                                         .num_combined_image_samplers = 0});
+
     auto builder = SwapDescriptorSetBuilder(2);
     builder.add_storage_buffer(0, vulkan::DescriptorBufferInfo::from_vector(
                                       m_format_sparse_set.dense.get_reference()));
@@ -214,7 +215,8 @@ TextHandle TextRenderer::get_font_showcase_text() {
 
     TextFormatSBOHandle format_handle = request_format_slot();
     TextFormatSBO &format_instance = get_text_format_instance(format_handle.id);
-    format_instance.model_matrix = math::Matrix();
+    format_instance.position = math::Vector3();
+    format_instance.font_size = 0.1f;
 
     std::vector<uint32_t> index_count;
     std::vector<uint32_t> first_index;
@@ -238,12 +240,11 @@ TextHandle TextRenderer::get_font_showcase_text() {
         size_t glyph_id = glyph_handles.back().id;
         m_glyph_sparse_set.dense[m_glyph_sparse_set.sparse[glyph_id]] = TextGlyphSBO{
             .text_id = static_cast<uint16_t>(format_handle.id),
-            .model_matrix = math::Matrix().translate(x, y, 0.0f).scale(0.1),
+            .offset = math::Vector3(x, y, 0.0f),
         };
 
-        const std::pair<size_t, size_t> glyph_info = m_font.get_glyph_draw_info(gid);
-        index_count.push_back(glyph_info.first);
-        first_index.push_back(glyph_info.second);
+        index_count.push_back(m_font.get_index_count(gid));
+        first_index.push_back(m_font.get_first_index(gid));
     }
 
     sync_render_slots();
@@ -269,8 +270,9 @@ void TextRenderer::_render(const vulkan::CommandBuffer &command_buffer,
 TextFormatSBOHandle TextRenderer::create_text_format_handle(const font::TextOpts &opts) {
     TextFormatSBOHandle format_handle = request_format_slot();
     TextFormatSBO &format_instance = get_text_format_instance(format_handle.id);
-    format_instance.model_matrix = math::Matrix().translate(opts.position);
+    format_instance.position = math::Vector3(opts.position, 0.0f);
     format_instance.font_color = opts.font_color;
+    format_instance.font_size = m_font.get_adjusted_font_size(opts.font_size);
     return format_handle;
 }
 
@@ -282,7 +284,7 @@ TextHandle TextRenderer::create_text2(const font::Unicode &codepoint,
             "Error: can't create text because a font is not loaded.");
     }
 
-    font::Text text = m_font.format(codepoint, opts);
+    font::Text text = m_font.create_text(codepoint, opts);
 
     TextHandle result;
     result.glyph_handles.reserve(text.glyphs.size());
@@ -300,7 +302,7 @@ TextHandle TextRenderer::create_text2(const font::Unicode &codepoint,
         TextGlyphSBO &glyph_instance = get_text_glyph_instance(glyph_handle);
         glyph_instance.text_id =
             static_cast<uint16_t>(m_format_sparse_set.sparse[format_handle.id]);
-        glyph_instance.model_matrix = g.model_matrix;
+        glyph_instance.offset = math::Vector3(g.offset, 0.0f);
         result.glyph_handles.push_back(std::move(glyph_handle));
 
         result.index_count.push_back(g.index_count);

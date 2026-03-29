@@ -1,6 +1,5 @@
 #include "font/Font.h"
 #include "font/Polygon.h"
-#include "math/Matrix.h"
 #include "math/winding.h"
 #include "triangulation/mapbox/earcut.h"
 
@@ -11,7 +10,15 @@ Font::Font(const std::string &font_path)
     triangulate_glyphs();
 }
 
-Text Font::format(const font::Unicode &codepoint, const TextOpts &opts) {
+TextFormat Font::create_text_format(const TextOpts &opts) {
+    return {
+        .position = math::Vector3(opts.position, 0.0f),
+        .font_size = get_adjusted_font_size(opts.font_size),
+        .font_color = opts.font_color,
+    };
+}
+
+Text Font::create_text(const font::Unicode &codepoint, const TextOpts &opts) {
 
     TextLayout layout = m_formatter.format(codepoint, opts);
     const float font_scale = opts.font_size / m_loader.get_units_per_em();
@@ -26,17 +33,14 @@ Text Font::format(const font::Unicode &codepoint, const TextOpts &opts) {
         for (size_t char_idx = 0; char_idx < num_chars_in_word; char_idx++) {
 
             const char32_t &c = codepoint[word.start_idx + char_idx];
-            std::pair<size_t, size_t> draw_info = get_draw_info(c);
 
             const math::Vector2 &char_offset = word.glyph_positions[char_idx];
 
             Glyph glyph{};
             glyph.unicode_char = c;
-            glyph.index_count = draw_info.first;
-            glyph.first_index = draw_info.second;
-            glyph.model_matrix = math::Matrix()
-                                     .scale(font_scale, font_scale, 1.0f)
-                                     .translate(word.offset + char_offset);
+            glyph.index_count = get_index_count(c);
+            glyph.first_index = get_first_index(c);
+            glyph.offset = (word.offset + char_offset) * font_scale;
 
             text.glyphs.push_back(glyph);
         }
@@ -45,9 +49,21 @@ Text Font::format(const font::Unicode &codepoint, const TextOpts &opts) {
     return text;
 }
 
-std::pair<size_t, size_t> Font::get_draw_info(const char32_t &c) {
-    return m_glyph_draw_info[m_loader.get_glyph_index(c)];
+float Font::get_adjusted_font_size(float font_size) {
+    return font_size / m_loader.get_units_per_em();
 }
+
+size_t Font::get_first_index(const char32_t &c) {
+    return m_first_index[m_loader.get_glyph_index(c)];
+}
+
+size_t Font::get_index_count(const char32_t &c) {
+    return m_index_count[m_loader.get_glyph_index(c)];
+}
+
+/*size_t Font::get_vertex_offset(const char32_t &c) {*/
+/*    return m_vertex_offset[m_loader.get_glyph_index(c)];*/
+/*}*/
 
 signed long Font::get_num_glyphs() const { return m_loader.get_num_glyphs(); }
 
@@ -55,13 +71,13 @@ FontBBox Font::get_font_bbox() const { return m_loader.get_font_bbox(); }
 
 unsigned short Font::get_units_per_em() const { return m_loader.get_units_per_em(); }
 
-const std::pair<size_t, size_t> &Font::get_glyph_draw_info(size_t glyph_index) const {
-    return m_glyph_draw_info[glyph_index];
-}
-
 void Font::triangulate_glyphs() {
 
-    m_glyph_draw_info.reserve(m_loader.get_num_glyphs());
+    /*m_glyph_draw_info.reserve(m_loader.get_num_glyphs());*/
+
+    m_first_index.reserve(m_loader.get_num_glyphs());
+    m_index_count.reserve(m_loader.get_num_glyphs());
+    /*m_vertex_offset.reserve(m_loader.get_num_glyphs());*/
 
     // class memebers
     /*std::vector<GlyphVertex> vertices;*/
@@ -72,6 +88,7 @@ void Font::triangulate_glyphs() {
         const font::FontFill exterior_fill = outlines.fill;
 
         const size_t first_index = indices.size();
+        const size_t vertex_offset = vertices.size();
         if (!outlines.line_segments.empty()) {
             const std::vector<Polygon> glyph_polygons =
                 Polygon::construct_polygons(outlines);
@@ -131,7 +148,10 @@ void Font::triangulate_glyphs() {
         }
 
         const size_t count = indices.size() - first_index;
-        m_glyph_draw_info.emplace_back(count, first_index);
+        /*m_glyph_draw_info.emplace_back(count, first_index);*/
+        m_first_index.push_back(first_index);
+        m_index_count.push_back(count);
+        /*m_vertex_offset.push_back(vertex_offset);*/
     }
 }
 }; // namespace font

@@ -78,7 +78,8 @@ class QuadRenderer2 {
         m_draw_commands.write(draw_commands);
 
         vkCmdDrawIndexedIndirect(command_buffer, m_draw_commands.handle(), 0,
-                                 draw_commands.size(), 1);
+                                 draw_commands.size(),
+                                 sizeof(VkDrawIndexedIndirectCommand));
     }
 };
 

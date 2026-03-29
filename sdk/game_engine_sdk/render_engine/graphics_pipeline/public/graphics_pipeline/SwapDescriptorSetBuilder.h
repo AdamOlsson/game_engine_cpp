@@ -7,6 +7,7 @@
 #include "vulkan/DescriptorPool.h"
 #include "vulkan/context/GraphicsContext.h"
 #include "vulkan/vulkan_core.h"
+#include <optional>
 
 namespace graphics_pipeline {
 struct SwapDescriptorSetBuilderOptions {
@@ -15,6 +16,7 @@ struct SwapDescriptorSetBuilderOptions {
 
 class SwapDescriptorSetBuilder {
   private:
+    std::optional<vulkan::DescriptorSetLayout> m_external_layout;
     DescriptorSetLayoutBuilder m_descriptor_set_layout_builder;
 
     size_t m_swap_size;
@@ -45,6 +47,8 @@ class SwapDescriptorSetBuilder {
 
   public:
     SwapDescriptorSetBuilder(size_t capacity);
+
+    SwapDescriptorSetBuilder &set_layout(vulkan::DescriptorSetLayout &&layout);
 
     SwapDescriptorSetBuilder &
     add_combined_image_sampler(size_t binding,

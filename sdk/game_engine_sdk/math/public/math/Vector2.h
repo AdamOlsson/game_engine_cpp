@@ -22,6 +22,9 @@ class Vector2 {
     constexpr Vector2(const T x, const T y) : m_vec(x, y) {}
 
     constexpr Vector2() : m_vec(0.0f, 0.0f) {}
+
+    template <StaticCastableToFloat T> constexpr Vector2(const T v) : m_vec(v, v) {}
+
     constexpr Vector2(glm::vec2 &&vec) : m_vec(vec) {}
     constexpr Vector2(const glm::vec2 &vec) : m_vec(vec) {}
 
@@ -106,8 +109,8 @@ class Vector2 {
     }
 
     std::string to_string() const {
-        return "Vector4(" + std::to_string(m_vec.x) + ", " + std::to_string(m_vec.y) +
-               ", " + ")";
+        return "Vector2(" + std::to_string(m_vec.x) + ", " + std::to_string(m_vec.y) +
+               ")";
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Vector2 &v) {

@@ -55,6 +55,11 @@ bool vulkan::context::device::PhysicalDevice::is_device_suitable(
     VkPhysicalDeviceFeatures device_features;
     vkGetPhysicalDeviceFeatures(physical_device, &device_features);
 
+    if (!device_features.multiDrawIndirect) {
+        throw std::runtime_error(
+            "Error: vulkan extension multiDrawIndirect is not supported on this device.");
+    }
+
     QueueFamilyIndices indices =
         device::PhysicalDevice::find_queue_families(physical_device, surface);
     bool extensionsSupported = check_device_extension_support(physical_device);
@@ -266,6 +271,7 @@ VkDevice vulkan::context::device::LogicalDevice::create_logical_device(
     devices_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
     devices_features.pNext = &indexing_features;
     devices_features.features.samplerAnisotropy = VK_TRUE;
+    devices_features.features.multiDrawIndirect = VK_TRUE;
 
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;

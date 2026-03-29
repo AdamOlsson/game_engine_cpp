@@ -22,8 +22,10 @@ class Event {
   public:
     Event() = default;
     Event(graphics_pipeline::geometry::GeometryRenderer2 *geometry_renderer,
-          graphics_pipeline::text::TextRenderer *text_renderer)
-        : m_geometry_renderer(geometry_renderer), m_text_renderer(text_renderer) {}
+          graphics_pipeline::text::TextRenderer *text_renderer,
+          graphics_pipeline::text::TextRenderer2 *text_renderer2)
+        : m_geometry_renderer(geometry_renderer), m_text_renderer(text_renderer),
+          m_text_renderer2(text_renderer2) {}
 
     Event(Event &&other) noexcept;
     Event(const Event &other) = delete;
@@ -48,42 +50,22 @@ class Event {
         DEBUG_ASSERT(!m_current_node.empty(), "Error: Current dialog node id is empty.");
 
         DialogNode &node = m_nodes[m_current_node];
-        m_text_renderer->render(command_buffer, node.text_handle, push_constant);
 
+        // CONTINUE: Transition dialog options to the new text renderer
         for (size_t i = 0; i < node.options.size(); i++) {
             m_text_renderer->render(command_buffer, node.options[i].text_handle,
                                     push_constant);
         }
-    }
 
-    template <typename PushConstantType>
-    void render_text2(const vulkan::CommandBuffer &command_buffer,
-                      PushConstantType *push_constant) {
-        DEBUG_ASSERT(m_text_renderer != nullptr,
-                     "Error: Attempted to render event text with non-existing "
-                     "pointer to a text renderer.");
-        DEBUG_ASSERT(!m_current_node.empty(), "Error: Current dialog node id is empty.");
+        std::vector<font::TextFormat> new_formats{};
+        new_formats.reserve(1 + node.options.size());
+        new_formats.push_back(node.text_format);
 
-        DialogNode &current_node = m_nodes[m_current_node];
+        m_text_renderer2->write_to_format_buffer(new_formats);
 
-        std::vector<graphics_pipeline::text::TextFormatSBO2> formats{};
-        formats.reserve(1 + current_node.options.size());
+        auto draw_commands = m_text_renderer2->write_to_glyph_buffer(node.text, 0);
 
-        formats.push_back(current_node.text_format);
-
-        for (const auto &option : current_node.options) {
-            formats.push_back(option.text_format);
-        }
-
-        m_text_renderer2->write_to_format_buffer(formats);
-
-        // TODO: Write text glyph data to gpu buffer:
-        // vulkan::DrawIndexedIndirectCommand draw_command =
-        // m_text_renderer->write_glyph_data(...);
-
-        // TODO: Issue render indirect call
-        // m_text_renderer->render_indirect(command_buffer, push_constant,
-        // {draw_command});
+        m_text_renderer2->render_indirect(command_buffer, push_constant, draw_commands);
     }
 
     template <typename PushConstantType>
@@ -112,7 +94,7 @@ class Event {
     void remove_event() {
         if (m_text_renderer != nullptr) {
             for (auto &node : m_nodes) {
-                m_text_renderer->remove_text(std::move(node.second.text_handle));
+                /*m_text_renderer->remove_text(std::move(node.second.text_handle));*/
                 for (auto &option : node.second.options) {
                     m_text_renderer->remove_text(std::move(option.text_handle));
                 }

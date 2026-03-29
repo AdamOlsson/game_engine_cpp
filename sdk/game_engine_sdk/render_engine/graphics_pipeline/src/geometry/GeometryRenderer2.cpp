@@ -1,4 +1,3 @@
-
 #include "graphics_pipeline/geometry/GeometryRenderer2.h"
 #include "graphics_pipeline/SwapDescriptorSetBuilder.h"
 
@@ -45,7 +44,7 @@ GeometryRenderer2::GeometryRenderer2(
     pipeline_opts.swap_chain.render_pass = opts.swap_chain.render_pass;
     pipeline_opts.push_constant_range = opts.push_constant_range;
     pipeline_opts.descriptor.layout = GeometryRenderer2::get_descriptor_set_layout(ctx);
-    m_geometry_pipeline = std::make_unique<GeometryPipeline>(m_ctx, pipeline_opts);
+    m_geometry_pipeline = GeometryPipeline(m_ctx, pipeline_opts);
 }
 
 vulkan::DescriptorSetLayout

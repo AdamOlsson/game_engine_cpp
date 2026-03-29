@@ -2,6 +2,7 @@
 
 #include "Vector2.h"
 #include "traits.h"
+#include <glm/ext/matrix_transform.hpp>
 #include <glm/glm.hpp>
 
 namespace math {
@@ -70,6 +71,30 @@ class Vector4 {
     }
 
     Vector4 operator-() const { return Vector4(-m_vec.x, -m_vec.y, -m_vec.z, -m_vec.w); }
+
+    friend Vector4 operator*(const Vector4 &lhs, const float scalar) {
+        return Vector4(lhs.x() * scalar, lhs.y() * scalar, lhs.z() * scalar,
+                       lhs.w() * scalar);
+    }
+
+    friend Vector4 operator*(const float scalar, const Vector4 &rhs) {
+        return Vector4(scalar * rhs.x(), scalar * rhs.y(), scalar * rhs.z(),
+                       scalar * rhs.w());
+    }
+
+    friend Vector4 operator/(const Vector4 &lhs, const float scalar) {
+        return Vector4(lhs.x() / scalar, lhs.y() / scalar, lhs.z() / scalar,
+                       lhs.w() / scalar);
+    }
+
+    template <StaticCastableToFloat T> Vector4 rotate_z(const T degrees) {
+        const glm::mat4 transform = glm::rotate(glm::mat4(1.0f), glm::radians(degrees),
+                                                glm::vec3(0.0f, 0.0f, 1.0f));
+        const glm::vec4 rotated_4d = transform * m_vec;
+        m_vec.x = rotated_4d.x;
+        m_vec.y = rotated_4d.y;
+        return *this;
+    }
 
     friend Vector4 operator+(const glm::vec4 &lhs, const Vector4 &rhs) {
         return Vector4(lhs.x + rhs.x(), lhs.y + rhs.y(), lhs.z + rhs.z(),

@@ -3,6 +3,7 @@
 #include "../events/Event.h"
 #include "graphics_pipeline/geometry/GeometryRenderer2.h"
 #include "graphics_pipeline/text/TextRenderer.h"
+#include "graphics_pipeline/text/TextRenderer2.h"
 #include "state_machine/StateTransition.h"
 
 struct GameState;
@@ -10,6 +11,7 @@ struct GameState;
 class IntroState {
   private:
     graphics_pipeline::text::TextRenderer *m_text_renderer = nullptr;
+    graphics_pipeline::text::TextRenderer2 *m_text_renderer2 = nullptr;
     graphics_pipeline::geometry::GeometryRenderer2 *m_geometry_renderer = nullptr;
 
     std::optional<Event> event = std::nullopt;
@@ -24,8 +26,10 @@ class IntroState {
     IntroState() = default;
 
     IntroState(graphics_pipeline::text::TextRenderer *text_renderer,
+               graphics_pipeline::text::TextRenderer2 *text_renderer2,
                graphics_pipeline::geometry::GeometryRenderer2 *geom_renderer)
-        : m_text_renderer(text_renderer), m_geometry_renderer(geom_renderer) {}
+        : m_text_renderer(text_renderer), m_text_renderer2(text_renderer2),
+          m_geometry_renderer(geom_renderer) {}
 
     IntroState(const IntroState &) = delete;
     IntroState(IntroState &&) = default;

@@ -1,9 +1,9 @@
 #include "camera/Camera.h"
-#include "font/Font.h"
 #include "game_engine_sdk/Game.h"
 #include "game_engine_sdk/GameEngine.h"
 #include "graphics_pipeline/RendererOpts.h"
 #include "graphics_pipeline/text/TextRenderer.h"
+#include "graphics_pipeline/text/TextRenderer2.h"
 #include "vulkan/CommandBufferManager.h"
 #include "vulkan/SwapChain.h"
 
@@ -21,6 +21,8 @@ class ExampleTextRendering : public Game {
     camera::Camera2D m_camera;
 
     std::unique_ptr<graphics_pipeline::text::TextRenderer> m_text_renderer;
+    std::unique_ptr<graphics_pipeline::text::TextRenderer2> m_text_renderer2;
+    std::vector<vulkan::DrawIndexedIndirectCommand> m_draw_commands2;
 
     std::vector<graphics_pipeline::text::TextHandle> m_texts;
 
@@ -87,6 +89,28 @@ class ExampleTextRendering : public Game {
                                                         .line_width = 100000.0f,
                                                     }));
         m_text_renderer->sync_render_slots();
+
+        m_text_renderer2 =
+            std::make_unique<graphics_pipeline::text::TextRenderer2>(ctx, renderer_opts);
+        m_text_renderer2->load_font(
+            m_command_buffer_manager.get(),
+            ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
+
+        font::TextOpts opts2 = font::TextOpts{
+            .position = math::Vector2(0, -22),
+            .font_color = util::colors::YELLOW,
+            .font_size = 11,
+            .line_width = 100000.0f,
+        };
+
+        font::Text text2 = m_text_renderer2->m_font.create_text(sentence, opts2);
+        font::TextFormat text_format2 =
+            m_text_renderer2->m_font.create_text_format(opts2);
+        size_t text_format2_id = 0;
+        m_text_renderer2->write_to_format_buffer({text_format2});
+
+        m_draw_commands2 =
+            m_text_renderer2->write_to_glyph_buffer(text2, text_format2_id);
     }
 
     void register_mouse_event_handler(vulkan::context::GraphicsContext *ctx) {
@@ -162,6 +186,8 @@ class ExampleTextRendering : public Game {
         for (const auto &text : m_texts) {
             m_text_renderer->render(command_buffer, text, &push_constant);
         }
+        m_text_renderer2->render_indirect(command_buffer, &push_constant,
+                                          m_draw_commands2);
         frame.end_render_pass();
 
         frame.submit_present();

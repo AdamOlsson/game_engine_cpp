@@ -4,10 +4,12 @@
 Event::Event(Event &&other) noexcept
     : m_geometry_renderer(std::move(other.m_geometry_renderer)),
       m_text_renderer(std::move(other.m_text_renderer)),
+      m_text_renderer2(std::move(other.m_text_renderer2)),
       m_bbox_render_data(std::move(other.m_bbox_render_data)),
       m_nodes(std::move(other.m_nodes)), m_current_node(std::move(other.m_current_node)) {
     other.m_geometry_renderer = nullptr;
     other.m_text_renderer = nullptr;
+    other.m_text_renderer2 = nullptr;
 }
 
 Event &Event::operator=(Event &&other) noexcept {
@@ -16,12 +18,14 @@ Event &Event::operator=(Event &&other) noexcept {
 
         m_geometry_renderer = std::move(other.m_geometry_renderer);
         m_text_renderer = std::move(other.m_text_renderer);
+        m_text_renderer2 = std::move(other.m_text_renderer2);
         m_bbox_render_data = std::move(other.m_bbox_render_data);
         m_nodes = std::move(other.m_nodes);
         m_current_node = std::move(other.m_current_node);
 
         other.m_geometry_renderer = nullptr;
         other.m_text_renderer = nullptr;
+        other.m_text_renderer2 = nullptr;
     }
 
     return *this;

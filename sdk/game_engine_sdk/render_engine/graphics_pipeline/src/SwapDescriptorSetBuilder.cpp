@@ -5,6 +5,13 @@ graphics_pipeline::SwapDescriptorSetBuilder::SwapDescriptorSetBuilder(size_t cap
     : m_swap_size(capacity) {}
 
 graphics_pipeline::SwapDescriptorSetBuilder &
+graphics_pipeline::SwapDescriptorSetBuilder::set_layout(
+    vulkan::DescriptorSetLayout &&layout) {
+    m_external_layout = std::move(layout);
+    return *this;
+}
+
+graphics_pipeline::SwapDescriptorSetBuilder &
 graphics_pipeline::SwapDescriptorSetBuilder::add_storage_buffer(
     size_t binding, std::vector<vulkan::DescriptorBufferInfo> &&buffer_infos,
     SwapDescriptorSetBuilderOptions &&options) {
@@ -150,7 +157,8 @@ graphics_pipeline::SwapDescriptorSet graphics_pipeline::SwapDescriptorSetBuilder
     }
 
     vulkan::DescriptorSetLayout descriptor_set_layout =
-        m_descriptor_set_layout_builder.build(ctx);
+        m_external_layout.has_value() ? std::move(m_external_layout.value())
+                                      : m_descriptor_set_layout_builder.build(ctx);
 
     std::vector<VkDescriptorSet> descriptor_sets =
         allocate_descriptor_sets(ctx, descriptor_pool, descriptor_set_layout);

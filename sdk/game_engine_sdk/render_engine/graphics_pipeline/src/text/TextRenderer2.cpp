@@ -3,31 +3,21 @@
 
 namespace graphics_pipeline::text {
 
+const size_t max_frames_in_flight = 2;
+constexpr size_t max_text_instances = 16;
+constexpr size_t max_glyph_instances = 1024;
+constexpr size_t max_draw_commands = 1024;
+
 TextRenderer2::TextRenderer2(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
                              const RendererOpts &opts)
-    : m_ctx(ctx) {
+    : m_ctx(ctx), m_text_format_instances(vulkan::buffers::StorageBuffer<TextFormatSBO2>(
+                      ctx, max_text_instances, max_frames_in_flight)),
+      m_glyph_instances(vulkan::buffers::StorageBuffer<TextGlyphSBO2>(
+          ctx, max_glyph_instances, max_frames_in_flight)),
+      m_draw_commands(vulkan::buffers::IndirectBuffer<vulkan::DrawIndexedIndirectCommand>(
+          m_ctx, max_draw_commands, max_frames_in_flight)) {
 
-    graphics_pipeline::PipelineOpts pipeline_opts{};
-    pipeline_opts.swap_chain.extent = opts.swap_chain.extent;
-    pipeline_opts.swap_chain.render_pass = opts.swap_chain.render_pass;
-    pipeline_opts.push_constant_range = opts.push_constant_range;
-    pipeline_opts.descriptor.layout = TextRenderer2::get_descriptor_set_layout(ctx);
-    m_text_pipeline = TextPipeline(ctx, pipeline_opts);
-
-    const size_t max_frames_in_flight = 2;
-    constexpr size_t max_text_instances = 16;
-    constexpr size_t max_glyph_instances = 1024;
-
-    m_text_format_instances = vulkan::buffers::StorageBuffer<TextFormatSBO2>(
-        ctx, max_text_instances, max_frames_in_flight);
-    m_glyph_instances = vulkan::buffers::StorageBuffer<TextGlyphSBO2>(
-        ctx, max_glyph_instances, max_frames_in_flight);
-
-    m_descriptor_pool = vulkan::DescriptorPool(
-        ctx, vulkan::DescriptorPoolOpts{.max_num_descriptor_sets = 2,
-                                        .num_storage_buffers = 2,
-                                        .num_uniform_buffers = 0,
-                                        .num_combined_image_samplers = 0});
+    m_descriptor_pool = vulkan::DescriptorPool(ctx, opts.text.pool_opts);
 
     auto builder = SwapDescriptorSetBuilder(2);
     builder.add_storage_buffer(0, vulkan::DescriptorBufferInfo::from_vector(
@@ -35,6 +25,13 @@ TextRenderer2::TextRenderer2(std::shared_ptr<vulkan::context::GraphicsContext> &
     builder.add_storage_buffer(
         1, vulkan::DescriptorBufferInfo::from_vector(m_glyph_instances.get_reference()));
     m_descriptor_sets = builder.build(ctx, m_descriptor_pool);
+
+    graphics_pipeline::PipelineOpts pipeline_opts{};
+    pipeline_opts.swap_chain.extent = opts.swap_chain.extent;
+    pipeline_opts.swap_chain.render_pass = opts.swap_chain.render_pass;
+    pipeline_opts.push_constant_range = opts.push_constant_range;
+    pipeline_opts.descriptor.layout = TextRenderer2::get_descriptor_set_layout(ctx);
+    m_text_pipeline = TextPipeline(ctx, pipeline_opts);
 }
 
 vulkan::DescriptorSetLayout TextRenderer2::get_descriptor_set_layout(
@@ -50,29 +47,52 @@ void TextRenderer2::write_to_format_buffer(
     m_text_format_instances.write(instance_data, offset);
 }
 
+void TextRenderer2::write_to_format_buffer(const std::vector<font::TextFormat> &format,
+                                           const size_t offset) {
+
+    std::vector<TextFormatSBO2> instance_data;
+    instance_data.reserve(format.size());
+    for (const auto &f : format) {
+        instance_data.emplace_back(f.position, f.font_color, f.font_size);
+    }
+    m_text_format_instances.write(instance_data, offset);
+}
+
 std::vector<vulkan::DrawIndexedIndirectCommand>
-TextRenderer2::write_to_glyph_buffer(const std::vector<TextGlyphSBO2> &instance_data,
+TextRenderer2::write_to_glyph_buffer(const font::Text &text, const size_t text_format_id,
                                      const size_t offset) {
     std::vector<vulkan::DrawIndexedIndirectCommand> draw_commands;
+    draw_commands.reserve(text.glyphs.size());
 
-    // TODO: This information is available in m_glyph_draw_info;
-    vulkan::DrawIndexedIndirectCommand draw_command;
-    /*draw_command.firstIndex = 0;*/
-    /*draw_command.firstInstance = 0;*/
-    /*draw_command.indexCount = m_quad_index_buffer.num_indices;*/
-    /*draw_command.instanceCount = instance_data.size();*/
-    /*draw_command.vertexOffset = 0;*/
+    std::vector<TextGlyphSBO2> glyph_instances;
+    glyph_instances.reserve(text.glyphs.size());
 
-    DEBUG_ASSERT(false, "Not yet implemented.");
+    for (size_t i = 0; i < text.glyphs.size(); i++) {
+        const auto &glyph = text.glyphs[i];
+
+        TextGlyphSBO2 glyph_instance;
+
+        glyph_instance.offset = math::Vector3(glyph.offset, 0.0f);
+        glyph_instance.text_id = text_format_id;
+        glyph_instances.push_back(glyph_instance);
+
+        vulkan::DrawIndexedIndirectCommand draw_command;
+        draw_command.firstIndex = glyph.first_index;
+        draw_command.firstInstance = i;
+        draw_command.indexCount = glyph.index_count;
+        draw_command.instanceCount = 1;
+        draw_command.vertexOffset = 0;
+        draw_commands.push_back(draw_command);
+    }
+
+    m_glyph_instances.write(glyph_instances);
+
     return draw_commands;
 }
 
-bool TextRenderer2::is_font_loaded() { return m_font.is_loaded(); }
-
 void TextRenderer2::load_font(vulkan::CommandBufferManager *command_buffer_manager,
-                              const std::string &font_path) {
-
-    m_font = font::Font(font_path);
+                              const std::string &font_filepath) {
+    m_font = font::Font(font_filepath);
 
     std::vector<GlyphVertex> vertices;
     vertices.reserve(m_font.vertices.size());
@@ -86,5 +106,14 @@ void TextRenderer2::load_font(vulkan::CommandBufferManager *command_buffer_manag
     m_glyph_index_buffer =
         vulkan::buffers::IndexBuffer(m_ctx, m_font.indices, command_buffer_manager);
 }
+
+/*font::TextFormat TextRenderer2::create_text_format(const font::TextOpts &opts) {*/
+/*    return m_font.create_text_format(opts);*/
+/*}*/
+
+/*font::Text TextRenderer2::create_text(const std::string &text,*/
+/*                                      const font::TextOpts &opts) {*/
+/*    return m_font.create_text(text, opts);*/
+/*}*/
 
 } // namespace graphics_pipeline::text

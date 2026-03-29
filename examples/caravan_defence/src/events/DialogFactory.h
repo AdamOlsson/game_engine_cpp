@@ -8,6 +8,7 @@
 class DialogFactory {
   private:
     graphics_pipeline::text::TextRenderer *m_text_renderer = nullptr;
+    graphics_pipeline::text::TextRenderer2 *m_text_renderer2 = nullptr;
 
     std::optional<font::TextOpts> m_dialog_text_opts = std::nullopt;
     std::optional<font::TextOpts> m_dialog_option_text_opts = std::nullopt;
@@ -21,8 +22,9 @@ class DialogFactory {
 
   public:
     DialogFactory() = delete;
-    DialogFactory(graphics_pipeline::text::TextRenderer *text_renderer)
-        : m_text_renderer(text_renderer) {}
+    DialogFactory(graphics_pipeline::text::TextRenderer *text_renderer,
+                  graphics_pipeline::text::TextRenderer2 *text_renderer2)
+        : m_text_renderer(text_renderer), m_text_renderer2(text_renderer2) {}
 
     void set_event_dialog_text_opts(const font::TextOpts &opts) {
         m_dialog_text_opts = opts;
@@ -70,14 +72,11 @@ class DialogFactory {
 
         DialogNode dialog{};
         dialog.id = m_id;
-        dialog.text_handle = m_text_renderer->create_text2(std::move(m_dialog_text),
-                                                           m_dialog_text_opts.value());
 
-        // CONTINUE: Rework the DialogFactory to only store Text data and not TextHandle
-        /*dialog.text_format.model_matrix =*/
-        /*    math::Matrix().translate(m_dialog_text_opts->position);*/
-        /*dialog.text_format.font_color = m_dialog_text_opts->font_color;*/
-        /*font::Text text = m_font.format(m_dialog_text, m_dialog_text_opts.value());*/
+        dialog.text_format =
+            m_text_renderer2->m_font.create_text_format(m_dialog_text_opts.value());
+        dialog.text = m_text_renderer2->m_font.create_text(std::move(m_dialog_text),
+                                                           m_dialog_text_opts.value());
 
         dialog.options.reserve(m_dialog_option_texts.size());
         for (size_t i = 0; i < m_dialog_option_texts.size(); i++) {
@@ -86,8 +85,6 @@ class DialogFactory {
             auto opts = m_dialog_option_text_opts.value();
             opts.position.y() += (opts.line_height + 0.02f) * i;
 
-            // TODO: Instead of a text_handle, simply store the text data:
-            // dialog.text = text_formatter.format(m_dialog_text);
             DialogOption option{};
             option.label = m_dialog_option_labels[i];
             option.text_handle =

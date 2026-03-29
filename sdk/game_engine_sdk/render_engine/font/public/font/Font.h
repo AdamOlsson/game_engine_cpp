@@ -22,7 +22,9 @@ class Font {
     FontLoader m_loader;
     TextFormatter m_formatter;
 
-    std::vector<std::pair<size_t, size_t>> m_glyph_draw_info;
+    std::vector<size_t> m_first_index;
+    std::vector<size_t> m_index_count;
+    /*std::vector<size_t> m_vertex_offset;*/
 
     void triangulate_glyphs();
 
@@ -45,14 +47,19 @@ class Font {
             m_formatter.set_font_loader(&m_loader);
             vertices = std::move(other.vertices);
             indices = std::move(other.indices);
-            m_glyph_draw_info = std::move(other.m_glyph_draw_info);
+            m_first_index = std::move(other.m_first_index);
+            m_index_count = std::move(other.m_index_count);
+            /*m_vertex_offset = std::move(other.m_vertex_offset);*/
         }
         return *this;
     }
 
-    std::pair<size_t, size_t> get_draw_info(const char32_t &c);
+    size_t get_first_index(const char32_t &c);
+    size_t get_index_count(const char32_t &c);
+    /*size_t get_vertex_offset(const char32_t &c);*/
 
-    Text format(const font::Unicode &codepoint, const TextOpts &opts);
+    TextFormat create_text_format(const TextOpts &opts);
+    Text create_text(const font::Unicode &codepoint, const TextOpts &opts);
 
     signed long get_num_glyphs() const;
 
@@ -60,7 +67,7 @@ class Font {
 
     unsigned short get_units_per_em() const;
 
-    const std::pair<size_t, size_t> &get_glyph_draw_info(size_t glyph_index) const;
+    float get_adjusted_font_size(float font_size);
 
     bool is_loaded() const { return !vertices.empty(); }
 };

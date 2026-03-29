@@ -51,6 +51,7 @@ class CaravanDefence : public Game {
     // UI renderers
     vulkan::RenderPass m_ui_render_pass;
     std::unique_ptr<graphics_pipeline::text::TextRenderer> m_ui_text_renderer;
+    std::unique_ptr<graphics_pipeline::text::TextRenderer2> m_ui_text_renderer2;
     std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer2> m_ui_geom_renderer2;
 
     struct GameState m_game_state;
@@ -86,12 +87,14 @@ class CaravanDefence : public Game {
         Configuration::setup_initial_game_state(m_quad_renderer.get(), m_game_state);
 
         m_state_machine.get_state<IntroState>() =
-            IntroState(m_ui_text_renderer.get(), m_ui_geom_renderer2.get());
+            IntroState(m_ui_text_renderer.get(), m_ui_text_renderer2.get(),
+                       m_ui_geom_renderer2.get());
         m_state_machine.get_state<DefendState>() =
             DefendState(m_quad_renderer.get(), m_world_geom_renderer2.get(),
                         m_ui_text_renderer.get(), m_ui_geom_renderer2.get());
         m_state_machine.get_state<EventState>() =
-            EventState(m_ui_text_renderer.get(), m_ui_geom_renderer2.get());
+            EventState(m_ui_text_renderer.get(), m_ui_text_renderer2.get(),
+                       m_ui_geom_renderer2.get());
 
         m_state_machine.init<IntroState>();
     }

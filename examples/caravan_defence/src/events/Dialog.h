@@ -29,10 +29,11 @@ struct DialogOption {
 struct DialogNode {
     std::string id;
 
-    graphics_pipeline::text::TextFormatSBO2 text_format;
-    std::vector<graphics_pipeline::text::TextGlyphSBO2> text_glyphs;
+    /*graphics_pipeline::text::TextFormatSBO2 text_format;*/
+    font::TextFormat text_format;
+    font::Text text;
 
-    graphics_pipeline::text::TextHandle text_handle; // TODO: Remove
+    /*graphics_pipeline::text::TextHandle text_handle; // TODO: Remove*/
 
     std::vector<DialogOption> options;
 
