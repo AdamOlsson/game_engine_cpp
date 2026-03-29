@@ -87,8 +87,7 @@ class CaravanDefence : public Game {
         Configuration::setup_initial_game_state(m_quad_renderer.get(), m_game_state);
 
         m_state_machine.get_state<IntroState>() =
-            IntroState(m_ui_text_renderer.get(), m_ui_text_renderer2.get(),
-                       m_ui_geom_renderer2.get());
+            IntroState(m_ui_text_renderer2.get(), m_ui_geom_renderer2.get());
         m_state_machine.get_state<DefendState>() =
             DefendState(m_quad_renderer.get(), m_world_geom_renderer2.get(),
                         m_ui_text_renderer.get(), m_ui_geom_renderer2.get());

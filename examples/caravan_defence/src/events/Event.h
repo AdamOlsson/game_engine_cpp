@@ -4,14 +4,11 @@
 #include "camera/Camera.h"
 #include "graphics_pipeline/geometry/GeometryPipelineSBO.h"
 #include "graphics_pipeline/geometry/GeometryRenderer2.h"
-#include "graphics_pipeline/text/TextRenderer.h"
 #include "graphics_pipeline/text/TextRenderer2.h"
 
 class Event {
   private:
     graphics_pipeline::geometry::GeometryRenderer2 *m_geometry_renderer = nullptr;
-    graphics_pipeline::text::TextRenderer *m_text_renderer = nullptr;
-
     graphics_pipeline::text::TextRenderer2 *m_text_renderer2 = nullptr;
 
     graphics_pipeline::geometry::GeometryPipelineSBO m_bbox_render_data;
@@ -22,10 +19,8 @@ class Event {
   public:
     Event() = default;
     Event(graphics_pipeline::geometry::GeometryRenderer2 *geometry_renderer,
-          graphics_pipeline::text::TextRenderer *text_renderer,
           graphics_pipeline::text::TextRenderer2 *text_renderer2)
-        : m_geometry_renderer(geometry_renderer), m_text_renderer(text_renderer),
-          m_text_renderer2(text_renderer2) {}
+        : m_geometry_renderer(geometry_renderer), m_text_renderer2(text_renderer2) {}
 
     Event(Event &&other) noexcept;
     Event(const Event &other) = delete;
@@ -44,26 +39,29 @@ class Event {
     template <typename PushConstantType>
     void render_text(const vulkan::CommandBuffer &command_buffer,
                      PushConstantType *push_constant) {
-        DEBUG_ASSERT(m_text_renderer != nullptr,
+        DEBUG_ASSERT(m_text_renderer2 != nullptr,
                      "Error: Attempted to render event text with non-existing "
                      "pointer to a text renderer.");
         DEBUG_ASSERT(!m_current_node.empty(), "Error: Current dialog node id is empty.");
 
         DialogNode &node = m_nodes[m_current_node];
 
-        // CONTINUE: Transition dialog options to the new text renderer
-        for (size_t i = 0; i < node.options.size(); i++) {
-            m_text_renderer->render(command_buffer, node.options[i].text_handle,
-                                    push_constant);
-        }
-
-        std::vector<font::TextFormat> new_formats{};
-        new_formats.reserve(1 + node.options.size());
-        new_formats.push_back(node.text_format);
-
-        m_text_renderer2->write_to_format_buffer(new_formats);
-
+        m_text_renderer2->write_to_format_buffer({node.text_format}, 0);
         auto draw_commands = m_text_renderer2->write_to_glyph_buffer(node.text, 0);
+
+        size_t offset = node.text.glyphs.size();
+        for (size_t i = 0; i < node.options.size(); i++) {
+            size_t format_idx = i + 1;
+            m_text_renderer2->write_to_format_buffer({node.options[i].text_format},
+                                                     format_idx);
+            auto option_commands = m_text_renderer2->write_to_glyph_buffer(
+                node.options[i].text, format_idx, offset);
+
+            offset += node.options[i].text.glyphs.size();
+
+            draw_commands.insert(draw_commands.end(), option_commands.begin(),
+                                 option_commands.end());
+        }
 
         m_text_renderer2->render_indirect(command_buffer, push_constant, draw_commands);
     }
@@ -92,15 +90,7 @@ class Event {
     }
 
     void remove_event() {
-        if (m_text_renderer != nullptr) {
-            for (auto &node : m_nodes) {
-                /*m_text_renderer->remove_text(std::move(node.second.text_handle));*/
-                for (auto &option : node.second.options) {
-                    m_text_renderer->remove_text(std::move(option.text_handle));
-                }
-            }
-        }
         m_geometry_renderer = nullptr;
-        m_text_renderer = nullptr;
+        m_text_renderer2 = nullptr;
     }
 };

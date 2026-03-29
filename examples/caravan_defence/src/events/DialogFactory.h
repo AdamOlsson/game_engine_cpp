@@ -1,14 +1,13 @@
 #pragma once
 
 #include "Dialog.h"
-#include "graphics_pipeline/text/TextRenderer.h"
+#include "font/Font.h"
 #include "math/Matrix.h"
 #include <optional>
 
 class DialogFactory {
   private:
-    graphics_pipeline::text::TextRenderer *m_text_renderer = nullptr;
-    graphics_pipeline::text::TextRenderer2 *m_text_renderer2 = nullptr;
+    font::Font *m_font = nullptr;
 
     std::optional<font::TextOpts> m_dialog_text_opts = std::nullopt;
     std::optional<font::TextOpts> m_dialog_option_text_opts = std::nullopt;
@@ -22,9 +21,7 @@ class DialogFactory {
 
   public:
     DialogFactory() = delete;
-    DialogFactory(graphics_pipeline::text::TextRenderer *text_renderer,
-                  graphics_pipeline::text::TextRenderer2 *text_renderer2)
-        : m_text_renderer(text_renderer), m_text_renderer2(text_renderer2) {}
+    DialogFactory(font::Font *font) : m_font(font) {}
 
     void set_event_dialog_text_opts(const font::TextOpts &opts) {
         m_dialog_text_opts = opts;
@@ -73,10 +70,9 @@ class DialogFactory {
         DialogNode dialog{};
         dialog.id = m_id;
 
-        dialog.text_format =
-            m_text_renderer2->m_font.create_text_format(m_dialog_text_opts.value());
-        dialog.text = m_text_renderer2->m_font.create_text(std::move(m_dialog_text),
-                                                           m_dialog_text_opts.value());
+        dialog.text_format = m_font->create_text_format(m_dialog_text_opts.value());
+        dialog.text =
+            m_font->create_text(std::move(m_dialog_text), m_dialog_text_opts.value());
 
         dialog.options.reserve(m_dialog_option_texts.size());
         for (size_t i = 0; i < m_dialog_option_texts.size(); i++) {
@@ -87,18 +83,19 @@ class DialogFactory {
 
             DialogOption option{};
             option.label = m_dialog_option_labels[i];
-            option.text_handle =
-                m_text_renderer->create_text2(std::move(m_dialog_option_texts[i]), opts);
+            option.text_format = m_font->create_text_format(opts);
+            option.text = m_font->create_text(m_dialog_option_texts[i], opts);
             option.next_dialog_node = m_dialog_option_next_node[i];
             option.on_click = m_dialog_option_cbs[i];
-            dialog.options.push_back(std::move(option));
 
-            const math::Bbox &text_bbox = option.text_handle.get_bbox();
+            const math::Bbox &text_bbox = option.text.bbox;
 
             option.bbox_render_data.model_matrix =
                 math::Matrix().translate(text_bbox.center()).scale(text_bbox.size());
 
             option.bbox_render_data.color = util::colors::TRANSPARENT;
+
+            dialog.options.push_back(std::move(option));
         }
 
         m_id.clear();

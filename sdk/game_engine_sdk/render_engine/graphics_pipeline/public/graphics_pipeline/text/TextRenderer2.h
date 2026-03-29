@@ -32,8 +32,10 @@ struct TextFormatSBO2 {
 // 2. DONE Make use of the new text formatting class in the existing TextRenderer.
 // 3. DONE Implement the new TextRenderer2 class.
 // 3.5 DONE Create a nice interface for rendering text with TextRenderer2
-// 4. Transition IntroState to use the TextRenderer2 class.
+// 4. DONE Transition IntroState to use the TextRenderer2 class.
+// 4.5 Refactor all other usage of TextRenderer to use TextRenderer2
 // 5. Evaluate if I can move font out from the TextRenderer2 class.
+// 6. Improve TextRenderer2 draw call by instancing on each character.
 
 class TextRenderer2 {
   private:
@@ -66,12 +68,8 @@ class TextRenderer2 {
     void load_font(vulkan::CommandBufferManager *command_buffer_manager,
                    const std::string &font_filepath);
 
-    /*font::TextFormat create_text_format(const font::TextOpts &opts);*/
-    /*font::Text create_text(const std::string &text, const font::TextOpts &opts);*/
-
-    void write_to_format_buffer(const std::vector<TextFormatSBO2> &instance_data,
-                                const size_t offset = 0);
-
+    /*void write_to_format_buffer(const font::TextFormat &format, const size_t offset =
+     * 0);*/
     void write_to_format_buffer(const std::vector<font::TextFormat> &format,
                                 const size_t offset = 0);
 

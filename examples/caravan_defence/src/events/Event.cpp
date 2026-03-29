@@ -3,12 +3,10 @@
 
 Event::Event(Event &&other) noexcept
     : m_geometry_renderer(std::move(other.m_geometry_renderer)),
-      m_text_renderer(std::move(other.m_text_renderer)),
       m_text_renderer2(std::move(other.m_text_renderer2)),
       m_bbox_render_data(std::move(other.m_bbox_render_data)),
       m_nodes(std::move(other.m_nodes)), m_current_node(std::move(other.m_current_node)) {
     other.m_geometry_renderer = nullptr;
-    other.m_text_renderer = nullptr;
     other.m_text_renderer2 = nullptr;
 }
 
@@ -17,14 +15,12 @@ Event &Event::operator=(Event &&other) noexcept {
         remove_event();
 
         m_geometry_renderer = std::move(other.m_geometry_renderer);
-        m_text_renderer = std::move(other.m_text_renderer);
         m_text_renderer2 = std::move(other.m_text_renderer2);
         m_bbox_render_data = std::move(other.m_bbox_render_data);
         m_nodes = std::move(other.m_nodes);
         m_current_node = std::move(other.m_current_node);
 
         other.m_geometry_renderer = nullptr;
-        other.m_text_renderer = nullptr;
         other.m_text_renderer2 = nullptr;
     }
 
@@ -76,13 +72,10 @@ void Event::on_hover(const interface::NDCPoint &point) {
     DialogNode &node = m_nodes[m_current_node];
     size_t hover_option_id = node.get_option(point);
     for (size_t i = 0; i < node.options.size(); i++) {
-        auto &text_instance =
-            m_text_renderer->get_text_format_instance(node.options[i].text_handle);
-
         if (i == hover_option_id) {
-            text_instance.font_color = util::colors::YELLOW;
+            node.options[i].text_format.font_color = util::colors::YELLOW;
         } else {
-            text_instance.font_color = util::colors::WHITE;
+            node.options[i].text_format.font_color = util::colors::WHITE;
         }
     }
 }

@@ -26,6 +26,7 @@ Text Font::create_text(const font::Unicode &codepoint, const TextOpts &opts) {
     Text text{};
     text.glyphs.reserve(layout.char_count);
     text.bbox = layout.bbox;
+    text.bbox.offset(opts.position);
 
     for (const font::Word &word : layout.words) {
         const size_t num_chars_in_word = word.end_idx - word.start_idx;

@@ -4,7 +4,7 @@
 #include "DefendState.h"
 
 void IntroState::on_enter(GameState &game_state) {
-    DEBUG_ASSERT(m_text_renderer != nullptr,
+    DEBUG_ASSERT(m_text_renderer2 != nullptr,
                  "Error: Text renderer is not set in IntroState.");
     DEBUG_ASSERT(m_geometry_renderer != nullptr,
                  "Error: Geometry renderer is not set in IntroState.");
@@ -13,7 +13,7 @@ void IntroState::on_enter(GameState &game_state) {
 }
 
 void IntroState::on_exit(GameState &game_state) {
-    DEBUG_ASSERT(m_text_renderer != nullptr,
+    DEBUG_ASSERT(m_text_renderer2 != nullptr,
                  "Error: Text renderer is not set in IntroState.");
     DEBUG_ASSERT(m_geometry_renderer != nullptr,
                  "Error: Geometry renderer is not set in IntroState.");
@@ -24,8 +24,7 @@ void IntroState::on_exit(GameState &game_state) {
 util::StateTransition IntroState::update(const float dt, GameState &game_state) {
 
     if (!event.has_value()) {
-        event = create_intro_contract(m_geometry_renderer, m_text_renderer, game_state,
-                                      *this);
+        event = create_intro_contract(game_state, *this);
     }
 
     if (game_state.cursor.click_point.has_value()) {
@@ -48,10 +47,7 @@ util::StateTransition IntroState::update(const float dt, GameState &game_state) 
     return util::StateTransition::none();
 }
 
-Event IntroState::create_intro_contract(
-    graphics_pipeline::geometry::GeometryRenderer2 *geom_renderer,
-    graphics_pipeline::text::TextRenderer *text_renderer, GameState &game_state,
-    IntroState &event_state) {
+Event IntroState::create_intro_contract(GameState &game_state, IntroState &event_state) {
 
     const float dialog_font_size = game_state.camera.to_ndc_width(22);
     const math::Vector2 dialog_box_center = interface::NDCPoint(0, 0);
@@ -96,16 +92,16 @@ Event IntroState::create_intro_contract(
     };
 
     DEBUG_ASSERT(
-        geom_renderer != nullptr,
+        m_geometry_renderer != nullptr,
         "Error: Creating intro contract with geometry renderer pointer as nullptr.");
-    DEBUG_ASSERT(text_renderer != nullptr,
+    DEBUG_ASSERT(m_text_renderer2 != nullptr,
                  "Error: Creating intro contract with text renderer pointer as nullptr.");
-    Event event = Event(geom_renderer, text_renderer, m_text_renderer2);
+    Event event = Event(m_geometry_renderer, m_text_renderer2);
 
     event.create_dialog_bbox(game_state.camera);
 
     // Consistent, same every time for all events
-    DialogFactory dialog_factory = DialogFactory(text_renderer, m_text_renderer2);
+    DialogFactory dialog_factory = DialogFactory(&m_text_renderer2->m_font);
     dialog_factory.set_event_dialog_text_opts(event_desc_opts);
     dialog_factory.set_event_dialog_option_text_opts(event_dialog_option_opts);
 

@@ -53,12 +53,12 @@ Event EventFactory::my_first_event(
         event_state.set_pending_transition(util::StateTransition::to<DefendState>());
     };
 
-    Event event = Event(geom_renderer, text_renderer, text_renderer2);
+    Event event = Event(geom_renderer, text_renderer2);
 
     event.create_dialog_bbox(game_state.camera);
 
     // Consistent, same every time for all events
-    DialogFactory dialog_factory = DialogFactory(text_renderer, text_renderer2);
+    DialogFactory dialog_factory = DialogFactory(&text_renderer2->m_font);
     // TODO: DialogFactory dialog_factory = DialogFactory(text_renderer, font);
     dialog_factory.set_event_dialog_text_opts(event_desc_opts);
     dialog_factory.set_event_dialog_option_text_opts(event_dialog_option_opts);

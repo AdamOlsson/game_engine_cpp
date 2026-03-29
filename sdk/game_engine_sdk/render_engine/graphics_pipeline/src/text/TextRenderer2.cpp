@@ -42,11 +42,6 @@ vulkan::DescriptorSetLayout TextRenderer2::get_descriptor_set_layout(
     return builder.build(ctx);
 }
 
-void TextRenderer2::write_to_format_buffer(
-    const std::vector<TextFormatSBO2> &instance_data, const size_t offset) {
-    m_text_format_instances.write(instance_data, offset);
-}
-
 void TextRenderer2::write_to_format_buffer(const std::vector<font::TextFormat> &format,
                                            const size_t offset) {
 
@@ -78,14 +73,14 @@ TextRenderer2::write_to_glyph_buffer(const font::Text &text, const size_t text_f
 
         vulkan::DrawIndexedIndirectCommand draw_command;
         draw_command.firstIndex = glyph.first_index;
-        draw_command.firstInstance = i;
+        draw_command.firstInstance = i + offset;
         draw_command.indexCount = glyph.index_count;
         draw_command.instanceCount = 1;
         draw_command.vertexOffset = 0;
         draw_commands.push_back(draw_command);
     }
 
-    m_glyph_instances.write(glyph_instances);
+    m_glyph_instances.write(glyph_instances, offset);
 
     return draw_commands;
 }
