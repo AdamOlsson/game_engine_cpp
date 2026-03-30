@@ -3,18 +3,18 @@
 #include "../GameState.h"
 
 void EventState::on_enter(GameState &game_state) {
-    DEBUG_ASSERT(m_text_renderer != nullptr,
+    DEBUG_ASSERT(m_text_renderer2 != nullptr,
                  "Error: Text renderer is not set in EventState.");
     DEBUG_ASSERT(m_geometry_renderer != nullptr,
                  "Error: Geometry renderer is not set in EventState.");
 
     m_pending_transition = std::nullopt;
-    event = EventFactory::my_first_event(m_geometry_renderer, m_text_renderer,
-                                         m_text_renderer2, game_state, *this);
+    event = EventFactory::my_first_event(m_geometry_renderer, m_text_renderer2,
+                                         game_state, *this);
 }
 
 void EventState::on_exit(GameState &game_state) {
-    DEBUG_ASSERT(m_text_renderer != nullptr,
+    DEBUG_ASSERT(m_text_renderer2 != nullptr,
                  "Error: Text renderer is not set in EventState.");
     DEBUG_ASSERT(m_geometry_renderer != nullptr,
                  "Error: Geometry renderer is not set in EventState.");

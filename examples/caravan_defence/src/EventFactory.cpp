@@ -7,9 +7,7 @@
 
 Event EventFactory::my_first_event(
     graphics_pipeline::geometry::GeometryRenderer2 *geom_renderer,
-    graphics_pipeline::text::TextRenderer *text_renderer,
     graphics_pipeline::text::TextRenderer2 *text_renderer2, GameState &game_state,
-
     EventState &event_state) {
 
     const float dialog_font_size = game_state.camera.to_ndc_width(22);
@@ -59,7 +57,6 @@ Event EventFactory::my_first_event(
 
     // Consistent, same every time for all events
     DialogFactory dialog_factory = DialogFactory(&text_renderer2->m_font);
-    // TODO: DialogFactory dialog_factory = DialogFactory(text_renderer, font);
     dialog_factory.set_event_dialog_text_opts(event_desc_opts);
     dialog_factory.set_event_dialog_option_text_opts(event_dialog_option_opts);
 

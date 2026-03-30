@@ -59,12 +59,6 @@ void Configuration::setup_ui_renderers(
     ui_renderer_opts.swap_chain.extent = game.m_swap_chain->get_extent();
     ui_renderer_opts.swap_chain.render_pass = &game.m_ui_render_pass;
 
-    game.m_ui_text_renderer =
-        std::make_unique<graphics_pipeline::text::TextRenderer>(ctx, ui_renderer_opts);
-    game.m_ui_text_renderer->load_font(
-        game.m_command_buffer_manager.get(),
-        ASSET_FILE("rabbid-highway-sign-iv-bold-oblique.otf"));
-
     game.m_ui_text_renderer2 =
         std::make_unique<graphics_pipeline::text::TextRenderer2>(ctx, ui_renderer_opts);
     game.m_ui_text_renderer2->load_font(

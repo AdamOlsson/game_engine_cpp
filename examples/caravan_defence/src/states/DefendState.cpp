@@ -162,8 +162,8 @@ EntitySettingsPanel DefendState::init_entity_settings_panel() {
     text_opts.position =
         math::Vector2(panel.center_x - text_opts.line_width / 2.0f, -0.90f);
 
-    auto headline_handle = m_ui_text_renderer->create_text2("Guard", text_opts);
-    panel.text_handles.push_back(std::move(headline_handle));
+    panel.headline_format = m_ui_text_renderer2->m_font.create_text_format(text_opts);
+    panel.headline = m_ui_text_renderer2->m_font.create_text("Guard", text_opts);
 
     DropDown drop_down{};
     drop_down.bbox.color = DropDown::background_color;
@@ -196,10 +196,10 @@ EntitySettingsPanel DefendState::init_entity_settings_panel() {
             Weapon::create_weapon<Sword>());
     };
 
-    drop_down.add_headline(m_ui_text_renderer, "Select weapon");
-    drop_down.add_drop_down_item(m_ui_text_renderer, "Sniper", change_weapon_to_sniper);
-    drop_down.add_drop_down_item(m_ui_text_renderer, "Bow", change_weapon_to_bow);
-    drop_down.add_drop_down_item(m_ui_text_renderer, "Sword", change_weapon_to_sword);
+    drop_down.add_headline(m_ui_text_renderer2, "Select weapon");
+    drop_down.add_drop_down_item(m_ui_text_renderer2, "Sniper", change_weapon_to_sniper);
+    drop_down.add_drop_down_item(m_ui_text_renderer2, "Bow", change_weapon_to_bow);
+    drop_down.add_drop_down_item(m_ui_text_renderer2, "Sword", change_weapon_to_sword);
 
     panel.drop_downs.push_back(std::move(drop_down));
 

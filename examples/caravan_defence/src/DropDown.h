@@ -2,13 +2,14 @@
 
 #include "GameState.h"
 #include "graphics_pipeline/geometry/GeometryPipelineSBO.h"
-#include "graphics_pipeline/text/TextRenderer.h"
+#include "graphics_pipeline/text/TextRenderer2.h"
 #include "util/colors.h"
 struct DropDown {
 
     struct DropDownItem {
         graphics_pipeline::geometry::GeometryPipelineSBO bbox;
-        graphics_pipeline::text::TextHandle text_handle;
+        font::TextFormat text_format;
+        font::Text text;
 
         std::function<void(GameState &)> on_click_cb = [](GameState &) {};
 
@@ -29,7 +30,9 @@ struct DropDown {
     static constexpr util::colors::Color border_color = util::colors::hex(0x8bac0f);
     static constexpr util::colors::Color font_color = util::colors::hex(0x9bbc0f);
 
-    graphics_pipeline::text::TextHandle headline_handle;
+    font::TextFormat headline_format;
+    font::Text headline;
+
     graphics_pipeline::geometry::GeometryPipelineSBO bbox;
 
     bool is_open = false;
@@ -39,7 +42,7 @@ struct DropDown {
     size_t selected_item_id = std::numeric_limits<size_t>::max();
     size_t hovered_item_id = std::numeric_limits<size_t>::max();
 
-    void add_headline(graphics_pipeline::text::TextRenderer *text_renderer,
+    void add_headline(graphics_pipeline::text::TextRenderer2 *text_renderer2,
                       const std::string &text) {
 
         const math::Vector2 drop_down_position =
@@ -57,10 +60,11 @@ struct DropDown {
 
         text_opts.position = math::Vector2(
             drop_down_position.x() - drop_down_size.x() / 2.0f, headline_pos_y);
-        headline_handle = text_renderer->create_text2(text, text_opts);
+        headline_format = text_renderer2->m_font.create_text_format(text_opts);
+        headline = text_renderer2->m_font.create_text(text, text_opts);
     }
 
-    void add_drop_down_item(graphics_pipeline::text::TextRenderer *text_renderer,
+    void add_drop_down_item(graphics_pipeline::text::TextRenderer2 *text_renderer2,
                             const std::string &text,
                             std::function<void(GameState &)> on_click_cb) {
         const math::Vector2 parent_position =
@@ -77,10 +81,10 @@ struct DropDown {
         text_opts.line_height = parent_size.y();
         text_opts.position = math::Vector2(parent_position.x() - parent_size.x() / 2.0f,
                                            drop_down_item_y_pos);
-        auto text_handle = text_renderer->create_text2(text, text_opts);
 
         DropDownItem item{};
-        item.text_handle = std::move(text_handle);
+        item.text_format = text_renderer2->m_font.create_text_format(text_opts);
+        item.text = text_renderer2->m_font.create_text(text, text_opts);
         item.on_click_cb = on_click_cb;
         item.bbox.color = background_color;
         item.bbox.border.width = 0.005;
