@@ -51,7 +51,7 @@ Event EventFactory::my_first_event(
         event_state.set_pending_transition(util::StateTransition::to<DefendState>());
     };
 
-    Event event = Event(geom_renderer, text_renderer2);
+    Event event;
 
     event.create_dialog_bbox(game_state.camera);
 

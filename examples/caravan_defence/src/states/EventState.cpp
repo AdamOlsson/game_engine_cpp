@@ -18,7 +18,6 @@ void EventState::on_exit(GameState &game_state) {
                  "Error: Text renderer is not set in EventState.");
     DEBUG_ASSERT(m_geometry_renderer != nullptr,
                  "Error: Geometry renderer is not set in EventState.");
-    event->remove_event();
     event = std::nullopt;
 };
 

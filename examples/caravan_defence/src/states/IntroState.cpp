@@ -17,7 +17,6 @@ void IntroState::on_exit(GameState &game_state) {
                  "Error: Text renderer is not set in IntroState.");
     DEBUG_ASSERT(m_geometry_renderer != nullptr,
                  "Error: Geometry renderer is not set in IntroState.");
-    event->remove_event();
     event = std::nullopt;
 };
 
@@ -96,7 +95,7 @@ Event IntroState::create_intro_contract(GameState &game_state, IntroState &event
         "Error: Creating intro contract with geometry renderer pointer as nullptr.");
     DEBUG_ASSERT(m_text_renderer2 != nullptr,
                  "Error: Creating intro contract with text renderer pointer as nullptr.");
-    Event event = Event(m_geometry_renderer, m_text_renderer2);
+    Event event;
 
     event.create_dialog_bbox(game_state.camera);
 
