@@ -5,7 +5,6 @@
 #include "camera/Camera.h"
 #include "graphics_pipeline/geometry/GeometryRenderer2.h"
 #include "graphics_pipeline/quad/QuadRenderer2.h"
-#include "graphics_pipeline/text/TextRenderer.h"
 #include "graphics_pipeline/text/TextRenderer2.h"
 #include "state_machine/StateTransition.h"
 #include <vector>
@@ -31,7 +30,6 @@ struct EntitySettingsPanel {
     bool is_open = false;
 
     void get_render_data(
-        std::vector<graphics_pipeline::text::TextHandle *> &text_out,
         std::vector<font::TextFormat> &text_format_out2,
         std::vector<font::Text> &text_out2,
         std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> &geom_out) {
@@ -173,13 +171,11 @@ class DefendState {
 
         if (m_settings_panel.is_open) {
 
-            std::vector<graphics_pipeline::text::TextHandle *> text_handles;
             std::vector<font::TextFormat> text_format;
             std::vector<font::Text> text;
             std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> geometry_data;
 
-            m_settings_panel.get_render_data(text_handles, text_format, text,
-                                             geometry_data);
+            m_settings_panel.get_render_data(text_format, text, geometry_data);
 
             vulkan::DrawIndexedIndirectCommand geom_draw_command =
                 m_ui_geometry_renderer->write_to_buffer(geometry_data);
