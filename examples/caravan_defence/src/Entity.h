@@ -11,6 +11,13 @@
 #include <variant>
 namespace entity {
 
+enum class PreferredTarget {
+    Nearest,
+    Farthest,
+    Armor,
+    EnergyShield,
+};
+
 class Entity;
 
 using Clock = std::chrono::steady_clock;
@@ -162,6 +169,7 @@ class Entity {
 
     graphics_pipeline::quad::QuadPipelineSBO m_render_data;
 
+    PreferredTarget m_preferred_target = PreferredTarget::Nearest;
     std::optional<Health> m_health = std::nullopt;
     std::optional<Weapon> m_weapon = std::nullopt;
     std::optional<AttackRangeRenderData> m_attack_range_render_data = std::nullopt;
@@ -464,10 +472,22 @@ class Entity {
         }
     }
 
+    void set_preferred_target(const PreferredTarget target) {
+        m_preferred_target = target;
+    }
+
     void set_weapon(Weapon &&weapon) {
         m_weapon = std::move(weapon);
         m_attack_range_render_data =
             AttackRangeRenderData(get_world_position(), m_weapon->range);
+    }
+
+    size_t select_target(const std::vector<Entity> &enemies) {
+        DEBUG_ASSERT(
+            m_weapon.has_value(),
+            "Error: Checking select_target() but entity does not have a weapon.");
+        // CONTINUE: Select a target based on m_preferred_target
+        return 0;
     }
 
     bool in_attack_range(const Entity &target) {

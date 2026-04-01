@@ -26,6 +26,94 @@ class EntitySettingsPanel {
 
     bool m_is_open = false;
 
+    void create_select_weapon_drop_down(const font::Font &font) {
+        DropDown drop_down{};
+        drop_down.bbox.color = DropDown::background_color;
+        drop_down.bbox.border.color = EntitySettingsPanel::border_color;
+        drop_down.bbox.border.width = 0.005;
+        drop_down.bbox.model_matrix =
+            math::Matrix().translate(m_center_x, -0.8f).scale(0.4f, 0.05f);
+
+        const auto change_weapon_to_sniper = [](GameState &game_state) {
+            DEBUG_ASSERT(
+                game_state.selected_guard.has_value(),
+                "Error: Settings panel is open for a guard, but no guard is selected.");
+            game_state.guards[game_state.selected_guard.value()].set_weapon(
+                Weapon::create_weapon<Sniper>());
+        };
+
+        const auto change_weapon_to_bow = [](GameState &game_state) {
+            DEBUG_ASSERT(
+                game_state.selected_guard.has_value(),
+                "Error: Settings panel is open for a guard, but no guard is selected.");
+            game_state.guards[game_state.selected_guard.value()].set_weapon(
+                Weapon::create_weapon<Bow>());
+        };
+
+        const auto change_weapon_to_sword = [](GameState &game_state) {
+            DEBUG_ASSERT(
+                game_state.selected_guard.has_value(),
+                "Error: Settings panel is open for a guard, but no guard is selected.");
+            game_state.guards[game_state.selected_guard.value()].set_weapon(
+                Weapon::create_weapon<Sword>());
+        };
+
+        drop_down.add_headline(font, "Select weapon");
+        drop_down.add_drop_down_item(font, "Sniper", change_weapon_to_sniper);
+        drop_down.add_drop_down_item(font, "Bow", change_weapon_to_bow);
+        drop_down.add_drop_down_item(font, "Sword", change_weapon_to_sword);
+        m_drop_downs.push_back(std::move(drop_down));
+    }
+
+    void create_preferred_target_drop_down(const font::Font &font) {
+        DropDown drop_down{};
+        drop_down.bbox.color = DropDown::background_color;
+        drop_down.bbox.border.color = EntitySettingsPanel::border_color;
+        drop_down.bbox.border.width = 0.005;
+        drop_down.bbox.model_matrix =
+            math::Matrix().translate(m_center_x, -0.66f).scale(0.4f, 0.05f);
+
+        const auto set_preferred_target_nearest = [](GameState &game_state) {
+            DEBUG_ASSERT(
+                game_state.selected_guard.has_value(),
+                "Error: Settings panel is open for a guard, but no guard is selected.");
+            game_state.guards[game_state.selected_guard.value()].set_preferred_target(
+                entity::PreferredTarget::Nearest);
+        };
+
+        const auto set_preferred_target_farthest = [](GameState &game_state) {
+            DEBUG_ASSERT(
+                game_state.selected_guard.has_value(),
+                "Error: Settings panel is open for a guard, but no guard is selected.");
+            game_state.guards[game_state.selected_guard.value()].set_preferred_target(
+                entity::PreferredTarget::Farthest);
+        };
+
+        const auto set_preferred_target_armor = [](GameState &game_state) {
+            DEBUG_ASSERT(
+                game_state.selected_guard.has_value(),
+                "Error: Settings panel is open for a guard, but no guard is selected.");
+            game_state.guards[game_state.selected_guard.value()].set_preferred_target(
+                entity::PreferredTarget::Armor);
+        };
+
+        const auto set_preferred_target_energy_shield = [](GameState &game_state) {
+            DEBUG_ASSERT(
+                game_state.selected_guard.has_value(),
+                "Error: Settings panel is open for a guard, but no guard is selected.");
+            game_state.guards[game_state.selected_guard.value()].set_preferred_target(
+                entity::PreferredTarget::EnergyShield);
+        };
+
+        drop_down.add_headline(font, "Preferred target");
+        drop_down.add_drop_down_item(font, "Nearest", set_preferred_target_nearest);
+        drop_down.add_drop_down_item(font, "Farthest", set_preferred_target_farthest);
+        drop_down.add_drop_down_item(font, "Armor", set_preferred_target_armor);
+        drop_down.add_drop_down_item(font, "Energy Shield",
+                                     set_preferred_target_energy_shield);
+        m_drop_downs.push_back(std::move(drop_down));
+    }
+
   public:
     EntitySettingsPanel() = default;
     EntitySettingsPanel(const font::Font &font) {
@@ -53,43 +141,8 @@ class EntitySettingsPanel {
         m_headline_format = font.create_text_format(text_opts);
         m_headline = font.create_text("Guard", text_opts);
 
-        DropDown select_weapon_drop_down{};
-        select_weapon_drop_down.bbox.color = DropDown::background_color;
-        select_weapon_drop_down.bbox.border.color = EntitySettingsPanel::border_color;
-        select_weapon_drop_down.bbox.border.width = 0.005;
-        select_weapon_drop_down.bbox.model_matrix =
-            math::Matrix().translate(m_center_x, -0.8f).scale(0.4f, 0.05f);
-
-        const auto change_weapon_to_sniper = [](GameState &game_state) {
-            DEBUG_ASSERT(
-                game_state.selected_guard.has_value(),
-                "Error: Settings panel is open for a guard, but no guard is selected.");
-            game_state.guards[game_state.selected_guard.value()].set_weapon(
-                Weapon::create_weapon<Sniper>());
-        };
-
-        const auto change_weapon_to_bow = [](GameState &game_state) {
-            DEBUG_ASSERT(
-                game_state.selected_guard.has_value(),
-                "Error: Settings panel is open for a guard, but no guard is selected.");
-            game_state.guards[game_state.selected_guard.value()].set_weapon(
-                Weapon::create_weapon<Bow>());
-        };
-
-        const auto change_weapon_to_sword = [](GameState &game_state) {
-            DEBUG_ASSERT(
-                game_state.selected_guard.has_value(),
-                "Error: Settings panel is open for a guard, but no guard is selected.");
-            game_state.guards[game_state.selected_guard.value()].set_weapon(
-                Weapon::create_weapon<Sword>());
-        };
-
-        select_weapon_drop_down.add_headline(font, "Select weapon");
-        select_weapon_drop_down.add_drop_down_item(font, "Sniper",
-                                                   change_weapon_to_sniper);
-        select_weapon_drop_down.add_drop_down_item(font, "Bow", change_weapon_to_bow);
-        select_weapon_drop_down.add_drop_down_item(font, "Sword", change_weapon_to_sword);
-        m_drop_downs.push_back(std::move(select_weapon_drop_down));
+        create_select_weapon_drop_down(font);
+        create_preferred_target_drop_down(font);
     }
 
     void get_render_data(
@@ -112,6 +165,10 @@ class EntitySettingsPanel {
                         text_format_out2.push_back(item.text_format);
                         text_out2.push_back(item.text);
                     }
+
+                    // For now, we don't render any drop downs below the open drop down as
+                    // they overlap.
+                    break;
                 } else {
                     geom_out.push_back(dd.bbox);
                 }
@@ -135,22 +192,14 @@ class EntitySettingsPanel {
             game_state.camera.to_ndc_point(game_state.cursor.viewport_position);
         const bool has_clicked = game_state.cursor.click_point.has_value();
 
-        if (has_clicked && is_point_inside(cursor_position)) {
-            bool click_inside_any_dropdown = false;
+        if (is_point_inside(cursor_position)) {
             for (auto &dd : m_drop_downs) {
-                if (dd.is_point_inside(cursor_position)) {
-                    click_inside_any_dropdown = true;
-                    break;
+                if (!dd.is_point_inside(cursor_position) && has_clicked) {
+                    dd.close();
                 }
-            }
-            if (!click_inside_any_dropdown) {
-                close_drop_downs();
-                return;
-            }
-        }
 
-        for (auto &dd : m_drop_downs) {
-            dd.handle_cursor(game_state);
+                dd.handle_cursor(game_state);
+            }
         }
     }
 

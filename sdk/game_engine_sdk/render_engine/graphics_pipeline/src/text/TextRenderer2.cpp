@@ -56,6 +56,12 @@ void TextRenderer2::write_to_format_buffer(const std::vector<font::TextFormat> &
 std::vector<vulkan::DrawIndexedIndirectCommand>
 TextRenderer2::write_to_glyph_buffer(const font::Text &text, const size_t text_format_id,
                                      const size_t offset) {
+
+    // TODO: Improve TextRenderer2 draw call by instancing on each character instead of
+    // simply creating one draw command per character. The result would become one draw
+    // commands for every 'a' for example. This also requires the characters to be
+    // sequentially in the instance buffer, even though they belon to different texts. As
+    // an example: a a a a a a |  b b b b b b  | c c c
     std::vector<vulkan::DrawIndexedIndirectCommand> draw_commands;
     draw_commands.reserve(text.glyphs.size());
 

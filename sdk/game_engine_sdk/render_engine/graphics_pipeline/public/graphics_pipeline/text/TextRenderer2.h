@@ -27,16 +27,6 @@ struct TextFormatSBO2 {
     alignas(4) float font_size = 11.0f;
 };
 
-// CONTINUE: Refactoring steps:
-// 1. DONE Break out text formatting to its own class.
-// 2. DONE Make use of the new text formatting class in the existing TextRenderer.
-// 3. DONE Implement the new TextRenderer2 class.
-// 3.5 DONE Create a nice interface for rendering text with TextRenderer2
-// 4. DONE Transition IntroState to use the TextRenderer2 class.
-// 4.5 Refactor all other usage of TextRenderer to use TextRenderer2
-// 5. Evaluate if I can move font out from the TextRenderer2 class.
-// 6. Improve TextRenderer2 draw call by instancing on each character.
-
 class TextRenderer2 {
   private:
     std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
@@ -57,6 +47,7 @@ class TextRenderer2 {
     get_descriptor_set_layout(std::shared_ptr<vulkan::context::GraphicsContext> &ctx);
 
   public:
+    // TODO: Evaluate if it would be better to move the font out form this class.
     font::Font m_font;
 
     TextRenderer2() = default;
