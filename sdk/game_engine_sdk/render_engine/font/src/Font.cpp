@@ -10,7 +10,7 @@ Font::Font(const std::string &font_path)
     triangulate_glyphs();
 }
 
-TextFormat Font::create_text_format(const TextOpts &opts) {
+TextFormat Font::create_text_format(const TextOpts &opts) const {
     return {
         .position = math::Vector3(opts.position, 0.0f),
         .font_size = get_adjusted_font_size(opts.font_size),
@@ -18,7 +18,7 @@ TextFormat Font::create_text_format(const TextOpts &opts) {
     };
 }
 
-Text Font::create_text(const font::Unicode &codepoint, const TextOpts &opts) {
+Text Font::create_text(const font::Unicode &codepoint, const TextOpts &opts) const {
 
     TextLayout layout = m_formatter.format(codepoint, opts);
     const float font_scale = opts.font_size / m_loader.get_units_per_em();
@@ -50,15 +50,15 @@ Text Font::create_text(const font::Unicode &codepoint, const TextOpts &opts) {
     return text;
 }
 
-float Font::get_adjusted_font_size(float font_size) {
+float Font::get_adjusted_font_size(float font_size) const {
     return font_size / m_loader.get_units_per_em();
 }
 
-size_t Font::get_first_index(const char32_t &c) {
+size_t Font::get_first_index(const char32_t &c) const {
     return m_first_index[m_loader.get_glyph_index(c)];
 }
 
-size_t Font::get_index_count(const char32_t &c) {
+size_t Font::get_index_count(const char32_t &c) const {
     return m_index_count[m_loader.get_glyph_index(c)];
 }
 

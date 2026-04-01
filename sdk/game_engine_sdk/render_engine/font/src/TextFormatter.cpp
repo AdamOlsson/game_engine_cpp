@@ -4,14 +4,15 @@
 
 namespace font {
 
-TextLayout TextFormatter::format(const font::Unicode &codepoint, const TextOpts &opts) {
+TextLayout TextFormatter::format(const font::Unicode &codepoint,
+                                 const TextOpts &opts) const {
     DEBUG_ASSERT(m_font_loader != nullptr,
                  "Error: Trying to format code when the font loader is not set.");
     return layout_text(codepoint, opts);
 }
 
 TextLayout TextFormatter::layout_text(const font::Unicode &codepoint,
-                                      const TextOpts &opts) {
+                                      const TextOpts &opts) const {
     /* line_height_top ---------------- < bbox top >
      * font_padding        <padding>
      * font_bbox_top   ---------------- < word bbox >
@@ -114,7 +115,7 @@ TextLayout TextFormatter::layout_text(const font::Unicode &codepoint,
 }
 
 Word TextFormatter::layout_word(const font::Unicode &codepoint, const size_t start,
-                                const size_t end, const math::Vector2 &offset) {
+                                const size_t end, const math::Vector2 &offset) const {
 
     std::vector<math::Vector2> glyph_positions;
     glyph_positions.reserve(end - start);

@@ -33,9 +33,9 @@ class TextFormatter {
 
     font::FontLoader *m_font_loader = nullptr;
 
-    TextLayout layout_text(const font::Unicode &codepoint, const TextOpts &opts);
+    TextLayout layout_text(const font::Unicode &codepoint, const TextOpts &opts) const;
     Word layout_word(const font::Unicode &codepoint, const size_t start, const size_t end,
-                     const math::Vector2 &offset);
+                     const math::Vector2 &offset) const;
 
   public:
     TextFormatter() = default;
@@ -50,8 +50,7 @@ class TextFormatter {
         return *this;
     }
 
-    void set_font_loader(FontLoader *font_loader) { m_font_loader = font_loader; }
-    TextLayout format(const font::Unicode &codepoint, const TextOpts &opts);
+    TextLayout format(const font::Unicode &codepoint, const TextOpts &opts) const;
 };
 
 } // namespace font

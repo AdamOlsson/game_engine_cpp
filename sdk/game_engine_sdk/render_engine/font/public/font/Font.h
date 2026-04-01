@@ -43,8 +43,7 @@ class Font {
     Font &operator=(Font &&other) noexcept {
         if (this != &other) {
             m_loader = std::move(other.m_loader);
-            m_formatter = std::move(other.m_formatter);
-            m_formatter.set_font_loader(&m_loader);
+            m_formatter = TextFormatter(&m_loader);
             vertices = std::move(other.vertices);
             indices = std::move(other.indices);
             m_first_index = std::move(other.m_first_index);
@@ -54,12 +53,12 @@ class Font {
         return *this;
     }
 
-    size_t get_first_index(const char32_t &c);
-    size_t get_index_count(const char32_t &c);
+    size_t get_first_index(const char32_t &c) const;
+    size_t get_index_count(const char32_t &c) const;
     /*size_t get_vertex_offset(const char32_t &c);*/
 
-    TextFormat create_text_format(const TextOpts &opts);
-    Text create_text(const font::Unicode &codepoint, const TextOpts &opts);
+    TextFormat create_text_format(const TextOpts &opts) const;
+    Text create_text(const font::Unicode &codepoint, const TextOpts &opts) const;
 
     signed long get_num_glyphs() const;
 
@@ -67,7 +66,7 @@ class Font {
 
     unsigned short get_units_per_em() const;
 
-    float get_adjusted_font_size(float font_size);
+    float get_adjusted_font_size(float font_size) const;
 
     bool is_loaded() const { return !vertices.empty(); }
 };

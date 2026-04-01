@@ -1,8 +1,9 @@
 #pragma once
 
 #include "GameState.h"
+#include "font/Font.h"
+#include "font/types.h"
 #include "graphics_pipeline/geometry/GeometryPipelineSBO.h"
-#include "graphics_pipeline/text/TextRenderer2.h"
 #include "util/colors.h"
 struct DropDown {
 
@@ -42,8 +43,7 @@ struct DropDown {
     size_t selected_item_id = std::numeric_limits<size_t>::max();
     size_t hovered_item_id = std::numeric_limits<size_t>::max();
 
-    void add_headline(graphics_pipeline::text::TextRenderer2 *text_renderer2,
-                      const std::string &text) {
+    void add_headline(const font::Font &font, const std::string &text) {
 
         const math::Vector2 drop_down_position =
             math::Matrix::position_2d(bbox.model_matrix);
@@ -60,12 +60,11 @@ struct DropDown {
 
         text_opts.position = math::Vector2(
             drop_down_position.x() - drop_down_size.x() / 2.0f, headline_pos_y);
-        headline_format = text_renderer2->m_font.create_text_format(text_opts);
-        headline = text_renderer2->m_font.create_text(text, text_opts);
+        headline_format = font.create_text_format(text_opts);
+        headline = font.create_text(text, text_opts);
     }
 
-    void add_drop_down_item(graphics_pipeline::text::TextRenderer2 *text_renderer2,
-                            const std::string &text,
+    void add_drop_down_item(const font::Font &font, const std::string &text,
                             std::function<void(GameState &)> on_click_cb) {
         const math::Vector2 parent_position =
             math::Matrix::position_2d(bbox.model_matrix);
@@ -83,8 +82,8 @@ struct DropDown {
                                            drop_down_item_y_pos);
 
         DropDownItem item{};
-        item.text_format = text_renderer2->m_font.create_text_format(text_opts);
-        item.text = text_renderer2->m_font.create_text(text, text_opts);
+        item.text_format = font.create_text_format(text_opts);
+        item.text = font.create_text(text, text_opts);
         item.on_click_cb = on_click_cb;
         item.bbox.color = background_color;
         item.bbox.border.width = 0.005;

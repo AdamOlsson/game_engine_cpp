@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../DropDown.h"
+#include "../EntitySettingsPanel.h"
 #include "../GameState.h"
 #include "camera/Camera.h"
 #include "graphics_pipeline/geometry/GeometryRenderer2.h"
@@ -8,102 +8,6 @@
 #include "graphics_pipeline/text/TextRenderer2.h"
 #include "state_machine/StateTransition.h"
 #include <vector>
-
-struct EntitySettingsPanel {
-    static constexpr util::colors::Color background_color =
-        util::colors::rgba(0.02f, 0.02f, 0.02f, 0.8f);
-    static constexpr util::colors::Color hover_color =
-        util::colors::rgba(0.08f, 0.08f, 0.08f, 0.90f);
-    static constexpr util::colors::Color border_color = util::colors::hex(0x8bac0f);
-    static constexpr util::colors::Color font_color = util::colors::hex(0x9bbc0f);
-
-    graphics_pipeline::geometry::GeometryPipelineSBO bbox_render_data;
-
-    font::TextFormat headline_format;
-    font::Text headline;
-
-    float center_x = 0.0f;
-    math::Vector2 size;
-
-    std::vector<DropDown> drop_downs;
-
-    bool is_open = false;
-
-    void get_render_data(
-        std::vector<font::TextFormat> &text_format_out2,
-        std::vector<font::Text> &text_out2,
-        std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> &geom_out) {
-
-        geom_out.push_back(bbox_render_data);
-
-        text_format_out2.push_back(headline_format);
-        text_out2.push_back(headline);
-
-        if (drop_downs.size() > 0) {
-            for (auto &dd : drop_downs) {
-                text_format_out2.push_back(dd.headline_format);
-                text_out2.push_back(dd.headline);
-                if (dd.is_open) {
-                    for (auto &item : dd.items) {
-                        geom_out.push_back(item.bbox);
-                        text_format_out2.push_back(item.text_format);
-                        text_out2.push_back(item.text);
-                    }
-                } else {
-                    geom_out.push_back(dd.bbox);
-                }
-            }
-            return;
-        }
-    }
-
-    bool is_point_inside(const math::Vector2 &point) const {
-        const camera::WorldPoint2D position =
-            math::Matrix::position_2d(bbox_render_data.model_matrix);
-        return math::is_point_inside_rectangle(point, position, size.x(), size.y());
-    }
-
-    void handle_cursor(GameState &game_state) {
-        if (!is_open) {
-            return;
-        }
-
-        const interface::NDCPoint cursor_position =
-            game_state.camera.to_ndc_point(game_state.cursor.viewport_position);
-        const bool has_clicked = game_state.cursor.click_point.has_value();
-
-        if (has_clicked && is_point_inside(cursor_position)) {
-            bool click_inside_any_dropdown = false;
-            for (auto &dd : drop_downs) {
-                if (dd.is_point_inside(cursor_position)) {
-                    click_inside_any_dropdown = true;
-                    break;
-                }
-            }
-            if (!click_inside_any_dropdown) {
-                close_drop_downs();
-                return;
-            }
-        }
-
-        for (auto &dd : drop_downs) {
-            dd.handle_cursor(game_state);
-        }
-    }
-
-    void open() { is_open = true; }
-    void close() {
-        is_open = false;
-        for (auto &dd : drop_downs) {
-            dd.close();
-        }
-    }
-    void close_drop_downs() {
-        for (auto &dd : drop_downs) {
-            dd.close();
-        }
-    }
-};
 
 class DefendState {
   private:
@@ -138,8 +42,6 @@ class DefendState {
     void handle_cursor(const interface::NDCPoint &cursor_position,
                        const bool has_clicked);
 
-    EntitySettingsPanel init_entity_settings_panel();
-
   public:
     DefendState() = default;
 
@@ -151,7 +53,8 @@ class DefendState {
           m_world_geometry_renderer(world_geom_renderer),
           m_ui_text_renderer2(ui_text_renderer2),
           m_ui_geometry_renderer(ui_geom_renderer) {
-        m_settings_panel = init_entity_settings_panel();
+
+        m_settings_panel = EntitySettingsPanel(m_ui_text_renderer2->m_font);
     }
 
     DefendState(DefendState &&) noexcept = default;
@@ -169,7 +72,7 @@ class DefendState {
     void render_ui(const vulkan::CommandBuffer &command_buffer,
                    PushConstantType *push_constant) {
 
-        if (m_settings_panel.is_open) {
+        if (m_settings_panel.is_open()) {
 
             std::vector<font::TextFormat> text_format;
             std::vector<font::Text> text;
