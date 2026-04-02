@@ -29,33 +29,44 @@ QuadRenderer2::QuadRenderer2(std::shared_ptr<vulkan::context::GraphicsContext> &
 
     m_descriptor_pool = vulkan::DescriptorPool(m_ctx, opts.quad.pool_opts);
     m_sampler = vulkan::Sampler(m_ctx, opts.quad.sampler_opts);
-    m_texture = opts.quad.texture.has_value()
-                    ? std::move(opts.quad.texture.value())
-                    : Texture::empty(ctx, command_buffer_manager);
+
+    if (opts.quad.textures.size() > 0) {
+        m_textures = std::move(opts.quad.textures);
+    } else {
+        std::vector<graphics_pipeline::Texture> empty_textures;
+        empty_textures.push_back(std::move(Texture::empty(ctx, command_buffer_manager)));
+        m_textures = std::move(empty_textures);
+    }
 
     const size_t max_frames_in_flight = 2;
+
+    std::vector<vulkan::DescriptorImageInfo> texture_image_infos;
+    texture_image_infos.reserve(m_textures.size());
+    for (auto &texture : m_textures) {
+        texture_image_infos.push_back(
+            vulkan::DescriptorImageInfo(texture.view(), &m_sampler));
+    }
 
     auto builder = SwapDescriptorSetBuilder(max_frames_in_flight);
     builder.add_storage_buffer(
         0, vulkan::DescriptorBufferInfo::from_vector(m_instances.get_reference()));
-    builder.add_combined_image_sampler(
-        2, {vulkan::DescriptorImageInfo(m_texture.view(), &m_sampler)});
+    builder.add_combined_image_sampler(2, std::move(texture_image_infos));
     m_descriptor_sets = builder.build(ctx, m_descriptor_pool);
 
     graphics_pipeline::PipelineOpts pipeline_opts{};
     pipeline_opts.swap_chain.extent = opts.swap_chain.extent;
     pipeline_opts.swap_chain.render_pass = opts.swap_chain.render_pass;
     pipeline_opts.push_constant_range = opts.push_constant_range;
-    pipeline_opts.descriptor.layout = QuadRenderer2::get_descriptor_set_layout(ctx);
+    pipeline_opts.descriptor.layout = get_descriptor_set_layout(ctx, m_textures.size());
     m_quad_pipeline = QuadPipeline(m_ctx, pipeline_opts);
 }
 
 vulkan::DescriptorSetLayout
 graphics_pipeline::quad::QuadRenderer2::get_descriptor_set_layout(
-    std::shared_ptr<vulkan::context::GraphicsContext> &ctx) {
+    std::shared_ptr<vulkan::context::GraphicsContext> &ctx, const size_t num_textures) {
     graphics_pipeline::DescriptorSetLayoutBuilder builder;
     builder.add_storage_buffer_binding(0, VK_SHADER_STAGE_VERTEX_BIT);
-    builder.add_combined_image_sampler_binding(2, 1);
+    builder.add_combined_image_sampler_binding(2, num_textures);
     return builder.build(ctx);
 }
 

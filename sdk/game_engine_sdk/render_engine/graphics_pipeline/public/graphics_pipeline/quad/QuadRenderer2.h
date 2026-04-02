@@ -26,7 +26,7 @@ class QuadRenderer2 {
 
     vulkan::DescriptorPool m_descriptor_pool;
 
-    Texture m_texture;
+    std::vector<Texture> m_textures;
     vulkan::Sampler m_sampler;
 
     SwapDescriptorSet m_descriptor_sets;
@@ -34,8 +34,9 @@ class QuadRenderer2 {
     vulkan::buffers::StorageBuffer<QuadPipelineSBO> m_instances;
     vulkan::buffers::IndirectBuffer<vulkan::DrawIndexedIndirectCommand> m_draw_commands;
 
-    static vulkan::DescriptorSetLayout
-    get_descriptor_set_layout(std::shared_ptr<vulkan::context::GraphicsContext> &ctx);
+    vulkan::DescriptorSetLayout
+    get_descriptor_set_layout(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
+                              const size_t num_textures);
 
   public:
     QuadRenderer2(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,

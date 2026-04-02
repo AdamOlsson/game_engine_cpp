@@ -71,7 +71,7 @@ class CaravanDefence : public Game {
         m_command_buffer_manager = std::make_unique<vulkan::CommandBufferManager>(ctx, 2);
 
         m_game_state.camera = camera::Camera2D(window_size.width, window_size.height);
-        m_game_state.camera.configure_max_zoom(1.0f);
+        m_game_state.camera.configure_max_zoom(2.0f);
         m_game_state.camera.configure_min_zoom(0.05f);
         m_game_state.camera.set_zoom(0.1f);
 

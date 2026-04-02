@@ -21,9 +21,12 @@ graphics_pipeline::quad::QuadRenderer::QuadRenderer(
 
     m_descriptor_pool = vulkan::DescriptorPool(m_ctx, opts.quad.pool_opts);
     m_sampler = vulkan::Sampler(m_ctx, opts.quad.sampler_opts);
-    m_texture = opts.quad.texture.has_value()
-                    ? std::move(opts.quad.texture.value())
-                    : Texture::empty(ctx, command_buffer_manager);
+
+    if (opts.quad.textures.size() > 0) {
+        m_texture = std::move(opts.quad.textures[0]);
+    } else {
+        m_texture = Texture::empty(ctx, command_buffer_manager);
+    }
 
     const size_t max_frames_in_flight = 2;
     m_sparse_set.dense =

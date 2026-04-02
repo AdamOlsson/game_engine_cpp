@@ -21,11 +21,9 @@ class DescriptorPool {
                                             const uint32_t num_samplers);
 
   public:
-    DescriptorPool() = default;
+    DescriptorPoolOpts opts;
 
-    DescriptorPool(std::shared_ptr<context::GraphicsContext> &ctx,
-                   const uint32_t capacity, const uint32_t num_storage_bufs,
-                   const uint32_t num_uniform_bufs, const uint32_t num_samplers);
+    DescriptorPool() = default;
 
     DescriptorPool(std::shared_ptr<context::GraphicsContext> &ctx,
                    const DescriptorPoolOpts &opts);

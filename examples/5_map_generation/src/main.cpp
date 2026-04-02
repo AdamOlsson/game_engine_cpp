@@ -88,9 +88,10 @@ class MapGeneration : public Game {
 
         m_sampler = vulkan::Sampler(ctx, vulkan::Filter::NEAREST,
                                     vulkan::SamplerAddressMode::CLAMP_TO_BORDER);
-        auto tileset = graphics_pipeline::Texture::from_filepath(
-            ctx, m_command_buffer_manager.get(), ASSET_FILE("forest_tileset_24x24.png"));
-        m_tileset_uvwt = TilesetUVWT(tileset, TileSize(24, 24));
+        std::vector<graphics_pipeline::Texture> tileset;
+        tileset.push_back(graphics_pipeline::Texture::from_filepath(
+            ctx, m_command_buffer_manager.get(), ASSET_FILE("forest_tileset_24x24.png")));
+        m_tileset_uvwt = TilesetUVWT(tileset[0], TileSize(24, 24));
 
         auto quad_push_constant_range =
             vulkan::PushConstantRange{.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
@@ -101,7 +102,7 @@ class MapGeneration : public Game {
         renderer_opts.push_constant_range = quad_push_constant_range;
         renderer_opts.swap_chain.extent = m_swap_chain->get_extent();
         renderer_opts.swap_chain.render_pass = m_swap_chain->get_render_pass_handle();
-        renderer_opts.quad.texture = std::move(tileset);
+        renderer_opts.quad.textures = std::move(tileset);
         renderer_opts.quad.instance_buffer_opts.size = grid.width() * grid.height();
         m_quad_renderer = std::make_unique<graphics_pipeline::quad::QuadRenderer>(
             ctx, m_command_buffer_manager.get(), renderer_opts);

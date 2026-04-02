@@ -1,25 +1,20 @@
 #include "vulkan/DescriptorPool.h"
 
 vulkan::DescriptorPool::DescriptorPool(
-    std::shared_ptr<vulkan::context::GraphicsContext> &ctx, const uint32_t capacity,
-    const uint32_t num_storage_bufs, const uint32_t num_uniform_bufs,
-    const uint32_t num_samplers)
-    : m_ctx(ctx), m_descriptor_pool(create_descriptor_pool(
-                      capacity, num_storage_bufs, num_uniform_bufs, num_samplers)) {}
-
-vulkan::DescriptorPool::DescriptorPool(
     std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
     const DescriptorPoolOpts &opts)
     : m_ctx(ctx), m_descriptor_pool(create_descriptor_pool(
                       opts.max_num_descriptor_sets, opts.num_storage_buffers,
-                      opts.num_uniform_buffers, opts.num_combined_image_samplers)) {}
+                      opts.num_uniform_buffers, opts.num_combined_image_samplers)),
+      opts(opts) {}
 
 vulkan::DescriptorPool::DescriptorPool(
     std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
     const DescriptorPoolOpts &&opts)
     : m_ctx(ctx), m_descriptor_pool(create_descriptor_pool(
                       opts.max_num_descriptor_sets, opts.num_storage_buffers,
-                      opts.num_uniform_buffers, opts.num_combined_image_samplers)) {}
+                      opts.num_uniform_buffers, opts.num_combined_image_samplers)),
+      opts(opts) {}
 
 vulkan::DescriptorPool::~DescriptorPool() {
     if (m_descriptor_pool != VK_NULL_HANDLE) {
@@ -69,7 +64,8 @@ VkDescriptorPool vulkan::DescriptorPool::create_descriptor_pool(
 }
 
 vulkan::DescriptorPool::DescriptorPool(vulkan::DescriptorPool &&other) noexcept
-    : m_ctx(std::move(other.m_ctx)), m_descriptor_pool(other.m_descriptor_pool) {
+    : m_ctx(std::move(other.m_ctx)), m_descriptor_pool(other.m_descriptor_pool),
+      opts(std::move(other.opts)) {
     other.m_descriptor_pool = VK_NULL_HANDLE;
 }
 
@@ -82,6 +78,7 @@ vulkan::DescriptorPool::operator=(DescriptorPool &&other) noexcept {
 
         m_ctx = std::move(other.m_ctx);
         m_descriptor_pool = other.m_descriptor_pool;
+        opts = std::move(opts);
 
         other.m_descriptor_pool = VK_NULL_HANDLE;
     }

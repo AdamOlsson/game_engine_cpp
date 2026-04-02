@@ -21,13 +21,19 @@ void Configuration::setup_world_renderers(
     push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     push_constant_range.size = camera::Camera2D::matrix_size();
 
+    std::vector<graphics_pipeline::Texture> textures;
+    textures.push_back(graphics_pipeline::Texture::from_filepath(
+        ctx, game.m_command_buffer_manager.get(), ASSET_FILE("sprite_sheet.png")));
+    textures.push_back(graphics_pipeline::Texture::from_filepath(
+        ctx, game.m_command_buffer_manager.get(), ASSET_FILE("guards/idle32x32.png")));
+
     graphics_pipeline::RendererOpts renderer_opts{};
     renderer_opts.push_constant_range = push_constant_range;
     renderer_opts.swap_chain.extent = game.m_swap_chain->get_extent();
     renderer_opts.swap_chain.render_pass = &game.m_world_render_pass;
-    renderer_opts.quad.texture = graphics_pipeline::Texture::from_filepath(
-        ctx, game.m_command_buffer_manager.get(), ASSET_FILE("sprite_sheet.png"));
 
+    renderer_opts.quad.textures = std::move(textures);
+    renderer_opts.quad.pool_opts.num_combined_image_samplers = 4; // 2 per frame in flight
     game.m_quad_renderer = std::make_unique<graphics_pipeline::quad::QuadRenderer2>(
         ctx, game.m_command_buffer_manager.get(), renderer_opts);
 
@@ -139,11 +145,12 @@ void Configuration::setup_initial_game_state(
         quad_renderer != nullptr,
         "Error: Quad renderer needs to be initialised before setting up game state.");
 
-    const float slot_distance_x = 250.0f;
+    const float slot_distance_x = 75.0f;
     // Add entities
     game_state.caravan.push_back(
         entity::Entity::create_caravan_cart(camera::WorldPoint2D(0.0f, 0.0f)));
     game_state.caravan.back().set_uvwt(0.3f, 0.0f, 0.4f, 0.2f);
+    game_state.caravan.back().set_texture_id(0);
     game_state.caravan_slots.push_back(
         entity::Entity::create_caravan_slot(camera::WorldPoint2D(
             slot_distance_x, game_state.caravan.back().get_world_position().y)));
@@ -152,8 +159,10 @@ void Configuration::setup_initial_game_state(
             -slot_distance_x, game_state.caravan.back().get_world_position().y)));
 
     game_state.caravan.push_back(
-        entity::Entity::create_caravan_cart(camera::WorldPoint2D(0.0f, 275.0f)));
+        entity::Entity::create_caravan_cart(camera::WorldPoint2D(0.0f, 144.0f)));
     game_state.caravan.back().set_uvwt(0.2f, 0.0f, 0.3f, 0.2f);
+    game_state.caravan.back().set_texture_id(0);
+
     game_state.caravan_slots.push_back(
         entity::Entity::create_caravan_slot(camera::WorldPoint2D(
             slot_distance_x, game_state.caravan.back().get_world_position().y)));
@@ -164,9 +173,13 @@ void Configuration::setup_initial_game_state(
     game_state.guards.reserve(16); // 16 is magic
     game_state.guards.push_back(
         entity::Entity::create_guard(camera::WorldPoint2D(0.0f, 0.0f)));
+    game_state.guards.back().set_uvwt(0.125f, 0.046875f, 0.375f, 0.2109375f);
+    game_state.guards.back().set_texture_id(1);
     game_state.guards.push_back(
         entity::Entity::create_guard(camera::WorldPoint2D(0.0f, 0.0f)));
     game_state.guards.back().set_weapon(Weapon::create_weapon<Sniper>());
+    game_state.guards.back().set_texture_id(1);
+    game_state.guards.back().set_uvwt(0.125f, 0.046875f, 0.375f, 0.2109375f);
 
     game_state.enemies.reserve(64);
     game_state.attacks.reserve(8);

@@ -28,9 +28,9 @@ struct caravan_cart_t {
         util::colors::rgb(0.6f, 0.0f, 0.6f);
     static constexpr util::colors::Color selected_color =
         util::colors::rgb(0.6f, 0.0f, 0.6f);
-    static constexpr math::Vector2 size = math::Vector2(128.0f, 256.0f);
+    static constexpr math::Vector2 size = math::Vector2(64.0f, 128.0f);
     static constexpr float velocity = 0.0f;
-    static constexpr float max_health = 10.0f;
+    static constexpr float max_health = 10000.0f;
     static constexpr std::optional<Weapon> weapon = std::nullopt;
 
     caravan_cart_t() {}
@@ -43,7 +43,7 @@ struct caravan_slot_t {
         util::colors::rgba(0.5f, 0.5f, 0.5f, 0.8f);
     static constexpr util::colors::Color selected_color =
         util::colors::rgba(0.5f, 0.5f, 0.5f, 0.2f);
-    static constexpr math::Vector2 size = math::Vector2(50.0f, 50.0f);
+    static constexpr math::Vector2 size = math::Vector2(16.0f, 16.0f);
     static constexpr float velocity = 0.0f;
     static constexpr float max_health = 10.0f;
 
@@ -58,7 +58,7 @@ struct enemy_t {
     static constexpr util::colors::Color color = util::colors::DARK_RED;
     static constexpr util::colors::Color highlighted_color = util::colors::DARK_RED;
     static constexpr util::colors::Color selected_color = util::colors::DARK_RED;
-    static constexpr math::Vector2 size = math::Vector2(50.0f, 50.0f);
+    static constexpr math::Vector2 size = math::Vector2(16.0f, 16.0f);
     static constexpr float velocity = 75.0f;
     static constexpr float max_health = 3.0f;
 
@@ -76,7 +76,7 @@ struct guard_t {
         util::colors::rgb(0.0f, 0.75f, 0.0f);
     static constexpr util::colors::Color selected_color =
         util::colors::rgb(0.0f, 0.75f, 0.0f);
-    static constexpr math::Vector2 size = math::Vector2(50.0f, 50.0f);
+    static constexpr math::Vector2 size = math::Vector2(16.0f, 21.0f);
     static constexpr float velocity = 95.0f;
     static constexpr float max_health = 10.0f;
 
@@ -92,7 +92,7 @@ struct ranged_attack_t {
     util::colors::Color color = util::colors::ORANGE;
     static constexpr util::colors::Color highlighted_color = util::colors::ORANGE;
     static constexpr util::colors::Color selected_color = util::colors::ORANGE;
-    static constexpr math::Vector2 size = math::Vector2(0.0f, 10.0f);
+    static constexpr math::Vector2 size = math::Vector2(0.0f, 4.0f);
     static constexpr float velocity = 0.0f;
     static constexpr float max_health = 10.0f;
 
@@ -233,7 +233,7 @@ class Entity {
             math::Vector2(0.0f, (e.m_size.y() / 2.0f) + 20.0f);
         math::Vector2 health_bar_position =
             e.get_world_position() + health_bar_position_offset;
-        math::Vector2 health_bar_size = math::Vector2(e.m_size.x(), 10.0f);
+        math::Vector2 health_bar_size = math::Vector2(e.m_size.x(), 6.0f);
 
         HealthBarOpts health_bar_opts{};
         health_bar_opts.type = HealthBarType::Normal;
@@ -276,10 +276,10 @@ class Entity {
         e.m_color = enemy_t::color;
 
         math::Vector2 health_bar_position_offset =
-            math::Vector2(0.0f, (e.m_size.y() / 2.0f) + 20.0f);
+            math::Vector2(0.0f, (e.m_size.y() / 2.0f) + 8.0f);
         math::Vector2 health_bar_position =
             e.get_world_position() + health_bar_position_offset;
-        math::Vector2 health_bar_size = math::Vector2(e.m_size.x(), 10.0f);
+        math::Vector2 health_bar_size = math::Vector2(e.m_size.x(), 4.0f);
 
         HealthBarOpts health_bar_opts{};
         health_bar_opts.type = HealthBarType::Normal;
@@ -330,7 +330,6 @@ class Entity {
 
     void get_quad_render_data(
         std::vector<graphics_pipeline::quad::QuadPipelineSBO> &out) const {
-
         out.push_back(m_render_data);
     }
 
@@ -431,10 +430,11 @@ class Entity {
     void update(const float dt_s) {
 
         const camera::WorldPoint2D position = get_world_position();
-        const float distance = math::distance(position, m_movement.target);
-
+        const float distance2 = math::distance2(position, m_movement.target);
         camera::WorldPoint2D new_position = position;
-        if (distance > 1.0f) {
+
+        if (distance2 > 0.0f) {
+            const float distance = math::sqrt(distance2);
             const float movement = m_movement.velocity * dt_s;
             const float fraction = std::min(movement / distance, 1.0f);
             new_position = math::lerp(position, m_movement.target, fraction);
@@ -465,6 +465,8 @@ class Entity {
     void set_move_target(const camera::WorldPoint2D &target) {
         m_movement.target = target;
     }
+
+    void set_texture_id(const size_t id) { m_render_data.texture_id = id; }
 
     void set_uvwt(const float u, const float v, const float w, const float t) {
         m_render_data.uvwt = math::Vector4(u, v, w, t);
@@ -656,8 +658,9 @@ inline void set_caravan_slot(Entity &guard_entity, Entity *slot_entity) {
                  "clear_caraval_slot() to clear the slot.");
     auto &guard = guard_entity.get<guard_t>();
     guard.caravan_slot = slot_entity;
-    /*guard_entity.set_world_position(slot_entity->get_world_position());*/
-    guard_entity.set_move_target(slot_entity->get_world_position());
+    math::Vector2 offset = (guard_t::size - caravan_slot_t::size) / 2.0f;
+    offset = offset * math::Vector2(0.0f, -1.0f);
+    guard_entity.set_move_target(slot_entity->get_world_position() + offset);
 }
 
 inline void clear_caravan_slot(Entity &guard_entity) {

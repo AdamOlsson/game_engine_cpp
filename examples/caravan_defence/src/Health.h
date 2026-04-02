@@ -25,7 +25,7 @@ class Health {
 
     math::Vector2 m_health_bar_position = math::Vector2(0.0f, 0.0f);
     math::Vector2 m_health_bar_position_offset = math::Vector2(0.0f, 0.0f);
-    math::Vector2 m_health_bar_size = math::Vector2(25.0f, 10.0f);
+    math::Vector2 m_health_bar_size = math::Vector2(25.0f, 4.0f);
 
     struct HealthBar {
         HealthBarType type;

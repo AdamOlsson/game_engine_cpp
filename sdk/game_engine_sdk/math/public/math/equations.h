@@ -28,6 +28,8 @@ template <Vec2Or3 T> constexpr float length(const T &v) {
     }
 }
 
+constexpr float sqrt(const float f) { return std::sqrt(f); }
+
 template <Vec2Or3 T> constexpr float distance(const T &from, const T &to) {
     const T diff = to - from;
     return length(diff);

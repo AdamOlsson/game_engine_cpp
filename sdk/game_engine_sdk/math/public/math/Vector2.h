@@ -79,6 +79,8 @@ class Vector2 {
 
     Vector2 operator-() const { return Vector2(-m_vec.x, -m_vec.y); }
 
+    Vector2 abs() const { return Vector2(glm::abs(m_vec)); }
+
     friend Vector2 operator+(const glm::vec2 &lhs, const Vector2 &rhs) {
         return Vector2(lhs.x + rhs.x(), lhs.y + rhs.y());
     }
@@ -89,6 +91,10 @@ class Vector2 {
 
     friend Vector2 operator*(const Vector2 &lhs, const float scalar) {
         return Vector2(lhs.x() * scalar, lhs.y() * scalar);
+    }
+
+    friend Vector2 operator*(const Vector2 &lhs, const Vector2 &rhs) {
+        return Vector2(lhs.x() * rhs.x(), lhs.y() * rhs.y());
     }
 
     template <typename Derived> Derived multiply(const Derived &other) const {

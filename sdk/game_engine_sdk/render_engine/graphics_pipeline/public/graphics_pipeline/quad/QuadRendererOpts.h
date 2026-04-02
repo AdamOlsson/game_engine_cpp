@@ -21,6 +21,6 @@ struct QuadRendererOpts {
         size_t size = 256;
     } instance_buffer_opts;
 
-    std::optional<graphics_pipeline::Texture> texture = std::nullopt;
+    std::vector<graphics_pipeline::Texture> textures;
 };
 } // namespace graphics_pipeline::quad
