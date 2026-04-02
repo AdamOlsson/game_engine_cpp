@@ -5,7 +5,7 @@
 
 constexpr void DefendState::spawn_group_of_enemies(GameState &game_state) {
     const size_t num_enemies = game_state.rng.uniform(1, 3);
-    const float group_distance = game_state.rng.uniform(800.0f, 1200.0f);
+    const float group_distance = game_state.rng.uniform(1200.0f, 1500.0f);
     const float group_angle = game_state.rng.uniform(-45.0f, 225.0f);
     const math::Vector2 group_center =
         math::Vector2(group_distance, 0.0f).rotate_z(group_angle);
@@ -103,19 +103,24 @@ util::StateTransition DefendState::update(const float dt, GameState &game_state)
         game_state.time_elapsed_ms = 0;
     }
 
-    for (size_t i = 0; i < game_state.enemies.size(); i++) {
-        entity::Entity &enemy = game_state.enemies[i];
-
-        for (entity::Entity &guard : game_state.guards) {
-            if (enemy.is_alive() && guard.can_attack() && guard.in_attack_range(enemy)) {
-
-                // Create attack
-                game_state.attacks.push_back(guard.attack(enemy));
-                break;
-            }
+    // Handle guard attacks
+    for (entity::Entity &guard : game_state.guards) {
+        if (!guard.can_attack()) {
+            continue;
         }
 
-        // Find the id of the cart the enemy is inside.
+        size_t target_id = guard.select_target(game_state.enemies, game_state.caravan);
+
+        if (target_id == std::numeric_limits<size_t>::max()) {
+            continue;
+        }
+
+        game_state.attacks.push_back(guard.attack(game_state.enemies[target_id]));
+    }
+
+    // Handle enemy attacks
+    for (size_t i = 0; i < game_state.enemies.size(); i++) {
+        entity::Entity &enemy = game_state.enemies[i];
         auto cart_id = find_caravan_cart(game_state, enemy.get_world_position());
         if (enemy.is_alive() && cart_id.has_value()) {
             enemy.attack(game_state.caravan[cart_id.value()]);
@@ -126,6 +131,31 @@ util::StateTransition DefendState::update(const float dt, GameState &game_state)
             game_state.enemies.erase(game_state.enemies.begin() + i);
         }
     }
+
+    /*for (size_t i = 0; i < game_state.enemies.size(); i++) {*/
+    /*    entity::Entity &enemy = game_state.enemies[i];*/
+    /**/
+    /*    for (entity::Entity &guard : game_state.guards) {*/
+    /*        if (enemy.is_alive() && guard.can_attack() && guard.in_attack_range(enemy))
+     * {*/
+    /**/
+    /*            // Create attack*/
+    /*            game_state.attacks.push_back(guard.attack(enemy));*/
+    /*            break;*/
+    /*        }*/
+    /*    }*/
+    /**/
+    /*    // Find the id of the cart the enemy is inside.*/
+    /*    auto cart_id = find_caravan_cart(game_state, enemy.get_world_position());*/
+    /*    if (enemy.is_alive() && cart_id.has_value()) {*/
+    /*        enemy.attack(game_state.caravan[cart_id.value()]);*/
+    /*        enemy.kill();*/
+    /*    }*/
+    /**/
+    /*    if (enemy.is_dead()) {*/
+    /*        game_state.enemies.erase(game_state.enemies.begin() + i);*/
+    /*    }*/
+    /*}*/
 
     for (auto &cart : game_state.caravan) {
         if (cart.is_dead()) {

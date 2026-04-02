@@ -169,7 +169,7 @@ class Entity {
 
     graphics_pipeline::quad::QuadPipelineSBO m_render_data;
 
-    PreferredTarget m_preferred_target = PreferredTarget::Nearest;
+    PreferredTarget m_preferred_target = PreferredTarget::Farthest;
     std::optional<Health> m_health = std::nullopt;
     std::optional<Weapon> m_weapon = std::nullopt;
     std::optional<AttackRangeRenderData> m_attack_range_render_data = std::nullopt;
@@ -387,6 +387,10 @@ class Entity {
         }
     }
 
+    HealthBarType get_active_health_bar_type() const {
+        return m_health->get_active_health_bar_type();
+    }
+
     void damage(const Weapon &weapon) {
         DEBUG_ASSERT(m_health.has_value(), "Error: Trying to call damage() "
                                            "on an entity that has no health.");
@@ -414,8 +418,8 @@ class Entity {
         m_health->handle_incomming_damage(m_health->max_health());
     }
 
-    bool is_dead() { return m_health->is_dead(); }
-    bool is_alive() { return !m_health->is_dead(); }
+    bool is_dead() const { return m_health->is_dead(); }
+    bool is_alive() const { return !m_health->is_dead(); }
 
     void set_color(const util::colors::Color &color) { m_color = color; }
 
@@ -482,12 +486,87 @@ class Entity {
             AttackRangeRenderData(get_world_position(), m_weapon->range);
     }
 
-    size_t select_target(const std::vector<Entity> &enemies) {
+    size_t select_target(const std::vector<Entity> &enemies,
+                         const std::vector<Entity> &caravan_carts) {
         DEBUG_ASSERT(
             m_weapon.has_value(),
             "Error: Checking select_target() but entity does not have a weapon.");
-        // CONTINUE: Select a target based on m_preferred_target
-        return 0;
+
+        size_t nearest_enemy = std::numeric_limits<size_t>::max();
+        float nearest_enemy_distance = std::numeric_limits<float>::max();
+
+        size_t farthest_enemy = std::numeric_limits<size_t>::max();
+        float farthest_enemy_distance = 0.0f;
+
+        size_t target_candidate = std::numeric_limits<size_t>::max();
+        float target_candidate_distance = std::numeric_limits<float>::max();
+        for (size_t i = 0; i < enemies.size(); i++) {
+            const auto &enemy = enemies[i];
+            if (enemy.is_dead()) {
+                continue;
+            }
+
+            if (!in_attack_range(enemy)) {
+                continue;
+            }
+
+            // find the closest caravan cart
+            float this_enemy_min_distance_to_cart = std::numeric_limits<float>::max();
+            float this_enemy_max_distance_to_cart = 0.0f;
+            for (size_t j = 0; j < caravan_carts.size(); j++) {
+                const auto &cart = caravan_carts[j];
+                const float distance2 = math::distance2(enemy.get_world_position(),
+                                                        cart.get_world_position());
+                this_enemy_min_distance_to_cart =
+                    fmin(this_enemy_min_distance_to_cart, distance2);
+                this_enemy_max_distance_to_cart =
+                    fmax(this_enemy_max_distance_to_cart, distance2);
+            }
+
+            if (this_enemy_min_distance_to_cart < nearest_enemy_distance) {
+                nearest_enemy = i;
+                nearest_enemy_distance = this_enemy_min_distance_to_cart;
+            }
+
+            if (this_enemy_max_distance_to_cart > farthest_enemy_distance) {
+                farthest_enemy = i;
+                farthest_enemy_distance = this_enemy_max_distance_to_cart;
+            }
+
+            switch (m_preferred_target) {
+            case PreferredTarget::Nearest: {
+                target_candidate = nearest_enemy;
+                target_candidate_distance = nearest_enemy_distance;
+                break;
+            }
+            case PreferredTarget::Farthest: {
+                target_candidate = farthest_enemy;
+                target_candidate_distance = farthest_enemy_distance;
+                break;
+            }
+            case PreferredTarget::Armor:
+                if (enemy.get_active_health_bar_type() == HealthBarType::Armor &&
+                    this_enemy_min_distance_to_cart < target_candidate_distance) {
+                    target_candidate = i;
+                    target_candidate_distance = this_enemy_min_distance_to_cart;
+                }
+                break;
+            case PreferredTarget::EnergyShield:
+                if (enemy.get_active_health_bar_type() == HealthBarType::EnergyShield &&
+                    this_enemy_min_distance_to_cart < target_candidate_distance) {
+                    target_candidate = i;
+                    target_candidate_distance = this_enemy_min_distance_to_cart;
+                }
+                break;
+            }
+        }
+
+        // If we found no enemy matching the preferred target, set target to the nearest
+        if (target_candidate == std::numeric_limits<size_t>::max()) {
+            target_candidate = nearest_enemy;
+        }
+
+        return target_candidate;
     }
 
     bool in_attack_range(const Entity &target) {
