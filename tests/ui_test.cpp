@@ -10,10 +10,11 @@ TEST(UITest, TestOnEnterAndOnLeaveWithSingleButton) {
     auto m_ui = ui::UI(ui::Menu().add_button(
         ui::Button("",
                    ui::ElementProperties{
-                       .container.dimension = glm::vec2(400.0f, 100.0f),
-                       .container.border.color = util::colors::GREEN,
-                       .container.border.thickness = 5.0f,
-                       .container.border.radius = 15.0f,
+                       .container = {.center = glm::vec3(0.0f, 0.0f, 0.0f),
+                                     .dimension = glm::vec2(400.0f, 100.0f),
+                                     .border.thickness = 5.0f,
+                                     .border.radius = 15.0f,
+                                     .border.color = util::colors::GREEN},
                    })
             .set_on_enter([](ui::Button &self) {
                 self.properties.container.border.color = util::colors::BLUE;
@@ -56,9 +57,9 @@ TEST(UITest, TestOnEnterAndOnLeaveWithThreeeButtons) {
                            ui::ElementProperties{
                                .container = {.center = glm::vec3(0.0f, 200.0f, 0.0f),
                                              .dimension = glm::vec2(400.0f, 100.0f),
-                                             .border.color = util::colors::DARK_GREEN,
                                              .border.thickness = 5.0f,
-                                             .border.radius = 15.0f},
+                                             .border.radius = 15.0f,
+                                             .border.color = util::colors::DARK_GREEN},
                            })
                     .set_on_enter([](ui::Button &self) {
                         self.properties.container.border.color = util::colors::DARK_BLUE;
@@ -71,9 +72,9 @@ TEST(UITest, TestOnEnterAndOnLeaveWithThreeeButtons) {
                            ui::ElementProperties{
                                .container = {.center = glm::vec3(0.0f, 0.0f, 0.0f),
                                              .dimension = glm::vec2(400.0f, 100.0f),
-                                             .border.color = util::colors::GREEN,
                                              .border.thickness = 5.0f,
-                                             .border.radius = 15.0f}})
+                                             .border.radius = 15.0f,
+                                             .border.color = util::colors::GREEN}})
                     .set_on_enter([](ui::Button &self) {
                         self.properties.container.border.color = util::colors::BLUE;
                     })
@@ -85,9 +86,9 @@ TEST(UITest, TestOnEnterAndOnLeaveWithThreeeButtons) {
                            ui::ElementProperties{
                                .container = {.center = glm::vec3(0.0f, -200.0f, 0.0f),
                                              .dimension = glm::vec2(400.0f, 100.0f),
-                                             .border.color = util::colors::LIGHT_GREEN,
                                              .border.thickness = 5.0f,
-                                             .border.radius = 15.0f}})
+                                             .border.radius = 15.0f,
+                                             .border.color = util::colors::LIGHT_GREEN}})
                     .set_on_enter([](ui::Button &self) {
                         self.properties.container.border.color = util::colors::LIGHT_BLUE;
                     })

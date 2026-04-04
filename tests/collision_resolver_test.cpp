@@ -210,11 +210,11 @@ TEST(CollisionResolverTest, GivenRectAndRectHasCollidedExpectVelocityTransferRev
                            .build();
 
     CollisionInformation collision_info{
-        .contact_type = ContactType::EDGE_EDGE,
+        .penetration_depth = 40.0f,
         .normal = glm::vec3(1.0f, 0.0f, 0.0f),
+        .contact_type = ContactType::EDGE_EDGE,
         .contact_patch = {glm::vec3(-40.0f, 40.0f, 0.0), glm::vec3(-40.0f, -40.0f, 0.0)},
-        .deepest_contact_idx = 0,
-        .penetration_depth = 40.0f};
+        .deepest_contact_idx = 0};
 
     auto solver = CollisionSolver(1.0);
     auto collision_corrections_ =
@@ -269,11 +269,11 @@ TEST(CollisionResolverTest,
                            .build();
 
     CollisionInformation collision_info{
+        .penetration_depth = 40.0f,
+        .normal = glm::vec3(1.0f, 0.0f, 0.0f),
         .contact_type = ContactType::EDGE_EDGE,
-        .normal = glm::vec3(-1.0f, 0.0f, 0.0f),
-        .contact_patch = {glm::vec3(-10.0f, 40.0f, 0.0), glm::vec3(-10.0f, -40.0f, 0.0)},
-        .deepest_contact_idx = 0,
-        .penetration_depth = 40.0f};
+        .contact_patch = {glm::vec3(-40.0f, 40.0f, 0.0), glm::vec3(-40.0f, -40.0f, 0.0)},
+        .deepest_contact_idx = 0};
 
     auto solver = CollisionSolver(1.0);
     auto collision_corrections_ =
@@ -329,11 +329,11 @@ TEST(CollisionResolverTest, GivenRectangleCollidesWithStaticObjectExpectBounce) 
                            .build();
 
     CollisionInformation collision_info{
-        .contact_type = ContactType::EDGE_EDGE,
+        .penetration_depth = 5.0f,
         .normal = glm::vec3(0.0f, -1.0f, 0.0f),
+        .contact_type = ContactType::EDGE_EDGE,
         .contact_patch = {glm::vec3(-50.0f, -5.0f, 0.0), glm::vec3(50.0f, -5.0f, 0.0)},
-        .deepest_contact_idx = 0,
-        .penetration_depth = 5.0f};
+        .deepest_contact_idx = 0};
 
     auto solver = CollisionSolver(1.0f);
     auto collision_corrections_ =
