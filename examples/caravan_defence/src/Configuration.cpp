@@ -145,7 +145,7 @@ void Configuration::setup_initial_game_state(
         quad_renderer != nullptr,
         "Error: Quad renderer needs to be initialised before setting up game state.");
 
-    const float slot_distance_x = 75.0f;
+    const float slot_distance_x = 16.0f * 4;
     // Add entities
     game_state.caravan.push_back(
         entity::Entity::create_caravan_cart(camera::WorldPoint2D(0.0f, 0.0f)));

@@ -84,6 +84,7 @@ target_link_libraries(${PROJECT_NAME}
         render_engine::font
         render_engine::image
         render_engine::camera
+        render_engine::tiled
         render_engine::tiling
         render_engine::window
         render_engine::vulkan

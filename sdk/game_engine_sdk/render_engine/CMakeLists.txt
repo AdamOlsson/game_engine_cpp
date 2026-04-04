@@ -4,6 +4,7 @@ message(STATUS "Configuring render_engine modules")
 
 project(render_engine)
 
+option(RENDER_ENGINE_BUILD_TILED "Build the tiled module" ON)
 option(RENDER_ENGINE_BUILD_TRIANGULATION "Build the triangulation module" ON)
 option(RENDER_ENGINE_BUILD_FONT "Build the font module" ON)
 option(RENDER_ENGINE_BUILD_IMAGE "Build the image module" ON)
@@ -68,6 +69,13 @@ if(RENDER_ENGINE_BUILD_GRAPHICS_PIPELINE)
     add_subdirectory(graphics_pipeline)
 else()
     message(STATUS " Skipping graphics_pipeline module")
+endif()
+
+if(RENDER_ENGINE_BUILD_TILED)
+    message(STATUS "Adding tiled module")
+    add_subdirectory(tiled)
+else()
+    message(STATUS " Skipping tiled module")
 endif()
 
 if(GAME_ENGINE_SDK_BUILD_TEST)

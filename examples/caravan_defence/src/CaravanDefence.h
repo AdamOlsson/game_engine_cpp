@@ -10,8 +10,20 @@
 #include "states/IntroState.h"
 #include "states/state_machine/StateMachine.h"
 #include "states/types.h"
+#include "tiled/TiledMap.h"
 #include "vulkan/CommandBufferManager.h"
 #include "vulkan/SwapChain.h"
+
+// CONTINUE: Start looking at rendering a map. Think of different approaches I could
+// handle the data.
+// - Initially, I would probably write all the tile data into the quad storage buffer.
+//      Because this game will probably never have modifiable terrain, this section of the
+//      buffer could be seen as more or less static.
+// - Another approach would be to use a complete separate storage buffer for tile data. I
+// do think this is the way to go in an optimised scenario, as I can minimize the size of
+// the Storage Buffer Object for performance. However, this also includes refactoring the
+// renderers to support adding additional storage buffers from the user side so its also
+// requires some game engine modifications.
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 constexpr glm::vec2 INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
@@ -93,6 +105,12 @@ class CaravanDefence : public Game {
             EventState(m_ui_text_renderer2.get(), m_ui_geom_renderer2.get());
 
         m_state_machine.init<IntroState>();
+
+        /*auto tiled_map = tiled::TiledMap("..");*/
+        // TODO: For each chunk
+        //  - Write all tiles in chunk into gpu buffer
+        //  - Save 1 draw command for chunk
+        //  - All other writes to the GPU buffer needs to be done after the last tile data
     }
 
     void update(const float dt) override { m_state_machine.update(dt, m_game_state); };
