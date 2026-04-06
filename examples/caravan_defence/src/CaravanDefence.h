@@ -13,16 +13,10 @@
 #include "vulkan/CommandBufferManager.h"
 #include "vulkan/SwapChain.h"
 
-// CONTINUE: Start looking at rendering a map. Think of different approaches I could
-// handle the data.
-// - Initially, I would probably write all the tile data into the quad storage buffer.
-//      Because this game will probably never have modifiable terrain, this section of the
-//      buffer could be seen as more or less static.
-// - Another approach would be to use a complete separate storage buffer for tile data. I
-// do think this is the way to go in an optimised scenario, as I can minimize the size of
-// the Storage Buffer Object for performance. However, this also includes refactoring the
-// renderers to support adding additional storage buffers from the user side so its also
-// requires some game engine modifications.
+// CONTINUE:
+// - Tiled module should use the image module to load the tileset image. This should
+// probably fix the asan error
+// - Fix the allocator error when running
 
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 constexpr glm::vec2 INVERT_AXISES = glm::vec2(-1.0f, -1.0f);

@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "Tileset.h"
+#include "tiled/Tileset.h"
 
 namespace tiled {
 

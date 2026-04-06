@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "Tileset.h"
 #include "math/Vector2.h"
 #include "math/Vector4.h"
 
@@ -61,13 +62,7 @@ class TiledMap {
     int32_t m_chunk_height = 0;
     std::vector<Layer> m_layers;
 
-    int32_t m_tileset_tile_width = 0;
-    int32_t m_tileset_tile_height = 0;
-    int32_t m_tileset_tilecount = 0;
-    int32_t m_tileset_columns = 0;
-    std::vector<uint8_t> m_tileset_image_data;
-    int32_t m_tileset_image_width = 0;
-    int32_t m_tileset_image_height = 0;
+    std::optional<Tileset> m_tileset = std::nullopt;
 };
 
 } // namespace tiled

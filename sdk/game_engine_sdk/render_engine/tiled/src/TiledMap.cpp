@@ -1,6 +1,7 @@
 #include "tiled/TiledMap.h"
 #include "TiledMapLoader.h"
 #include "TilesetLoader.h"
+#include "tiled/Tileset.h"
 
 namespace tiled {
 
@@ -25,21 +26,7 @@ TiledMap::TiledMap(const std::filesystem::path &path) {
     std::filesystem::path tileset_path = loader.get_tileset_path();
     if (!tileset_path.empty()) {
         std::filesystem::path tileset_dir = tileset_path.parent_path();
-        Tileset tileset = TilesetLoader::load_from_file(tileset_path, tileset_dir);
-
-        m_tileset_tile_width = tileset.get_tile_width();
-        m_tileset_tile_height = tileset.get_tile_height();
-        m_tileset_tilecount = tileset.get_tilecount();
-        m_tileset_columns = tileset.get_columns();
-        m_tileset_image_width = tileset.get_image_width();
-        m_tileset_image_height = tileset.get_image_height();
-
-        const uint8_t *img_data = tileset.get_image_data();
-        if (img_data) {
-            size_t img_size = static_cast<size_t>(m_tileset_image_width) *
-                              static_cast<size_t>(m_tileset_image_height) * 4;
-            m_tileset_image_data.assign(img_data, img_data + img_size);
-        }
+        m_tileset = TilesetLoader::load_from_file(tileset_path, tileset_dir);
     }
 }
 
@@ -55,41 +42,58 @@ int32_t TiledMap::get_chunk_width() const { return m_chunk_width; }
 
 int32_t TiledMap::get_chunk_height() const { return m_chunk_height; }
 
-const uint8_t *TiledMap::get_tileset_image_data() const {
-    return m_tileset_image_data.empty() ? nullptr : m_tileset_image_data.data();
+const unsigned char *TiledMap::get_tileset_image_data() const {
+    return m_tileset.has_value() ? m_tileset->get_image_data() : nullptr;
 }
 
-int32_t TiledMap::get_tileset_image_width() const { return m_tileset_image_width; }
+int32_t TiledMap::get_tileset_image_width() const {
+    return m_tileset.has_value() ? m_tileset->get_image_width() : 0;
+}
 
-int32_t TiledMap::get_tileset_image_height() const { return m_tileset_image_height; }
+int32_t TiledMap::get_tileset_image_height() const {
+    return m_tileset.has_value() ? m_tileset->get_image_height() : 0;
+}
 
-int32_t TiledMap::get_tileset_tile_width() const { return m_tileset_tile_width; }
+int32_t TiledMap::get_tileset_tile_width() const {
+    return m_tileset.has_value() ? m_tileset->get_tile_width() : 0;
+}
 
-int32_t TiledMap::get_tileset_tile_height() const { return m_tileset_tile_height; }
+int32_t TiledMap::get_tileset_tile_height() const {
+    return m_tileset.has_value() ? m_tileset->get_tile_height() : 0;
+}
 
-int32_t TiledMap::get_tileset_tilecount() const { return m_tileset_tilecount; }
+int32_t TiledMap::get_tileset_tilecount() const {
+    return m_tileset.has_value() ? m_tileset->get_tilecount() : 0;
+}
 
-int32_t TiledMap::get_tileset_columns() const { return m_tileset_columns; }
+int32_t TiledMap::get_tileset_columns() const {
+    return m_tileset.has_value() ? m_tileset->get_columns() : 0;
+}
 
 math::Vector4 TiledMap::get_tile_uvwt(uint32_t tile_id) const {
-    if (tile_id == 0 || m_tileset_columns == 0 || m_tileset_tile_width == 0 ||
-        m_tileset_tile_height == 0 || m_tileset_image_width == 0 ||
-        m_tileset_image_height == 0) {
+    if (tile_id == 0 || !m_tileset.has_value()) {
         return math::Vector4(0.0f, 0.0f, 0.0f, 0.0f);
     }
 
-    uint32_t index = tile_id - 1;
-    uint32_t col = index % static_cast<uint32_t>(m_tileset_columns);
-    uint32_t row = index / static_cast<uint32_t>(m_tileset_columns);
+    auto tileset_tile_width = m_tileset->get_tile_width();
+    auto tileset_tile_height = m_tileset->get_tile_height();
+    auto tileset_tilecount = m_tileset->get_tilecount();
+    auto tileset_columns = m_tileset->get_columns();
+    auto tileset_image_width = m_tileset->get_image_width();
+    auto tileset_image_height = m_tileset->get_image_height();
 
-    float u = static_cast<float>(col * m_tileset_tile_width) /
-              static_cast<float>(m_tileset_image_width);
-    float v = static_cast<float>(row * m_tileset_tile_height) /
-              static_cast<float>(m_tileset_image_height);
-    float w = static_cast<float>((col + 1) * m_tileset_tile_width) /
-              static_cast<float>(m_tileset_image_width);
-    float t = static_cast<float>((row + 1) * m_tileset_tile_height) /
-              static_cast<float>(m_tileset_image_height);
+    uint32_t index = tile_id - 1;
+    uint32_t col = index % static_cast<uint32_t>(tileset_columns);
+    uint32_t row = index / static_cast<uint32_t>(tileset_columns);
+
+    float u = static_cast<float>(col * tileset_tile_width) /
+              static_cast<float>(tileset_image_width);
+    float v = static_cast<float>(row * tileset_tile_height) /
+              static_cast<float>(tileset_image_height);
+    float w = static_cast<float>((col + 1) * tileset_tile_width) /
+              static_cast<float>(tileset_image_width);
+    float t = static_cast<float>((row + 1) * tileset_tile_height) /
+              static_cast<float>(tileset_image_height);
 
     return math::Vector4(u, v, w, t);
 }

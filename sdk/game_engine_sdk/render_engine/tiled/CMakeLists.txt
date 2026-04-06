@@ -30,6 +30,7 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC
         sdk::logger
         sdk::math
+        render_engine::image
 )
 
 if(GAME_ENGINE_SDK_BUILD_TEST)

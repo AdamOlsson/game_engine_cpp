@@ -7,11 +7,13 @@
 #include <iostream>
 #include <sstream>
 
-image::Image::Image(image::ImageDimensions &dim, unsigned char *pixels, size_t size,
-                    bool use_stbi_free = true)
+namespace image {
+
+Image::Image(ImageDimensions &dim, unsigned char *pixels, size_t size,
+             bool use_stbi_free = true)
     : dimensions(dim), pixels(pixels), size(size), m_use_stbi_free(use_stbi_free) {}
 
-image::Image::~Image() {
+Image::~Image() {
     if (pixels == nullptr) {
         return;
     }
@@ -24,25 +26,44 @@ image::Image::~Image() {
     pixels = nullptr;
 }
 
-image::Image image::Image::load_rgba_image(const uint8_t *bytes, const size_t num_bytes) {
+Image::Image(Image &&other) noexcept
+    : m_use_stbi_free(other.m_use_stbi_free), dimensions(other.dimensions),
+      pixels(other.pixels), size(other.size) {
+    other.pixels = nullptr;
+}
+Image &Image::operator=(Image &&other) noexcept {
+    if (this != &other) {
+        if (pixels != nullptr && m_use_stbi_free) {
+            stbi_image_free(pixels);
+        }
+
+        m_use_stbi_free = other.m_use_stbi_free;
+        dimensions = other.dimensions;
+        pixels = std::move(other.pixels);
+        size = other.size;
+
+        other.pixels = nullptr;
+    }
+    return *this;
+}
+
+Image Image::load_rgba_image(const uint8_t *bytes, const size_t num_bytes) {
     return load_image(bytes, num_bytes, STBI_rgb_alpha);
 }
 
-image::Image image::Image::load_rgb_image(const uint8_t *bytes, const size_t num_bytes) {
+Image Image::load_rgb_image(const uint8_t *bytes, const size_t num_bytes) {
     return load_image(bytes, num_bytes, STBI_rgb);
 }
 
-image::Image image::Image::load_grey_image(const uint8_t *bytes, const size_t num_bytes) {
+Image Image::load_grey_image(const uint8_t *bytes, const size_t num_bytes) {
     return load_image(bytes, num_bytes, STBI_grey);
 }
 
-image::Image image::Image::load_grey_alpha_image(const uint8_t *bytes,
-                                                 const size_t num_bytes) {
+Image Image::load_grey_alpha_image(const uint8_t *bytes, const size_t num_bytes) {
     return load_image(bytes, num_bytes, STBI_grey_alpha);
 }
 
-image::Image image::Image::load_image(const uint8_t *bytes, const size_t num_bytes,
-                                      int image_type) {
+Image Image::load_image(const uint8_t *bytes, const size_t num_bytes, int image_type) {
     int width;
     int height;
     int channels;
@@ -58,20 +79,20 @@ image::Image image::Image::load_image(const uint8_t *bytes, const size_t num_byt
         throw std::runtime_error(ss.str());
     }
 
-    image::ImageDimensions dim = image::ImageDimensions{
-        static_cast<unsigned int>(width), static_cast<unsigned int>(height),
-        static_cast<unsigned int>(channels)};
+    ImageDimensions dim = ImageDimensions{static_cast<unsigned int>(width),
+                                          static_cast<unsigned int>(height),
+                                          static_cast<unsigned int>(channels)};
 
-    return image::Image(dim, pixels, size, true);
+    return Image(dim, pixels, size, true);
 }
 
-image::Image image::Image::empty() {
-    image::ImageDimensions dim = image::ImageDimensions{1, 1, 4};
+Image Image::empty() {
+    ImageDimensions dim = ImageDimensions{1, 1, 4};
     unsigned char *pixels = new unsigned char[4];
-    return image::Image(dim, pixels, 4, false);
+    return Image(dim, pixels, 4, false);
 }
 
-std::vector<char> image::Image::read_file(const std::string &filename) {
+std::vector<char> Image::read_file(const std::string &filename) {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
     if (!file.is_open()) {
@@ -86,3 +107,4 @@ std::vector<char> image::Image::read_file(const std::string &filename) {
     file.close();
     return buffer;
 }
+} // namespace image

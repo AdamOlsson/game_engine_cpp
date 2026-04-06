@@ -32,10 +32,10 @@ class Image {
     size_t size;
 
     Image() = default;
-    Image(Image &&other) noexcept = delete;
     Image(const Image &other) = delete;
-    Image &operator=(Image &&other) noexcept = delete;
-    Image &operator=(const Image &other) noexcept = delete;
+    Image &operator=(const Image &other) = delete;
+    Image(Image &&other) noexcept;
+    Image &operator=(Image &&other) noexcept;
 
     ~Image();
     static Image load_rgba_image(const uint8_t *bytes, const size_t num_bytes);

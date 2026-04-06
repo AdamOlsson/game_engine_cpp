@@ -4,20 +4,6 @@
 
 namespace tiled {
 
-std::vector<uint8_t> TilesetLoader::read_file_bytes(const std::string &path) {
-    std::ifstream file(path, std::ios::ate | std::ios::binary);
-    if (!file.is_open()) {
-        return {};
-    }
-
-    size_t file_size = static_cast<size_t>(file.tellg());
-    std::vector<uint8_t> buffer(file_size);
-    file.seekg(0);
-    file.read(reinterpret_cast<char *>(buffer.data()), file_size);
-    file.close();
-    return buffer;
-}
-
 std::string TilesetLoader::extract_attribute(const std::string &element,
                                              const std::string &attribute) {
     std::string search = attribute + "=\"";
@@ -65,6 +51,7 @@ Tileset TilesetLoader::load_from_file(const std::filesystem::path &tileset_path,
     int32_t image_width = 0;
     int32_t image_height = 0;
     std::vector<uint8_t> image_data;
+    std::filesystem::path image_path;
 
     auto image_start = content.find("<image", tileset_end);
     if (image_start != std::string::npos) {
@@ -77,13 +64,12 @@ Tileset TilesetLoader::load_from_file(const std::filesystem::path &tileset_path,
             image_width = std::stoi(extract_attribute(image_element, "width"));
             image_height = std::stoi(extract_attribute(image_element, "height"));
 
-            std::filesystem::path image_path = base_path / source;
-            image_data = read_file_bytes(image_path.string());
+            image_path = base_path / source;
         }
     }
 
-    return Tileset(tile_width, tile_height, tilecount, columns, std::move(image_data),
-                   image_width, image_height);
+    return Tileset(tile_width, tile_height, tilecount, columns, image_path, image_width,
+                   image_height);
 }
 
 } // namespace tiled
