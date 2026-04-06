@@ -9,7 +9,10 @@ class TiledMapLoader {
     explicit TiledMapLoader(const std::filesystem::path &path);
 
     std::string get_tileset_basename() const;
+    std::filesystem::path get_tileset_path() const;
     RenderOrder get_render_order() const;
+    int32_t get_tile_width() const;
+    int32_t get_tile_height() const;
 
     size_t get_layer_count() const;
     const Layer &get_layer(size_t index) const;
@@ -18,12 +21,16 @@ class TiledMapLoader {
 
   private:
     std::string m_tileset_basename;
+    std::filesystem::path m_tileset_path;
     RenderOrder m_render_order = RenderOrder::RightDown;
+    int32_t m_tile_width = 0;
+    int32_t m_tile_height = 0;
     std::vector<Layer> m_layers;
     std::vector<std::string> m_layer_names;
 
     void parse_file(const std::filesystem::path &path);
-    void parse_map_element(const std::string &content);
+    void parse_map_element(const std::string &content,
+                           const std::filesystem::path &map_path);
     void parse_layer_element(const std::string &content);
     std::string extract_attribute(const std::string &element,
                                   const std::string &attribute);

@@ -38,7 +38,13 @@ TiledMapLoader::TiledMapLoader(const std::filesystem::path &path) { parse_file(p
 
 std::string TiledMapLoader::get_tileset_basename() const { return m_tileset_basename; }
 
+std::filesystem::path TiledMapLoader::get_tileset_path() const { return m_tileset_path; }
+
 RenderOrder TiledMapLoader::get_render_order() const { return m_render_order; }
+
+int32_t TiledMapLoader::get_tile_width() const { return m_tile_width; }
+
+int32_t TiledMapLoader::get_tile_height() const { return m_tile_height; }
 
 size_t TiledMapLoader::get_layer_count() const { return m_layers.size(); }
 
@@ -63,10 +69,11 @@ void TiledMapLoader::parse_file(const std::filesystem::path &path) {
     buffer << file.rdbuf();
     std::string content = buffer.str();
 
-    parse_map_element(content);
+    parse_map_element(content, path);
 }
 
-void TiledMapLoader::parse_map_element(const std::string &content) {
+void TiledMapLoader::parse_map_element(const std::string &content,
+                                       const std::filesystem::path &map_path) {
     auto map_start = content.find("<map");
     if (map_start == std::string::npos) {
         return;
@@ -93,6 +100,16 @@ void TiledMapLoader::parse_map_element(const std::string &content) {
         }
     }
 
+    std::string tilewidth = extract_attribute(map_element, "tilewidth");
+    if (!tilewidth.empty()) {
+        m_tile_width = std::stoi(tilewidth);
+    }
+
+    std::string tileheight = extract_attribute(map_element, "tileheight");
+    if (!tileheight.empty()) {
+        m_tile_height = std::stoi(tileheight);
+    }
+
     auto tileset_start = content.find("<tileset", map_end);
     if (tileset_start != std::string::npos) {
         auto tileset_end = content.find(">", tileset_start);
@@ -102,6 +119,9 @@ void TiledMapLoader::parse_map_element(const std::string &content) {
             std::string source = extract_attribute(tileset_element, "source");
             if (!source.empty()) {
                 m_tileset_basename = extract_filename(source);
+
+                std::filesystem::path base_dir = map_path.parent_path();
+                m_tileset_path = base_dir / source;
             }
         }
     }

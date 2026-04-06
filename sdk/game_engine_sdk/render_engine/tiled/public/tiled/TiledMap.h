@@ -5,6 +5,9 @@
 #include <string>
 #include <vector>
 
+#include "math/Vector2.h"
+#include "math/Vector4.h"
+
 namespace tiled {
 
 enum class RenderOrder { RightDown, RightUp, LeftDown, LeftUp };
@@ -15,6 +18,8 @@ struct Chunk {
     int32_t width = 0;
     int32_t height = 0;
     std::vector<uint32_t> tiles;
+
+    math::Vector2 get_tile_position(size_t index) const;
 };
 
 using Layer = std::vector<Chunk>;
@@ -25,8 +30,23 @@ class TiledMap {
 
     std::string get_tileset_basename() const;
     RenderOrder get_render_order() const;
+    int32_t get_tile_width() const;
+    int32_t get_tile_height() const;
+    int32_t get_chunk_width() const;
+    int32_t get_chunk_height() const;
+
+    const uint8_t *get_tileset_image_data() const;
+    int32_t get_tileset_image_width() const;
+    int32_t get_tileset_image_height() const;
+    int32_t get_tileset_tile_width() const;
+    int32_t get_tileset_tile_height() const;
+    int32_t get_tileset_tilecount() const;
+    int32_t get_tileset_columns() const;
+
+    math::Vector4 get_tile_uvwt(uint32_t tile_id) const;
 
     size_t get_layer_count() const;
+    size_t get_chunk_count() const;
     size_t get_chunk_count(size_t layer_index) const;
     const Layer &get_layer(size_t index) const;
     const Chunk &get_chunk(size_t layer_index, size_t chunk_index) const;
@@ -35,7 +55,19 @@ class TiledMap {
   private:
     std::string m_tileset_basename;
     RenderOrder m_render_order = RenderOrder::RightDown;
+    int32_t m_tile_width = 0;
+    int32_t m_tile_height = 0;
+    int32_t m_chunk_width = 0;
+    int32_t m_chunk_height = 0;
     std::vector<Layer> m_layers;
+
+    int32_t m_tileset_tile_width = 0;
+    int32_t m_tileset_tile_height = 0;
+    int32_t m_tileset_tilecount = 0;
+    int32_t m_tileset_columns = 0;
+    std::vector<uint8_t> m_tileset_image_data;
+    int32_t m_tileset_image_width = 0;
+    int32_t m_tileset_image_height = 0;
 };
 
 } // namespace tiled

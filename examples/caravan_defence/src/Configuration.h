@@ -26,7 +26,5 @@ class Configuration {
     setup_keyboard_event_handler(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
                                  CaravanDefence &game);
 
-    static void
-    setup_initial_game_state(graphics_pipeline::quad::QuadRenderer2 *quad_renderer,
-                             GameState &game_state);
+    static void setup_initial_game_state(GameState &game_state);
 };

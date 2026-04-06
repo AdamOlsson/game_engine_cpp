@@ -10,7 +10,6 @@
 #include "states/IntroState.h"
 #include "states/state_machine/StateMachine.h"
 #include "states/types.h"
-#include "tiled/TiledMap.h"
 #include "vulkan/CommandBufferManager.h"
 #include "vulkan/SwapChain.h"
 
@@ -55,7 +54,7 @@ class CaravanDefence : public Game {
 
     // World renderers
     vulkan::RenderPass m_world_render_pass;
-    std::unique_ptr<graphics_pipeline::quad::QuadRenderer2> m_quad_renderer;
+    std::unique_ptr<graphics_pipeline::quad::QuadRenderer2> m_world_quad_renderer;
     std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer2>
         m_world_geom_renderer2;
 
@@ -63,6 +62,8 @@ class CaravanDefence : public Game {
     vulkan::RenderPass m_ui_render_pass;
     std::unique_ptr<graphics_pipeline::text::TextRenderer2> m_ui_text_renderer2;
     std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer2> m_ui_geom_renderer2;
+
+    std::vector<vulkan::DrawIndexedIndirectCommand> m_tile_draw_commands;
 
     struct GameState m_game_state;
     util::StateMachine<CaravanDefenceStates, GameState> m_state_machine;
@@ -94,23 +95,17 @@ class CaravanDefence : public Game {
         Configuration::setup_mouse_event_handler(ctx, *this);
         Configuration::setup_keyboard_event_handler(ctx, *this);
 
-        Configuration::setup_initial_game_state(m_quad_renderer.get(), m_game_state);
+        Configuration::setup_initial_game_state(m_game_state);
 
         m_state_machine.get_state<IntroState>() =
             IntroState(m_ui_text_renderer2.get(), m_ui_geom_renderer2.get());
         m_state_machine.get_state<DefendState>() =
-            DefendState(m_quad_renderer.get(), m_world_geom_renderer2.get(),
+            DefendState(m_world_quad_renderer.get(), m_world_geom_renderer2.get(),
                         m_ui_text_renderer2.get(), m_ui_geom_renderer2.get());
         m_state_machine.get_state<EventState>() =
             EventState(m_ui_text_renderer2.get(), m_ui_geom_renderer2.get());
 
         m_state_machine.init<IntroState>();
-
-        /*auto tiled_map = tiled::TiledMap("..");*/
-        // TODO: For each chunk
-        //  - Write all tiles in chunk into gpu buffer
-        //  - Save 1 draw command for chunk
-        //  - All other writes to the GPU buffer needs to be done after the last tile data
     }
 
     void update(const float dt) override { m_state_machine.update(dt, m_game_state); };
@@ -125,8 +120,11 @@ class CaravanDefence : public Game {
 
         frame.begin_render_pass(&m_world_render_pass);
 
-        auto &defend_state = m_state_machine.get_state<DefendState>();
-        defend_state.render(command_buffer, &push_constant, m_game_state);
+        /*auto &defend_state = m_state_machine.get_state<DefendState>();*/
+        /*defend_state.render(command_buffer, &push_constant, m_game_state);*/
+
+        m_world_quad_renderer->render_indirect(command_buffer, &push_constant,
+                                               m_tile_draw_commands);
 
         frame.end_render_pass();
 

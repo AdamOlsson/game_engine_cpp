@@ -1,5 +1,6 @@
 #include "Configuration.h"
 #include "CaravanDefence.h"
+#include "tiled/TiledMap.h"
 
 void Configuration::setup_world_renderers(
     std::shared_ptr<vulkan::context::GraphicsContext> &ctx, CaravanDefence &game) {
@@ -21,11 +22,16 @@ void Configuration::setup_world_renderers(
     push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     push_constant_range.size = camera::Camera2D::matrix_size();
 
+    auto tiled_map = tiled::TiledMap(ASSET_FILE("tiled/maps/test_map.tmx"));
+
     std::vector<graphics_pipeline::Texture> textures;
     textures.push_back(graphics_pipeline::Texture::from_filepath(
         ctx, game.m_command_buffer_manager.get(), ASSET_FILE("sprite_sheet.png")));
     textures.push_back(graphics_pipeline::Texture::from_filepath(
         ctx, game.m_command_buffer_manager.get(), ASSET_FILE("guards/idle32x32.png")));
+    textures.push_back(graphics_pipeline::Texture::from_filepath(
+        ctx, game.m_command_buffer_manager.get(),
+        ASSET_FILE("tiled/tilesets/Tileset.png")));
 
     graphics_pipeline::RendererOpts renderer_opts{};
     renderer_opts.push_constant_range = push_constant_range;
@@ -34,12 +40,51 @@ void Configuration::setup_world_renderers(
 
     renderer_opts.quad.textures = std::move(textures);
     renderer_opts.quad.pool_opts.num_combined_image_samplers = 4; // 2 per frame in flight
-    game.m_quad_renderer = std::make_unique<graphics_pipeline::quad::QuadRenderer2>(
+    renderer_opts.quad.instance_buffer_opts.size = 65536;
+
+    game.m_world_quad_renderer = std::make_unique<graphics_pipeline::quad::QuadRenderer2>(
         ctx, game.m_command_buffer_manager.get(), renderer_opts);
 
     game.m_world_geom_renderer2 =
         std::make_unique<graphics_pipeline::geometry::GeometryRenderer2>(
             ctx, game.m_command_buffer_manager.get(), renderer_opts);
+
+    // CONTINUE:
+    // - Store the draw commands on CaravanDefence
+    // - Render the tiles
+    // - Move all rendering to Caravan Defence
+    const size_t tile_count_per_chunk =
+        tiled_map.get_chunk_width() * tiled_map.get_chunk_height();
+
+    /*std::vector<vulkan::DrawIndexedIndirectCommand> tile_draw_commands;*/
+    game.m_tile_draw_commands.reserve(tiled_map.get_chunk_count());
+
+    std::vector<graphics_pipeline::quad::QuadPipelineSBO> instanced_tile_data;
+
+    instanced_tile_data.reserve(tile_count_per_chunk);
+    for (size_t layer_id = 0; layer_id < tiled_map.get_layer_count(); layer_id++) {
+        for (size_t chunk_id = 0; chunk_id < tiled_map.get_layer_count(); chunk_id++) {
+            const tiled::Chunk &chunk = tiled_map.get_chunk(layer_id, chunk_id);
+            for (size_t tile_id = 0; tile_id < tile_count_per_chunk; tile_id++) {
+                size_t tile_sprite_id = tiled_map.get_tile(layer_id, chunk_id, tile_id);
+                graphics_pipeline::quad::QuadPipelineSBO instance;
+                instance.model_matrix =
+                    math::Matrix()
+                        .scale(tiled_map.get_tile_width(), tiled_map.get_tile_height())
+                        .translate(chunk.get_tile_position(tile_id));
+                instance.uvwt = tiled_map.get_tile_uvwt(tile_sprite_id);
+                instance.texture_id = 2;
+                instanced_tile_data.push_back(instance);
+            }
+        }
+
+        auto draw_command = game.m_world_quad_renderer->write_to_buffer(
+            instanced_tile_data, layer_id * tile_count_per_chunk);
+        game.m_tile_draw_commands.push_back(draw_command);
+        instanced_tile_data.clear();
+
+        break; // TODO: Render all layers
+    }
 }
 
 void Configuration::setup_ui_renderers(
@@ -138,12 +183,7 @@ void Configuration::setup_keyboard_event_handler(
         });
 }
 
-void Configuration::setup_initial_game_state(
-    graphics_pipeline::quad::QuadRenderer2 *quad_renderer, GameState &game_state) {
-
-    DEBUG_ASSERT(
-        quad_renderer != nullptr,
-        "Error: Quad renderer needs to be initialised before setting up game state.");
+void Configuration::setup_initial_game_state(GameState &game_state) {
 
     const float slot_distance_x = 16.0f * 4;
     // Add entities

@@ -23,6 +23,18 @@ TEST_F(TiledMapTest, ParsesRenderOrder) {
     EXPECT_EQ(map.get_render_order(), RenderOrder::RightDown);
 }
 
+TEST_F(TiledMapTest, ParsesTileDimensions) {
+    TiledMap map(get_test_path());
+    EXPECT_EQ(map.get_tile_width(), 16);
+    EXPECT_EQ(map.get_tile_height(), 16);
+}
+
+TEST_F(TiledMapTest, ParsesChunkDimensions) {
+    TiledMap map(get_test_path());
+    EXPECT_EQ(map.get_chunk_width(), 16);
+    EXPECT_EQ(map.get_chunk_height(), 16);
+}
+
 TEST_F(TiledMapTest, ReturnsCorrectLayerCount) {
     TiledMap map(get_test_path());
     EXPECT_EQ(map.get_layer_count(), 1);

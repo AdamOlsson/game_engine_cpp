@@ -29,6 +29,7 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
         sdk::logger
+        sdk::math
 )
 
 if(GAME_ENGINE_SDK_BUILD_TEST)
