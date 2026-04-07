@@ -16,23 +16,6 @@ namespace graphics_pipeline::geometry {
 class GeometrySBOHandle;
 
 class GeometryRenderer2 {
-  private:
-    std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
-
-    vulkan::buffers::VertexBuffer<vulkan::Vertex> m_quad_vertex_buffer;
-    vulkan::buffers::IndexBuffer m_quad_index_buffer;
-
-    GeometryPipeline m_geometry_pipeline;
-
-    vulkan::DescriptorPool m_descriptor_pool;
-
-    SwapDescriptorSet m_descriptor_sets;
-
-    vulkan::buffers::StorageBuffer<GeometryPipelineSBO> m_instances;
-    vulkan::buffers::IndirectBuffer<vulkan::DrawIndexedIndirectCommand> m_draw_commands;
-
-    static vulkan::DescriptorSetLayout
-    get_descriptor_set_layout(std::shared_ptr<vulkan::context::GraphicsContext> &ctx);
 
   public:
     GeometryRenderer2(std::shared_ptr<vulkan::context::GraphicsContext> &ctx,
@@ -53,10 +36,14 @@ class GeometryRenderer2 {
     write_to_buffer(const std::vector<GeometryPipelineSBO> &instance_data,
                     const size_t offset = 0);
 
+    void write_to_draw_command_buffer(
+        const std::vector<vulkan::DrawIndexedIndirectCommand> &draw_commands,
+        const size_t offset = 0);
+
     template <typename PushConstantType>
-    void render_indirect(
-        const vulkan::CommandBuffer &command_buffer, PushConstantType *push_constant,
-        const std::vector<vulkan::DrawIndexedIndirectCommand> &draw_commands) {
+    void render_indirect(const vulkan::CommandBuffer &command_buffer,
+                         PushConstantType *push_constant, const size_t draw_count,
+                         const size_t draw_offset = 0) {
 
         if (push_constant) {
             vkCmdPushConstants(command_buffer, m_geometry_pipeline.get_layout(),
@@ -77,12 +64,28 @@ class GeometryRenderer2 {
         vkCmdBindIndexBuffer(command_buffer, m_quad_index_buffer.buffer, 0,
                              VK_INDEX_TYPE_UINT16);
 
-        m_draw_commands.write(draw_commands);
-
-        vkCmdDrawIndexedIndirect(command_buffer, m_draw_commands.handle(), 0,
-                                 draw_commands.size(),
-                                 sizeof(VkDrawIndexedIndirectCommand));
+        vkCmdDrawIndexedIndirect(command_buffer, m_draw_commands.handle(),
+                                 draw_offset * sizeof(vulkan::DrawIndexedIndirectCommand),
+                                 draw_count, sizeof(vulkan::DrawIndexedIndirectCommand));
     }
+
+  private:
+    std::shared_ptr<vulkan::context::GraphicsContext> m_ctx;
+
+    vulkan::buffers::VertexBuffer<vulkan::Vertex> m_quad_vertex_buffer;
+    vulkan::buffers::IndexBuffer m_quad_index_buffer;
+
+    GeometryPipeline m_geometry_pipeline;
+
+    vulkan::DescriptorPool m_descriptor_pool;
+
+    SwapDescriptorSet m_descriptor_sets;
+
+    vulkan::buffers::StorageBuffer<GeometryPipelineSBO> m_instances;
+    vulkan::buffers::IndirectBuffer<vulkan::DrawIndexedIndirectCommand> m_draw_commands;
+
+    static vulkan::DescriptorSetLayout
+    get_descriptor_set_layout(std::shared_ptr<vulkan::context::GraphicsContext> &ctx);
 };
 
 } // namespace graphics_pipeline::geometry

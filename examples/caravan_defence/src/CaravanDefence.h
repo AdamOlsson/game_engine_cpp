@@ -13,11 +13,6 @@
 #include "vulkan/CommandBufferManager.h"
 #include "vulkan/SwapChain.h"
 
-// CONTINUE:
-// - Tiled module should use the image module to load the tileset image. This should
-// probably fix the asan error
-// - Fix the allocator error when running
-
 #define ASSET_FILE(filename) ASSET_DIR "/" filename
 constexpr glm::vec2 INVERT_AXISES = glm::vec2(-1.0f, -1.0f);
 constexpr float ZOOM_SCALE_FACTOR = 0.1f;
@@ -57,7 +52,8 @@ class CaravanDefence : public Game {
     std::unique_ptr<graphics_pipeline::text::TextRenderer2> m_ui_text_renderer2;
     std::unique_ptr<graphics_pipeline::geometry::GeometryRenderer2> m_ui_geom_renderer2;
 
-    std::vector<vulkan::DrawIndexedIndirectCommand> m_tile_draw_commands;
+    std::vector<vulkan::DrawIndexedIndirectCommand> m_map_layer_1_chunk_draw_commands;
+    std::vector<vulkan::DrawIndexedIndirectCommand> m_map_layer_2_chunk_draw_commands;
 
     struct GameState m_game_state;
     util::StateMachine<CaravanDefenceStates, GameState> m_state_machine;
@@ -114,11 +110,21 @@ class CaravanDefence : public Game {
 
         frame.begin_render_pass(&m_world_render_pass);
 
+        // CONTINUE: Move state rendering to this context
         /*auto &defend_state = m_state_machine.get_state<DefendState>();*/
         /*defend_state.render(command_buffer, &push_constant, m_game_state);*/
 
+        m_world_quad_renderer->write_to_draw_command_buffer(
+            m_map_layer_1_chunk_draw_commands, 0);
+        m_world_quad_renderer->write_to_draw_command_buffer(
+            m_map_layer_2_chunk_draw_commands, m_map_layer_1_chunk_draw_commands.size());
+
+        m_world_quad_renderer->render_indirect(
+            command_buffer, &push_constant, m_map_layer_1_chunk_draw_commands.size(), 0);
+
         m_world_quad_renderer->render_indirect(command_buffer, &push_constant,
-                                               m_tile_draw_commands);
+                                               m_map_layer_2_chunk_draw_commands.size(),
+                                               m_map_layer_1_chunk_draw_commands.size());
 
         frame.end_render_pass();
 

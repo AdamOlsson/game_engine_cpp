@@ -39,7 +39,7 @@ void Configuration::setup_world_renderers(
     renderer_opts.swap_chain.render_pass = &game.m_world_render_pass;
 
     renderer_opts.quad.textures = std::move(textures);
-    renderer_opts.quad.pool_opts.num_combined_image_samplers = 4; // 2 per frame in flight
+    renderer_opts.quad.pool_opts.num_combined_image_samplers = 6; // 2 per frame in flight
     renderer_opts.quad.instance_buffer_opts.size = 65536;
 
     game.m_world_quad_renderer = std::make_unique<graphics_pipeline::quad::QuadRenderer2>(
@@ -49,22 +49,21 @@ void Configuration::setup_world_renderers(
         std::make_unique<graphics_pipeline::geometry::GeometryRenderer2>(
             ctx, game.m_command_buffer_manager.get(), renderer_opts);
 
-    // CONTINUE:
-    // - Store the draw commands on CaravanDefence
-    // - Render the tiles
-    // - Move all rendering to Caravan Defence
     const size_t tile_count_per_chunk =
         tiled_map.get_chunk_width() * tiled_map.get_chunk_height();
 
-    /*std::vector<vulkan::DrawIndexedIndirectCommand> tile_draw_commands;*/
-    game.m_tile_draw_commands.reserve(tiled_map.get_chunk_count());
+    game.m_map_layer_1_chunk_draw_commands.reserve(tiled_map.get_chunk_count(0));
+    game.m_map_layer_2_chunk_draw_commands.reserve(tiled_map.get_chunk_count(1));
 
-    std::vector<graphics_pipeline::quad::QuadPipelineSBO> instanced_tile_data;
+    std::vector<graphics_pipeline::quad::QuadPipelineSBO> chunk_tile_data;
+    chunk_tile_data.reserve(tile_count_per_chunk);
 
-    instanced_tile_data.reserve(tile_count_per_chunk);
+    size_t buffer_offset = 0;
     for (size_t layer_id = 0; layer_id < tiled_map.get_layer_count(); layer_id++) {
-        for (size_t chunk_id = 0; chunk_id < tiled_map.get_layer_count(); chunk_id++) {
+        for (size_t chunk_id = 0; chunk_id < tiled_map.get_chunk_count(layer_id);
+             chunk_id++) {
             const tiled::Chunk &chunk = tiled_map.get_chunk(layer_id, chunk_id);
+
             for (size_t tile_id = 0; tile_id < tile_count_per_chunk; tile_id++) {
                 size_t tile_sprite_id = tiled_map.get_tile(layer_id, chunk_id, tile_id);
                 graphics_pipeline::quad::QuadPipelineSBO instance;
@@ -74,16 +73,23 @@ void Configuration::setup_world_renderers(
                         .translate(chunk.get_tile_position(tile_id));
                 instance.uvwt = tiled_map.get_tile_uvwt(tile_sprite_id);
                 instance.texture_id = 2;
-                instanced_tile_data.push_back(instance);
+                chunk_tile_data.push_back(instance);
             }
+
+            auto draw_command = game.m_world_quad_renderer->write_to_buffer(
+                chunk_tile_data, buffer_offset);
+            buffer_offset += chunk_tile_data.size();
+
+            if (layer_id == 0) {
+                game.m_map_layer_1_chunk_draw_commands.push_back(draw_command);
+            } else if (layer_id == 1) {
+                game.m_map_layer_2_chunk_draw_commands.push_back(draw_command);
+            } else {
+                /*DEBUG_ASSERT(false, "Error: Fix storing draw commands for map.");*/
+            }
+
+            chunk_tile_data.clear();
         }
-
-        auto draw_command = game.m_world_quad_renderer->write_to_buffer(
-            instanced_tile_data, layer_id * tile_count_per_chunk);
-        game.m_tile_draw_commands.push_back(draw_command);
-        instanced_tile_data.clear();
-
-        break; // TODO: Render all layers
     }
 }
 

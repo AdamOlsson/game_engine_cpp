@@ -43,8 +43,8 @@ class IntroState {
 
             vulkan::DrawIndexedIndirectCommand draw_command =
                 m_geometry_renderer->write_to_buffer(data);
-            m_geometry_renderer->render_indirect(command_buffer, push_constant,
-                                                 {draw_command});
+            m_geometry_renderer->write_to_draw_command_buffer({draw_command});
+            m_geometry_renderer->render_indirect(command_buffer, push_constant, 1, 0);
 
             std::vector<font::TextFormat> formats;
             std::vector<font::Text> texts;

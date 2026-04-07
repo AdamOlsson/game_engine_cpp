@@ -82,8 +82,10 @@ class DefendState {
 
             vulkan::DrawIndexedIndirectCommand geom_draw_command =
                 m_ui_geometry_renderer->write_to_buffer(geometry_data);
-            m_ui_geometry_renderer->render_indirect(command_buffer, push_constant,
-                                                    {geom_draw_command});
+
+            m_ui_geometry_renderer->write_to_draw_command_buffer({geom_draw_command});
+
+            m_ui_geometry_renderer->render_indirect(command_buffer, push_constant, 1, 0);
 
             size_t offset = 0;
             std::vector<vulkan::DrawIndexedIndirectCommand> text_draw_commands;
@@ -139,8 +141,9 @@ class DefendState {
         std::vector<vulkan::DrawIndexedIndirectCommand> quad_draw_commands;
         quad_draw_commands.push_back(quad_draw_command);
 
+        m_world_quad_renderer->write_to_draw_command_buffer(quad_draw_commands);
         m_world_quad_renderer->render_indirect(command_buffer, push_constant,
-                                               quad_draw_commands);
+                                               quad_draw_commands.size(), 0);
 
         std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> geometry_data;
         geometry_data.reserve(game_state.enemies.size());
@@ -163,7 +166,9 @@ class DefendState {
         std::vector<vulkan::DrawIndexedIndirectCommand> geometry_draw_commands;
         geometry_draw_commands.push_back(geometry_draw_command);
 
+        m_world_geometry_renderer->write_to_draw_command_buffer(geometry_draw_commands);
+
         m_world_geometry_renderer->render_indirect(command_buffer, push_constant,
-                                                   geometry_draw_commands);
+                                                   geometry_draw_commands.size(), 0);
     }
 };

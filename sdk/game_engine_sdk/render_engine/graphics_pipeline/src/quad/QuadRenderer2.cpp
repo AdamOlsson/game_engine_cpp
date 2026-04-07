@@ -76,13 +76,19 @@ QuadRenderer2::write_to_buffer(const std::vector<QuadPipelineSBO> &instance_data
 
     vulkan::DrawIndexedIndirectCommand draw_command;
     draw_command.firstIndex = 0;
-    draw_command.firstInstance = 0;
+    draw_command.firstInstance = offset;
     draw_command.indexCount = m_quad_index_buffer.num_indices;
     draw_command.instanceCount = instance_data.size();
     draw_command.vertexOffset = 0;
 
     m_instances.write(instance_data, offset);
     return draw_command;
+}
+
+void QuadRenderer2::write_to_draw_command_buffer(
+    const std::vector<vulkan::DrawIndexedIndirectCommand> &draw_commands,
+    const size_t offset) {
+    m_draw_commands.write(draw_commands, offset);
 }
 
 } // namespace graphics_pipeline::quad

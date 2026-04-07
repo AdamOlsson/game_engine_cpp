@@ -85,4 +85,10 @@ GeometryRenderer2::write_to_buffer(const std::vector<GeometryPipelineSBO> &insta
     return draw_command;
 }
 
+void GeometryRenderer2::write_to_draw_command_buffer(
+    const std::vector<vulkan::DrawIndexedIndirectCommand> &draw_commands,
+    const size_t offset) {
+    m_draw_commands.write(draw_commands, offset);
+}
+
 } // namespace graphics_pipeline::geometry
