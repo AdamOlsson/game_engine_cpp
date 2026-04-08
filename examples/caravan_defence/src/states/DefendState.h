@@ -3,22 +3,11 @@
 #include "../EntitySettingsPanel.h"
 #include "../GameState.h"
 #include "camera/Camera.h"
-#include "graphics_pipeline/geometry/GeometryRenderer2.h"
-#include "graphics_pipeline/quad/QuadRenderer2.h"
-#include "graphics_pipeline/text/TextRenderer2.h"
 #include "state_machine/StateTransition.h"
 #include <vector>
 
 class DefendState {
   private:
-    // World renderers
-    graphics_pipeline::quad::QuadRenderer2 *m_world_quad_renderer = nullptr;
-    graphics_pipeline::geometry::GeometryRenderer2 *m_world_geometry_renderer = nullptr;
-
-    // UI renderers
-    graphics_pipeline::text::TextRenderer2 *m_ui_text_renderer2 = nullptr;
-    graphics_pipeline::geometry::GeometryRenderer2 *m_ui_geometry_renderer = nullptr;
-
     EntitySettingsPanel m_settings_panel;
 
     constexpr void spawn_group_of_enemies(GameState &game_state);
@@ -45,17 +34,7 @@ class DefendState {
   public:
     DefendState() = default;
 
-    DefendState(graphics_pipeline::quad::QuadRenderer2 *world_quad_renderer,
-                graphics_pipeline::geometry::GeometryRenderer2 *world_geom_renderer,
-                graphics_pipeline::text::TextRenderer2 *ui_text_renderer2,
-                graphics_pipeline::geometry::GeometryRenderer2 *ui_geom_renderer)
-        : m_world_quad_renderer(world_quad_renderer),
-          m_world_geometry_renderer(world_geom_renderer),
-          m_ui_text_renderer2(ui_text_renderer2),
-          m_ui_geometry_renderer(ui_geom_renderer) {
-
-        m_settings_panel = EntitySettingsPanel(m_ui_text_renderer2->m_font);
-    }
+    DefendState(const font::Font &font) : m_settings_panel(EntitySettingsPanel(font)) {}
 
     DefendState(DefendState &&) noexcept = default;
     DefendState(const DefendState &) = delete;
@@ -68,47 +47,39 @@ class DefendState {
     void on_exit(GameState &game_state);
     util::StateTransition update(const float dt, GameState &game_state);
 
-    template <typename PushConstantType>
-    void render_ui(const vulkan::CommandBuffer &command_buffer,
-                   PushConstantType *push_constant) {
-
+    std::vector<font::TextFormat> get_ui_text_format_render_data() {
+        std::vector<font::TextFormat> text_format;
+        std::vector<font::Text> text;
+        std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> geometry_data;
         if (m_settings_panel.is_open()) {
-
-            std::vector<font::TextFormat> text_format;
-            std::vector<font::Text> text;
-            std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> geometry_data;
-
             m_settings_panel.get_render_data(text_format, text, geometry_data);
-
-            vulkan::DrawIndexedIndirectCommand geom_draw_command =
-                m_ui_geometry_renderer->write_to_buffer(geometry_data);
-
-            m_ui_geometry_renderer->write_to_draw_command_buffer({geom_draw_command});
-
-            m_ui_geometry_renderer->render_indirect(command_buffer, push_constant, 1, 0);
-
-            size_t offset = 0;
-            std::vector<vulkan::DrawIndexedIndirectCommand> text_draw_commands;
-            for (size_t i = 0; i < text.size(); i++) {
-                size_t format_idx = i;
-                m_ui_text_renderer2->write_to_format_buffer({text_format[i]}, format_idx);
-                auto draw_cmd = m_ui_text_renderer2->write_to_glyph_buffer(
-                    text[i], format_idx, offset);
-                offset += text[i].glyphs.size();
-
-                text_draw_commands.insert(text_draw_commands.end(), draw_cmd.begin(),
-                                          draw_cmd.end());
-            }
-
-            m_ui_text_renderer2->render_indirect(command_buffer, push_constant,
-                                                 text_draw_commands);
         }
+        return text_format;
     }
 
-    template <typename PushConstantType>
-    void render(const vulkan::CommandBuffer &command_buffer,
-                PushConstantType *push_constant, const GameState &game_state) {
+    std::vector<font::Text> get_ui_text_render_data() {
+        std::vector<font::TextFormat> text_format;
+        std::vector<font::Text> text;
+        std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> geometry_data;
+        if (m_settings_panel.is_open()) {
+            m_settings_panel.get_render_data(text_format, text, geometry_data);
+        }
+        return text;
+    }
 
+    std::vector<graphics_pipeline::geometry::GeometryPipelineSBO>
+    get_ui_geometry_render_data() {
+        std::vector<font::TextFormat> text_format;
+        std::vector<font::Text> text;
+        std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> geometry_data;
+        if (m_settings_panel.is_open()) {
+            m_settings_panel.get_render_data(text_format, text, geometry_data);
+        }
+        return geometry_data;
+    }
+
+    std::vector<graphics_pipeline::quad::QuadPipelineSBO>
+    get_quad_render_data(const GameState &game_state) {
         std::vector<graphics_pipeline::quad::QuadPipelineSBO> quad_data;
         quad_data.reserve(game_state.guards.size() + game_state.caravan.size() +
                           game_state.enemies.size());
@@ -135,16 +106,11 @@ class DefendState {
             }
         }
 
-        vulkan::DrawIndexedIndirectCommand quad_draw_command =
-            m_world_quad_renderer->write_to_buffer(quad_data);
+        return quad_data;
+    }
 
-        std::vector<vulkan::DrawIndexedIndirectCommand> quad_draw_commands;
-        quad_draw_commands.push_back(quad_draw_command);
-
-        m_world_quad_renderer->write_to_draw_command_buffer(quad_draw_commands);
-        m_world_quad_renderer->render_indirect(command_buffer, push_constant,
-                                               quad_draw_commands.size(), 0);
-
+    std::vector<graphics_pipeline::geometry::GeometryPipelineSBO>
+    get_geometry_render_data(const GameState &game_state) {
         std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> geometry_data;
         geometry_data.reserve(game_state.enemies.size());
 
@@ -160,15 +126,6 @@ class DefendState {
             entity.get_geometry_render_data(geometry_data);
         }
 
-        vulkan::DrawIndexedIndirectCommand geometry_draw_command =
-            m_world_geometry_renderer->write_to_buffer(geometry_data);
-
-        std::vector<vulkan::DrawIndexedIndirectCommand> geometry_draw_commands;
-        geometry_draw_commands.push_back(geometry_draw_command);
-
-        m_world_geometry_renderer->write_to_draw_command_buffer(geometry_draw_commands);
-
-        m_world_geometry_renderer->render_indirect(command_buffer, push_constant,
-                                                   geometry_draw_commands.size(), 0);
+        return geometry_data;
     }
 };

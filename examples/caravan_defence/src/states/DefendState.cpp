@@ -50,28 +50,14 @@ std::optional<size_t> DefendState::find_caravan_cart(GameState &game_state,
     return std::nullopt;
 }
 
-void DefendState::on_enter(GameState &game_state) {
-    DEBUG_ASSERT(m_world_quad_renderer != nullptr,
-                 "Error: Quad renderer is not set in DefendState.");
-    DEBUG_ASSERT(m_world_geometry_renderer != nullptr,
-                 "Error: Geometry renderer is not set in DefendState.");
-};
+void DefendState::on_enter(GameState &game_state) {};
 
-void DefendState::on_exit(GameState &game_state) {
-    DEBUG_ASSERT(m_world_quad_renderer != nullptr,
-                 "Error: Quad renderer is not set in DefendState.");
-    DEBUG_ASSERT(m_world_geometry_renderer != nullptr,
-                 "Error: Geometry renderer is not set in DefendState.");
-};
+void DefendState::on_exit(GameState &game_state) {};
 
 void DefendState::handle_cursor(const interface::NDCPoint &cursor_position,
                                 const bool has_clicked) {}
 
 util::StateTransition DefendState::update(const float dt, GameState &game_state) {
-    DEBUG_ASSERT(m_world_quad_renderer != nullptr,
-                 "Error: Quad renderer is not set in DefendState.");
-    DEBUG_ASSERT(m_world_geometry_renderer != nullptr,
-                 "Error: Geometry renderer is not set in DefendState.");
 
     const interface::NDCPoint ndc_point =
         game_state.camera.to_ndc_point(game_state.cursor.viewport_position);

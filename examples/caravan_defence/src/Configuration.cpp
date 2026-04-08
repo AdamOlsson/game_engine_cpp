@@ -58,7 +58,7 @@ void Configuration::setup_world_renderers(
     std::vector<graphics_pipeline::quad::QuadPipelineSBO> chunk_tile_data;
     chunk_tile_data.reserve(tile_count_per_chunk);
 
-    size_t buffer_offset = 0;
+    game.m_map_tiles_count = 0;
     for (size_t layer_id = 0; layer_id < tiled_map.get_layer_count(); layer_id++) {
         for (size_t chunk_id = 0; chunk_id < tiled_map.get_chunk_count(layer_id);
              chunk_id++) {
@@ -77,8 +77,8 @@ void Configuration::setup_world_renderers(
             }
 
             auto draw_command = game.m_world_quad_renderer->write_to_buffer(
-                chunk_tile_data, buffer_offset);
-            buffer_offset += chunk_tile_data.size();
+                chunk_tile_data, game.m_map_tiles_count);
+            game.m_map_tiles_count += chunk_tile_data.size();
 
             if (layer_id == 0) {
                 game.m_map_layer_1_chunk_draw_commands.push_back(draw_command);
