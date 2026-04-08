@@ -6,19 +6,6 @@
 #include <optional>
 
 class DialogFactory {
-  private:
-    font::Font *m_font = nullptr;
-
-    std::optional<font::TextOpts> m_dialog_text_opts = std::nullopt;
-    std::optional<font::TextOpts> m_dialog_option_text_opts = std::nullopt;
-
-    std::string m_id = "";
-    std::string m_dialog_text = "";
-    std::vector<std::string> m_dialog_option_labels;
-    std::vector<std::string> m_dialog_option_texts;
-    std::vector<std::optional<std::string>> m_dialog_option_next_node;
-    std::vector<DialogOptionCb> m_dialog_option_cbs;
-
   public:
     DialogFactory() = delete;
     DialogFactory(font::Font *font) : m_font(font) {}
@@ -107,4 +94,17 @@ class DialogFactory {
 
         return dialog;
     }
+
+  private:
+    font::Font *m_font = nullptr;
+
+    std::optional<font::TextOpts> m_dialog_text_opts = std::nullopt;
+    std::optional<font::TextOpts> m_dialog_option_text_opts = std::nullopt;
+
+    std::string m_id = "";
+    std::string m_dialog_text = "";
+    std::vector<std::string> m_dialog_option_labels;
+    std::vector<std::string> m_dialog_option_texts;
+    std::vector<std::optional<std::string>> m_dialog_option_next_node;
+    std::vector<DialogOptionCb> m_dialog_option_cbs;
 };

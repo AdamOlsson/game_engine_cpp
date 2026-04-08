@@ -88,8 +88,7 @@ class CaravanDefence : public Game {
 
         Configuration::setup_initial_game_state(m_game_state);
 
-        m_state_machine.get_state<IntroState>() =
-            IntroState(m_ui_text_renderer2.get(), m_ui_geom_renderer2.get());
+        m_state_machine.get_state<IntroState>() = IntroState(m_ui_text_renderer2->m_font);
         m_state_machine.get_state<DefendState>() =
             DefendState(m_ui_text_renderer2->m_font);
         m_state_machine.get_state<EventState>() =
@@ -150,6 +149,55 @@ class CaravanDefence : public Game {
         frame.end_render_pass();
     }
 
+    void render_ui(vulkan::CommandBuffer &command_buffer, vulkan::Frame &frame) {
+        const math::Matrix ui_push_constant = math::Matrix();
+        frame.begin_render_pass(&m_ui_render_pass);
+
+        std::vector<font::TextFormat> text_format;
+        std::vector<font::Text> text;
+        std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> geometry_data;
+
+        if (m_state_machine.is_in_state<EventState>()) {
+            auto &state = m_state_machine.get_state<EventState>();
+            state.render_ui(command_buffer, &ui_push_constant);
+        } else if (m_state_machine.is_in_state<IntroState>()) {
+            auto &state = m_state_machine.get_state<IntroState>();
+            text_format = state.get_ui_text_format_render_data();
+            text = state.get_ui_text_render_data();
+            geometry_data = state.get_ui_geometry_render_data();
+        } else if (m_state_machine.is_in_state<DefendState>()) {
+            auto &state = m_state_machine.get_state<DefendState>();
+            text_format = state.get_ui_text_format_render_data();
+            text = state.get_ui_text_render_data();
+            geometry_data = state.get_ui_geometry_render_data();
+        }
+
+        vulkan::DrawIndexedIndirectCommand geom_draw_command =
+            m_ui_geom_renderer2->write_to_buffer(geometry_data);
+        m_ui_geom_renderer2->write_to_draw_command_buffer({geom_draw_command});
+
+        // UI: render the UI geometry data (background bounding boxes etc)
+        m_ui_geom_renderer2->render_indirect(command_buffer, &ui_push_constant, 1, 0);
+
+        size_t offset = 0;
+        std::vector<vulkan::DrawIndexedIndirectCommand> text_draw_commands;
+        for (size_t i = 0; i < text.size(); i++) {
+            size_t format_idx = i;
+            m_ui_text_renderer2->write_to_format_buffer({text_format[i]}, format_idx);
+            auto draw_cmd =
+                m_ui_text_renderer2->write_to_glyph_buffer(text[i], format_idx, offset);
+            offset += text[i].glyphs.size();
+
+            text_draw_commands.insert(text_draw_commands.end(), draw_cmd.begin(),
+                                      draw_cmd.end());
+        }
+
+        m_ui_text_renderer2->render_indirect(command_buffer, &ui_push_constant,
+                                             text_draw_commands);
+
+        frame.end_render_pass();
+    }
+
     void render() override {
 
         auto command_buffer = m_command_buffer_manager->get_command_buffer();
@@ -157,50 +205,8 @@ class CaravanDefence : public Game {
         vulkan::Frame frame = m_swap_chain->begin_frame(command_buffer);
 
         render_world(command_buffer, frame);
+        render_ui(command_buffer, frame);
 
-        const math::Matrix ui_push_constant = math::Matrix();
-        frame.begin_render_pass(&m_ui_render_pass);
-
-        if (m_state_machine.is_in_state<EventState>()) {
-            auto &state = m_state_machine.get_state<EventState>();
-            state.render_ui(command_buffer, &ui_push_constant);
-        } else if (m_state_machine.is_in_state<IntroState>()) {
-            auto &state = m_state_machine.get_state<IntroState>();
-            state.render_ui(command_buffer, &ui_push_constant);
-        } else if (m_state_machine.is_in_state<DefendState>()) {
-            auto &state = m_state_machine.get_state<DefendState>();
-
-            std::vector<font::TextFormat> text_format =
-                state.get_ui_text_format_render_data();
-            std::vector<font::Text> text = state.get_ui_text_render_data();
-            std::vector<graphics_pipeline::geometry::GeometryPipelineSBO> geometry_data =
-                state.get_ui_geometry_render_data();
-
-            vulkan::DrawIndexedIndirectCommand geom_draw_command =
-                m_ui_geom_renderer2->write_to_buffer(geometry_data);
-            m_ui_geom_renderer2->write_to_draw_command_buffer({geom_draw_command});
-
-            // UI: render the UI geometry data (background bounding boxes etc)
-            m_ui_geom_renderer2->render_indirect(command_buffer, &ui_push_constant, 1, 0);
-
-            size_t offset = 0;
-            std::vector<vulkan::DrawIndexedIndirectCommand> text_draw_commands;
-            for (size_t i = 0; i < text.size(); i++) {
-                size_t format_idx = i;
-                m_ui_text_renderer2->write_to_format_buffer({text_format[i]}, format_idx);
-                auto draw_cmd = m_ui_text_renderer2->write_to_glyph_buffer(
-                    text[i], format_idx, offset);
-                offset += text[i].glyphs.size();
-
-                text_draw_commands.insert(text_draw_commands.end(), draw_cmd.begin(),
-                                          draw_cmd.end());
-            }
-
-            m_ui_text_renderer2->render_indirect(command_buffer, &ui_push_constant,
-                                                 text_draw_commands);
-        }
-
-        frame.end_render_pass();
         frame.submit_present();
     }
 };
