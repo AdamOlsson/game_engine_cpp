@@ -113,7 +113,6 @@ class CaravanDefence : public Game {
             m_map_layer_1_chunk_draw_commands.size() +
             m_map_layer_2_chunk_draw_commands.size();
 
-        // CONTINUE: Move state rendering to this context
         auto &defend_state = m_state_machine.get_state<DefendState>();
         const auto quad_instance_data = defend_state.get_quad_render_data(m_game_state);
 
@@ -159,7 +158,9 @@ class CaravanDefence : public Game {
 
         if (m_state_machine.is_in_state<EventState>()) {
             auto &state = m_state_machine.get_state<EventState>();
-            state.render_ui(command_buffer, &ui_push_constant);
+            text_format = state.get_ui_text_format_render_data();
+            text = state.get_ui_text_render_data();
+            geometry_data = state.get_ui_geometry_render_data();
         } else if (m_state_machine.is_in_state<IntroState>()) {
             auto &state = m_state_machine.get_state<IntroState>();
             text_format = state.get_ui_text_format_render_data();
